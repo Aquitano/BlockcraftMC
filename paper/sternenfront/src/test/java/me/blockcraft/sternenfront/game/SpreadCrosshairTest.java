@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import static org.junit.Assert.assertEquals;
 
@@ -18,18 +19,18 @@ public class SpreadCrosshairTest {
 
     private record Case(String name, WeaponHandling.Posture posture, double heat, int size) { }
 
-    private static final WeaponHandling.Posture STILL = new WeaponHandling.Posture(false, false, false);
-    private static final WeaponHandling.Posture CROUCHED = new WeaponHandling.Posture(false, true, false);
+    private static final WeaponHandling.Posture STILL = new WeaponHandling.Posture(false, false, false, OptionalInt.empty());
+    private static final WeaponHandling.Posture AIMING = new WeaponHandling.Posture(false, true, false, OptionalInt.empty());
     private static final Case[] CASES = {
-            new Case("still and cold", STILL, 0, 0),
-            new Case("crouched", CROUCHED, 0, 0),
-            new Case("crouched and hot", CROUCHED, 1, 0),
-            new Case("walking and hot", new WeaponHandling.Posture(true, false, false), 1, SpreadCrosshair.SIZES - 1),
-            new Case("jumping and hot", new WeaponHandling.Posture(false, false, true), 1, SpreadCrosshair.SIZES - 1),
+            new Case("still and cold", STILL, 0, 1),
+            new Case("aiming", AIMING, 0, 0),
+            new Case("aiming and hot", AIMING, 1, 0),
+            new Case("walking and hot", new WeaponHandling.Posture(true, false, false, OptionalInt.empty()), 1, SpreadCrosshair.SIZES - 1),
+            new Case("jumping and hot", new WeaponHandling.Posture(false, false, true, OptionalInt.empty()), 1, SpreadCrosshair.SIZES - 1),
     };
 
     @Test
-    public void everyBlasterWithSpreadClosesAtRestAndOpensFullyHotOnTheMove() {
+    public void everyBlasterClosesAtTheSightsAndOpensFullyHotOnTheMove() {
         var config = SternenfrontConfig.from(CONFIG);
         for (var blaster : Blaster.values()) {
             if (blaster == Blaster.SPEEDER_CANNON) {
@@ -38,7 +39,7 @@ public class SpreadCrosshairTest {
             double base = config.stats(blaster).spread();
             for (var each : CASES) {
                 var size = CROSSHAIR.size(base, HANDLING.spread(blaster, base, each.posture(), each.heat()));
-                assertEquals(blaster + " " + each.name(), blaster.isLongRifle() ? Optional.empty() : Optional.of(each.size()), size);
+                assertEquals(blaster + " " + each.name(), Optional.of(each.size()), size);
             }
         }
     }

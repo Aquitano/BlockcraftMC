@@ -13,6 +13,8 @@ screen effects, and the Sternenfront intro.
   square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory. A menu
   item that needs a frame draws it in its own model, as Sternenfront's spawn markers do with `oversized_in_gui` so the
   frame can cover the slot's border.
+- **Scope.** `HudArt` replaces `textures/misc/spyglass_scope.png` with the long rifle's reticle, so a spyglass in any
+  game on the network looks through it.
 - **Boss bars.** `HudArt` blanks the `pink_*` and `notched_20_*` boss bar sprites, because Sternenfront's objective
   line and minimap carry only text on a boss bar line. The client has no per-server switch, so on every server of the
   network a pink bar or one with twenty notches shows its text and no bar. Any other plugin's boss bar needs another
@@ -65,15 +67,19 @@ exported with "Java Block/Item".
 ## Sternenfront first-person weapons
 
 `SternenfrontArt.java` assigns seven `GunPose` families in the equipment list. The same definition supplies resting
-transforms, a firing kick and a sprint pose, lowered and turned across the body, for both hands. Vanilla mirrors the left hand's X translation, yaw and roll, so the authored
+transforms, a firing kick, a sprint pose, lowered and turned across the body, and an aim pose with its own smaller kick,
+for both hands. The aim pose puts the rear of the top of the gun's centre line, its sight, half a block ahead of the eye
+and just below it, so the barrel runs to the crosshair; a pair of pistols sits either side of it. The vanilla item
+override draws `<model>_aim` only in the first-person hands, while the client's own sneak key is down.
+A long rifle is a spyglass to the client, which draws it in its `head` transform at the eye while the player scopes. Vanilla mirrors the left hand's X translation, yaw and roll, so the authored
 hand transforms are identical. Third-person, GUI, ground and fixed transforms retain their existing values.
 
-Run `:resourcepack:generateBattle` to regenerate the equipment, firing and lowered models. Java writes those transforms to
+Run `:resourcepack:generateBattle` to regenerate the equipment, firing, lowered and aim models. Java writes those transforms to
 `build/sternenfront/gun-poses.json`; `BattleArt.py` consumes that manifest and inherits each gun's geometry and other
 transforms. Running `BattleArt.py` directly requires a fresh Java generation first.
 `:resourcepack:verifyWeaponPoses`, also part of `check`, checks that the guns and guarded blades `PackModel` registers
 are the ones the generator writes, and their vanilla item routes, texture paths, both hands, firing and lowered
-inheritance, family framing, recoil differences, the lowered muzzle and wrist bounds.
+inheritance, family framing, recoil differences, the lowered muzzle, the sights under the crosshair and wrist bounds.
 
 Each long gun has one feature that names it in profile. The carbine is short and boxy with a power cell standing out on
 its left. The DC-15A is long, with a scope and a grip under the barrel. The E-5 is long and thin, with a ribbed barrel and

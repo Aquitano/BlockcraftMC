@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/long_rifle",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        1.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        4.4190000000000005,
+        2.464
+      ],
+      "scale": [
+        0.52,
+        0.52,
+        0.52
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        1.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        4.4190000000000005,
+        2.464
+      ],
+      "scale": [
+        0.52,
+        0.52,
+        0.52
+      ]
+    }
+  }
+}

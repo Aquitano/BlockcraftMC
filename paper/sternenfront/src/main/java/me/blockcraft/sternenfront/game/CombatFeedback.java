@@ -393,9 +393,9 @@ public final class CombatFeedback {
         notifications.markerNow(player, ticks.append(arc).append(marker), held);
     }
 
-    /** A blaster in hand, on foot and unscoped, for a client whose pack draws the marks round the crosshair. */
+    /** A blaster in hand, on foot and not in a scope, whose reticle replaces the marks, for a client whose pack draws them. */
     private boolean aiming(Player player) {
-        return BlockcraftApi.get().resourcePack().applied(player) && !player.isInsideVehicle() && !game.scoped(player)
+        return BlockcraftApi.get().resourcePack().applied(player) && !player.isInsideVehicle() && !SternenfrontGame.scoped(player)
                 && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
     }
 

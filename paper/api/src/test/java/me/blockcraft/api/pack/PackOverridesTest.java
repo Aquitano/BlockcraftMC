@@ -1,5 +1,6 @@
 package me.blockcraft.api.pack;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.Test;
@@ -39,16 +40,7 @@ public class PackOverridesTest {
             var cases = new HashMap<String, PackOverrides.Case>();
             for (var entry : model.getAsJsonArray("cases")) {
                 var match = entry.getAsJsonObject();
-                var drawn = match.getAsJsonObject("model");
-                boolean guarded = drawn.get("type").getAsString().equals("minecraft:condition");
-                var shown = guarded ? drawn.getAsJsonObject("on_false") : drawn;
-                var found = new PackOverrides.Case(shown.get("model").getAsString(), tintedByItem(shown), guarded);
-                if (guarded) {
-                    assertEquals(file.toString(), "minecraft:using_item", drawn.get("property").getAsString());
-                    var guard = drawn.getAsJsonObject("on_true");
-                    assertEquals(file.toString(), found.guard(), guard.get("model").getAsString());
-                    assertEquals(file.toString(), found.tinted(), tintedByItem(guard));
-                }
+                var found = drawn(file, match.getAsJsonObject("model"));
                 cases.put(match.get("when").getAsString(), found);
             }
             assertEquals(file.toString(), item.getValue(), cases);
@@ -56,6 +48,42 @@ public class PackOverridesTest {
                 assertTrue(file + " must not lower the weapon for each swap in place", !read(file).get("hand_animation_on_swap").getAsBoolean());
             }
         }
+    }
+
+    private static PackOverrides.Case drawn(Path file, JsonObject drawn) {
+        var stance = switch (drawn.get("type").getAsString()) {
+            case "minecraft:condition" -> PackModel.Stance.GUARD;
+            case "minecraft:select" -> PackModel.Stance.AIM;
+            default -> PackModel.Stance.NONE;
+        };
+        var condition = switch (stance) {
+            case NONE -> null;
+            case GUARD -> drawn;
+            case AIM -> {
+                assertEquals(file.toString(), "minecraft:display_context", drawn.get("property").getAsString());
+                var firstPerson = drawn.getAsJsonArray("cases").get(0).getAsJsonObject();
+                assertEquals(file.toString(), List.of("firstperson_righthand", "firstperson_lefthand"),
+                        firstPerson.getAsJsonArray("when").asList().stream().map(JsonElement::getAsString).toList());
+                var sneaking = firstPerson.getAsJsonObject("model");
+                assertEquals(file.toString(), "key.sneak", sneaking.get("keybind").getAsString());
+                yield sneaking;
+            }
+        };
+        var shown = switch (stance) {
+            case NONE -> drawn;
+            case GUARD -> drawn.getAsJsonObject("on_false");
+            case AIM -> drawn.getAsJsonObject("fallback");
+        };
+        var found = new PackOverrides.Case(shown.get("model").getAsString(), tintedByItem(shown), stance);
+        if (condition != null) {
+            assertEquals(file.toString(), stance == PackModel.Stance.GUARD ? "minecraft:using_item" : "minecraft:keybind_down",
+                    condition.get("property").getAsString());
+            assertEquals(file.toString(), found.model(), condition.getAsJsonObject("on_false").get("model").getAsString());
+            var variant = condition.getAsJsonObject("on_true");
+            assertEquals(file.toString(), found.variant(), variant.get("model").getAsString());
+            assertEquals(file.toString(), found.tinted(), tintedByItem(variant));
+        }
+        return found;
     }
 
     /** A tinted model's colour comes from the item's first custom_model_data colour, not from a dye or a map. */
@@ -84,9 +112,7 @@ public class PackOverridesTest {
         var models = new HashSet<String>();
         PackOverrides.cases().values().forEach(cases -> cases.values().forEach(drawn -> {
             models.add(drawn.model());
-            if (drawn.guarded()) {
-                models.add(drawn.guard());
-            }
+            models.add(drawn.variant());
         }));
         for (var model : models) {
             assertTrue(model, Files.exists(asset(model, "models", ".json")));

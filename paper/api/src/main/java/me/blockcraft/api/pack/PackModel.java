@@ -36,10 +36,10 @@ public enum PackModel {
     ZOMBIES_FROST_CROWN(Material.PACKED_ICE, "zombies/frost_crown"),
     ZOMBIES_MOLOTOV(Material.HONEY_BOTTLE, "zombies/molotov"),
     TTT_MEDIPACK(Material.GLISTERING_MELON_SLICE, "ttt/medipack"),
-    STERNENFRONT_CARBINE(Material.IRON_HOE, "sternenfront/carbine", true),
-    STERNENFRONT_REPEATER(Material.NETHERITE_HOE, "sternenfront/repeater", true),
-    STERNENFRONT_LONG_RIFLE(Material.DIAMOND_HOE, "sternenfront/long_rifle", true),
-    STERNENFRONT_PISTOL(Material.STONE_HOE, "sternenfront/pistol", true),
+    STERNENFRONT_CARBINE(Material.IRON_HOE, "sternenfront/carbine", true, Stance.AIM),
+    STERNENFRONT_REPEATER(Material.NETHERITE_HOE, "sternenfront/repeater", true, Stance.AIM),
+    STERNENFRONT_LONG_RIFLE(Material.SPYGLASS, "sternenfront/long_rifle", true, Stance.AIM),
+    STERNENFRONT_PISTOL(Material.STONE_HOE, "sternenfront/pistol", true, Stance.AIM),
     STERNENFRONT_GRENADE(Material.FIREWORK_STAR, "sternenfront/grenade"),
     STERNENFRONT_ADRENALINE(Material.SUGAR, "sternenfront/adrenaline"),
     STERNENFRONT_SHIELD_EMITTER(Material.PRISMARINE_CRYSTALS, "sternenfront/shield_emitter"),
@@ -47,15 +47,15 @@ public enum PackModel {
     STERNENFRONT_MED_STATION(Material.GLISTERING_MELON_SLICE, "sternenfront/med_station"),
     STERNENFRONT_SIEGE_MODE(Material.NETHERITE_SCRAP, "sternenfront/siege_mode"),
     STERNENFRONT_MINING_CHARGE(Material.GUNPOWDER, "sternenfront/mining_charge"),
-    STERNENFRONT_RELIC_BLADE(Material.NETHERITE_SWORD, "sternenfront/relic_blade", false, true),
+    STERNENFRONT_RELIC_BLADE(Material.NETHERITE_SWORD, "sternenfront/relic_blade", false, Stance.GUARD),
     STERNENFRONT_HELMET_KOLONIEN(Material.STONE_BUTTON, "sternenfront/helmet_kolonien"),
     STERNENFRONT_HELMET_HEGEMONIE(Material.STONE_BUTTON, "sternenfront/helmet_hegemonie"),
     // Bolts only fly on item displays; a client without the pack sees an end rod in the faction's glow.
     STERNENFRONT_BOLT_KOLONIEN(Material.END_ROD, "sternenfront/bolt_kolonien"),
     STERNENFRONT_BOLT_HEGEMONIE(Material.END_ROD, "sternenfront/bolt_hegemonie"),
-    STERNENFRONT_LIGHTSABER_JEDI(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi", true, true),
+    STERNENFRONT_LIGHTSABER_JEDI(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi", true, Stance.GUARD),
     STERNENFRONT_LIGHTSABER_JEDI_OFF(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi_off"),
-    STERNENFRONT_LIGHTSABER_SITH(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith", true, true),
+    STERNENFRONT_LIGHTSABER_SITH(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith", true, Stance.GUARD),
     STERNENFRONT_LIGHTSABER_SITH_OFF(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith_off"),
     STERNENFRONT_LIGHTSABER_JEDI_25(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi_25", true),
     STERNENFRONT_LIGHTSABER_JEDI_50(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi_50", true),
@@ -69,33 +69,33 @@ public enum PackModel {
     STERNENFRONT_HELMET_ARC(Material.STONE_BUTTON, "sternenfront/helmet_arc"),
     STERNENFRONT_HELMET_COMMANDO(Material.STONE_BUTTON, "sternenfront/helmet_commando"),
     STERNENFRONT_CAP_COMMANDER(Material.STONE_BUTTON, "sternenfront/cap_commander"),
-    STERNENFRONT_TWIN_PISTOL(Material.GOLDEN_HOE, "sternenfront/twin_pistol", true),
-    STERNENFRONT_HEAVY_RIFLE(Material.WOODEN_HOE, "sternenfront/heavy_rifle", true),
-    STERNENFRONT_CARBINE_FIRING(Material.IRON_HOE, "sternenfront/carbine_firing", true),
-    STERNENFRONT_REPEATER_FIRING(Material.NETHERITE_HOE, "sternenfront/repeater_firing", true),
-    STERNENFRONT_LONG_RIFLE_FIRING(Material.DIAMOND_HOE, "sternenfront/long_rifle_firing", true),
-    STERNENFRONT_PISTOL_FIRING(Material.STONE_HOE, "sternenfront/pistol_firing", true),
-    STERNENFRONT_TWIN_PISTOL_FIRING(Material.GOLDEN_HOE, "sternenfront/twin_pistol_firing", true),
-    STERNENFRONT_HEAVY_RIFLE_FIRING(Material.WOODEN_HOE, "sternenfront/heavy_rifle_firing", true),
-    STERNENFRONT_E5(Material.IRON_HOE, "sternenfront/e5", true),
-    STERNENFRONT_E5_FIRING(Material.IRON_HOE, "sternenfront/e5_firing", true),
-    STERNENFRONT_WRIST_BLASTER(Material.NETHERITE_HOE, "sternenfront/wrist_blaster", true),
-    STERNENFRONT_WRIST_BLASTER_FIRING(Material.NETHERITE_HOE, "sternenfront/wrist_blaster_firing", true),
-    STERNENFRONT_E5S(Material.DIAMOND_HOE, "sternenfront/e5s", true),
-    STERNENFRONT_E5S_FIRING(Material.DIAMOND_HOE, "sternenfront/e5s_firing", true),
-    STERNENFRONT_SE14(Material.STONE_HOE, "sternenfront/se14", true),
-    STERNENFRONT_SE14_FIRING(Material.STONE_HOE, "sternenfront/se14_firing", true),
-    STERNENFRONT_WESTAR_PISTOLS(Material.GOLDEN_HOE, "sternenfront/westar_pistols", true),
-    STERNENFRONT_WESTAR_PISTOLS_FIRING(Material.GOLDEN_HOE, "sternenfront/westar_pistols_firing", true),
+    STERNENFRONT_TWIN_PISTOL(Material.GOLDEN_HOE, "sternenfront/twin_pistol", true, Stance.AIM),
+    STERNENFRONT_HEAVY_RIFLE(Material.WOODEN_HOE, "sternenfront/heavy_rifle", true, Stance.AIM),
+    STERNENFRONT_CARBINE_FIRING(Material.IRON_HOE, "sternenfront/carbine_firing", true, Stance.AIM),
+    STERNENFRONT_REPEATER_FIRING(Material.NETHERITE_HOE, "sternenfront/repeater_firing", true, Stance.AIM),
+    STERNENFRONT_LONG_RIFLE_FIRING(Material.SPYGLASS, "sternenfront/long_rifle_firing", true, Stance.AIM),
+    STERNENFRONT_PISTOL_FIRING(Material.STONE_HOE, "sternenfront/pistol_firing", true, Stance.AIM),
+    STERNENFRONT_TWIN_PISTOL_FIRING(Material.GOLDEN_HOE, "sternenfront/twin_pistol_firing", true, Stance.AIM),
+    STERNENFRONT_HEAVY_RIFLE_FIRING(Material.WOODEN_HOE, "sternenfront/heavy_rifle_firing", true, Stance.AIM),
+    STERNENFRONT_E5(Material.IRON_HOE, "sternenfront/e5", true, Stance.AIM),
+    STERNENFRONT_E5_FIRING(Material.IRON_HOE, "sternenfront/e5_firing", true, Stance.AIM),
+    STERNENFRONT_WRIST_BLASTER(Material.NETHERITE_HOE, "sternenfront/wrist_blaster", true, Stance.AIM),
+    STERNENFRONT_WRIST_BLASTER_FIRING(Material.NETHERITE_HOE, "sternenfront/wrist_blaster_firing", true, Stance.AIM),
+    STERNENFRONT_E5S(Material.SPYGLASS, "sternenfront/e5s", true, Stance.AIM),
+    STERNENFRONT_E5S_FIRING(Material.SPYGLASS, "sternenfront/e5s_firing", true, Stance.AIM),
+    STERNENFRONT_SE14(Material.STONE_HOE, "sternenfront/se14", true, Stance.AIM),
+    STERNENFRONT_SE14_FIRING(Material.STONE_HOE, "sternenfront/se14_firing", true, Stance.AIM),
+    STERNENFRONT_WESTAR_PISTOLS(Material.GOLDEN_HOE, "sternenfront/westar_pistols", true, Stance.AIM),
+    STERNENFRONT_WESTAR_PISTOLS_FIRING(Material.GOLDEN_HOE, "sternenfront/westar_pistols_firing", true, Stance.AIM),
     STERNENFRONT_CARBINE_LOWERED(Material.IRON_HOE, "sternenfront/carbine_lowered", true),
     STERNENFRONT_REPEATER_LOWERED(Material.NETHERITE_HOE, "sternenfront/repeater_lowered", true),
-    STERNENFRONT_LONG_RIFLE_LOWERED(Material.DIAMOND_HOE, "sternenfront/long_rifle_lowered", true),
+    STERNENFRONT_LONG_RIFLE_LOWERED(Material.SPYGLASS, "sternenfront/long_rifle_lowered", true),
     STERNENFRONT_PISTOL_LOWERED(Material.STONE_HOE, "sternenfront/pistol_lowered", true),
     STERNENFRONT_TWIN_PISTOL_LOWERED(Material.GOLDEN_HOE, "sternenfront/twin_pistol_lowered", true),
     STERNENFRONT_HEAVY_RIFLE_LOWERED(Material.WOODEN_HOE, "sternenfront/heavy_rifle_lowered", true),
     STERNENFRONT_E5_LOWERED(Material.IRON_HOE, "sternenfront/e5_lowered", true),
     STERNENFRONT_WRIST_BLASTER_LOWERED(Material.NETHERITE_HOE, "sternenfront/wrist_blaster_lowered", true),
-    STERNENFRONT_E5S_LOWERED(Material.DIAMOND_HOE, "sternenfront/e5s_lowered", true),
+    STERNENFRONT_E5S_LOWERED(Material.SPYGLASS, "sternenfront/e5s_lowered", true),
     STERNENFRONT_SE14_LOWERED(Material.STONE_HOE, "sternenfront/se14_lowered", true),
     STERNENFRONT_WESTAR_PISTOLS_LOWERED(Material.GOLDEN_HOE, "sternenfront/westar_pistols_lowered", true),
     STERNENFRONT_ORBITAL_BEACON(Material.ECHO_SHARD, "sternenfront/orbital_beacon"),
@@ -143,10 +143,29 @@ public enum PackModel {
     GADGET_PAINT_GUN(Material.SNOWBALL, "gadgets/paint_gun"),
     PROP_STAR(Material.NETHER_STAR, "props/star");
 
+    /** A second model the client swaps a held model for on its own, without waiting for the server. */
+    public enum Stance {
+        NONE(""),
+        /** {@code <path>_guard} while its holder uses the item, as a blade raised to block. */
+        GUARD("_guard"),
+        /** {@code <path>_aim} in the holder's own first-person view while their sneak key is down, as a gun at the sights. */
+        AIM("_aim");
+
+        private final String suffix;
+
+        Stance(String suffix) {
+            this.suffix = suffix;
+        }
+
+        public String suffix() {
+            return suffix;
+        }
+    }
+
     private final Material fallback;
     private final String path;
     private final boolean tinted;
-    private final boolean guarded;
+    private final Stance stance;
 
     PackModel(Material fallback, String path) {
         this(fallback, path, false);
@@ -157,15 +176,14 @@ public enum PackModel {
      * custom_model_data, as a lightsaber's blade or a blaster's heat vents do.
      */
     PackModel(Material fallback, String path, boolean tinted) {
-        this(fallback, path, tinted, false);
+        this(fallback, path, tinted, Stance.NONE);
     }
 
-    /** A guarded model is drawn as {@code <path>_guard} while its holder uses the item, as a blade raised to block. */
-    PackModel(Material fallback, String path, boolean tinted, boolean guarded) {
+    PackModel(Material fallback, String path, boolean tinted, Stance stance) {
         this.fallback = fallback;
         this.path = path;
         this.tinted = tinted;
-        this.guarded = guarded;
+        this.stance = stance;
     }
 
     public Material fallback() {
@@ -176,8 +194,8 @@ public enum PackModel {
         return tinted;
     }
 
-    public boolean guarded() {
-        return guarded;
+    public Stance stance() {
+        return stance;
     }
 
     /** What the item carries as custom_model_data, and the case the pack selects on. */

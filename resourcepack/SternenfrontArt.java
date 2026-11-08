@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 
 /**
@@ -1183,8 +1184,35 @@ public final class SternenfrontArt {
               "ground":{"translation":[0,3,0],"scale":[0.4,0.4,0.4]},
               "fixed":{"rotation":[0,90,0],"translation":[-0.9,1.5,0],"scale":[0.55,0.55,0.55]}}
             """;
-    /** How the hands hold a gun: at rest, kicked back by a shot, or lowered across the body in a sprint. */
-    private enum Hold { REST, FIRING, LOWERED }
+    /**
+     * How the hands hold a gun: at rest, kicked back by a shot, lowered across the body in a sprint, or at the sights
+     * and kicked back there, which the pack swaps in while the player's sneak key is down.
+     */
+    private enum Hold {
+        REST, FIRING, LOWERED, AIM, FIRING_AIM;
+
+        boolean aimed() {
+            return this == AIM || this == FIRING_AIM;
+        }
+
+        boolean firing() {
+            return this == FIRING || this == FIRING_AIM;
+        }
+    }
+
+    /**
+     * The top of a gun's centre line and where along it that top begins, in model units, where the eye looks along
+     * it at the sights. Mirrored pairs and turned boxes are side parts and never the sight.
+     */
+    private record Sight(double top, double rear) {
+
+        static Sight of(Shape shape) {
+            var centre = shape.boxes.stream().filter(box -> box.spin == null && box.x1 <= 0 && box.x2 >= 0).toList();
+            double top = centre.stream().mapToDouble(Box::y2).max().orElseThrow();
+            double rear = centre.stream().filter(box -> box.y2 == top).mapToDouble(Box::z1).min().orElseThrow();
+            return new Sight(8 + top * 16, 8 + rear * 16);
+        }
+    }
 
     private enum GunPose {
         CARBINE(-2, -4, 0, .7, 1.25, -.4, .55, 4, .15, .85),
@@ -1197,6 +1225,14 @@ public final class SternenfrontArt {
 
         private static final double LOWER_PITCH = 30, LOWER_YAW = 22, LOWER_ROLL = 12, LOWER_INWARD = .5, LOWER_DROP = 2.2,
                 LOWER_BACK = .8;
+        /** Where vanilla holds the right hand, in blocks right of, below and ahead of the eye. */
+        private static final double HAND_RIGHT = .56, HAND_DOWN = .52, HAND_AHEAD = .72;
+        /** At the sights the gun's top runs this far below the eye, its rear this far ahead, so it points at the crosshair. */
+        private static final double SIGHT_DROP = .04, SIGHT_AHEAD = .5;
+        /** How far ahead of the head's centre a scope held to the eye ends, in the head item's own units. */
+        private static final double EYEPIECE_AHEAD = -.45;
+        /** A shot at the sights kicks this share of the hip shot's kick. */
+        private static final double AIMED_KICK = .5;
 
         private final double pitch, yaw, roll, x, y, z, scale, kick, rise, back;
 
@@ -1214,23 +1250,65 @@ public final class SternenfrontArt {
             this.back = back;
         }
 
-        String hands(Hold hold) {
-            boolean firing = hold == Hold.FIRING;
+        String hands(Hold hold, Sight sight) {
             boolean lowered = hold == Hold.LOWERED;
+            double kicked = hold.firing() ? hold.aimed() ? AIMED_KICK : 1 : 0;
+            var pose = hold.aimed()
+                    ? pose(kick * kicked, 180, 0, aimed(sight).add(0, rise * kicked, back * kicked), scale)
+                    : pose(pitch + kick * kicked - (lowered ? LOWER_PITCH : 0), 180 + yaw - (lowered ? LOWER_YAW : 0),
+                    roll + (lowered ? LOWER_ROLL : 0), new Shift(x - (lowered ? LOWER_INWARD : 0),
+                            y + rise * kicked - (lowered ? LOWER_DROP : 0), z + back * kicked + (lowered ? LOWER_BACK : 0)), scale);
             // Vanilla mirrors X translation, yaw and roll for the left hand during rendering.
-            String pose = String.format(Locale.ROOT,
-                    "{\"rotation\":[%s,%s,%s],\"translation\":[%s,%s,%s],\"scale\":[%s,%s,%s]}",
-                    pitch + (firing ? kick : lowered ? -LOWER_PITCH : 0), 180 + yaw - (lowered ? LOWER_YAW : 0),
-                    roll + (lowered ? LOWER_ROLL : 0), x - (lowered ? LOWER_INWARD : 0),
-                    y + (firing ? rise : lowered ? -LOWER_DROP : 0), z + (firing ? back : lowered ? LOWER_BACK : 0),
-                    scale, scale, scale);
             return "\"firstperson_righthand\":" + pose + ",\"firstperson_lefthand\":" + pose;
+        }
+
+        /**
+         * Puts the sight's rear on the eye's line, centred, or for a pair of pistols each beside it. The model turns about
+         * its centre at 8, 8, 8 and the display moves it in sixteenths of a block.
+         */
+        private Shift aimed(Sight sight) {
+            double up = sight.top() / 16 - .5, along = sight.rear() / 16 - .5;
+            return new Shift(round(16 * (aimBeside() - HAND_RIGHT)), round(16 * (HAND_DOWN - SIGHT_DROP - scale * up)),
+                    round(16 * (HAND_AHEAD - SIGHT_AHEAD + scale * along)));
+        }
+
+        /**
+         * A long rifle is a spyglass to the client, which draws it held to the eye in its head transform while it is
+         * in use: level, the muzzle ahead, the sight's rear a little in front of the face and the scope at eye height.
+         */
+        String heldToEye(Sight sight) {
+            if (this != LONG_RIFLE) {
+                return "";
+            }
+            double size = .96, eyeLine = sight.top() - 1;
+            var shift = new Shift(0, round(-16 * size * (eyeLine / 16 - .5)), round(16 * (EYEPIECE_AHEAD + size * (sight.rear() / 16 - .5))));
+            return ",\"head\":" + pose(0, 180, 0, shift, size);
+        }
+
+        private double aimBeside() {
+            return this == TWIN_PISTOL ? .12 : 0;
+        }
+
+        private static String pose(double pitch, double yaw, double roll, Shift shift, double size) {
+            return String.format(Locale.ROOT, "{\"rotation\":[%s,%s,%s],\"translation\":[%s,%s,%s],\"scale\":[%s,%s,%s]}",
+                    pitch, yaw, roll, shift.x(), shift.y(), shift.z(), size, size, size);
+        }
+
+        private static double round(double value) {
+            return Math.round(value * 1000) / 1000.0;
+        }
+
+        private record Shift(double x, double y, double z) {
+            Shift add(double dx, double dy, double dz) {
+                return new Shift(x + dx, y + dy, z + dz);
+            }
         }
     }
 
     private static Family gun(String name, Shape shape, GunPose pose) {
         return new Family("equipment_" + name, 64, false, List.of(
-                new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(Hold.REST)), pose)));
+                new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(Hold.REST, Sight.of(shape))
+                        + pose.heldToEye(Sight.of(shape))), pose)));
     }
 
     /**
@@ -2191,8 +2269,10 @@ public final class SternenfrontArt {
         }
         var holds = equipment.stream().flatMap(family -> family.models.stream())
                 .filter(model -> model.gunPose != null)
-                .map(model -> "\"" + model.path + "\": {\"firing\": {" + model.gunPose.hands(Hold.FIRING)
-                        + "}, \"lowered\": {" + model.gunPose.hands(Hold.LOWERED) + "}}")
+                .map(model -> "\"" + model.path + "\": {" + Stream.of(Hold.FIRING, Hold.LOWERED, Hold.AIM, Hold.FIRING_AIM)
+                        .map(hold -> "\"" + hold.name().toLowerCase(Locale.ROOT) + "\": {"
+                                + model.gunPose.hands(hold, Sight.of(model.shape)) + "}")
+                        .collect(Collectors.joining(", ")) + "}")
                 .collect(Collectors.joining(",\n"));
         for (var path : GUARDED) {
             Files.writeString(root.resolve("models/item/" + path + "_guard.json"), "{\n  \"parent\":\"blockcraft:item/" + path

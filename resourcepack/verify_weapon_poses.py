@@ -9,7 +9,7 @@ PACK = Path(__file__).parent / "src/assets"
 REGISTRY = (Path(__file__).parent.parent / "paper/api/src/main/java/me/blockcraft/api/pack/PackModel.java").read_text()
 GENERATOR = (Path(__file__).parent / "SternenfrontArt.java").read_text()
 HANDS = ("firstperson_righthand", "firstperson_lefthand")
-HOLDS = ("_firing", "_lowered")
+HOLDS = ("_firing", "_lowered", "_aim", "_firing_aim")
 # FirstPersonHandsAndItemsRenderer in the 26.3 client: the arm's offset, then the turn it gives a blocking non-shield.
 VANILLA_ARM_SHIFT = (0.56, -0.52, -0.72)
 VANILLA_SWORD_BLOCK_SHIFT = (-0.14142136, 0.08, 0.14142136)
@@ -43,12 +43,28 @@ def turned(vector, degrees):
     return [x, y, z]
 
 
+def displayed(pose, pixel):
+    point = [pose["scale"][axis] * (pixel[axis] / 16 - 0.5) for axis in range(3)]
+    return [a + b / 16 for a, b in zip(turned(point, pose["rotation"]), pose["translation"])]
+
+
+def held_view(pose, pixel):
+    """Where the client draws a model pixel in the right hand, the camera looking along -Z."""
+    return [a + b for a, b in zip(displayed(pose, pixel), VANILLA_ARM_SHIFT)]
+
+
 def blocking_view(pose, pixel):
     """Where the client draws a model pixel in the right hand while the item blocks, the camera looking along -Z."""
-    point = [pose["scale"][axis] * (pixel[axis] / 16 - 0.5) for axis in range(3)]
-    point = [a + b / 16 for a, b in zip(turned(point, pose["rotation"]), pose["translation"])]
-    point = [a + b for a, b in zip(turned(point, VANILLA_SWORD_BLOCK_DEGREES), VANILLA_SWORD_BLOCK_SHIFT)]
+    point = [a + b for a, b in zip(turned(displayed(pose, pixel), VANILLA_SWORD_BLOCK_DEGREES), VANILLA_SWORD_BLOCK_SHIFT)]
     return [a + b for a, b in zip(point, VANILLA_ARM_SHIFT)]
+
+
+def sight(model):
+    """The rear of the top of the gun's centre line, as SternenfrontArt's Sight finds it."""
+    centre = [element for element in model["elements"]
+              if "rotation" not in element and element["from"][0] <= 8 <= element["to"][0]]
+    top = max(element["to"][1] for element in centre)
+    return [8, top, min(element["from"][2] for element in centre if element["to"][1] == top)]
 
 
 class WeaponPoses(unittest.TestCase):
@@ -79,13 +95,13 @@ class WeaponPoses(unittest.TestCase):
                     self.assertIn(f'"blockcraft:item/{path}{suffix}"', serialized)
 
     def test_registered_and_generated_guards_agree(self):
-        registered = re.findall(r'"(sternenfront/\w+)", (?:true|false), true\)', REGISTRY)
+        registered = re.findall(r'"(sternenfront/\w+)", (?:true|false), Stance\.GUARD\)', REGISTRY)
         generated = re.findall(r'"(sternenfront/\w+)"', re.search(r"GUARDED = List\.of\(([^)]*)\)", GENERATOR).group(1))
         self.assertTrue(registered)
         self.assertEqual(sorted(registered), sorted(generated))
 
     def test_guarded_blades_draw_lit_and_in_view(self):
-        for material, path in re.findall(r'Material\.(\w+), "(sternenfront/\w+)", (?:true|false), true\)', REGISTRY):
+        for material, path in re.findall(r'Material\.(\w+), "(sternenfront/\w+)", (?:true|false), Stance\.GUARD\)', REGISTRY):
             with self.subTest(blade=path):
                 rest, guard = read_model(path), read_model(path + "_guard")
                 self.assertEqual(guard["parent"], f"blockcraft:item/{path}")
@@ -132,6 +148,21 @@ class WeaponPoses(unittest.TestCase):
         self.assertGreater(pistol_kick, rotary_kick)
         self.assertLess(pose("repeater")["translation"][1], pose("carbine")["translation"][1])
         self.assertGreater(pose("repeater")["scale"][0], pose("carbine")["scale"][0])
+
+    def test_aim_puts_the_sights_under_the_crosshair(self):
+        for path in re.findall(r'"(sternenfront/\w+)", true, Stance\.AIM\)', REGISTRY):
+            if path.endswith("_firing"):
+                continue
+            with self.subTest(weapon=path):
+                model = read_model(path)
+                aim = read_model(path + "_aim")["display"][HANDS[0]]
+                x, y, z = held_view(aim, sight(model))
+                self.assertAlmostEqual(z, -0.5, places=2)
+                self.assertTrue(-0.05 < y < 0, y)
+                self.assertLess(abs(x), 0.2 if "pistol" in path else 0.001)
+                fired = read_model(path + "_firing_aim")["display"][HANDS[0]]
+                self.assertGreater(barrel_elevation(fired), barrel_elevation(aim))
+                self.assertEqual(aim["scale"], model["display"][HANDS[0]]["scale"])
 
     def test_wrist_forearm_and_vanilla_bounds(self):
         wrist = read_model("sternenfront/wrist_blaster")

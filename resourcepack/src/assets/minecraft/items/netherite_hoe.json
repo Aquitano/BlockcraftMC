@@ -7,29 +7,107 @@
       {
         "when": "blockcraft:sternenfront/repeater",
         "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/repeater",
-          "tints": [
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
             {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/repeater_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/repeater",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.sneak"
+              }
             }
-          ]
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/repeater",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
         }
       },
       {
         "when": "blockcraft:sternenfront/repeater_firing",
         "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/repeater_firing",
-          "tints": [
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
             {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/repeater_firing_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/repeater_firing",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.sneak"
+              }
             }
-          ]
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/repeater_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
         }
       },
       {
@@ -49,29 +127,107 @@
       {
         "when": "blockcraft:sternenfront/wrist_blaster",
         "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/wrist_blaster",
-          "tints": [
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
             {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/wrist_blaster_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/wrist_blaster",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.sneak"
+              }
             }
-          ]
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/wrist_blaster",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
         }
       },
       {
         "when": "blockcraft:sternenfront/wrist_blaster_firing",
         "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/wrist_blaster_firing",
-          "tints": [
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
             {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/wrist_blaster_firing_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/wrist_blaster_firing",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.sneak"
+              }
             }
-          ]
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/wrist_blaster_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
         }
       },
       {
