@@ -310,7 +310,11 @@ public final class Powers {
     public void tick(long tick) {
         rockets.tick();
         lightning.tick(tick);
-        windUps.removeIf(windUp -> gather(windUp, tick));
+        for (var windUp : List.copyOf(windUps)) {
+            if (gather(windUp, tick)) {
+                windUps.remove(windUp);
+            }
+        }
         thrusts.values().removeIf(until -> until <= tick);
         var airborne = List.copyOf(flights);
         flights.clear();
