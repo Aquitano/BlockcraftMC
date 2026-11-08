@@ -37,11 +37,11 @@ public final class Fighter {
             return tick >= readyTick && chosen.isPresent() && confirmed;
         }
 
-        public Optional<Hero> paidHero() {
+        public Optional<Hero> confirmedHero() {
             return hero.filter(ignored -> confirmed);
         }
 
-        public Optional<Reinforcement> paidReinforcement() {
+        public Optional<Reinforcement> confirmedReinforcement() {
             return reinforcement.filter(ignored -> confirmed);
         }
 

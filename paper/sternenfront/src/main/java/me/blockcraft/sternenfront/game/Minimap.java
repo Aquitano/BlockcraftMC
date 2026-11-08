@@ -120,7 +120,7 @@ final class Minimap implements Listener {
                     view.clamped(centre.getX(), centre.getZ(), MinimapLayout.BADGE_REACH),
                     game.posts().owner(index).map(Tint::of).orElse(Tint.WHITE)));
         }
-        game.deployment().order(viewer).ifPresent(target -> {
+        game.deployment().postToHeadFor(viewer).ifPresent(target -> {
             var centre = game.map().posts().get(target).center();
             glyphs.add(MinimapLayout.target(view.clamped(centre.getX(), centre.getZ(), MinimapLayout.BADGE_REACH)));
         });

@@ -843,7 +843,7 @@ public final class Bots implements Listener {
                 .filter(player -> player.getWorld().equals(leader.getWorld()) && player.getLocation().distanceSquared(leader) <= range * range)
                 .min(Comparator.comparingDouble(player -> player.getLocation().distanceSquared(leader)))
                 .flatMap(player -> {
-                    var post = game.deployment().order(player);
+                    var post = game.deployment().postToHeadFor(player);
                     return post.isPresent() && !team.avoiding(post.getAsInt(), tick)
                             ? Optional.of(new Order(player.getUniqueId(), post.getAsInt())) : Optional.empty();
                 });

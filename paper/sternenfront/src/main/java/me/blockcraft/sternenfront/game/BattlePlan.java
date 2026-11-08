@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-public final class BattleNavigation {
+/** Where a fighter should go: the post to head for on the field, and the spawn to recommend while they deploy. */
+public final class BattlePlan {
 
     public record Point(double x, double z) {
         public double distanceSquared(Point other) {
@@ -13,13 +14,16 @@ public final class BattleNavigation {
         }
     }
 
-    public record Post(int index, Point center, boolean safe, boolean objective, boolean priority) { }
+    /** {@code deployable} once the faction holds the post and no enemy keeps it from spawning there. */
+    public record Post(int index, Point center, boolean deployable, boolean priority) { }
 
-    private BattleNavigation() { }
+    private BattlePlan() { }
 
-    public static Optional<Post> target(List<Post> posts, Point origin, Point enemyHeadquarters) {
+    /** The assault's priority, else the nearest post to take, else the post nearest the enemy to hold. */
+    public static Optional<Post> postToHeadFor(List<Post> posts, Point origin, Point enemyHeadquarters) {
         return posts.stream().filter(Post::priority).findFirst()
-                .or(() -> posts.stream().filter(Post::objective).min(Comparator.comparingDouble(post -> origin.distanceSquared(post.center()))))
+                .or(() -> posts.stream().filter(post -> !post.deployable())
+                        .min(Comparator.comparingDouble(post -> origin.distanceSquared(post.center()))))
                 .or(() -> posts.stream().min(Comparator.comparingDouble(post -> enemyHeadquarters.distanceSquared(post.center()))));
     }
 
@@ -27,8 +31,8 @@ public final class BattleNavigation {
                                   Predicate<Spawn> available) {
         return remembered.filter(Spawn.Post.class::isInstance).filter(ignored -> posts.stream().noneMatch(Post::priority))
                 .filter(available).orElseGet(() -> {
-            var target = target(posts, headquarters, enemyHeadquarters).map(Post::center).orElse(enemyHeadquarters);
-            return posts.stream().filter(Post::safe)
+            var target = postToHeadFor(posts, headquarters, enemyHeadquarters).map(Post::center).orElse(enemyHeadquarters);
+            return posts.stream().filter(Post::deployable)
                     .filter(post -> post.center().distanceSquared(target) < headquarters.distanceSquared(target))
                     .min(Comparator.comparingDouble(post -> post.center().distanceSquared(target)))
                     .<Spawn>map(post -> new Spawn.Post(post.index())).orElse(new Spawn.Headquarters());

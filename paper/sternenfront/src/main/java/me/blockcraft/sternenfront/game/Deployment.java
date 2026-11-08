@@ -191,7 +191,7 @@ public final class Deployment {
 
     public Spawn recommended(Player player) {
         var faction = game.factionOf(player).orElseThrow();
-        return BattleNavigation.recommend(navigationPosts(faction), headquarters(faction), headquarters(faction.enemy()),
+        return BattlePlan.recommend(plannedPosts(faction), headquarters(faction), headquarters(faction.enemy()),
                 Optional.ofNullable(remembered.get(player.getUniqueId())), spawn -> available(faction, spawn));
     }
 
@@ -206,25 +206,23 @@ public final class Deployment {
     }
 
     /** The post the minimap marks for the player: the assault's priority, the nearest one to take, or the one to hold. */
-    public OptionalInt order(Player player) {
-        return game.factionOf(player).flatMap(faction -> BattleNavigation.target(navigationPosts(faction), point(player.getLocation()),
+    public OptionalInt postToHeadFor(Player player) {
+        return game.factionOf(player).flatMap(faction -> BattlePlan.postToHeadFor(plannedPosts(faction), point(player.getLocation()),
                 headquarters(faction.enemy()))).map(target -> OptionalInt.of(target.index())).orElseGet(OptionalInt::empty);
     }
 
-    private List<BattleNavigation.Post> navigationPosts(Faction faction) {
-        return game.posts().indices().stream().map(index -> {
-            boolean safe = available(faction, new Spawn.Post(index));
-            return new BattleNavigation.Post(index, point(game.map().posts().get(index).center()), safe, !safe, game.posts().priority(index));
-        }).toList();
+    private List<BattlePlan.Post> plannedPosts(Faction faction) {
+        return game.posts().indices().stream().map(index -> new BattlePlan.Post(index, point(game.map().posts().get(index).center()),
+                available(faction, new Spawn.Post(index)), game.posts().priority(index))).toList();
     }
 
-    private BattleNavigation.Point headquarters(Faction faction) {
+    private BattlePlan.Point headquarters(Faction faction) {
         var center = game.map().headquarters().get(faction).zone().getCenter();
-        return new BattleNavigation.Point(center.getX(), center.getZ());
+        return new BattlePlan.Point(center.getX(), center.getZ());
     }
 
-    private static BattleNavigation.Point point(Location location) {
-        return new BattleNavigation.Point(location.getX(), location.getZ());
+    private static BattlePlan.Point point(Location location) {
+        return new BattlePlan.Point(location.getX(), location.getZ());
     }
 
     void deployWhenDue(Player player, Fighter fighter) {
@@ -286,7 +284,7 @@ public final class Deployment {
         var map = game.map();
         game.combat().forget(player);
         player.leaveVehicle();
-        var spawn = BattleNavigation.resolve(wanted, candidate -> available(faction.get(), candidate), recommended(player));
+        var spawn = BattlePlan.resolve(wanted, candidate -> available(faction.get(), candidate), recommended(player));
         if (!spawn.equals(wanted)) {
             player.sendMessage(messages.get("deploy.lost"));
         }
@@ -295,7 +293,7 @@ public final class Deployment {
             case Spawn.Post post -> spawnSpots.farthestFromEnemies(map.posts().get(post.index()).spawns(), faction.get());
             case Spawn.Dropship ignored -> spawnSpots.leastCrowded(spawnSpots.dropshipSpots(game.front().orElseThrow()));
         };
-        var picked = game.fighter(player).choosing().flatMap(Fighter.Choosing::paidReinforcement);
+        var picked = game.fighter(player).choosing().flatMap(Fighter.Choosing::confirmedReinforcement);
         if (picked.isPresent()) {
             var unit = picked.get();
             var result = game.reinforcementUnits().roster().deploy(player.getUniqueId(), faction.get(), unit,
@@ -332,7 +330,7 @@ public final class Deployment {
         var config = game.config();
         var heroes = game.heroes();
         var fighter = game.fighter(player);
-        var picked = fighter.choosing().flatMap(Fighter.Choosing::paidHero);
+        var picked = fighter.choosing().flatMap(Fighter.Choosing::confirmedHero);
         var hero = picked.filter(chosen -> heroes.enlist(player, faction, chosen));
         if (picked.isPresent() && hero.isEmpty()) {
             player.sendMessage(messages.get("hero.missed", Placeholder.component("hero", heroes.name(picked.get()))));

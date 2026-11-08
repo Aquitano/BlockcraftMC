@@ -1,6 +1,6 @@
 package me.blockcraft.sternenfront.menu;
 
-import me.blockcraft.sternenfront.game.BattleNavigation.Point;
+import me.blockcraft.sternenfront.game.BattlePlan.Point;
 import me.blockcraft.sternenfront.game.Spawn;
 import org.junit.Test;
 
