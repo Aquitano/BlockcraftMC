@@ -7,7 +7,6 @@
     {"type":"bitmap","file":"blockcraft:font/cards_6.png","ascent":13,"height":222,"chars":["\ue126"]},
     {"type":"bitmap","file":"blockcraft:font/overlay_sternenfront_class.png","ascent":13,"height":222,"chars":["\ue130"]},
     {"type":"bitmap","file":"blockcraft:font/overlay_sternenfront_class_with_bots.png","ascent":13,"height":222,"chars":["\ue131"]},
-    {"type":"bitmap","file":"blockcraft:font/overlay_sternenfront_deploy.png","ascent":13,"height":222,"chars":["\ue132"]},
     {
       "type": "space",
       "advances": {

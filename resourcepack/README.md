@@ -8,7 +8,7 @@ screen effects, and the Sternenfront intro.
 ## Constraints from the client
 
 - **Plain fallback.** Shared code draws a vanilla version for a client without the pack, because a client can be in the
-  world before it loads. `UiFont.overlaid` has no fallback, and Sternenfront's class and deploy menus use it.
+  world before it loads. `UiFont.overlaid` has no fallback, and Sternenfront's class menu uses it. A menu's own `screen()` falls back to its plain title.
 - **Slot highlight.** The pack blanks `container/slot_highlight_back` and `_front`, because the highlight would mark one
   square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory. A menu
   item that needs a frame draws it in its own model, as Sternenfront's spawn markers do with `oversized_in_gui` so the
