@@ -149,6 +149,11 @@ public final class UiFont {
         return Component.text(glyph).font(KEY);
     }
 
+    /** Moves the cursor {@code pixels} to the right, or to the left when negative, without drawing anything. */
+    public static Component space(int pixels) {
+        return Component.text(shift(pixels)).font(KEY);
+    }
+
     static char panel(int rows, boolean toolbar) {
         if (rows < (toolbar ? 2 : 1) || rows > MAX_ROWS) {
             throw new IllegalArgumentException("No " + (toolbar ? "toolbar " : "") + "panel for " + rows + " rows");
