@@ -104,19 +104,19 @@ public class ReinforcementLoadoutTest {
     @Test
     public void automaticDeploymentCannotChargeAnUnconfirmedUnitAndChangingRoleRequiresConfirmationAgain() {
         var choosing = Fighter.Choosing.begin(10, 30).pick(ARC_TROOPER);
-        assertTrue(choosing.paidReinforcement().isEmpty());
+        assertTrue(choosing.confirmedReinforcement().isEmpty());
         assertFalse(choosing.manualReady(30));
         var confirmed = choosing.choose(new Spawn.Headquarters());
-        assertEquals(Optional.of(ARC_TROOPER), confirmed.paidReinforcement());
+        assertEquals(Optional.of(ARC_TROOPER), confirmed.confirmedReinforcement());
         assertTrue(confirmed.manualReady(10));
         assertTrue(confirmed.pick(ARC_TROOPER).confirmed());
         var hero = confirmed.pick(Optional.of(Hero.JEDI));
         assertFalse(hero.confirmed());
-        assertTrue(hero.paidHero().isEmpty());
-        assertTrue(hero.paidReinforcement().isEmpty());
+        assertTrue(hero.confirmedHero().isEmpty());
+        assertTrue(hero.confirmedReinforcement().isEmpty());
         var unit = hero.choose(new Spawn.Headquarters()).pick(ARC_TROOPER);
         assertFalse(unit.confirmed());
-        assertTrue(unit.paidReinforcement().isEmpty());
-        assertTrue(confirmed.pick(Optional.empty()).paidReinforcement().isEmpty());
+        assertTrue(unit.confirmedReinforcement().isEmpty());
+        assertTrue(confirmed.pick(Optional.empty()).confirmedReinforcement().isEmpty());
     }
 }

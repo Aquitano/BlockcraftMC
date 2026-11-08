@@ -14,7 +14,7 @@ public class DeploymentChoiceTest {
         var choosing = Fighter.Choosing.begin(100, 300).pick(Optional.of(Hero.JEDI)).choose(new Spawn.Post(1));
         var retry = choosing.retry(650);
         assertFalse(retry.manualReady(350));
-        assertTrue(retry.paidHero().isEmpty());
+        assertTrue(retry.confirmedHero().isEmpty());
         assertEquals(650, retry.autoTick());
         assertEquals(choosing.chosen(), retry.chosen());
         assertEquals(choosing.hero(), retry.hero());
@@ -24,12 +24,12 @@ public class DeploymentChoiceTest {
     @Test
     public void selectingAHeroDoesNotAuthorizeAutomaticPayment() {
         var choosing = Fighter.Choosing.begin(100, 300).pick(Optional.of(Hero.JEDI));
-        assertTrue(choosing.paidHero().isEmpty());
+        assertTrue(choosing.confirmedHero().isEmpty());
         assertFalse(choosing.manualReady(300));
         var confirmed = choosing.choose(new Spawn.Post(1));
         assertFalse(confirmed.manualReady(99));
         assertTrue(confirmed.manualReady(100));
-        assertEquals(Optional.of(Hero.JEDI), confirmed.paidHero());
+        assertEquals(Optional.of(Hero.JEDI), confirmed.confirmedHero());
     }
 
     @Test
@@ -37,12 +37,12 @@ public class DeploymentChoiceTest {
         var choosing = Fighter.Choosing.begin(100, 300).choose(new Spawn.Headquarters());
         var hero = choosing.pick(Optional.of(Hero.JEDI));
         assertEquals(choosing.chosen(), hero.chosen());
-        assertTrue(hero.paidHero().isEmpty());
+        assertTrue(hero.confirmedHero().isEmpty());
         assertFalse(hero.manualReady(100));
         var confirmed = hero.choose(new Spawn.Headquarters());
-        assertEquals(Optional.of(Hero.JEDI), confirmed.pick(Optional.of(Hero.JEDI)).paidHero());
-        assertTrue(confirmed.pick(Optional.of(Hero.COMMANDER)).paidHero().isEmpty());
-        assertTrue(confirmed.pick(Optional.empty()).paidHero().isEmpty());
+        assertEquals(Optional.of(Hero.JEDI), confirmed.pick(Optional.of(Hero.JEDI)).confirmedHero());
+        assertTrue(confirmed.pick(Optional.of(Hero.COMMANDER)).confirmedHero().isEmpty());
+        assertTrue(confirmed.pick(Optional.empty()).confirmedHero().isEmpty());
     }
 
     @Test
@@ -52,7 +52,7 @@ public class DeploymentChoiceTest {
         fighter.hero(Optional.of(Hero.JEDI));
         fighter.choosing(Optional.of(Fighter.Choosing.begin(100, 50)));
         assertEquals(CombatClass.MEDIC, fighter.combatClass());
-        assertTrue(fighter.choosing().orElseThrow().paidHero().isEmpty());
+        assertTrue(fighter.choosing().orElseThrow().confirmedHero().isEmpty());
         assertEquals(100, fighter.choosing().orElseThrow().autoTick());
     }
 }

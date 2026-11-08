@@ -73,8 +73,10 @@ public final class ReinforcementUnits {
         lore.add(messages.get(!roster.open(faction, unit) ? "reinforcement.taken" : !affordable ? "reinforcement.too-few-points"
                 : picked ? confirmed ? "deploy.queued" : "reinforcement.picked" : "reinforcement.pick"));
         if (picked && !affordable) lore.add(messages.get("deploy.paid-fallback"));
-        var card = unit.blaster().model().item().name(name(unit)).lore(lore).hideAttributes()
-                .state(!affordable ? MenuState.LOCKED : picked ? MenuState.ACTIVE : MenuState.AVAILABLE);
+        var card = unit.blaster().model().item().name(name(unit)).lore(lore).hideAttributes();
+        if (!affordable) {
+            card.state(MenuState.LOCKED);
+        }
         if (picked && affordable) {
             card.glow();
         }

@@ -4,12 +4,18 @@ import com.google.gson.JsonParser;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.game.AbilityIcon;
+import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -34,9 +40,7 @@ public class DeployScreenTest {
     @Test
     public void everyLineTheScreenWritesOnHasAFontInThePack() {
         var fonts = new TreeSet<String>();
-        for (int places = 1; places <= 7; places++) {
-            fonts(DeployScreen.title(messages, view(places)), fonts);
-        }
+        views().forEach(view -> fonts(DeployScreen.title(messages, view), fonts));
         for (var font : fonts) {
             var path = PACK.resolve("src/assets/" + font.replace(":", "/font/") + ".json");
             assertTrue(path.toString(), Files.isRegularFile(path));
@@ -49,39 +53,108 @@ public class DeployScreenTest {
      */
     @Test
     public void everyPartReturnsTheCursorToTheTitlesStart() throws Exception {
-        for (int places = 1; places <= 7; places++) {
-            var title = DeployScreen.title(messages, view(places));
-            assertEquals(-122, width(title, null, new HashMap<>()));
+        for (var view : views()) {
+            assertEquals(-122, width(DeployScreen.title(messages, view), null, new HashMap<>()));
         }
     }
 
     @Test
-    public void portraitsAreInTheOrderOfThePacksSheets() throws Exception {
-        var matcher = Pattern.compile("UNITS = List\\.of\\(([^)]*)\\)", Pattern.DOTALL)
-                .matcher(Files.readString(PACK.resolve("DeployArt.java")));
-        assertTrue(matcher.find());
-        var units = Arrays.stream(matcher.group(1).split(",")).map(unit -> unit.strip().replace("\"", "")).toList();
+    public void portraitsAreInTheOrderOfThePacksSheets() {
+        var units = generator("UNITS").stream().map(unit -> unit.replace("\"", "")).toList();
         var portraits = Arrays.stream(DeployScreen.Portrait.values()).map(portrait -> portrait.name().toLowerCase(Locale.ROOT)).toList();
 
         assertEquals(units.stream().map(unit -> unit.replaceFirst("^(reinforcement|hero)_", "")).toList(), portraits);
     }
 
-    private DeployScreen.View view(int places) {
+    @Test
+    public void everyRoleTheMenuOffersHasAPortrait() {
+        for (var faction : Faction.values()) {
+            Arrays.stream(CombatClass.values()).forEach(combatClass -> DeployScreen.Portrait.of(faction, combatClass));
+            DeployScreen.Portrait.of(Reinforcement.of(faction));
+            Hero.of(faction).forEach(DeployScreen.Portrait::of);
+        }
+    }
+
+    /** The pack's window has its buttons, cards and map where the menu's slots are, and the screen draws over them. */
+    @Test
+    public void thePacksWindowHasItsButtonsCardsAndMapWhereTheSlotsAre() {
+        assertEquals(DeployScreen.CLASS_CARDS.stream().map(String::valueOf).toList(), generator("CLASS_CARDS"));
+        assertEquals(DeployScreen.SPECIALS.stream().map(String::valueOf).toList(), generator("SPECIALS"));
+        assertEquals(DeployScreen.BUTTONS.stream().map(String::valueOf).toList(), generator("BUTTONS"));
+        var sizes = Map.of("CLASS_CARD_COLUMNS", DeployScreen.CLASS_CARD_COLUMNS, "CLASS_CARD_ROWS", DeployScreen.CLASS_CARD_ROWS,
+                "SPECIAL_COLUMNS", DeployScreen.SPECIAL_COLUMNS, "MAP_COLUMNS", TacticalLayout.COLUMNS, "MAP_ROWS", TacticalLayout.ROWS);
+        sizes.forEach((name, size) -> assertEquals(name, List.of(String.valueOf(size)), generator(name)));
+    }
+
+    /** The icons are numbered by their order, so both sides must list them alike. */
+    @Test
+    public void iconsAreInTheOrderOfThePacksSheet() {
+        var matcher = Pattern.compile("new Icon\\(\"(\\w+)\"").matcher(source());
+        var icons = new java.util.ArrayList<String>();
+        while (matcher.find()) {
+            icons.add(matcher.group(1));
+        }
+
+        assertEquals(Arrays.stream(DeployScreen.Icon.values()).map(icon -> icon.name().toLowerCase(Locale.ROOT)).toList(), icons);
+    }
+
+    @Test
+    public void everyAbilityIconHasAGlyphOnEveryLine() throws Exception {
+        var line = JsonParser.parseString(Files.readString(PACK.resolve("src/assets/" + DeployScreen.line(144).asString()
+                .replace(":", "/font/") + ".json"))).getAsJsonObject();
+        var abilities = line.getAsJsonArray("providers").asList().stream().map(provider -> provider.getAsJsonObject())
+                .filter(provider -> provider.has("file") && provider.get("file").getAsString().endsWith("/ability_icons.png"))
+                .findFirst().orElseThrow();
+
+        assertEquals(AbilityIcon.values().length, abilities.getAsJsonArray("chars").get(0).getAsString().length());
+    }
+
+    /** The values of {@code name} in the standalone generator, which shares no code with the plugin. */
+    private static List<String> generator(String name) {
+        var matcher = Pattern.compile("\\b" + name + " = (?:List\\.of\\()?([^);]*)\\)?;", Pattern.DOTALL).matcher(source());
+        assertTrue(name, matcher.find());
+        return Arrays.stream(matcher.group(1).split(",")).map(String::strip).toList();
+    }
+
+    /** The headquarters with up to five posts, with and without the dropship, so every line of the list is drawn on. */
+    private List<DeployScreen.View> views() {
+        var views = new java.util.ArrayList<DeployScreen.View>();
+        for (int posts = 0; posts <= 5; posts++) {
+            views.add(view(posts, false));
+            views.add(view(posts, true));
+        }
+        return views;
+    }
+
+    private DeployScreen.View view(int posts, boolean dropship) {
         var role = new DeployScreen.Role("Klasse", "Klonsoldat", DeployScreen.Portrait.KOLONIEN_SOLDIER,
                 List.of(new DeployScreen.Stat("Gesundheit", "10", true), new DeployScreen.Stat("Tempo", "100 %", false),
                         new DeployScreen.Stat("Schaden", "2,5", true), new DeployScreen.Stat("Reichweite", "60 m", false)),
-                "DC-15A-Blastergewehr", List.of(new DeployScreen.Ability("Thermaldetonator", "Taste F", AbilityIcon.GRENADE),
+                "Großer DC-15A-Blaster", List.of(new DeployScreen.Ability("Thermaldetonator", "Taste F", AbilityIcon.GRENADE),
                         new DeployScreen.Ability("Adrenalin", "Taste Q", AbilityIcon.ADRENALINE)),
-                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Guthaben", "340 KP", false)));
+                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Deine Kampfpunkte", "1340 KP", false)));
         var card = new DeployScreen.ClassCard("Soldat", DeployScreen.Portrait.KOLONIEN_SOLDIER, List.of(AbilityIcon.GRENADE, AbilityIcon.RALLY), true);
-        var special = new DeployScreen.Special("ARC", DeployScreen.Portrait.ARC_TROOPER, 250, true, true);
-        var spawns = new java.util.ArrayList<DeployScreen.Place>(List.of(new DeployScreen.Place.Headquarters("Hauptquartier")));
-        for (int post = 0; post < places - 2; post++) {
-            spawns.add(new DeployScreen.Place.Post(post, "Posten"));
+        var special = new DeployScreen.Special("ARC", DeployScreen.Portrait.ARC_TROOPER, 1250, true, true);
+        var spawns = new java.util.ArrayList<>(List.of(new DeployScreen.Place(new Spawn.Headquarters(), "Hauptquartier", 0xFF3434,
+                true, false, DeployScreen.Selection.NONE)));
+        for (int post = 0; post < posts; post++) {
+            boolean open = post % 2 == 0;
+            spawns.add(new DeployScreen.Place(new Spawn.Post(post), "Raffinerie", 0xFFFFFF, open, open,
+                    open ? DeployScreen.Selection.values()[post % 3] : DeployScreen.Selection.NONE));
         }
-        spawns.add(new DeployScreen.Place.Landing("Landung bei A"));
-        return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), role, List.of(card, card, card, card),
-                List.of(special, special, special), 340, spawns.subList(0, places));
+        if (dropship) {
+            spawns.add(new DeployScreen.Place(new Spawn.Dropship(), "Landung bei A", 0xFFFFFF, true, true, DeployScreen.Selection.CONFIRMED));
+        }
+        return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), List.of("Schließen", "Einsetzen"), role,
+                List.of(card, card, card, card), List.of(special, special, special), spawns);
+    }
+
+    private static String source() {
+        try {
+            return Files.readString(PACK.resolve("DeployArt.java"));
+        } catch (IOException failed) {
+            throw new UncheckedIOException(failed);
+        }
     }
 
     private static int width(Component component, String font, Map<String, Map<Integer, Integer>> fonts) throws Exception {

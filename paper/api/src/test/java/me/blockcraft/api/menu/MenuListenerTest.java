@@ -36,8 +36,9 @@ public class MenuListenerTest {
         protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         }
     };
+    private Menu open = shop;
     private final Inventory top = fake(Inventory.class, (proxy, method, args) -> switch (method.getName()) {
-        case "getHolder" -> shop;
+        case "getHolder" -> open;
         case "getSize" -> MENU_SLOTS;
         default -> throw new AssertionError(method.getName());
     });
@@ -66,6 +67,23 @@ public class MenuListenerTest {
 
         assertFalse(drag(OWN_SLOT, OWN_SLOT + 1));
         assertTrue(drag(OWN_SLOT, MENU_SLOTS - 1));
+    }
+
+    /** A menu that lets the player tidy their inventory still keeps their hands off the slots it has borrowed. */
+    @Test
+    public void aBorrowingMenuKeepsDragsOutOfTheBorrowedSlots() {
+        open = new Menu(1, Component.empty(), true) {
+            @Override
+            protected boolean locksPlayerInventory() {
+                return false;
+            }
+
+            @Override
+            protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+            }
+        };
+
+        assertTrue(drag(OWN_SLOT, OWN_SLOT + 1));
     }
 
     private boolean click(int rawSlot, ClickType type, InventoryAction action) {

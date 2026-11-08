@@ -66,7 +66,7 @@ public final class MenuListener implements Listener {
             return;
         }
         int menuSlots = event.getView().getTopInventory().getSize();
-        if (menu.locksPlayerInventory() || event.getRawSlots().stream().anyMatch(slot -> slot < menuSlots)) {
+        if (menu.locksPlayerInventory() || menu.borrowsPlayerInventory() || event.getRawSlots().stream().anyMatch(slot -> slot < menuSlots)) {
             event.setCancelled(true);
         }
     }
@@ -114,18 +114,16 @@ public final class MenuListener implements Listener {
         }
     }
 
-    /** A crash keeps no promise to give anything back, so a menu's items saved with the player are dropped on arrival. */
+    /** A crash that saved a menu's items with the player gives the player's own back on arrival. */
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        var inventory = event.getPlayer().getInventory();
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            if (PlayerSlots.lent(inventory.getItem(slot))) {
-                inventory.setItem(slot, null);
-            }
-        }
+        Loan.recover(new PlayerSlots(event.getPlayer().getInventory()));
     }
 
-    /** A menu's plugin going away, at a stop or a reload, ends its loans while its listener still hears the close. */
+    /**
+     * Any plugin being disabled, at a stop or a reload, ends every loan, so the menu's plugin, if it is that one, still
+     * hears the close.
+     */
     @EventHandler
     public void onPluginDisable(PluginDisableEvent event) {
         for (var player : Bukkit.getOnlinePlayers()) {

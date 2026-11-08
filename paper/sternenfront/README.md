@@ -123,11 +123,13 @@ cover, teammate safety, and self-damage. Lightning uses the saber guard without 
 
 ## Redeployment
 
-The middle toolbar button confirms a quick deployment with the selected class, hero, or reinforcement. It queues the deployment during
-the five-second wait. Without confirmation, the fifteen-second timer deploys the existing free class without spending battle points.
-Selecting a different paid unit requires another confirmation, including when a spawn was already queued.
-The spawn card distinguishes a pending choice from a confirmed deployment. A failed teleport clears confirmation and
-restarts the automatic countdown, leaving the menu open for another choice.
+Clicking a spawn chooses and confirms it in one step with the selected class, hero or reinforcement: the player deploys
+there at once, or as soon as the five-second wait ends. The yellow `Einsetzen` button does the same for the spawn that
+shows the countdown. Without confirmation, the fifteen-second timer deploys the existing free class there without
+spending battle points. Selecting a different paid unit, or going back from one to a class, drops the confirmation,
+including when a spawn was already queued, so the spawn needs another click. A failed teleport also drops it and restarts
+the automatic countdown, leaving the menu open for another choice. The red `Schließen` button closes the menu; the
+countdown goes on, the deploy item opens it again, and the menu stays closed until then.
 
 The suggestion keeps an explicitly chosen spawn for the current deployment if it is still safe. Outside an assault,
 it remembers a safe post selected by clicking its spawn card. HQ is never a lasting preference, and the assault priority
@@ -140,25 +142,29 @@ The dropship remains an explicit choice and is never recommended automatically.
 The deploy menu is one screen. The pack draws a window wider and taller than the chest around it, from
 `resourcepack/DeployArt.java`, sized for the smallest automatic GUI, 426 by 240 pixels, which Minecraft's default window and
 720p at scale 3 get. Left of the slots it shows the chosen class, reinforcement or hero: portrait, health, pace, damage
-and range, weapon, both abilities with their keys, the cost and the player's battle points. Right of them it names the
-spawns and explains the markers. In the chest are the four class cards, then the reinforcement and both heroes with their
-costs, in red while the player cannot pay or no slot is free. The chest's title draws that window, so it cannot change
-while the chest is open; a choice, a change in battle points or in what the player can pay for, or a landing coming or
-going opens the menu again with a new one. The countdowns and the spawns' states are items and change in place.
+and range, a dash where a hero's blade has none, weapon, both abilities with their keys, the cost and the player's
+battle points as `Deine Kampfpunkte`. Right of them it lists the spawns with the marks their markers wear and explains
+the markers. In the chest are the two labelled buttons, the four class cards, then the reinforcement and both heroes
+with their costs, in red and with a padlock while the player cannot pay or no slot is free. The chest's title draws that
+window, so it cannot change while the chest is open; a choice, a change in battle points or in what the player can pay
+for, a spawn locking, opening or becoming the recommendation, or the dropship coming or going opens the menu again with
+a new one, at most once a second. The countdowns and the posts' blinking are items and change in place.
 
 The spawns stand on a map in the player's own inventory, which the menu borrows while it is open: north up, east right,
-the current map's posts and headquarters at one scale, overlapping markers moved apart. The landing has the bottom-right
+the current map's posts and headquarters at one scale, overlapping markers moved apart. The dropship has the bottom-right
 cell. While a dead player chooses, that inventory holds only the deploy item. The menu gives each slot back whatever
 closes it, when it closes, the player dies, quits, is kicked or the server stops, unless something else changed the slot
-meanwhile, as deploying does. The vanilla `Inventory` label falls on a band in its own grey, so it does not show.
+meanwhile, as deploying does. Each item the menu lays there carries the one it replaced, so when a crash saved the
+menu's items instead, the player's next join puts their own back. The vanilla `Inventory` label falls on a band in its own grey, so it does not show.
 
 Posts A–E use the same letter badges as the combat HUD. Filled badges allow deployment, outlines mark locked posts,
 and blinking badges mark contested or attacked posts. Colours show ownership. The pack frames the chosen spawn on its
 slot's border: gold corners while it waits for a confirmation, a green frame and a glow once confirmed. A star marks the
-recommended spawn and a padlock a locked one. The spawn the player will land at shows the seconds left as its count: the
-wait once confirmed, otherwise the automatic deployment. The confirmation button names its target and shows the wait or
-automatic deployment countdown. Hovering shows the post name, recommendation, selection, and for a locked spawn
-`Gesperrt` with the reason. The landing names its target post.
+recommended spawn and a padlock a locked one; the list beside the map repeats the star, the frame and the padlock. The
+spawn the player will land at shows the seconds left as its count, which the legend names: the wait once confirmed,
+otherwise the automatic deployment. The `Einsetzen` button names its target and shows the wait or automatic deployment
+countdown. Hovering shows the post name, recommendation, selection, and for a locked spawn `Gesperrt` with the reason.
+The dropship names the post it lands beside, and its cell stays empty while there is none.
 
 After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
 objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence. The top

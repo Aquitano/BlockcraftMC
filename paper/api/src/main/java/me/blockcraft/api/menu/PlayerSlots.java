@@ -7,7 +7,8 @@ import org.bukkit.persistence.PersistentDataType;
 
 /**
  * A player's 36 own slots in the client's order below a chest: the three rows above the hotbar, then the hotbar. What
- * a menu puts there is marked, so that an item a crash kept from coming back can be told from the player's own.
+ * a menu puts there is marked and carries the player's own item, so that a crash that saved the menu's item gives the
+ * player's back on their next join.
  */
 record PlayerSlots(PlayerInventory inventory) implements Loan.Slots<ItemStack> {
 
@@ -15,6 +16,7 @@ record PlayerSlots(PlayerInventory inventory) implements Loan.Slots<ItemStack> {
     private static final int MAIN = 27;
     private static final int HOTBAR = 9;
     private static final NamespacedKey MARKER = NamespacedKey.fromString("blockcraft:lent");
+    private static final NamespacedKey ORIGINAL = NamespacedKey.fromString("blockcraft:lent_from");
 
     @Override
     public int size() {
@@ -36,10 +38,29 @@ record PlayerSlots(PlayerInventory inventory) implements Loan.Slots<ItemStack> {
         return slot < MAIN ? slot + HOTBAR : slot - MAIN;
     }
 
-    static ItemStack mark(ItemStack item) {
+    @Override
+    public ItemStack mark(ItemStack item, ItemStack original) {
         var marked = item.clone();
-        marked.editMeta(meta -> meta.getPersistentDataContainer().set(MARKER, PersistentDataType.BOOLEAN, true));
+        marked.editMeta(meta -> {
+            var data = meta.getPersistentDataContainer();
+            data.set(MARKER, PersistentDataType.BOOLEAN, true);
+            if (original != null) {
+                data.set(ORIGINAL, PersistentDataType.BYTE_ARRAY, original.serializeAsBytes());
+            }
+        });
         return marked;
+    }
+
+    @Override
+    public boolean marked(ItemStack item) {
+        return lent(item);
+    }
+
+    @Override
+    public ItemStack original(ItemStack marked) {
+        var data = marked.getItemMeta().getPersistentDataContainer();
+        return data.has(ORIGINAL, PersistentDataType.BYTE_ARRAY)
+                ? ItemStack.deserializeBytes(data.get(ORIGINAL, PersistentDataType.BYTE_ARRAY)) : null;
     }
 
     static boolean lent(ItemStack item) {

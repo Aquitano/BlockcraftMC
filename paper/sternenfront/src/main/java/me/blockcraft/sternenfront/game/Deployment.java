@@ -11,6 +11,7 @@ import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import me.blockcraft.sternenfront.reinforcement.ReinforcementRoster;
 import me.blockcraft.sternenfront.menu.DeployMenu;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -33,7 +34,8 @@ public final class Deployment {
     private static final long TICKS_PER_SECOND = 20;
     private static final int DEPLOY_SLOT = 4;
     private static final long KILLER_FOCUS_TICKS = 2;
-    private static final List<String> CONTROL_KEYS = List.of("F", "Q");
+    /** The keys a role's first and second ability sit on. */
+    public static final List<String> CONTROL_KEYS = List.of("F", "Q");
 
     private final SternenfrontGame game;
     private final SpawnSpots spawnSpots;
@@ -178,20 +180,30 @@ public final class Deployment {
         return enemies.stream().noneMatch(site::contains) && SpawnSpots.hasClearSpawn(site.spawns(), enemies, clearance);
     }
 
-    /** Ticks until the player may deploy, 0 once they may. */
-    public long waitTicks(Player player) {
-        return game.fighterIfAny(player).flatMap(Fighter::choosing)
-                .map(choosing -> Math.max(0, choosing.readyTick() - game.tick())).orElse(0L);
+    /** Seconds until the player may deploy, 0 once they may. */
+    public long waitSeconds(Player player) {
+        return game.fighterIfAny(player).flatMap(Fighter::choosing).map(choosing -> seconds(choosing.readyTick() - game.tick())).orElse(0L);
     }
 
-    public long autoTicks(Player player) {
-        return game.fighterIfAny(player).flatMap(Fighter::choosing)
-                .map(choosing -> Math.max(0, choosing.autoTick() - game.tick())).orElse(0L);
+    /** Seconds until the player deploys without confirming. */
+    public long autoSeconds(Player player) {
+        return game.fighterIfAny(player).flatMap(Fighter::choosing).map(choosing -> seconds(choosing.autoTick() - game.tick())).orElse(0L);
+    }
+
+    /** When the player deploys: after the wait once confirmed, else when they may or when the timer deploys them. */
+    public Component status(Player player) {
+        var messages = game.messages();
+        var choosing = game.fighterIfAny(player).flatMap(Fighter::choosing);
+        long wait = waitSeconds(player);
+        return choosing.filter(Fighter.Choosing::confirmed).isPresent()
+                ? messages.get("deploy.status-queued", Formatter.number("seconds", wait)) : wait > 0
+                ? messages.get("deploy.status-waiting", Formatter.number("seconds", wait))
+                : messages.get("deploy.status-ready", Formatter.number("seconds", autoSeconds(player)));
     }
 
     public Spawn recommended(Player player) {
         var faction = game.factionOf(player).orElseThrow();
-        return BattleNavigation.recommend(navigationPosts(faction), headquarters(faction), headquarters(faction.enemy()),
+        return BattlePlan.recommend(plannedPosts(faction), headquarters(faction), headquarters(faction.enemy()),
                 Optional.ofNullable(remembered.get(player.getUniqueId())), spawn -> available(faction, spawn));
     }
 
@@ -206,25 +218,23 @@ public final class Deployment {
     }
 
     /** The post the minimap marks for the player: the assault's priority, the nearest one to take, or the one to hold. */
-    public OptionalInt order(Player player) {
-        return game.factionOf(player).flatMap(faction -> BattleNavigation.target(navigationPosts(faction), point(player.getLocation()),
+    public OptionalInt postToHeadFor(Player player) {
+        return game.factionOf(player).flatMap(faction -> BattlePlan.postToHeadFor(plannedPosts(faction), point(player.getLocation()),
                 headquarters(faction.enemy()))).map(target -> OptionalInt.of(target.index())).orElseGet(OptionalInt::empty);
     }
 
-    private List<BattleNavigation.Post> navigationPosts(Faction faction) {
-        return game.posts().indices().stream().map(index -> {
-            boolean safe = available(faction, new Spawn.Post(index));
-            return new BattleNavigation.Post(index, point(game.map().posts().get(index).center()), safe, !safe, game.posts().priority(index));
-        }).toList();
+    private List<BattlePlan.Post> plannedPosts(Faction faction) {
+        return game.posts().indices().stream().map(index -> new BattlePlan.Post(index, point(game.map().posts().get(index).center()),
+                available(faction, new Spawn.Post(index)), game.posts().priority(index))).toList();
     }
 
-    private BattleNavigation.Point headquarters(Faction faction) {
+    private BattlePlan.Point headquarters(Faction faction) {
         var center = game.map().headquarters().get(faction).zone().getCenter();
-        return new BattleNavigation.Point(center.getX(), center.getZ());
+        return new BattlePlan.Point(center.getX(), center.getZ());
     }
 
-    private static BattleNavigation.Point point(Location location) {
-        return new BattleNavigation.Point(location.getX(), location.getZ());
+    private static BattlePlan.Point point(Location location) {
+        return new BattlePlan.Point(location.getX(), location.getZ());
     }
 
     void deployWhenDue(Player player, Fighter fighter) {
@@ -242,13 +252,7 @@ public final class Deployment {
         if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || player.getGameMode() == GameMode.SPECTATOR) {
             return;
         }
-        var choosing = fighter.get().choosing().get();
-        long waiting = choosing.readyTick() - game.tick();
-        var status = choosing.confirmed()
-                ? game.messages().get("deploy.status-queued", Formatter.number("seconds", seconds(waiting))) : waiting > 0
-                ? game.messages().get("deploy.waiting", Formatter.number("seconds", seconds(waiting)))
-                : game.messages().get("deploy.ready", Formatter.number("seconds", seconds(choosing.autoTick() - game.tick())));
-        BlockcraftApi.get().notifications().status(player, status);
+        BlockcraftApi.get().notifications().status(player, status(player));
         refreshMenu(player);
     }
 
@@ -286,7 +290,7 @@ public final class Deployment {
         var map = game.map();
         game.combat().forget(player);
         player.leaveVehicle();
-        var spawn = BattleNavigation.resolve(wanted, candidate -> available(faction.get(), candidate), recommended(player));
+        var spawn = BattlePlan.resolve(wanted, candidate -> available(faction.get(), candidate), recommended(player));
         if (!spawn.equals(wanted)) {
             player.sendMessage(messages.get("deploy.lost"));
         }
@@ -295,7 +299,7 @@ public final class Deployment {
             case Spawn.Post post -> spawnSpots.farthestFromEnemies(map.posts().get(post.index()).spawns(), faction.get());
             case Spawn.Dropship ignored -> spawnSpots.leastCrowded(spawnSpots.dropshipSpots(game.front().orElseThrow()));
         };
-        var picked = game.fighter(player).choosing().flatMap(Fighter.Choosing::paidReinforcement);
+        var picked = game.fighter(player).choosing().flatMap(Fighter.Choosing::confirmedReinforcement);
         if (picked.isPresent()) {
             var unit = picked.get();
             var result = game.reinforcementUnits().roster().deploy(player.getUniqueId(), faction.get(), unit,
@@ -332,7 +336,7 @@ public final class Deployment {
         var config = game.config();
         var heroes = game.heroes();
         var fighter = game.fighter(player);
-        var picked = fighter.choosing().flatMap(Fighter.Choosing::paidHero);
+        var picked = fighter.choosing().flatMap(Fighter.Choosing::confirmedHero);
         var hero = picked.filter(chosen -> heroes.enlist(player, faction, chosen));
         if (picked.isPresent() && hero.isEmpty()) {
             player.sendMessage(messages.get("hero.missed", Placeholder.component("hero", heroes.name(picked.get()))));
