@@ -150,8 +150,10 @@ public final class Heroes {
                 : picked ? confirmed ? "deploy.queued" : "hero.picked" : "hero.pick"));
         if (picked && !affordable) lore.add(messages.get("deploy.paid-fallback"));
         var model = hero.weapon().model();
-        var card = model.item().name(name(hero)).lore(lore).hideAttributes()
-                .state(!affordable ? MenuState.LOCKED : picked ? MenuState.ACTIVE : MenuState.AVAILABLE);
+        var card = model.item().name(name(hero)).lore(lore).hideAttributes();
+        if (!affordable) {
+            card.state(MenuState.LOCKED);
+        }
         if (picked && affordable) {
             card.glow();
         }

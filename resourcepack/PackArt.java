@@ -154,15 +154,19 @@ public final class PackArt {
 
     /** Three slots wide and one high: a bevelled bar the middle slot's icon item sits on. */
     static void button(BufferedImage image, int x, int y, int[] colours) {
+        button(image, x, y, 52, colours);
+    }
+
+    static void button(BufferedImage image, int x, int y, int width, int[] colours) {
         int fill = colours[0];
         int shade = colours[1];
         int shine = colours[2];
-        fill(image, x, y, 52, 16, shade);
-        fill(image, x + 1, y + 1, 50, 14, fill);
-        fill(image, x + 1, y + 1, 50, 1, shine);
+        fill(image, x, y, width, 16, shade);
+        fill(image, x + 1, y + 1, width - 2, 14, fill);
+        fill(image, x + 1, y + 1, width - 2, 1, shine);
         fill(image, x + 1, y + 1, 1, 13, shine);
-        fill(image, x + 1, y + 14, 50, 1, shade);
-        for (int[] corner : new int[][] {{x, y}, {x + 51, y}, {x, y + 15}, {x + 51, y + 15}}) {
+        fill(image, x + 1, y + 14, width - 2, 1, shade);
+        for (int[] corner : new int[][] {{x, y}, {x + width - 1, y}, {x, y + 15}, {x + width - 1, y + 15}}) {
             image.setRGB(corner[0], corner[1], BODY);
         }
     }

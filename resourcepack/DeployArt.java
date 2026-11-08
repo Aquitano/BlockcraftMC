@@ -35,6 +35,8 @@ public final class DeployArt {
     static final int CLASS_CARD_ROWS = 2;
     static final List<Integer> SPECIALS = List.of(45, 48, 51);
     static final int SPECIAL_COLUMNS = 3;
+    /** The toolbar's buttons from these slots, each up to the next or the row's end: close, then deploy. */
+    static final List<Integer> BUTTONS = List.of(0, 4);
     static final int MAP_COLUMNS = 9;
     static final int MAP_ROWS = 3;
 
@@ -47,7 +49,7 @@ public final class DeployArt {
     static final int INVENTORY_TOP = 139;
 
     /** Tops of the server's text lines; Sternenfront's DeployScreen draws on no others. */
-    static final int[] LINES = {-3, 21, 22, 23, 25, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 153, 154, 155, 164, 166, 168, 175, 177, 178, 186, 188, 196, 197, 199, 202, 206, 214};
+    static final int[] LINES = {-3, 18, 21, 24, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 153, 154, 155, 163, 165, 168, 173, 175, 178, 183, 185, 193, 195, 196, 202, 204, 205, 206, 214};
 
     static final String[] FACTIONS = {"kolonien", "hegemonie"};
     static final int[] ACCENTS = {0xFF3D8BFF, 0xFFE8473F};
@@ -90,9 +92,13 @@ public final class DeployArt {
     static final int ICON_GLYPHS = 0xE100;
     static final int ABILITY_GLYPHS = 0xE120;
     static final int BADGE_GLYPHS = 0xE140;
+    static final int TOOLBAR_GLYPHS = 0xE150;
     static final int ICON_SIZE = 9;
     static final int ABILITY_SIZE = 16;
     static final int BADGE_SIZE = 13;
+    static final int TOOLBAR_SIZE = 16;
+    /** The menu icons the buttons wore as items, now drawn beside their labels: close, then deploy. */
+    static final List<String> TOOLBAR_ICONS = List.of("tool_close", "deploy");
 
     /** A small picture for the text lines, nine pixels square. */
     record Icon(String name, String... rows) { }
@@ -100,7 +106,6 @@ public final class DeployArt {
     /** In the order of their glyphs from U+E100, which DeployScreen's own Icon names in the same order. */
     static final List<Icon> ICONS = List.of(
             new Icon("heart", ".........", ".##...##.", "####.####", "#########", "#########", ".#######.", "..#####..", "...###...", "....#...."),
-            new Icon("points", "....#....", "...###...", "..#####..", ".#######.", "#########", ".#######.", "..#####..", "...###...", "....#...."),
             new Icon("recommended", "....#....", "....#....", "#########", ".#######.", "..#####..", ".###.###.", "##.....##", ".........", "........."),
             new Icon("pending", "###...###", "#.......#", "#.......#", ".........", ".........", ".........", "#.......#", "#.......#", "###...###"),
             new Icon("confirmed", "#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#########"),
@@ -157,6 +162,7 @@ public final class DeployArt {
         PackArt.write(labels(), textures.resolve("labels.png"));
         PackArt.write(umlauts(), textures.resolve("umlauts.png"));
         PackArt.write(icons(), textures.resolve("icons.png"));
+        PackArt.write(toolbar(root.resolve("assets/blockcraft/textures/item")), textures.resolve("toolbar.png"));
         int abilities = squares(textures.resolveSibling("ability_icons.png"));
         int badges = squares(textures.resolveSibling("objective_pips.png"));
         for (int top : LINES) {
@@ -172,6 +178,7 @@ public final class DeployArt {
                 providers.add(bitmap("deploy/icons.png", top, ICON_SIZE, run(ICON_GLYPHS, ICONS.size())));
                 providers.add(bitmap("ability_icons.png", top, ABILITY_SIZE, run(ABILITY_GLYPHS, abilities)));
                 providers.add(bitmap("objective_pips.png", top, BADGE_SIZE, run(BADGE_GLYPHS, badges)));
+                providers.add(bitmap("deploy/toolbar.png", top, TOOLBAR_SIZE, run(TOOLBAR_GLYPHS, TOOLBAR_ICONS.size())));
             }
             Files.writeString(fonts.resolve("line_" + top + ".json"), font(providers));
         }
@@ -206,11 +213,11 @@ public final class DeployArt {
         canvas.fill(180, 28, 115, 1, EDGE);
         canvas.fill(181, 139, 113, 1, EDGE);
 
-        PackArt.button(image, 8 - LEFT, 18 - TOP, PackArt.BUTTONS[0]);
-        PackArt.button(image, 62 - LEFT, 18 - TOP, PackArt.BUTTONS[1]);
-        canvas.fill(116, 18, 52, 16, 0xFF6B5A2A);
-        canvas.fill(117, 19, 50, 14, 0xFF15171D);
-        canvas.fill(117, 19, 50, 1, 0xFF2A2E38);
+        for (int button = 0; button < BUTTONS.size(); button++) {
+            int last = button + 1 < BUTTONS.size() ? BUTTONS.get(button + 1) : COLUMNS;
+            PackArt.button(image, slotX(BUTTONS.get(button)) - LEFT, slotY(BUTTONS.get(button)) - TOP,
+                    span(last - BUTTONS.get(button)), PackArt.BUTTONS[button]);
+        }
 
         for (int slot : CLASS_CARDS) {
             card(canvas, slotX(slot), slotY(slot), accent);
@@ -255,10 +262,6 @@ public final class DeployArt {
         for (int[] corner : new int[][] {{mapLeft, mapTop, 1, 1}, {mapRight, mapTop, -1, 1}, {mapLeft, mapBottom, 1, -1}, {mapRight, mapBottom, -1, -1}}) {
             canvas.fill(Math.min(corner[0], corner[0] + corner[2] * 5), corner[1], 6, 1, accent);
             canvas.fill(corner[0], Math.min(corner[1], corner[1] + corner[3] * 5), 1, 6, accent);
-        }
-        for (int dot = 0; dot < 16; dot += 2) {
-            double angle = Math.PI * 2 * dot / 16;
-            canvas.fill(160 + (int) Math.round(Math.cos(angle) * 6), 183 + (int) Math.round(Math.sin(angle) * 6), 1, 1, MAP_CROSS);
         }
         canvas.fill(mapLeft, mapBottom + 4, mapWidth, 1, EDGE);
         return image;
@@ -407,6 +410,20 @@ public final class DeployArt {
                 image.setRGB(corner, ICON_SIZE - 1, 0x01000000);
             }
         }
+        return image;
+    }
+
+    static BufferedImage toolbar(Path items) throws IOException {
+        var image = new BufferedImage(TOOLBAR_SIZE * TOOLBAR_ICONS.size(), TOOLBAR_SIZE, BufferedImage.TYPE_INT_ARGB);
+        var graphics = image.createGraphics();
+        for (int index = 0; index < TOOLBAR_ICONS.size(); index++) {
+            graphics.drawImage(ImageIO.read(items.resolve(TOOLBAR_ICONS.get(index) + ".png").toFile()), index * TOOLBAR_SIZE, 0, null);
+            int corner = index * TOOLBAR_SIZE + TOOLBAR_SIZE - 1;
+            if (image.getRGB(corner, TOOLBAR_SIZE - 1) == 0) {
+                image.setRGB(corner, TOOLBAR_SIZE - 1, 0x01000000);
+            }
+        }
+        graphics.dispose();
         return image;
     }
 

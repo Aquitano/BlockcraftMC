@@ -121,23 +121,28 @@ public final class Loadouts {
                 Placeholder.component("ability", messages.get(ability.messageKey(faction) + ".name")))));
         lore.add(Component.empty());
         lore.addAll(hint);
-        return classCard(faction, combatClass, selected, lore);
+        return classCard(faction, combatClass, selected, lore).build();
     }
 
+    /** The class menu's tile shows the chosen class with a badge; the deploy screen frames its card instead. */
     public ItemStack roleCard(Faction faction, CombatClass combatClass, boolean selected, List<Component> hint) {
         var lore = new ArrayList<>(messages.getLines(combatClass.messageKey(faction) + ".lore"));
         lore.add(Component.empty());
         lore.addAll(hint);
-        return classCard(faction, combatClass, selected, lore);
+        var card = classCard(faction, combatClass, selected, lore);
+        if (selected) {
+            card.state(MenuState.ACTIVE);
+        }
+        return card.build();
     }
 
-    private ItemStack classCard(Faction faction, CombatClass combatClass, boolean selected, List<Component> lore) {
+    private Items.Builder classCard(Faction faction, CombatClass combatClass, boolean selected, List<Component> lore) {
         var builder = combatClass.blaster(faction).model().item().name(messages.get(combatClass.messageKey(faction) + ".name"))
                 .lore(lore).hideAttributes();
         if (selected) {
-            builder.glow().state(MenuState.ACTIVE);
+            builder.glow();
         }
-        return builder.build();
+        return builder;
     }
 
     /** The class's numbers as the class menu's read-out shows them. */

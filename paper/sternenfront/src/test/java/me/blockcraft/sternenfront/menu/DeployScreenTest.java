@@ -40,9 +40,7 @@ public class DeployScreenTest {
     @Test
     public void everyLineTheScreenWritesOnHasAFontInThePack() {
         var fonts = new TreeSet<String>();
-        for (int places = 1; places <= 7; places++) {
-            fonts(DeployScreen.title(messages, view(places)), fonts);
-        }
+        views().forEach(view -> fonts(DeployScreen.title(messages, view), fonts));
         for (var font : fonts) {
             var path = PACK.resolve("src/assets/" + font.replace(":", "/font/") + ".json");
             assertTrue(path.toString(), Files.isRegularFile(path));
@@ -55,9 +53,8 @@ public class DeployScreenTest {
      */
     @Test
     public void everyPartReturnsTheCursorToTheTitlesStart() throws Exception {
-        for (int places = 1; places <= 7; places++) {
-            var title = DeployScreen.title(messages, view(places));
-            assertEquals(-122, width(title, null, new HashMap<>()));
+        for (var view : views()) {
+            assertEquals(-122, width(DeployScreen.title(messages, view), null, new HashMap<>()));
         }
     }
 
@@ -78,11 +75,12 @@ public class DeployScreenTest {
         }
     }
 
-    /** The pack's window has its cards and map where the menu's slots are, and the screen draws over both. */
+    /** The pack's window has its buttons, cards and map where the menu's slots are, and the screen draws over them. */
     @Test
-    public void thePacksWindowHasItsCardsAndMapWhereTheSlotsAre() {
+    public void thePacksWindowHasItsButtonsCardsAndMapWhereTheSlotsAre() {
         assertEquals(DeployScreen.CLASS_CARDS.stream().map(String::valueOf).toList(), generator("CLASS_CARDS"));
         assertEquals(DeployScreen.SPECIALS.stream().map(String::valueOf).toList(), generator("SPECIALS"));
+        assertEquals(DeployScreen.BUTTONS.stream().map(String::valueOf).toList(), generator("BUTTONS"));
         var sizes = Map.of("CLASS_CARD_COLUMNS", DeployScreen.CLASS_CARD_COLUMNS, "CLASS_CARD_ROWS", DeployScreen.CLASS_CARD_ROWS,
                 "SPECIAL_COLUMNS", DeployScreen.SPECIAL_COLUMNS, "MAP_COLUMNS", TacticalLayout.COLUMNS, "MAP_ROWS", TacticalLayout.ROWS);
         sizes.forEach((name, size) -> assertEquals(name, List.of(String.valueOf(size)), generator(name)));
@@ -118,22 +116,37 @@ public class DeployScreenTest {
         return Arrays.stream(matcher.group(1).split(",")).map(String::strip).toList();
     }
 
-    private DeployScreen.View view(int places) {
+    /** The headquarters with up to five posts, with and without the dropship, so every line of the list is drawn on. */
+    private List<DeployScreen.View> views() {
+        var views = new java.util.ArrayList<DeployScreen.View>();
+        for (int posts = 0; posts <= 5; posts++) {
+            views.add(view(posts, false));
+            views.add(view(posts, true));
+        }
+        return views;
+    }
+
+    private DeployScreen.View view(int posts, boolean dropship) {
         var role = new DeployScreen.Role("Klasse", "Klonsoldat", DeployScreen.Portrait.KOLONIEN_SOLDIER,
                 List.of(new DeployScreen.Stat("Gesundheit", "10", true), new DeployScreen.Stat("Tempo", "100 %", false),
                         new DeployScreen.Stat("Schaden", "2,5", true), new DeployScreen.Stat("Reichweite", "60 m", false)),
                 "Großer DC-15A-Blaster", List.of(new DeployScreen.Ability("Thermaldetonator", "Taste F", AbilityIcon.GRENADE),
                         new DeployScreen.Ability("Adrenalin", "Taste Q", AbilityIcon.ADRENALINE)),
-                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Guthaben", "340 KP", false)));
+                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Deine Kampfpunkte", "1340 KP", false)));
         var card = new DeployScreen.ClassCard("Soldat", DeployScreen.Portrait.KOLONIEN_SOLDIER, List.of(AbilityIcon.GRENADE, AbilityIcon.RALLY), true);
-        var special = new DeployScreen.Special("ARC", DeployScreen.Portrait.ARC_TROOPER, 250, true, true);
-        var spawns = new java.util.ArrayList<>(List.of(new DeployScreen.Place(new Spawn.Headquarters(), "Hauptquartier")));
-        for (int post = 0; post < places - 2; post++) {
-            spawns.add(new DeployScreen.Place(new Spawn.Post(post), "Posten"));
+        var special = new DeployScreen.Special("ARC", DeployScreen.Portrait.ARC_TROOPER, 1250, true, true);
+        var spawns = new java.util.ArrayList<>(List.of(new DeployScreen.Place(new Spawn.Headquarters(), "Hauptquartier", 0xFF3434,
+                true, false, DeployScreen.Selection.NONE)));
+        for (int post = 0; post < posts; post++) {
+            boolean open = post % 2 == 0;
+            spawns.add(new DeployScreen.Place(new Spawn.Post(post), "Raffinerie", 0xFFFFFF, open, open,
+                    open ? DeployScreen.Selection.values()[post % 3] : DeployScreen.Selection.NONE));
         }
-        spawns.add(new DeployScreen.Place(new Spawn.Dropship(), "Landung bei A"));
-        return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), role, List.of(card, card, card, card),
-                List.of(special, special, special), 340, spawns.subList(0, places));
+        if (dropship) {
+            spawns.add(new DeployScreen.Place(new Spawn.Dropship(), "Landung bei A", 0xFFFFFF, true, true, DeployScreen.Selection.CONFIRMED));
+        }
+        return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), List.of("Schließen", "Einsetzen"), role,
+                List.of(card, card, card, card), List.of(special, special, special), spawns);
     }
 
     private static String source() {
