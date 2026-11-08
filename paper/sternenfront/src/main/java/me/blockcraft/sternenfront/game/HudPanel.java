@@ -19,7 +19,9 @@ public final class HudPanel {
         /** On a boss bar line of its own. */
         TOP_LEFT(231),
         /** On the action bar, starting in the line's middle. */
-        BOTTOM_RIGHT(232);
+        BOTTOM_RIGHT(232),
+        /** On a boss bar line like the top-left, from the corner leftwards. */
+        TOP_RIGHT(233);
 
         private final int red;
 

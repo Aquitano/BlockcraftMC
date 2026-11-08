@@ -152,6 +152,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final BattlePresentation presentation;
     private final ObjectiveHud objective;
     private final Minimap minimap;
+    private final KillFeed killFeed;
     private final Battlefield battlefield;
     private final SupportRewards support;
     private final Gadgets gadgets;
@@ -232,6 +233,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
         this.minimap = new Minimap(this, Minimap.Settings.from(plugin.getConfig()));
+        this.killFeed = KillFeed.from(plugin.getConfig());
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
@@ -283,6 +285,21 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     Minimap minimap() {
         return minimap;
+    }
+
+    KillFeed killFeed() {
+        return killFeed;
+    }
+
+    /** How the kill feed names a fighter: a player by name, a bot by the call sign the minimap's squad list uses. */
+    private Optional<KillFeed.Named> named(LivingEntity fighter) {
+        var faction = factionOf(fighter);
+        if (faction.isEmpty()) {
+            return Optional.empty();
+        }
+        var tint = HudPanel.Tint.of(faction.get());
+        return fighter instanceof Player player ? Optional.of(new KillFeed.Named(player.getName(), tint))
+                : bots.squadmate(fighter).map(mate -> new KillFeed.Named(minimap.botName(faction.get(), mate), tint));
     }
 
     public BattleRadio radio() {
@@ -560,6 +577,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         standDown(player);
         deployment.forget(player);
         minimap.forget(player);
+        killFeed.forget(player.getUniqueId());
         if (round.stepOut(player, this::forfeited)) {
             refreshAll();
             return;
@@ -1001,10 +1019,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         Bukkit.getPluginManager().callEvent(new ShotEvent(shooter));
     }
 
-    public void botDied(LivingEntity victim, Faction faction, Optional<Player> killer, int points) {
-        support.killed(victim, killer, points);
+    public void botDied(LivingEntity victim, Faction faction, Bots.Squadmate bot, Optional<Player> killer, int points) {
+        var named = new KillFeed.Named(minimap.botName(faction, bot), HudPanel.Tint.of(faction));
+        support.killed(victim, named, killer, points);
         reinforcements.lose(faction, 1);
         killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
+            killFeed.add(player.getUniqueId(), dealingHeadshot ? KillFeed.Kind.HEADSHOT : KillFeed.Kind.KILL, Optional.of(named), tick);
             summary.awardMobKill(player, config.rewards().botKill());
             awardPoints(player, points, CombatFeedback.Reward.KILL);
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
@@ -1442,8 +1462,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                         Placeholder.component("weapon", messages.get("blaster." + blaster.orElseThrow().key() + ".name"))))
                 .orElse(death.line());
         Bukkit.broadcast(line);
-        support.killed(victim, death.killer().filter(killer -> !killer.equals(victim)), heroes.config().points().kill());
+        var victimNamed = named(victim).orElseGet(() -> new KillFeed.Named(victim.getName(), HudPanel.Tint.WHITE));
+        var killedBy = death.killer().filter(killer -> !killer.equals(victim)).<LivingEntity>map(killer -> killer)
+                .or(() -> Optional.ofNullable(source).filter(cause -> bots.faction(cause).isPresent())
+                        .filter(LivingEntity.class::isInstance).map(LivingEntity.class::cast));
+        killFeed.add(victim.getUniqueId(), KillFeed.Kind.DEATH, killedBy.flatMap(this::named), tick);
+        support.killed(victim, victimNamed, death.killer().filter(killer -> !killer.equals(victim)), heroes.config().points().kill());
         death.killer().filter(killer -> !killer.equals(victim)).ifPresent(killer -> {
+            killFeed.add(killer.getUniqueId(), dealingHeadshot ? KillFeed.Kind.HEADSHOT : KillFeed.Kind.KILL, Optional.of(victimNamed), tick);
             summary.awardKill(killer, victim, Defeat.RESPAWN);
             fieldKills.merge(killer.getUniqueId(), 1, Integer::sum);
             awardPoints(killer, heroes.config().points().kill(), CombatFeedback.Reward.KILL);
@@ -1568,6 +1594,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         feedback.clear();
         objective.clear();
         minimap.clear();
+        killFeed.clear();
         speeders.clear();
         battlefield.clear();
         support.clear();

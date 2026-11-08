@@ -232,6 +232,7 @@ public final class HudArt {
         ImageIO.write(minimapDisc(), "PNG", root.resolve("minimap_disc.png").toFile());
         ImageIO.write(minimapMarks(), "PNG", root.resolve("minimap_marks.png").toFile());
         ImageIO.write(minimapTarget(), "PNG", root.resolve("minimap_target.png").toFile());
+        ImageIO.write(feedMarks(), "PNG", root.resolve("minimap_feed.png").toFile());
         ImageIO.write(classMarks(), "PNG", root.resolve("minimap_classes.png").toFile());
         var underscore = new BufferedImage(3, 7, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < 3; x++) {
@@ -248,6 +249,7 @@ public final class HudArt {
                 topAligned("objective_pips.png", 11, run(0xE010, 10)),
                 topAligned("minimap_marks.png", MARK, run(0xE020, MARKS)),
                 topAligned("minimap_target.png", TARGET, run(0xE034, 1)),
+                topAligned("minimap_feed.png", FEED_MARK, run(0xE050, 3)),
                 topAligned("minimap_classes.png", 7, run(0xE040, CLASS_MARKS.length)),
                 topAligned("labels.png", 7, LABEL_LETTERS),
                 topAligned("minimap_underscore.png", 7, "_")) + "\n  ]\n}\n");
@@ -260,6 +262,25 @@ public final class HudArt {
     private static final int HEADINGS = 16;
     private static final int MARKS = HEADINGS + 4;
     private static final int TARGET = 13;
+    private static final int FEED_MARK = 7;
+    private static final int FEED_CELL = 20;
+    /** A skull at twice the resolution: white bone, dark sockets, nose and teeth. */
+    private static final String[] SKULL = {
+            "....######....",
+            "..##########..",
+            ".############.",
+            "##############",
+            "##############",
+            "##kkkk##kkkk##",
+            "##kkkk##kkkk##",
+            "##kkk####kkk##",
+            ".#####kk#####.",
+            "..####kk####..",
+            "...########...",
+            "...#k#kk#k#...",
+            "...########...",
+            ".............."};
+    private static final String[] DIAMOND = {"...#...", "..###..", ".#####.", "#######", ".#####.", "..###..", "...#..."};
     private static final int TARGET_ARM = 7;
     /** PackArt's label letters, in the order its sheet draws them. */
     private static final String LABEL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
@@ -380,6 +401,57 @@ public final class HudArt {
             }
         }
         return image;
+    }
+
+    /**
+     * The kill feed's marks in cells as tall as a label letter, drawn at twice the resolution: a skull for a kill or a
+     * death, its outline for an assist, and the skull with the crosshair's headshot diamond at its corner.
+     */
+    private static BufferedImage feedMarks() {
+        int height = 2 * FEED_MARK;
+        var image = new BufferedImage(FEED_CELL * 3, height, BufferedImage.TYPE_INT_ARGB);
+        for (int cell = 0; cell < 3; cell++) {
+            boolean hollow = cell == 1;
+            for (int y = 0; y < SKULL.length; y++) {
+                for (int x = 0; x < SKULL[y].length(); x++) {
+                    char ink = SKULL[y].charAt(x);
+                    if (ink == 'k') {
+                        image.setRGB(cell * FEED_CELL + x, y, OUTLINE);
+                    } else if (ink == '#' && (!hollow || nearSkullEdge(x, y))) {
+                        image.setRGB(cell * FEED_CELL + x, y, 0xFFFFFFFF);
+                    }
+                }
+            }
+        }
+        int left = 3 * FEED_CELL - DIAMOND.length - 1;
+        for (int y = 0; y < DIAMOND.length; y++) {
+            for (int x = -1; x <= DIAMOND.length; x++) {
+                if (diamondInk(x, y)) {
+                    image.setRGB(left + x, y, 0xFFFFB02E);
+                } else if (diamondInk(x - 1, y) || diamondInk(x + 1, y) || diamondInk(x, y - 1) || diamondInk(x, y + 1)) {
+                    image.setRGB(left + x, y, OUTLINE);
+                }
+            }
+        }
+        return image;
+    }
+
+    private static boolean diamondInk(int x, int y) {
+        return x >= 0 && y >= 0 && y < DIAMOND.length && x < DIAMOND.length && DIAMOND[y].charAt(x) == '#';
+    }
+
+    /** Whether a bone texel lies within two texels of the skull's outside, which is all the assist's outline keeps. */
+    private static boolean nearSkullEdge(int x, int y) {
+        for (int dy = -2; dy <= 2; dy++) {
+            for (int dx = -2; dx <= 2; dx++) {
+                int nx = x + dx;
+                int ny = y + dy;
+                if (nx < 0 || ny < 0 || ny >= SKULL.length || nx >= SKULL[ny].length() || SKULL[ny].charAt(nx) == '.') {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** A dark rim round the cell's ink, so the arrow stays readable over a white post badge where the player stands. */

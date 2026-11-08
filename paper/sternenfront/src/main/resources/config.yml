@@ -455,6 +455,10 @@ outlines: {enabled: true, range: 64, allies: false}
 # update-ticks and sends nothing while nothing on it moved. An enemy shows for enemy-ticks after each shot it fires.
 minimap: {radius: 48, update-ticks: 4, enemy-ticks: 60}
 
+# The top-right lines about a player's own kills, assists and death last this long, the last second greyed out.
+kill-feed:
+  seconds: 5
+
 combat-feedback:
   marker-ticks: 8
   reward-ticks: 30

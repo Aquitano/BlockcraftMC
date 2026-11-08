@@ -191,6 +191,12 @@ a multiple of that blaster's base in `combat-feedback.spread-steps`, so every bl
 cool and opens fully hot on the move. A scoped or spreadless long rifle shows none, and the vanilla crosshair stays inside
 the ticks. All three share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat or guard meter.
+A player with the pack sees their own kills, assists and death in the top-right corner, newest on top, at most four
+lines. A line reads killer, mark and victim in the minimap's capitals, with the player's own name in white and others
+in their side's colour: a skull for a kill or a death, its outline for an assist and a diamond beside it for a headshot.
+Bots go by their minimap call signs. A line greys out in its last second and is gone after `kill-feed.seconds`. It rides
+on the minimap's boss bar line, and stays up while the player is dead so the kill cam shows who it was. Sternenfront's
+own potion effects hide their icons, which would otherwise cover the feed.
 A grenade holds `abilities.grenade.charges` throws, full on each deployment, and they come back one at a time, each
 `cooldown-seconds` after the one before. The HUD shows the throws left as `1/2` and the seconds to the next only when none is
 left, which is also the only time the vanilla cooldown runs on its material. Bots keep a plain cooldown.

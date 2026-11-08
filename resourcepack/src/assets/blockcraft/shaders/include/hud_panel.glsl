@@ -2,13 +2,17 @@
 #define BLOCKCRAFT_HUD_PANEL_GLSL
 
 // GUI text drawn in colours (red, row, 176 + tint) is a panel in a corner of the screen: red 231 on a boss bar line
-// goes to the top-left corner, and red 232 on the action bar to the bottom-right. The server starts the panel in the
-// screen's middle and lays it out to take no width. Each glyph hangs row pixels below the panel's top: a glyph placed
-// lower by its font would leave the line that the shader finds it by.
+// goes to the top-left corner, red 233 on a boss bar line to the top-right, and red 232 on the action bar to the
+// bottom-right. The server starts the panel in the screen's middle and lays it out to take no width; a right-hand
+// panel's glyphs lie left of its start. Each glyph hangs row pixels below the panel's top: a glyph placed lower by its
+// font would leave the line that the shader finds it by.
 const int BLOCKCRAFT_PANEL_RED = 231;
 const int BLOCKCRAFT_ACTION_PANEL_RED = 232;
+const int BLOCKCRAFT_RIGHT_PANEL_RED = 233;
 const int BLOCKCRAFT_PANEL_FIRST_TINT = 176;
 const vec2 BLOCKCRAFT_PANEL_CORNER = vec2(4.0, 4.0);
+// The top-right panel's top-right corner, from the top-right corner of the screen.
+const vec2 BLOCKCRAFT_TOP_RIGHT_PANEL_CORNER = vec2(-4.0, 4.0);
 // The action bar panel's top-right corner, from the bottom-right corner of the screen.
 const vec2 BLOCKCRAFT_ACTION_PANEL_CORNER = vec2(-3.0, -28.0);
 const int BLOCKCRAFT_PANEL_TINT_COUNT = 7;
@@ -24,7 +28,7 @@ const vec3 BLOCKCRAFT_PANEL_TINTS[BLOCKCRAFT_PANEL_TINT_COUNT] = vec3[](
 
 int blockcraft_panel_tint(ivec3 marker) {
     int tint = marker.b - BLOCKCRAFT_PANEL_FIRST_TINT;
-    bool panel = marker.r == BLOCKCRAFT_PANEL_RED || marker.r == BLOCKCRAFT_ACTION_PANEL_RED;
+    bool panel = marker.r == BLOCKCRAFT_PANEL_RED || marker.r == BLOCKCRAFT_ACTION_PANEL_RED || marker.r == BLOCKCRAFT_RIGHT_PANEL_RED;
     return panel && tint >= 0 && tint < BLOCKCRAFT_PANEL_TINT_COUNT ? tint : -1;
 }
 
@@ -39,6 +43,9 @@ vec2 blockcraft_panel_position(vec2 position, ivec3 marker, mat4 projection) {
         return gui + BLOCKCRAFT_ACTION_PANEL_CORNER + vec2(fromMiddle, float(marker.g) + position.y - lineTop);
     }
     float lineTop = 3.0 + 19.0 * floor((position.y - 2.0) / 19.0);
+    if (marker.r == BLOCKCRAFT_RIGHT_PANEL_RED) {
+        return vec2(gui.x, 0.0) + BLOCKCRAFT_TOP_RIGHT_PANEL_CORNER + vec2(fromMiddle, float(marker.g) + position.y - lineTop);
+    }
     return BLOCKCRAFT_PANEL_CORNER + vec2(fromMiddle, float(marker.g) + position.y - lineTop);
 }
 

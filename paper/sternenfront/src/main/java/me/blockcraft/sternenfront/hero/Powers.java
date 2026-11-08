@@ -238,8 +238,8 @@ public final class Powers {
             return false;
         }
         int ticks = grip.seconds() * 20;
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, 0, false, false, true));
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, 3, false, false, true));
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, 0, false, false, false));
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, 3, false, false, false));
         SoundCue.FORCE_GRIP.play(victim.getLocation(), 1.2f);
         grips.removeIf(each -> each.victim().equals(victim));
         grips.add(new Grip(player, victim, tick + ticks, grip.damage() / Math.max(1, ticks / GRIP_PULSE_TICKS)));
@@ -297,8 +297,8 @@ public final class Powers {
             if (ally.getWorld().equals(player.getWorld())
                     && ally.getLocation().distanceSquared(player.getLocation()) <= rally.radius() * rally.radius()
                     && game.onField(ally) && game.factionOf(ally).filter(faction::equals).isPresent()) {
-                ally.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 0, false, false, true));
-                ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, ticks, 0, false, false, true));
+                ally.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 0, false, false, false));
+                ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, ticks, 0, false, false, false));
                 ally.getWorld().spawnParticle(Particle.DUST, ally.getLocation().add(0, 1, 0), 8, .3, .5, .3, 0,
                         new Particle.DustOptions(faction.bolt(), 1.2f), true);
             }
