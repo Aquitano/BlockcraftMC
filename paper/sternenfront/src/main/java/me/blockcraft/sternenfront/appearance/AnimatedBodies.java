@@ -8,6 +8,7 @@ import kr.toxicity.model.api.platform.PlatformPlayer;
 import kr.toxicity.model.api.tracker.EntityTracker;
 import kr.toxicity.model.api.tracker.TrackerModifier;
 import kr.toxicity.model.api.tracker.TrackerUpdateAction;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -31,7 +32,10 @@ import java.util.logging.Logger;
 final class AnimatedBodies implements AutoCloseable {
 
     private static final String OUTLINED = "_outlined";
-    private static final int ENEMY_OUTLINE = 0xAA0000;
+    /** The dark red that TargetOutlines gives enemies and the outline shader reserves for them. */
+    private static final int ENEMY_OUTLINE = NamedTextColor.DARK_RED.value();
+    /** BetterModel counts its flash on its own tracker clock, from that clock's next frame, so it can end after ours. */
+    private static final int FLASH_SLACK_TICKS = 2;
     private static final String MARKS = "_marks";
     private static final String PAULDRON = "_pauldron";
 
@@ -148,7 +152,7 @@ final class AnimatedBodies implements AutoCloseable {
     void hurt(LivingEntity actor) {
         var trackers = drawn.get(actor.getUniqueId());
         if (trackers != null) {
-            trackers.calmFrom = actor.getServer().getCurrentTick() + BodyRig.HURT_TICKS + 2;
+            trackers.calmFrom = actor.getServer().getCurrentTick() + BodyRig.HURT_TICKS + FLASH_SLACK_TICKS;
         }
     }
 
