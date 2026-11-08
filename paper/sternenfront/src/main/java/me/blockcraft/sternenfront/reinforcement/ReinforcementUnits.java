@@ -42,6 +42,10 @@ public final class ReinforcementUnits {
         return config.stats(unit).cost();
     }
 
+    public ReinforcementConfig.Stats stats(Reinforcement unit) {
+        return config.stats(unit);
+    }
+
     public void equip(Player player, Reinforcement unit) {
         player.getInventory().clear();
         player.getInventory().setItem(0, loadouts.blaster(unit.blaster()));
