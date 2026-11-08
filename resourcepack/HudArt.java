@@ -833,7 +833,7 @@ public final class HudArt {
         return image;
     }
 
-    /** The key in a dark badge with a light rim: F, Q, Shift and F, and a double jump's two chevrons. */
+    /** The key in a dark badge with a light rim: F, Q, Shift and F, and the space bar twice for a double jump. */
     private static BufferedImage keyBadges() {
         int height = 2 * BADGE;
         int cell = 2 * WIDE_BADGE;
@@ -865,7 +865,7 @@ public final class HudArt {
     }
 
     private static final int WIDE_BADGE = 15;
-    /** Ten by fourteen texels each: F, Q, an outlined arrow up for Shift, and two chevrons for the double jump. */
+    /** Ten by fourteen texels each: F, Q, an outlined arrow up for Shift, and the space bar's bracket. */
     private static final String[] KEY_F = {
             "..........", ".########.", ".########.", ".##.......", ".##.......", ".######...", ".######...",
             ".##.......", ".##.......", ".##.......", ".##.......", ".##.......", "..........", ".........."};
@@ -875,10 +875,10 @@ public final class HudArt {
     private static final String[] KEY_SHIFT = {
             "....##....", "...####...", "..##..##..", ".##....##.", "###....###", "..##..##..", "..##..##..",
             "..##..##..", "..##..##..", "..######..", "..........", "..........", "..........", ".........."};
-    private static final String[] KEY_JUMPS = {
-            "....##....", "...####...", "..##..##..", ".##....##.", "##......##", "..........", "....##....",
-            "...####...", "..##..##..", ".##....##.", "##......##", "..........", "..........", ".........."};
-    private static final String[][][] BADGES = {{KEY_F}, {KEY_Q}, {KEY_SHIFT, KEY_F}, {KEY_JUMPS}};
+    private static final String[] KEY_SPACE = {
+            "..........", "..........", "..........", "..........", "..........", "..........", ".##....##.",
+            ".##....##.", ".########.", ".########.", "..........", "..........", "..........", ".........."};
+    private static final String[][][] BADGES = {{KEY_F}, {KEY_Q}, {KEY_SHIFT, KEY_F}, {KEY_SPACE, KEY_SPACE}};
 
     /** Bold digits for the seconds left, six by nine GUI pixels, ringed dark so they read over any icon. */
     private static BufferedImage cooldownDigits() {

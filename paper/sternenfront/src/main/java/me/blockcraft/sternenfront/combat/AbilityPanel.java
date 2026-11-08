@@ -21,9 +21,9 @@ final class AbilityPanel {
 
     static final Key FONT = Key.key("blockcraft", "abilities");
 
-    /** What a tile's badge shows. */
+    /** What a tile's badge shows; a double jump shows the space bar twice. */
     enum Binding {
-        F(10), Q(10), SHIFT_F(16), DOUBLE_JUMP(10);
+        F(10), Q(10), SHIFT_F(16), DOUBLE_JUMP(16);
 
         private final int advance;
 

@@ -204,7 +204,7 @@ Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` a
 idle kill counts and point progress stay hidden.
 Nearby gains combine into one segment.
 A player with the pack sees their abilities as a column of tiles in the screen's bottom-right corner: F against the
-corner, Q above it, then a bladed hero's leap under a double-jump badge, and a kill streak's strike framed in gold under
+corner, Q above it, then a bladed hero's leap under a badge with the space bar twice, and a kill streak's strike framed in gold under
 Shift+F until it is thrown. A key with nothing bound shows no tile. Each tile carries its key on a badge and the
 ability's full name beside it. A ready tile is bright and framed in the side's colour; a recharging one turns grey
 behind the seconds left and a fill that rises as it recharges. An ability that holds several uses counts those left in
