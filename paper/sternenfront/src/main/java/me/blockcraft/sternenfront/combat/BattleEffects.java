@@ -63,6 +63,8 @@ public final class BattleEffects {
     private static final Vector STILL = new Vector();
     private static final int VENT_INTERVAL = 3;
     private static final int FIRING_TICKS = 3;
+    /** A respawn's loadout or a swap between hands changes the items but not their look, so it is redrawn this often. */
+    private static final int REFRESH_TICKS = 20;
     private static final double VENTING_HEAT = 0.85;
     private static final double HOT_BARREL = 0.65;
     private static final double OFF_THE_WALL = 0.12;
@@ -93,6 +95,7 @@ public final class BattleEffects {
     private final Ambience ambience;
     private final HeatGlow.Steps glow;
     private final Map<UUID, Shot> shots = new HashMap<>();
+    private final Map<UUID, Shown> shown = new HashMap<>();
     private final List<Tether> tethers = new ArrayList<>();
     private final Map<UUID, Long> nextSaberMark = new HashMap<>();
     private final boolean enabled;
@@ -629,6 +632,10 @@ public final class BattleEffects {
         var heat = actor instanceof Player player
                 ? HeatGlow.of(glow, game.fighter(player).heat().level(), game.fighter(player).heat().venting(tick), tick)
                 : HeatGlow.of(glow, game.bots().heat(actor), game.bots().venting(actor, tick), tick);
+        var look = new Shown(pose, heat, actor instanceof Player player ? player.getInventory().getHeldItemSlot() : -1);
+        if (look.equals(shown.put(actor.getUniqueId(), look)) && tick % REFRESH_TICKS != 0) {
+            return;
+        }
         var main = equipment.getItemInMainHand();
         if (HotbarItem.of(main, Blaster.class).filter(blaster -> blaster.show(main, pose, heat)).isPresent()) {
             equipment.setItemInMainHand(main);
@@ -637,6 +644,10 @@ public final class BattleEffects {
         if (HotbarItem.of(off, Blaster.class).filter(blaster -> blaster.show(off, pose, heat)).isPresent()) {
             equipment.setItemInOffHand(off);
         }
+    }
+
+    /** What {@link #showBlasters} last put in an actor's hands; until it changes the items need no look. */
+    private record Shown(Blaster.Pose pose, HeatGlow heat, int slot) {
     }
 
     /** A shooter may have put the gun away mid-shot; the hands show their blasters again the same tick. */
@@ -655,6 +666,7 @@ public final class BattleEffects {
     public void clear() {
         shots.values().forEach(BattleEffects::restore);
         shots.clear();
+        shown.clear();
         flares.clear();
         scorches.clear();
         tethers.clear();
