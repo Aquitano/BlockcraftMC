@@ -52,7 +52,7 @@ public final class SternenfrontArt {
 
     private enum Grain { SMOOTH, PLATE, BRUSHED, WEAVE, BLOTCH, GRIT, HAZARD, GLASS, GLOW, FURNACE }
 
-    private enum Wear { NONE, SCUFF, CHIP, RUST, PATCHED, SCORCH, SERVICED }
+    private enum Wear { NONE, SCUFF, CHIP, RUST, PATCHED, SCORCH, SERVICED, EDGED }
 
     private record Sprite(String id, boolean glow, boolean tinted, Drawing drawing) implements Surface {
         @Override
@@ -226,6 +226,29 @@ public final class SternenfrontArt {
                 case PATCHED -> patch(colours, width, height, seed, random);
                 case SCORCH -> scorch(colours, width, height, seed, random);
                 case SERVICED -> serviced(colours, width, height, seed, random);
+                case EDGED -> edged(colours, width, height, seed, random);
+            }
+        }
+
+        /** Paint rubbed lighter along the top and side edges, chipped to bare metal near them, and a few dark scratches. */
+        private void edged(int[] colours, int width, int height, long seed, Random random) {
+            int rubbed = ramp[Math.min(base + 2, ramp.length - 1)];
+            for (int y = 0; y < height - 1; y++) {
+                for (int x = 0; x < width; x++) {
+                    int edge = Math.min(Math.min(x, width - 1 - x), y);
+                    if (edge == 0 && cell(x / 3, y / 3, seed) > .2) {
+                        colours[y * width + x] = rubbed;
+                    } else if (edge <= 2 && cell(x / 2, y / 2, seed + 3) < .07) {
+                        colours[y * width + x] = BARE_METAL[(int) (cell(x, y, seed + 4) * BARE_METAL.length)];
+                    }
+                }
+            }
+            for (int mark = width * height / 700; mark > 0; mark--) {
+                int x = random.nextInt(width);
+                int y = random.nextInt(height);
+                for (int step = 2 + random.nextInt(4); step >= 0 && x + step < width && y + step / 2 < height; step--) {
+                    colours[(y + step / 2) * width + x + step] = ramp[0];
+                }
             }
         }
 
@@ -609,21 +632,31 @@ public final class SternenfrontArt {
 
     private static final String MARKS = "_marks";
     private static final String PAULDRON = "pauldron";
+    private static final String LEFT_ARM = "arm_left";
 
     private static Family body(String name, int unit, Shape torso, Shape head, Shape arm, Shape leg) {
         return body(name, unit, torso, head, arm, leg, leg, new Shape());
     }
 
+    private static Family body(String name, int unit, Shape torso, Shape head, Shape arm, Shape leg, Shape rightLeg, Shape pauldron) {
+        return body(name, unit, torso, head, arm, new Shape(), leg, rightLeg, pauldron);
+    }
+
     /**
      * Each part's markings become a model of their own, which the item definition tints with the fighter's unit colour
      * and BetterModel draws as a bone it can tint apart. {@code pauldron} sits on either arm of a fireteam leader.
+     * {@code arm} hangs on both shoulders unless {@code leftArm} has boxes, which RigBody then names as the left arm.
      */
-    private static Family body(String name, int unit, Shape torso, Shape head, Shape arm, Shape leg, Shape rightLeg, Shape pauldron) {
+    private static Family body(String name, int unit, Shape torso, Shape head, Shape arm, Shape leftArm, Shape leg, Shape rightLeg,
+                               Shape pauldron) {
         var models = new ArrayList<Model>();
         var parts = new LinkedHashMap<String, Shape>();
         parts.put("torso", torso);
         parts.put("head", head);
         parts.put("arm", arm);
+        if (!leftArm.boxes.isEmpty()) {
+            parts.put(LEFT_ARM, leftArm);
+        }
         parts.put("leg", leg);
         parts.put("leg_right", rightLeg);
         parts.forEach((part, shape) -> {
@@ -652,8 +685,19 @@ public final class SternenfrontArt {
             0x70614A, 0x9C8968, 0xBEAC87, 0xD7C8A7, 0xE9DFC5);
     private static final Paint SHELL = paint("droid_shell", 2, Grain.PLATE, 0, Wear.SCUFF,
             0x70614A, 0x9C8968, 0xBEAC87, 0xD7C8A7, 0xE9DFC5);
-    private static final Paint GUNMETAL = paint("gunmetal", 2, Grain.PLATE, 0, Wear.SCUFF,
-            0x2C333C, 0x434D58, 0x5E6A77, 0x7B8896, 0x9AA7B4);
+    private static final Paint GUNMETAL = paint("gunmetal", 2, Grain.PLATE, 0, Wear.EDGED,
+            0x24282D, 0x353B42, 0x4A525B, 0x636D77, 0x86909A);
+    private static final Paint SILVER = paint("silver", 2, Grain.PLATE, 0, Wear.EDGED,
+            0x5E6266, 0x7C8085, 0x9A9EA2, 0xB5B8BB, 0xCFD1D3);
+    /** Narrow grooves across a face, for the heavy's segmented abdomen. */
+    private static final Sprite RIBS = new Sprite("ribs", false, false, (width, height, random) -> {
+        int[] shades = {0x4A525B, 0x353B42, 0x2B3035, 0x1A1E22};
+        var pixels = new int[width * height];
+        for (int index = 0; index < pixels.length; index++) {
+            pixels[index] = shades[index / width % shades.length];
+        }
+        return pixels;
+    });
     private static final Paint MAROON = paint("republic_maroon", 2, Grain.SMOOTH, 0, Wear.CHIP,
             0x391723, 0x612537, 0x8B3B4B, 0xAE5360, 0xC97A83);
     /** Greyscale, so that a unit colour multiplied into it keeps its shading; the item definition supplies the colour. */
@@ -760,44 +804,44 @@ public final class SternenfrontArt {
 
     private static Family superBattleDroid() {
         var torso = new Shape()
-                .add(box(0, .03, 0, .52, .13, .25, FRAME))
-                .add(box(0, .21, 0, .38, .3, .28, GUNMETAL))
-                .add(box(0, .12, 0, .388, .035, .288, MARKING))
-                .add(box(0, .49, .02, .71, .4, .4, GUNMETAL))
-                .both(box(.27, .46, .22, .21, .3, .06, TRIM).spinY(22.5))
-                .add(box(0, .4, .24, .36, .18, .05, FRAME))
-                .add(box(0, .355, .266, .3, .014, .008, GUNMETAL))
-                .add(box(0, .4, .266, .3, .014, .008, GUNMETAL))
-                .add(box(0, .445, .266, .3, .014, .008, GUNMETAL))
-                .add(box(0, .68, -.015, .8, .1, .34, GUNMETAL))
-                .add(box(0, .53, -.24, .5, .32, .12, FRAME));
+                .add(box(0, -.01, 0, .5, .14, .28, GUNMETAL))
+                .add(box(0, .2, .01, .26, .28, .2, RIBS))
+                .add(box(0, .08, .01, .3, .04, .24, MARKING))
+                .add(box(0, .43, .03, .44, .22, .36, GUNMETAL))
+                .both(box(.26, .47, .02, .2, .28, .36, GUNMETAL).spinZ(-22.5))
+                .add(box(0, .64, 0, .76, .3, .42, GUNMETAL))
+                .add(box(0, .82, -.02, .5, .08, .36, GUNMETAL))
+                .both(box(.45, .72, -.01, .32, .2, .42, GUNMETAL).spinZ(-22.5))
+                .add(box(0, .66, -.22, .7, .3, .14, GUNMETAL).spinX(-22.5))
+                .both(box(.16, .53, .214, .05, .44, .012, SILVER).spinZ(-45))
+                .add(box(.31, .71, .215, .04, .04, .012, RED));
         var head = new Shape()
-                .add(box(0, .04, -.06, .21, .16, .18, FRAME))
-                .add(box(0, .124, -.06, .05, .01, .185, MARKING))
-                .add(box(0, .08, .045, .19, .07, .04, GUNMETAL))
-                .add(box(-.055, .08, .071, .032, .026, .014, RED));
+                .add(box(0, .07, .07, .2, .3, .16, GUNMETAL).spinX(22.5))
+                .add(box(0, .14, .155, .05, .12, .012, MARKING).spinX(22.5).about(0, .07, .07))
+                .add(box(0, .2, -.02, .24, .08, .26, GUNMETAL))
+                .add(box(0, -.1, .12, .12, .1, .1, GUNMETAL))
+                .add(box(0, -.11, .171, .08, .03, .004, FRAME));
         var arm = new Shape()
-                .add(box(0, .035, 0, .34, .25, .34, GUNMETAL))
-                .add(box(0, .12, 0, .348, .04, .348, MARKING))
-                .add(box(0, -.2, 0, .16, .24, .16, FRAME))
-                .add(box(0, -.43, 0, .26, .3, .26, GUNMETAL))
-                .add(box(0, -.36, 0, .268, .04, .268, MARKING))
-                .add(box(0, -.62, 0, .22, .08, .22, TRIM))
-                .both(box(.055, -.73, .045, .07, .19, .09, FRAME))
-                .both(box(.055, -.83, .045, .045, .015, .045, RED));
+                .add(box(0, -.02, 0, .18, .18, .18, FRAME))
+                .add(box(0, -.17, 0, .12, .24, .12, FRAME))
+                .add(box(0, -.3, 0, .16, .16, .16, FRAME))
+                .add(box(0, -.52, 0, .26, .4, .28, GUNMETAL))
+                .add(box(0, -.41, 0, .268, .04, .288, MARKING))
+                .add(box(0, -.78, 0, .16, .12, .16, FRAME));
+        var leftArm = new Shape().add(arm.boxes);
+        arm.add(box(0, -.58, .16, .14, .2, .06, GUNMETAL))
+                .both(box(.04, -.74, .17, .045, .32, .045, STEEL));
         var leg = new Shape()
-                .add(box(0, -.06, 0, .2, .17, .2, FRAME))
-                .add(box(0, -.21, .035, .2, .27, .2, GUNMETAL))
-                .add(box(0, -.37, .035, .19, .09, .19, FRAME))
-                .add(box(0, -.37, .135, .13, .08, .02, GUNMETAL))
-                .add(box(0, -.54, 0, .18, .28, .19, GUNMETAL))
-                .add(box(0, -.47, 0, .188, .04, .198, MARKING))
-                .add(box(0, -.74, .065, .28, .1, .4, GUNMETAL))
-                .add(box(0, -.74, .2, .284, .102, .01, FRAME));
+                .add(box(0, -.04, 0, .18, .18, .18, FRAME))
+                .add(box(0, -.2, 0, .24, .26, .24, GUNMETAL))
+                .add(box(0, -.36, 0, .19, .1, .2, FRAME))
+                .add(box(0, -.36, .115, .12, .08, .05, MARKING))
+                .add(box(0, -.55, 0, .27, .3, .27, GUNMETAL))
+                .add(box(0, -.735, .06, .31, .09, .41, GUNMETAL))
+                .add(box(0, -.735, .265, .312, .092, .01, FRAME));
         var pauldron = new Shape()
-                .add(box(0, .175, 0, .36, .03, .36, MARKING))
-                .both(box(.177, .09, 0, .016, .14, .35, MARKING));
-        return body("hegemonie_heavy", SEPARATIST_UNIT, torso, head, arm, leg, leg, pauldron);
+                .both(box(.115, -.04, 0, .03, .22, .26, MARKING));
+        return body("hegemonie_heavy", SEPARATIST_UNIT, torso, head, arm, leftArm, leg, leg, pauldron);
     }
 
     private static Shape cloneHelmet(CloneRole role) {
@@ -1797,9 +1841,17 @@ public final class SternenfrontArt {
             switch (part) {
                 case "torso" -> boxes.addAll(shape.shifted(0, heavy ? .8 : .97, 0).scaled(scale).boxes);
                 case "head" -> boxes.addAll(shape.shifted(0, heavy ? 1.32 : droid ? 1.64 : 1.5, heavy ? .3 : 0).scaled(scale).boxes);
-                case "arm" -> {
-                    boxes.addAll(shape.shifted(heavy ? .47 : droid ? .25 : .3, heavy ? 1.46 : droid ? 1.47 : 1.4, heavy ? .14 : 0).scaled(scale).boxes);
-                    boxes.addAll(shape.shifted(heavy ? -.47 : droid ? -.25 : -.3, heavy ? 1.46 : droid ? 1.47 : 1.4, heavy ? .14 : 0).scaled(scale).boxes);
+                case "arm", LEFT_ARM -> {
+                    double x = heavy ? .47 : droid ? .25 : .3;
+                    double y = heavy ? 1.46 : droid ? 1.47 : 1.4;
+                    double z = heavy ? .14 : 0;
+                    boolean ownLeftArm = family.has(model.path.substring(0, model.path.lastIndexOf('/') + 1) + LEFT_ARM);
+                    if (part.equals(LEFT_ARM) || !ownLeftArm) {
+                        boxes.addAll(shape.shifted(x, y, z).scaled(scale).boxes);
+                    }
+                    if (part.equals("arm")) {
+                        boxes.addAll(shape.shifted(-x, y, z).scaled(scale).boxes);
+                    }
                 }
                 default -> { }
             }
@@ -1970,7 +2022,7 @@ public final class SternenfrontArt {
             layers.add(markings(model.path + MARKS, family.unit));
         }
         var pauldron = model.path.substring(0, model.path.lastIndexOf('/') + 1) + PAULDRON;
-        if (model.path.endsWith("/arm") && family.has(pauldron)) {
+        if ((model.path.endsWith("/arm") || model.path.endsWith("/" + LEFT_ARM)) && family.has(pauldron)) {
             layers.add("{\"type\":\"minecraft:condition\",\"property\":\"minecraft:custom_model_data\",\"index\":0,\"on_true\":"
                     + markings(pauldron, family.unit) + ",\"on_false\":{\"type\":\"minecraft:empty\"}}");
         }

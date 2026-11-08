@@ -12,7 +12,7 @@ import java.util.Optional;
 enum RigBody {
 
     HEGEMONIE_SOLDIER(Faction.HEGEMONIE, new Joints(.25f, 1.47f, 0, .085f, .96f, .98f, 0, 1.64f, 0, -.22f, 1.3f, .53f), 1, -1.1f, .45f, true, "arm"),
-    HEGEMONIE_HEAVY(Faction.HEGEMONIE, new Joints(.47f, 1.46f, .14f, .22f, .78f, .8f, .26f, 1.32f, .3f, 0, 0, 0), 1.25f, -1.45f, 0, false, "arm"),
+    HEGEMONIE_HEAVY(Faction.HEGEMONIE, new Joints(.47f, 1.46f, .14f, .22f, .78f, .8f, .26f, 1.32f, .3f, 0, 0, 0), 1.25f, -1.45f, 0, false, "arm_left"),
     HEGEMONIE_SCOUT(Faction.HEGEMONIE, new Joints(.25f, 1.47f, 0, .085f, .96f, .98f, 0, 1.64f, 0, -.22f, 1.3f, .53f), 1, -1.1f, .45f, true, "arm"),
     HEGEMONIE_MEDIC(Faction.HEGEMONIE, new Joints(.2f, 1.44f, 0, .09f, .96f, .98f, 0, 1.58f, 0, -.17f, 1.3f, .55f), 1, -1.15f, 0, true, "arm"),
     KOLONIEN_SOLDIER(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), 1, -1.1f, .55f, true, "arm"),

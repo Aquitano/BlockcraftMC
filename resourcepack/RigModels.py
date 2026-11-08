@@ -48,6 +48,7 @@ BODIES = {
 OUTLINED = "_outlined"
 MARKS = "_marks"
 PAULDRON = "pauldron"
+LEFT_ARM = "arm_left"
 OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
 
 
@@ -209,14 +210,15 @@ def build(family, blaster, joints):
     parts = f"sternenfront/body/{family}"
     right_shoulder = (-shoulder[0], shoulder[1], shoulder[2])
     right_hip = (-hip[0], hip[1], 0)
-    for bone, part, at in (("torso", "torso", torso_at), ("hi_head", "head", head_at), ("hi_left_arm", "arm", shoulder),
+    left_arm = LEFT_ARM if (ASSETS / "models/item" / f"{parts}/{LEFT_ARM}.json").exists() else "arm"
+    for bone, part, at in (("torso", "torso", torso_at), ("hi_head", "head", head_at), ("hi_left_arm", left_arm, shoulder),
                            ("hi_right_arm", "arm", right_shoulder), ("left_leg", "leg", hip), ("right_leg", "leg_right", right_hip)):
         model.add(bone, f"{parts}/{part}", at, scale)
         side = bone.removeprefix("hi_")
         if (ASSETS / "models/item" / f"{parts}/{part}{MARKS}.json").exists():
             model.bone(f"{side}{MARKS}", bone, at)
             model.add(f"{side}{MARKS}", f"{parts}/{part}{MARKS}", at, scale)
-        if part == "arm" and (ASSETS / "models/item" / f"{parts}/{PAULDRON}.json").exists():
+        if part in ("arm", LEFT_ARM) and (ASSETS / "models/item" / f"{parts}/{PAULDRON}.json").exists():
             model.bone(f"{side}_{PAULDRON}", bone, at)
             model.add(f"{side}_{PAULDRON}", f"{parts}/{PAULDRON}", at, scale)
     if blaster:
