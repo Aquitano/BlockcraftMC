@@ -78,7 +78,6 @@ public final class DeployArt {
     static final Map<Character, String> EXTRA_LABELS = Map.of(
             '%', "101001010100101", ',', "000000000001010", '(', "001010010010001", ')', "100010010010100",
             '·', "000000010000000", '1', "010110010010111");
-    static final String UMLAUTS = "äöüÄÖÜß·…";
     static final int PORTRAIT_WELL = 30;
 
     /** The first glyph of each run the art font and the line fonts hold; DeployScreen draws from the same numbers. */
@@ -160,7 +159,6 @@ public final class DeployArt {
         Files.writeString(fonts.resolve("art.json"), font(artGlyphs));
 
         PackArt.write(labels(), textures.resolve("labels.png"));
-        PackArt.write(umlauts(), textures.resolve("umlauts.png"));
         PackArt.write(icons(), textures.resolve("icons.png"));
         PackArt.write(toolbar(root.resolve("assets/blockcraft/textures/item")), textures.resolve("toolbar.png"));
         int abilities = squares(textures.resolveSibling("ability_icons.png"));
@@ -168,10 +166,9 @@ public final class DeployArt {
         for (int top : LINES) {
             var providers = new ArrayList<String>();
             providers.add("{\"type\":\"space\",\"advances\":{\" \":4}}");
-            // The client's sheet is eight pixels tall, so its text cannot rise above the title line's top.
+            // The letter sheet is eight pixels tall, so its text cannot rise above the title line's top.
             if (top >= 5) {
-                providers.add("{\"type\":\"bitmap\",\"file\":\"minecraft:font/ascii.png\",\"ascent\":" + (13 - top) + ",\"chars\":" + ASCII + "}");
-                providers.add(bitmap("deploy/umlauts.png", top - 3, 12, escapeAll(UMLAUTS)));
+                providers.addAll(PackArt.textProviders(13 - top));
             }
             providers.add(bitmap("deploy/labels.png", top - 2, 32, run(LABEL_GLYPHS, LABELS.length())));
             if (top >= 4) {
@@ -365,34 +362,6 @@ public final class DeployArt {
         return image;
     }
 
-    /**
-     * The letters the vanilla ASCII sheet lacks, drawn to its proportions: the capital's top in the cell's fourth row
-     * as in the client's accented sheet, dots two rows above the letter.
-     */
-    static BufferedImage umlauts() {
-        String[][] glyphs = {
-                {"", "", "", ".#.#.", "", ".###.", "....#", ".####", "#...#", ".####"},
-                {"", "", "", ".#.#.", "", ".###.", "#...#", "#...#", "#...#", ".###."},
-                {"", "", "", ".#.#.", "", "#...#", "#...#", "#...#", "#...#", ".####"},
-                {"", ".#.#.", "", ".###.", "#...#", "#####", "#...#", "#...#", "#...#", "#...#"},
-                {"", ".#.#.", "", ".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."},
-                {"", ".#.#.", "", "#...#", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."},
-                {"", "", "", ".###.", "#...#", "#.##.", "#...#", "#...#", "#...#", "#.##.", "#...."},
-                {"", "", "", "", "", "", "#"},
-                {"", "", "", "", "", "", "", "", "", "#..#..#"}};
-        var image = new BufferedImage(8 * glyphs.length, 12, BufferedImage.TYPE_INT_ARGB);
-        for (int index = 0; index < glyphs.length; index++) {
-            for (int y = 0; y < glyphs[index].length; y++) {
-                for (int x = 0; x < glyphs[index][y].length(); x++) {
-                    if (glyphs[index][y].charAt(x) == '#') {
-                        image.setRGB(index * 8 + x, y, PackArt.WHITE);
-                    }
-                }
-            }
-        }
-        return image;
-    }
-
     static BufferedImage icons() {
         var image = new BufferedImage(ICON_SIZE * ICONS.size(), ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
         for (int index = 0; index < ICONS.size(); index++) {
@@ -433,16 +402,6 @@ public final class DeployArt {
         return image.getWidth() / image.getHeight();
     }
 
-    /** The client's own ASCII sheet, cell for cell as its default font reads it. */
-    static final String ASCII = "[\"" + String.join("\",\"", List.of(
-            blank(), blank(), " !\\\"#$%&'()*+,-./", "0123456789:;<=>?", "@ABCDEFGHIJKLMNO", "PQRSTUVWXYZ[\\\\]^_",
-            "`abcdefghijklmno", "pqrstuvwxyz{|}~" + escape(0), blank(), blank(), blank(), blank(), blank(), blank(),
-            blank(), blank())) + "\"]";
-
-    static String blank() {
-        return escape(0).repeat(16);
-    }
-
     static String bitmap(String file, int top, int height, String chars) {
         return "{\"type\":\"bitmap\",\"file\":\"blockcraft:font/" + file + "\",\"ascent\":" + (13 - top)
                 + ",\"height\":" + height + ",\"chars\":[\"" + chars + "\"]}";
@@ -457,12 +416,6 @@ public final class DeployArt {
         for (int index = 0; index < count; index++) {
             chars.append(escape(first + index));
         }
-        return chars.toString();
-    }
-
-    static String escapeAll(String text) {
-        var chars = new StringBuilder();
-        text.chars().forEach(character -> chars.append(escape(character)));
         return chars.toString();
     }
 

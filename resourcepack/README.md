@@ -19,6 +19,11 @@ screen effects, and the Sternenfront intro.
   item. `item_model` set for one viewer is only for menus, which nobody else sees.
 - **Title lettering.** `<display>` is only for titles, because `Notifications` turns it into bold text for a client
   without the pack. At title scale about thirteen letters fit a 1366x768 screen.
+- **Counted text.** A player's own pack may replace `minecraft:font/ascii.png` or the default font with letters of other
+  widths, and only the client knows them. Text whose width the server counts, such as the deploy screen's lines and
+  the action bar beside the ability tiles, draws from `text.png`, the pack's copy of the vanilla sheet, in
+  `blockcraft:text` or a deploy line font. `PackArt` writes the letters' advances to
+  `paper/api/src/main/resources/text-glyphs.properties`, which `UiFont.width` counts with.
 - **Crosshair marks.** The client centres a subtitle by the advances it measures from each glyph's last inked column, and
   draws a font pixel there two GUI pixels wide. `HudArt` therefore draws the marks, arcs and spread ticks at twice the
   resolution, centred between the middle texels, with a nearly clear texel in each cell's last column; `UiFontTest`

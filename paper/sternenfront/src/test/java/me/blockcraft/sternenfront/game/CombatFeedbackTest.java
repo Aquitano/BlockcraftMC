@@ -10,12 +10,10 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
-import org.bukkit.map.MinecraftFont;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,14 +51,9 @@ public class CombatFeedbackTest {
     public void theAbilitiesPanelStartsInTheMiddleOfTheLineHoweverLongTheFeedback() throws IOException {
         var meter = Component.text("Deckung");
         var abilities = Component.text("\ue000").font(Key.key("blockcraft", "abilities"));
-        var fonts = new HashMap<Key, Map<Integer, Integer>>();
-        fonts.put(UiFont.KEY, PackFonts.advances("ui"));
-        var vanilla = new HashMap<Integer, Integer>();
-        "+25 KP Deckung Kopfschuss Abschuss Verteidigt".codePoints().forEach(codepoint ->
-                vanilla.put(codepoint, MinecraftFont.Font.getWidth(Character.toString(codepoint)) + 1));
-        fonts.put(null, vanilla);
+        var fonts = Map.of(UiFont.KEY, PackFonts.advances("ui"), UiFont.TEXT, PackFonts.advances("text"));
         var state = new CombatFeedback.PlayerFeedback();
-        state.actionBar = new CombatFeedback.ActionBar(meter, PackFonts.width(meter, fonts), abilities);
+        state.actionBar = new CombatFeedback.ActionBar(meter, UiFont.width(meter), abilities);
         for (var feedback : List.of(Component.empty(), Component.text("+25 KP"),
                 Component.text("Kopfschuss Abschuss Verteidigt Abschuss +25 KP"))) {
             var parts = state.compose(feedback, Optional.empty()).children();

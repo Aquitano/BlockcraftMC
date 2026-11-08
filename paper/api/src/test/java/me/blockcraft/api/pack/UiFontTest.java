@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -81,7 +82,16 @@ public class UiFontTest {
         var parts = joined.children();
         assertEquals(96 / 2, width(parts.getFirst(), null, fonts));
         assertEquals(0, width(Component.empty().append(parts.get(0)).append(parts.get(1)).append(parts.get(2)), null, fonts));
-        assertEquals(line, parts.getLast());
+        assertEquals(UiFont.measured(line), parts.getLast());
+    }
+
+    /** A player's pack may change the vanilla letters, so the server counts the pack's own copy of them, letter by letter. */
+    @Test
+    public void theServerCountsEveryLetterOfTheTextFontAsWideAsThePackDrawsIt() throws IOException {
+        var advances = fontAdvances("text");
+        assertTrue(advances.keySet().containsAll(List.of((int) 'A', (int) '»', (int) 'ß')));
+        advances.forEach((codepoint, advance) ->
+                assertEquals(Character.toString(codepoint), (int) advance, UiFont.width(Component.text(Character.toString(codepoint)))));
     }
 
     private static int width(Component component, Key inherited, Map<Key, Map<Integer, Integer>> fonts) {
@@ -107,7 +117,10 @@ public class UiFontTest {
             var provider = entry.getAsJsonObject();
             if (provider.get("type").getAsString().equals("space")) {
                 provider.getAsJsonObject("advances").entrySet().forEach(space ->
-                        advances.put(space.getKey().codePointAt(0), space.getValue().getAsInt()));
+                        advances.putIfAbsent(space.getKey().codePointAt(0), space.getValue().getAsInt()));
+                continue;
+            }
+            if (provider.get("type").getAsString().equals("reference")) {
                 continue;
             }
             String file = provider.get("file").getAsString().substring("blockcraft:".length());
@@ -127,7 +140,9 @@ public class UiFontTest {
                             }
                         }
                     }
-                    advances.put(codepoints[column], (int) Math.round(inkWidth * scale) + 1);
+                    if (codepoints[column] != 0) {
+                        advances.putIfAbsent(codepoints[column], (int) Math.round(inkWidth * scale) + 1);
+                    }
                 }
             }
         }

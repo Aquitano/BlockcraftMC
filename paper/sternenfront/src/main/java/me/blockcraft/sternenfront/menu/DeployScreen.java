@@ -16,7 +16,6 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * The deploy screen as its chest title draws it: a window wider and taller than the chest from
@@ -26,7 +25,8 @@ import java.util.Map;
  * <p>
  * Every part moves the cursor back by the width it measures for itself, so a part at a wrong x moves nothing else, but
  * one whose width is measured wrongly shifts every part after it. A text line uses the font the pack writes for its
- * height, since a font draws at one height only.
+ * height, since a font draws at one height only, and every letter comes from the pack's own sheets: a player's pack
+ * that replaces the vanilla letters would otherwise give them widths the server does not know.
  */
 final class DeployScreen {
 
@@ -68,9 +68,6 @@ final class DeployScreen {
 
     private static final String LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&%,()·";
     private static final int LABEL_ADVANCE = 4;
-    private static final String DRAWN_TEXT = "äöüÄÖÜß·…";
-    private static final Map<Character, Integer> DRAWN_ADVANCES = Map.of('·', 2, '…', 8);
-    private static final int DRAWN_ADVANCE = 6;
     private static final int ICON_ADVANCE = 10;
     private static final int ABILITY_ADVANCE = 17;
     private static final int BADGE_ADVANCE = 13;
@@ -162,7 +159,7 @@ final class DeployScreen {
         screen.loadout(view);
         screen.cards(view);
         screen.places(view);
-        screen.title.append(UiFont.space(HEADER_LEFT - ORIGIN)).append(view.title());
+        screen.title.append(UiFont.space(HEADER_LEFT - ORIGIN)).append(UiFont.measured(view.title()));
         return screen.title.build();
     }
 
@@ -356,18 +353,16 @@ final class DeployScreen {
         return text.toUpperCase(Locale.ROOT).length() * LABEL_ADVANCE;
     }
 
-    /** The vanilla font's ASCII and the pack's own umlauts; anything else would draw at a width the server cannot know. */
+    /** The pack's copy of the vanilla ASCII letters and its umlauts; anything else would draw at a width the server cannot know. */
     static String drawable(String text) {
         var drawable = new StringBuilder();
-        text.chars().forEach(character -> drawable.append(character >= ' ' && character <= '~' || DRAWN_TEXT.indexOf(character) >= 0
+        text.chars().forEach(character -> drawable.append(character >= ' ' && character <= '~' || UiFont.TEXT_ACCENTS.indexOf(character) >= 0
                 ? (char) character : '?'));
         return drawable.toString();
     }
 
     static int textWidth(String text) {
-        return drawable(text).chars().map(character -> DRAWN_TEXT.indexOf(character) >= 0
-                ? DRAWN_ADVANCES.getOrDefault((char) character, DRAWN_ADVANCE)
-                : UiFont.width(Component.text(Character.toString(character)))).sum();
+        return UiFont.width(Component.text(drawable(text)));
     }
 
     private String plain(String key) {

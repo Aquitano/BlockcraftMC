@@ -38,14 +38,20 @@ public final class PackFonts {
         throw new AssertionError(name + " draws nothing from " + file);
     }
 
-    /** Each glyph's advance as the client measures it: up to its last inked column, scaled to its height, plus one. */
+    /**
+     * Each glyph's advance as the client measures it: up to its last inked column, scaled to its height, plus one. The
+     * first provider with a glyph draws it, and a reference to another font, vanilla's, adds none.
+     */
     public static Map<Integer, Integer> advances(String name) throws IOException {
         var advances = new HashMap<Integer, Integer>();
         for (var entry : providers(name)) {
             var provider = entry.getAsJsonObject();
             if (provider.get("type").getAsString().equals("space")) {
                 provider.getAsJsonObject("advances").entrySet().forEach(space ->
-                        advances.put(space.getKey().codePointAt(0), space.getValue().getAsInt()));
+                        advances.putIfAbsent(space.getKey().codePointAt(0), space.getValue().getAsInt()));
+                continue;
+            }
+            if (provider.get("type").getAsString().equals("reference")) {
                 continue;
             }
             String file = provider.get("file").getAsString().substring("blockcraft:".length());
@@ -65,7 +71,9 @@ public final class PackFonts {
                             }
                         }
                     }
-                    advances.put(codepoints[column], (int) Math.round(inkWidth * scale) + 1);
+                    if (codepoints[column] != 0) {
+                        advances.putIfAbsent(codepoints[column], (int) Math.round(inkWidth * scale) + 1);
+                    }
                 }
             }
         }

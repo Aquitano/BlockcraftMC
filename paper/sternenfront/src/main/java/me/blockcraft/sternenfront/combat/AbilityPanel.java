@@ -56,8 +56,10 @@ final class AbilityPanel {
     /** The column with every slot filled; the pack's shader puts the panel's top that far above its corner. */
     static final int HEIGHT = MAX_SLOTS * PITCH - (PITCH - TILE);
     private static final int TILE_ADVANCE = TILE + 1;
-    private static final int ICON_INSET = 2;
-    private static final int ICON_ADVANCE = 21;
+    /** A sixteen-pixel icon, as Minecraft draws an item, in the middle of the tile. */
+    private static final int ICON = 16;
+    private static final int ICON_INSET = (TILE - ICON) / 2;
+    private static final int ICON_ADVANCE = ICON + 1;
     private static final int FILL_LEVELS = TILE - 2;
     private static final int DIGIT_ADVANCE = 9;
     /** A digit's dark rim overlaps the next one's. */
