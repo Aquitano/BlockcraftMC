@@ -140,9 +140,12 @@ The dropship remains an explicit choice and is never recommended automatically.
 The right toolbar button opens a tactical schematic with north up and east right. It projects the current map's post and
 HQ positions into inventory slots, preserving scale and separating overlapping markers. Colours show ownership.
 Posts A–E use the same letter badges as the combat HUD in both deployment views. Filled badges allow deployment, outlines mark locked posts,
-and blinking badges mark contested or attacked posts. A confirmed available spawn glows.
-The confirmation button names its target and shows the wait or automatic deployment countdown. Hovering shows the post
-name, recommendation, selection and why deployment is locked. The landing button names its target
+and blinking badges mark contested or attacked posts. In both views the pack frames the chosen spawn on its slot's border:
+gold corners while it waits for a confirmation, a green frame and a glow once confirmed. A star marks the recommended
+spawn and a padlock a locked one. The spawn the player will land at shows the seconds left as its count: the wait once
+confirmed, otherwise the automatic deployment. The confirmation button names its target and shows the wait or automatic
+deployment countdown. Hovering shows the post name, recommendation, selection, and for a locked spawn `Gesperrt` with
+the reason. The landing button names its target
 post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
 After spawning, the order bar shows the assault's priority post, or the nearest objective outside the assault, with its
