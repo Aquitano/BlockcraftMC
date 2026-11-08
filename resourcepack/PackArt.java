@@ -77,6 +77,7 @@ public final class PackArt {
         }
         TileArt.write(root);
         WeaponArt.write(root);
+        DeployArt.write(root);
     }
 
     static BufferedImage panel(int rows, boolean toolbar) {
