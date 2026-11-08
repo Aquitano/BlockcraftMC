@@ -316,7 +316,7 @@ public final class Gadgets {
             if (normal.dot(incoming) > 0) {
                 normal.multiply(-1);
             }
-            game.effects().impact(at, normal, wall.faction().bolt());
+            game.effects().shieldRipple(at, normal, wall.faction().bolt());
         });
         return struck.isPresent();
     }
@@ -365,7 +365,7 @@ public final class Gadgets {
         var at = display.getLocation();
         if (tick % TICKS_PER_SECOND == 0) {
             double radius = game.config().medStation().radius();
-            game.effects().pulse(at, station.faction(), radius, STATION_PULSE_TICKS);
+            game.effects().groundRing(at, station.faction(), radius, STATION_PULSE_TICKS);
             var owner = Bukkit.getPlayer(station.owner());
             for (var ally : game.combatants()) {
                 if (ally.getWorld().equals(at.getWorld()) && ally.getLocation().distanceSquared(at) <= radius * radius

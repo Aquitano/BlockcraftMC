@@ -122,7 +122,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var markings = new Markings(units.of(faction, squad.map(Bots.Squad::fireteam).orElse(0)),
                     squad.filter(Bots.Squad::leads).isPresent());
             if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
-                animated.get().keep(actor, body, markings, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
+                animated.get().keep(actor, body, markings, game.effects().blasters().recoil(actor), plugin.getServer().getOnlinePlayers());
                 continue;
             }
             var existing = rigs.get(id);
@@ -140,7 +140,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
                 return created;
             });
             rig.mark(markings);
-            rig.tick(game.effects().recoil(actor));
+            rig.tick(game.effects().blasters().recoil(actor));
         }
         animated.ifPresent(bodies -> bodies.forgetAbsent(present));
         for (var id : new HashSet<>(rigs.keySet())) {
