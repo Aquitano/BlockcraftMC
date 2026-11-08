@@ -47,13 +47,14 @@ public final class SupportRewards {
         }
     }
 
-    public void killed(LivingEntity victim, Optional<Player> killer, int killPoints) {
+    void killed(LivingEntity victim, KillFeed.Named named, Optional<Player> killer, int killPoints) {
         var assists = ledger.killed(victim.getUniqueId(), killer.map(Player::getUniqueId), killPoints,
                 game.heroes().config().points().kill(), game.tick());
         assists.forEach((id, points) -> {
             var player = Bukkit.getPlayer(id);
             if (player != null && eligible(player)) {
                 award(player, points, CombatFeedback.Reward.ASSIST);
+                game.killFeed().add(id, KillFeed.Kind.ASSIST, Optional.of(named), game.tick());
             }
         });
         killer.filter(this::eligible).filter(game::onField).ifPresent(player -> game.factionOf(player).ifPresent(faction -> {

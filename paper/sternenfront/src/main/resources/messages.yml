@@ -343,8 +343,7 @@ headquarters:
 deploy:
   location: "<location>"
   landing: "<white>Landungsschiff"
-  controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
-  no-ability: "<muted>Keine Fähigkeit"
+  controls: "<prefix><accent><key> <dark>· <white><name><muted>: <ability>"
   saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
@@ -383,16 +382,6 @@ deploy:
     - "<muted>Stern: empfohlen. Die Zahl zählt bis zu deiner Landung."
     - "<muted>Zeige auf einen Posten für Name und Sperrgrund."
     - "<muted>Die Landung unten führt zum benannten Posten."
-  ability-hint: "<accent><key> <dark>· <white><name><muted>: <ability>"
-  navigate: "<accent>Posten <letter> <dark>· <white><distance> m <dark>· <muted><direction>"
-  defend: "<aqua>Posten <letter> sichern <dark>· <white><distance> m <dark>· <muted><direction>"
-  navigate-here: "<accent>Posten <letter> <dark>· <white>hier"
-  defend-here: "<aqua>Posten <letter> sichern <dark>· <white>hier"
-  direction:
-    ahead: "vor dir"
-    behind: "hinter dir"
-    left: "links"
-    right: "rechts"
   headquarters: "<white>Hauptquartier"
   post: "<white>Posten <accent><letter> <white><post>"
   choose: "<click>Hier einsetzen"
@@ -491,6 +480,8 @@ reinforcement:
 
 hero:
   head: "<white>Heldenrüstung"
+  leap:
+    name: "<white>Machtsprung"
   saber-lore:
     - "<left>Trifft alle Gegner im Schwung vor dir."
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
@@ -558,13 +549,12 @@ hero:
   fallen: "<prefix><hero> <white><player> <muted>hat das Feld verlassen."
 
 recap:
-  battle: "<muted>Kampfpunkte <white><points> <dark>· <muted>Posten <white><captures> <dark>· <muted>Aufträge <white><orders>"
+  battle: "<muted>Kampfpunkte <white><points> <dark>· <muted>Posten <white><captures>"
 
 feedback:
   kill: "<error>Abschuss <success>+<points> KP"
   multikill: "<error><kills>x <success>+<points> KP"
   headshot: "<error>Kopfschuss <success>+<points> KP"
-  order: "<accent>Auftrag <success>+<points> KP"
   assist: "<aqua>Hilfe <success>+<points> KP"
   defence: "<aqua>Verteidigt <success>+<points> KP"
   healing: "<success>Geheilt +<points> KP"
@@ -574,16 +564,6 @@ feedback:
   elite-ready: "<success>Elite bereit"
   progress: "<muted><kills> K <dark>· <muted><points>/<cost> KP"
 
-orders:
-  hud: "<muted><what> <dark><done>/<count>"
-  completed: "<success>Auftrag erfüllt <dark>· <accent>+<points> KP <dark>· <accent>+<coins> Münzen"
-  deed:
-    kill: "Abschüsse"
-    headshot: "Kopfschüsse"
-    assist: "Kampfhilfen"
-    defence: "Posten verteidigen"
-    capture: "Posten erobern"
-
 awards:
   title: "<prefix><accent>Auszeichnungen dieser Schlacht"
   mvp: "  <accent>Beste Leistung <dark>· <white><player> <muted>mit <value> KP"
@@ -592,7 +572,7 @@ awards:
   comrade: "  <accent>Kamerad <dark>· <white><player> <muted>mit <value> Kampfhilfen"
 
 career:
-  battle: "<prefix><muted>Deine Schlacht: <white><points> KP <dark>· <muted>Abschüsse <white><kills> <dark>· <muted>Kopfschüsse <white><headshots> <dark>· <muted>Posten <white><captures> <dark>· <muted>Aufträge <white><orders>"
+  battle: "<prefix><muted>Deine Schlacht: <white><points> KP <dark>· <muted>Abschüsse <white><kills> <dark>· <muted>Kopfschüsse <white><headshots> <dark>· <muted>Posten <white><captures>"
   record: "<prefix><accent>Neuer Rekord! <muted>Dein bisher bester Wert war <white><best> KP<muted>."
   promoted: "<prefix><accent>Befördert! <muted>Du bist jetzt <white><rank><muted>."
   standing: "<prefix><muted>Dein Rang: <accent><rank> <dark>· <white><points>/<next> KP"
@@ -610,7 +590,6 @@ career:
     "9": "General"
 
 hud:
-  separator: " <dark>│ "
   objective: "<own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
   priority: "<accent>★"
 

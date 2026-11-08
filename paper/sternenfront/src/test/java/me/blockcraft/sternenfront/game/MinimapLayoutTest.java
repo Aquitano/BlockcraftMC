@@ -72,8 +72,9 @@ public class MinimapLayoutTest {
         var view = new View(0, 0, 48);
         for (int post = 0; post < 5; post++) {
             double angle = post * Math.PI * 2 / 5;
-            glyphs.add(MinimapLayout.badge(post, post % 2 == 0, view.clamped(Math.sin(angle) * 900, -Math.cos(angle) * 900,
-                    MinimapLayout.BADGE_REACH), Tint.REPUBLIC));
+            var rim = view.clamped(Math.sin(angle) * 900, -Math.cos(angle) * 900, MinimapLayout.BADGE_REACH);
+            glyphs.add(MinimapLayout.badge(post, post % 2 == 0, rim, Tint.REPUBLIC));
+            glyphs.add(MinimapLayout.target(rim));
         }
         for (var mark : Mark.values()) {
             glyphs.add(MinimapLayout.mark(mark, view.inside(0, -48).orElseThrow(), Tint.SQUAD));
@@ -110,7 +111,7 @@ public class MinimapLayoutTest {
         var labels = PackFonts.providers("label_wide_0").get(1).getAsJsonObject();
         var minimap = PackFonts.providers("minimap");
         var ours = minimap.asList().stream().map(provider -> provider.getAsJsonObject())
-                .filter(provider -> provider.has("file") && provider.get("file").getAsString().equals(labels.get("file").getAsString()))
+                .filter(provider -> provider.has("file") && provider.get("file").getAsString().endsWith("minimap_letters.png"))
                 .findFirst().orElseThrow();
         assertEquals(labels.get("chars"), ours.get("chars"));
     }

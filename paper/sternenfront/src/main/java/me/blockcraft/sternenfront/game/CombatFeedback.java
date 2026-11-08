@@ -36,7 +36,7 @@ public final class CombatFeedback {
         }
     }
 
-    public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE, HEADSHOT, CHAIN, ORDER }
+    public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE, HEADSHOT, CHAIN }
 
     /**
      * The combat HUD: {@code meter}, {@code width} pixels wide, centred on the action bar, and {@code corner}, a panel
@@ -129,7 +129,7 @@ public final class CombatFeedback {
                 case HEADSHOT -> headshot = true;
                 default -> { }
             }
-            if (next == Reward.ORDER || reward != Reward.ORDER && (reward != Reward.KILL || next == Reward.KILL)) {
+            if (reward != Reward.KILL || next == Reward.KILL) {
                 reward = next;
             }
             rewardUntil = tick + ticks;
@@ -145,8 +145,7 @@ public final class CombatFeedback {
 
         Component reward(Messages messages) {
             int inARow = Math.max(kills, shownChain);
-            var key = reward == Reward.ORDER ? "feedback.order"
-                    : inARow > 1 ? "feedback.multikill"
+            var key = inARow > 1 ? "feedback.multikill"
                     : headshot ? "feedback.headshot"
                     : "feedback." + reward.name().toLowerCase(Locale.ROOT);
             return messages.get(key, Formatter.number("points", points), Formatter.number("kills", inARow));

@@ -863,8 +863,13 @@ public final class Bots implements Listener {
         });
     }
 
-    /** A bot of a player's squad: its number and class, and its body while it is deployed. */
+    /** A bot's number and class, which name it on the HUD, and its body while it is deployed. */
     public record Squadmate(int number, CombatClass role, Optional<Mob> body) { }
+
+    public Optional<Squadmate> squadmate(Entity entity) {
+        return Optional.ofNullable(bodies.get(entity.getUniqueId()))
+                .map(soldier -> new Squadmate(soldier.number, soldier.role, deployed(soldier) ? Optional.of(soldier.body) : Optional.empty()));
+    }
 
     /** The bots of the player's squad, its leader first, or none before a fireteam took the player's order. */
     public List<Squadmate> squadmates(Player player) {
@@ -1478,7 +1483,8 @@ public final class Bots implements Listener {
         soldier.deployAt = game.tick() + game.config().respawn().seconds() * 20L;
         var killer = event.getDamageSource().getCausingEntity() instanceof Player player
                 ? Optional.of(player) : Optional.<Player>empty();
-        game.botDied(event.getEntity(), soldier.faction, killer, config.killPoints());
+        game.botDied(event.getEntity(), soldier.faction, new Squadmate(soldier.number, soldier.role, Optional.empty()), killer,
+                config.killPoints());
         if (soldier.team != null && soldier.guarding < 0 && event.getDamageSource().getCausingEntity() instanceof LivingEntity enemy
                 && game.hittable(soldier.faction, enemy)) {
             alarm(soldier.team, event.getEntity().getLocation(), enemy.getLocation());

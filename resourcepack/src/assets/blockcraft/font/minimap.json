@@ -4,8 +4,10 @@
     {"type":"bitmap","file":"blockcraft:font/minimap_disc.png","ascent":7,"height":16,"chars":["\ue000","\ue001","\ue002","\ue003"]},
     {"type":"bitmap","file":"blockcraft:font/objective_pips.png","ascent":7,"height":11,"chars":["\ue010\ue011\ue012\ue013\ue014\ue015\ue016\ue017\ue018\ue019"]},
     {"type":"bitmap","file":"blockcraft:font/minimap_marks.png","ascent":7,"height":9,"chars":["\ue020\ue021\ue022\ue023\ue024\ue025\ue026\ue027\ue028\ue029\ue02a\ue02b\ue02c\ue02d\ue02e\ue02f\ue030\ue031\ue032\ue033"]},
+    {"type":"bitmap","file":"blockcraft:font/minimap_target.png","ascent":7,"height":13,"chars":["\ue034"]},
+    {"type":"bitmap","file":"blockcraft:font/minimap_feed.png","ascent":7,"height":7,"chars":["\ue050\ue051\ue052"]},
     {"type":"bitmap","file":"blockcraft:font/minimap_classes.png","ascent":7,"height":7,"chars":["\ue040\ue041\ue042\ue043\ue044"]},
-    {"type":"bitmap","file":"blockcraft:font/labels.png","ascent":7,"height":7,"chars":["\u0041\u0042\u0043\u0044\u0045\u0046\u0047\u0048\u0049\u004a\u004b\u004c\u004d\u004e\u004f\u0050\u0051\u0052\u0053\u0054\u0055\u0056\u0057\u0058\u0059\u005a\u0030\u0031\u0032\u0033\u0034\u0035\u0036\u0037\u0038\u0039\u00c4\u00d6\u00dc\u002d\u002e\u003a\u0021\u003f\u2026\u002f\u002b\u0026"]},
+    {"type":"bitmap","file":"blockcraft:font/minimap_letters.png","ascent":7,"height":7,"chars":["\u0041\u0042\u0043\u0044\u0045\u0046\u0047\u0048\u0049\u004a\u004b\u004c\u004d\u004e\u004f\u0050\u0051\u0052\u0053\u0054\u0055\u0056\u0057\u0058\u0059\u005a\u0030\u0031\u0032\u0033\u0034\u0035\u0036\u0037\u0038\u0039\u00c4\u00d6\u00dc\u002d\u002e\u003a\u0021\u003f\u2026\u002f\u002b\u0026"]},
     {"type":"bitmap","file":"blockcraft:font/minimap_underscore.png","ascent":7,"height":7,"chars":["\u005f"]}
   ]
 }

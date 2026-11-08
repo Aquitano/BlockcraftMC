@@ -39,12 +39,4 @@ public final class BattleNavigation {
         if (available.test(wanted)) return wanted;
         return available.test(recommendation) ? recommendation : new Spawn.Headquarters();
     }
-
-    public static String direction(Point origin, float yaw, Point target) {
-        double bearing = Math.toDegrees(Math.atan2(-(target.x() - origin.x()), target.z() - origin.z()));
-        double relative = ((bearing - yaw) % 360 + 540) % 360 - 180;
-        if (Math.abs(relative) <= 45) return "ahead";
-        if (Math.abs(relative) >= 135) return "behind";
-        return relative > 0 ? "right" : "left";
-    }
 }

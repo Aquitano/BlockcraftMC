@@ -281,9 +281,7 @@ respawn:
   seconds: 5
   auto-seconds: 15
   protection-seconds: 3
-  ability-hint-seconds: 3
   enemy-clearance: 12
-  navigation-update-ticks: 5
 
 # What an enemy inside a faction's headquarters takes every second.
 headquarters:
@@ -443,13 +441,6 @@ streaks:
   orbital-strike: 5
   bots-per-kill: 3
 
-# One goal at a time for each fighter, in a shuffled order, as deed:count. Deeds are kill, headshot, assist, defence and
-# capture. Each pays points and coins.
-orders:
-  points: 150
-  coins: 3
-  list: ["kill:5", "headshot:2", "capture:1", "assist:3", "defence:2", "kill:10"]
-
 # The battle points ever earned that each rank needs, lowest first; career.rank.<index> in messages.yml names them.
 career:
   ranks: [0, 1500, 4000, 8000, 15000, 25000, 40000, 60000, 90000, 130000]
@@ -463,6 +454,10 @@ outlines: {enabled: true, range: 64, allies: false}
 # The map in the top-left corner while deployed, north up around the player: radius blocks reach its rim. It redraws every
 # update-ticks and sends nothing while nothing on it moved. An enemy shows for enemy-ticks after each shot it fires.
 minimap: {radius: 48, update-ticks: 4, enemy-ticks: 60}
+
+# The top-right lines about a player's own kills, assists and death last this long, the last second greyed out.
+kill-feed:
+  seconds: 5
 
 combat-feedback:
   marker-ticks: 8

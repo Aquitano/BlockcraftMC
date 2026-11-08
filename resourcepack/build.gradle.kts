@@ -41,7 +41,7 @@ val generateYardArt = tasks.register<Exec>("generateYardArt") {
 
 val generateHud = tasks.register<Exec>("generateHud") {
     workingDir(layout.projectDirectory)
-    commandLine("java", "HudArt.java", "src")
+    commandLine("java", "HudArt.java", "src", "build/hud/ability-icons.png")
 }
 
 val generateBattle = tasks.register<Exec>("generateBattle") {

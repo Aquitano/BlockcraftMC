@@ -115,7 +115,7 @@ public final class Heroes {
         hero.abilities().forEach(ability -> player.setCooldown(ability.material(), 0));
         if (hero == Hero.CHAMPION) {
             loadouts.arm(player);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false, true));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false, false));
         } else {
             var inventory = player.getInventory();
             inventory.clear();

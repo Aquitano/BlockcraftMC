@@ -4,6 +4,7 @@ import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.HudPanel;
 import me.blockcraft.sternenfront.hero.HeroAbility;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -29,7 +30,11 @@ public class CombatHudTest {
                 .flatMap(unit -> unit.abilities().stream().map(ability -> ability.messageKey(unit.faction())));
         var nameKeys = Stream.of(classKeys, reinforcementKeys,
                 Arrays.stream(HeroAbility.values()).map(ability -> "hero.ability." + ability.key())).flatMap(keys -> keys);
-        nameKeys.forEach(key -> assertNotNull(key, messages.getString(key + ".name")));
+        Stream.concat(nameKeys, Stream.of("hero.leap")).forEach(key -> {
+            var name = messages.getString(key + ".name");
+            assertNotNull(key, name);
+            assertFalse(name, HudPanel.capitals(name.replaceAll("<[^>]+>", "")).contains("?"));
+        });
         Stream.concat(Arrays.stream(Ability.values()).map(Ability::key), Arrays.stream(HeroAbility.values()).map(HeroAbility::key))
                 .forEach(key -> assertNotNull(key, messages.getString("combat.hints." + key)));
         for (var key : List.of("guarding", "broken", "hot", "venting")) {

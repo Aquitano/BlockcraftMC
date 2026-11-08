@@ -183,8 +183,8 @@ public final class Gadgets {
 
     private boolean adrenaline(Player player) {
         int ticks = game.config().adrenalineSeconds() * TICKS_PER_SECOND;
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 1, false, false, true));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, ticks, 0, false, false, true));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 1, false, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, ticks, 0, false, false, false));
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 12, 0.3, 0.5, 0.3, 0);
         Sounds.HEAL.play(player);
         return true;

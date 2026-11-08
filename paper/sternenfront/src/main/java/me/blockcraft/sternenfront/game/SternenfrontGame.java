@@ -91,7 +91,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -153,6 +152,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final BattlePresentation presentation;
     private final ObjectiveHud objective;
     private final Minimap minimap;
+    private final KillFeed killFeed;
     private final Battlefield battlefield;
     private final SupportRewards support;
     private final Gadgets gadgets;
@@ -162,7 +162,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final FeelConfig feel;
     private final KillStreaks streaks;
     private final RoundTally tally = new RoundTally();
-    private final Orders orders;
     private final Career career;
     private final Map<UUID, Fighter> fighters = new HashMap<>();
     /** While the round deals damage itself, which marks its own hits. */
@@ -234,11 +233,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
         this.minimap = new Minimap(this, Minimap.Settings.from(plugin.getConfig()));
+        this.killFeed = KillFeed.from(plugin.getConfig());
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak(), feel.botsPerStreakKill());
-        this.orders = Orders.from(plugin, ThreadLocalRandom.current());
         this.career = new Career(plugin, messages, BlockcraftApi.get().database(), plugin.getConfig().getLongList("career.ranks"));
         Tasks.async(plugin, career::createTable);
         this.reinforcements = new Reinforcements(config.tickets());
@@ -286,6 +285,21 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     Minimap minimap() {
         return minimap;
+    }
+
+    KillFeed killFeed() {
+        return killFeed;
+    }
+
+    /** How the kill feed names a fighter: a player by name, a bot by the call sign the minimap's squad list uses. */
+    private Optional<KillFeed.Named> named(LivingEntity fighter) {
+        var faction = factionOf(fighter);
+        if (faction.isEmpty()) {
+            return Optional.empty();
+        }
+        var tint = HudPanel.Tint.of(faction.get());
+        return fighter instanceof Player player ? Optional.of(new KillFeed.Named(player.getName(), tint))
+                : bots.squadmate(fighter).map(mate -> new KillFeed.Named(minimap.botName(faction.get(), mate), tint));
     }
 
     public BattleRadio radio() {
@@ -338,7 +352,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return feedback;
     }
 
-    /** A deed counts for orders and awards even when config.yml pays nothing for it. */
+    /** A deed counts for the awards even when config.yml pays nothing for it. */
     public void awardPoints(Player player, int points, CombatFeedback.Reward reward) {
         if (points > 0) {
             heroes.earn(player, points);
@@ -357,17 +371,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void did(Player player, RoundTally.Deed deed) {
-        var id = player.getUniqueId();
-        tally.did(id, deed);
-        orders.did(id, deed).ifPresent(completed -> {
-            tally.did(id, RoundTally.Deed.ORDER);
-            int coins = summary.awardCoins(player, orders.coins());
-            player.sendMessage(messages.get("orders.completed", Formatter.number("points", orders.points()),
-                    Formatter.number("coins", coins)));
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.2f);
-            awardPoints(player, orders.points(), CombatFeedback.Reward.ORDER);
-        });
-        objective.order(player);
+        tally.did(player.getUniqueId(), deed);
     }
 
     private void killBonuses(Player killer, int killPoints, boolean headshot) {
@@ -380,16 +384,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             int extra = points.multikill() * Math.min(chain - 1, MOST_CHAINED_BONUSES);
             awardPoints(killer, RoundTally.bonus(extra, killPoints, points.kill()), CombatFeedback.Reward.CHAIN);
         }
-    }
-
-    Optional<Component> orderLine(Player player) {
-        if (!isPlaying(player)) {
-            return Optional.empty();
-        }
-        return orders.of(player.getUniqueId()).map(current -> messages.get("orders.hud",
-                Placeholder.component("what", messages.get("orders.deed." + current.order().deed().name().toLowerCase(Locale.ROOT))),
-                Formatter.number("done", current.done()), Formatter.number("count", current.order().count()),
-                Formatter.number("points", orders.points())));
     }
 
     public int humans(Faction faction) {
@@ -584,6 +578,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         standDown(player);
         deployment.forget(player);
         minimap.forget(player);
+        killFeed.forget(player.getUniqueId());
         if (round.stepOut(player, this::forfeited)) {
             refreshAll();
             return;
@@ -866,11 +861,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             }
         }
         minimap.tick(tick);
-        int navigationTicks = Math.clamp(plugin.getConfig().getInt("respawn.navigation-update-ticks"), 1, 20);
         if (tick % TICKS_PER_SECOND == 0) {
             second();
-        } else if (tick % navigationTicks == 0) {
-            round.players().stream().filter(this::onField).forEach(objective::order);
         }
     }
 
@@ -1028,10 +1020,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         Bukkit.getPluginManager().callEvent(new ShotEvent(shooter));
     }
 
-    public void botDied(LivingEntity victim, Faction faction, Optional<Player> killer, int points) {
-        support.killed(victim, killer, points);
+    public void botDied(LivingEntity victim, Faction faction, Bots.Squadmate bot, Optional<Player> killer, int points) {
+        var named = new KillFeed.Named(minimap.botName(faction, bot), HudPanel.Tint.of(faction));
+        support.killed(victim, named, killer, points);
         reinforcements.lose(faction, 1);
         killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
+            killFeed.add(player.getUniqueId(), dealingHeadshot ? KillFeed.Kind.HEADSHOT : KillFeed.Kind.KILL, Optional.of(named), tick);
             summary.awardMobKill(player, config.rewards().botKill());
             awardPoints(player, points, CombatFeedback.Reward.KILL);
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
@@ -1408,7 +1402,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     /** A hero fell or left: their slot opens, a champion's relic goes home, and whoever beat them is paid. */
     private void fallen(Player victim, Optional<Player> killer) {
-        deployment.interruptHints(victim);
         releaseReinforcement(victim);
         var fighter = fighters.get(victim.getUniqueId());
         if (fighter == null || fighter.hero().isEmpty()) {
@@ -1466,8 +1459,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                         Placeholder.component("weapon", messages.get("blaster." + blaster.orElseThrow().key() + ".name"))))
                 .orElse(death.line());
         Bukkit.broadcast(line);
-        support.killed(victim, death.killer().filter(killer -> !killer.equals(victim)), heroes.config().points().kill());
+        var victimNamed = named(victim).orElseGet(() -> new KillFeed.Named(victim.getName(), HudPanel.Tint.WHITE));
+        var killedBy = death.killer().filter(killer -> !killer.equals(victim)).<LivingEntity>map(killer -> killer)
+                .or(() -> Optional.ofNullable(source).filter(cause -> bots.faction(cause).isPresent())
+                        .filter(LivingEntity.class::isInstance).map(LivingEntity.class::cast));
+        killFeed.add(victim.getUniqueId(), KillFeed.Kind.DEATH, killedBy.flatMap(this::named), tick);
+        support.killed(victim, victimNamed, death.killer().filter(killer -> !killer.equals(victim)), heroes.config().points().kill());
         death.killer().filter(killer -> !killer.equals(victim)).ifPresent(killer -> {
+            killFeed.add(killer.getUniqueId(), dealingHeadshot ? KillFeed.Kind.HEADSHOT : KillFeed.Kind.KILL, Optional.of(victimNamed), tick);
             summary.awardKill(killer, victim, Defeat.RESPAWN);
             fieldKills.merge(killer.getUniqueId(), 1, Integer::sum);
             awardPoints(killer, heroes.config().points().kill(), CombatFeedback.Reward.KILL);
@@ -1557,8 +1556,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 .ifPresent(player -> summary.awardCoins(player, config.rewards().award())));
         tally.lines().forEach((id, line) -> Optional.ofNullable(Bukkit.getPlayer(id)).ifPresent(player ->
                 summary.note(player, messages.get("recap.battle", Formatter.number("points", line.points()),
-                        Formatter.number("captures", line.count(RoundTally.Deed.CAPTURE)),
-                        Formatter.number("orders", line.count(RoundTally.Deed.ORDER))))));
+                        Formatter.number("captures", line.count(RoundTally.Deed.CAPTURE))))));
         round.end();
         announce(awards);
         career.close(tally.lines());
@@ -1593,6 +1591,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         feedback.clear();
         objective.clear();
         minimap.clear();
+        killFeed.clear();
         speeders.clear();
         battlefield.clear();
         support.clear();

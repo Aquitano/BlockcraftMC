@@ -4,10 +4,12 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Binding;
+import me.blockcraft.sternenfront.combat.AbilityPanel.Charges;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Slot;
 import me.blockcraft.sternenfront.combat.AbilityPanel.State;
 import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.CombatFeedback;
+import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import me.blockcraft.sternenfront.game.Heat;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
@@ -15,11 +17,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 /** The heat or guard meter on the action bar, and the ability tiles the pack moves into the bottom-right corner. */
@@ -38,6 +40,7 @@ public final class CombatHud {
     /** The flame's and the shield's width with their spacing. */
     static final int METER_ICON_ADVANCE = 11;
     private static final int TICKS_PER_SECOND = 20;
+    private static final List<Binding> BINDINGS = List.of(Binding.F, Binding.Q);
 
     /** Whether a dialogue, a screen effect or a scene has the screen, which the HUD then leaves to it. */
     public static boolean covered(Player player) {
@@ -60,7 +63,8 @@ public final class CombatHud {
                 .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD), UiFont.before(state, STATE_WIDTH));
         int width = UiFont.width(hud(Component.empty(), Component.empty(), Component.empty()))
                 + METER_ICON_ADVANCE + METER_ADVANCE + Math.max(STATE_WIDTH, UiFont.width(state));
-        var corner = BlockcraftApi.get().resourcePack().applied(player) ? AbilityPanel.render(slots(player, blade)) : Component.empty();
+        var corner = BlockcraftApi.get().resourcePack().applied(player)
+                ? AbilityPanel.render(slots(player, blade), game.factionOf(player).map(Tint::of).orElse(Tint.WHITE)) : Component.empty();
         game.feedback().show(player, new CombatFeedback.Hud(meter, width, corner));
     }
 
@@ -69,38 +73,38 @@ public final class CombatHud {
                 Placeholder.component("state", state));
     }
 
-    /** Q against the corner and F beside it, then the leap while it recharges and a kill streak's strike while it waits. */
+    /** F against the corner and Q above it, then the leap of a bladed hero and a kill streak's strike while it waits. */
     private List<Slot> slots(Player player, boolean blade) {
-        var slots = new ArrayList<>(List.of(slot(player, 1, Binding.Q), slot(player, 0, Binding.F)));
-        int leap = game.combat().leapCooldown(player);
-        if (blade && leap > 0) {
-            slots.add(new Slot(Binding.DOUBLE_JUMP, Optional.of(AbilityIcon.LEAP), new State.Cooling(seconds(leap))));
+        var fighter = game.fighter(player);
+        var slots = new ArrayList<Slot>();
+        fighter.hero().ifPresentOrElse(hero -> hero.abilities().stream().limit(2).forEach(ability -> {
+            int total = game.heroes().config().cooldownTicks(ability);
+            slots.add(new Slot(BINDINGS.get(slots.size()), ability.icon(), name("hero.ability." + ability.key() + ".name"),
+                    cooling(player.getCooldown(ability.material()), total), Charges.ONE));
+        }), () -> game.factionOf(player).ifPresent(side -> fighter.abilities(side).stream().limit(2).forEach(ability -> {
+            var charges = fighter.charges(ability);
+            int stored = charges.stored(game.tick());
+            var state = stored > 0 ? new State.Ready() : cooling(player.getCooldown(ability.material()), game.config().cooldownTicks(ability));
+            slots.add(new Slot(BINDINGS.get(slots.size()), ability.icon(), name(ability.messageKey(side) + ".name"), state,
+                    new Charges(stored, charges.capacity())));
+        })));
+        if (blade) {
+            slots.add(new Slot(Binding.DOUBLE_JUMP, AbilityIcon.LEAP, name("hero.leap.name"),
+                    cooling(game.combat().leapCooldown(player), game.combat().leapTicks(player)), Charges.ONE));
         }
         if (game.strikeReady(player)) {
-            slots.add(new Slot(Binding.SHIFT_F, Optional.of(AbilityIcon.ORBITAL_STRIKE), new State.Armed()));
+            slots.add(new Slot(Binding.SHIFT_F, AbilityIcon.ORBITAL_STRIKE, name("hero.ability.orbital-strike.name"), new State.Armed(),
+                    Charges.ONE));
         }
         return slots;
     }
 
-    private Slot slot(Player player, int index, Binding binding) {
-        var fighter = game.fighter(player);
-        var hero = fighter.hero();
-        if (hero.isPresent()) {
-            return hero.get().abilities().stream().skip(index).findFirst()
-                    .map(ability -> new Slot(binding, Optional.of(ability.icon()), cooling(player.getCooldown(ability.material()))))
-                    .orElseGet(() -> new Slot(binding, Optional.empty(), new State.Ready()));
-        }
-        return game.factionOf(player).flatMap(side -> fighter.abilities(side).stream().skip(index).findFirst()).map(ability -> {
-            var charges = fighter.charges(ability);
-            int stored = charges.stored(game.tick());
-            var state = charges.capacity() > 1 && stored > 0 ? new State.Charged(stored, charges.capacity())
-                    : cooling(player.getCooldown(ability.material()));
-            return new Slot(binding, Optional.of(ability.icon()), state);
-        }).orElseGet(() -> new Slot(binding, Optional.empty(), new State.Ready()));
+    private String name(String key) {
+        return PlainTextComponentSerializer.plainText().serialize(game.messages().get(key));
     }
 
-    private static State cooling(int ticks) {
-        return ticks > 0 ? new State.Cooling(seconds(ticks)) : new State.Ready();
+    private static State cooling(int ticks, int total) {
+        return ticks > 0 ? new State.Cooling(seconds(ticks), 1 - (double) ticks / Math.max(ticks, total)) : new State.Ready();
     }
 
     private static int seconds(int ticks) {

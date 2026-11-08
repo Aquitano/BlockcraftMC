@@ -45,11 +45,6 @@ public class BattleNavigationTest {
     public void pointsAtAnObjectiveOrTheForwardDefenceWhenEverythingIsSafe() {
         assertEquals(2, BattleNavigation.target(POSTS, HQ, ENEMY_HQ).orElseThrow().index());
         assertEquals(1, BattleNavigation.target(POSTS.subList(0, 2), HQ, ENEMY_HQ).orElseThrow().index());
-        assertEquals("ahead", BattleNavigation.direction(HQ, -90, ENEMY_HQ));
-        assertEquals("behind", BattleNavigation.direction(HQ, 90, ENEMY_HQ));
-        assertEquals("left", BattleNavigation.direction(HQ, 0, ENEMY_HQ));
-        assertEquals("right", BattleNavigation.direction(HQ, 180, ENEMY_HQ));
-        assertEquals("ahead", BattleNavigation.direction(HQ, 270, ENEMY_HQ));
     }
 
     @Test

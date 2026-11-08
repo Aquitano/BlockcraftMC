@@ -10,132 +10,147 @@ import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
- * The ability tiles in the screen's bottom-right corner, in the pixels of the pack's {@code blockcraft:abilities} font.
- * The first slot stands against the corner and each next one left of it, every tile under a keycap naming its key.
- * The panel's origin is its top-right corner, so every glyph lies left of it.
+ * The ability tiles in the screen's bottom-right corner, in the pixels of the pack's {@code blockcraft:abilities} font:
+ * a column against the corner, the first slot lowest, each tile with its key on a badge and the ability's name left of
+ * it. The panel's origin is its top-right corner, so every glyph lies left of it and below it.
  */
 final class AbilityPanel {
 
     static final Key FONT = Key.key("blockcraft", "abilities");
 
-    /** What a tile's keycap shows. */
+    /** What a tile's badge shows. */
     enum Binding {
-        F('\uE04A'), Q('\uE04B'), SHIFT_F('\uE04C', '\uE04A'), DOUBLE_JUMP('\uE04D');
+        F(10), Q(10), SHIFT_F(16), DOUBLE_JUMP(10);
 
-        private final char[] symbols;
+        private final int advance;
 
-        Binding(char... symbols) {
-            this.symbols = symbols;
+        Binding(int advance) {
+            this.advance = advance;
         }
     }
 
     sealed interface State {
-        /** Bright, ready to use. */
+        /** Bright with the side's frame, ready to use. */
         record Ready() implements State { }
 
-        /** Bright with the uses left, while at least one is. */
-        record Charged(int stored, int capacity) implements State { }
+        /** Grey with the seconds left, behind a fill that rises as the ability recharges, {@code done} of the way. */
+        record Cooling(int seconds, double done) implements State { }
 
-        /** Dimmed with the seconds until it can be used again. */
-        record Cooling(int seconds) implements State { }
-
-        /** Ringed in gold: a reward that waits to be used. */
+        /** Framed in gold: a reward that waits to be used. */
         record Armed() implements State { }
     }
 
-    /** A tile with no icon is a key with nothing bound to it, drawn dimmed. */
-    record Slot(Binding binding, Optional<AbilityIcon> icon, State state) { }
+    /** {@code stored} of {@code capacity} uses, shown as pips under the name while the ability holds more than one. */
+    record Charges(int stored, int capacity) {
+        static final Charges ONE = new Charges(1, 1);
+    }
 
-    static final int TILE = 20;
-    private static final int PITCH = TILE + 3;
-    private static final int TILE_TOP = 6;
-    private static final int ICON_INSET = 2;
-    private static final char TILE_GLYPH = '\uE000';
-    private static final char FIRST_ICON = '\uE010';
-    private static final char KEYCAP = '\uE030';
-    private static final char WIDE_KEYCAP = '\uE031';
-    private static final char FIRST_DIGIT = '\uE040';
+    record Slot(Binding binding, AbilityIcon icon, String name, State state, Charges charges) { }
+
+    static final int MAX_SLOTS = 4;
+    static final int TILE = 24;
+    private static final int PITCH = TILE + 4;
+    /** The column with every slot filled; the pack's shader puts the panel's top that far above its corner. */
+    static final int HEIGHT = MAX_SLOTS * PITCH - (PITCH - TILE);
     private static final int TILE_ADVANCE = TILE + 1;
-    private static final int ICON_ADVANCE = 17;
-    private static final int[] KEYCAP_WIDTHS = {9, 15};
-    private static final int SYMBOL_ADVANCE = 6;
-    private static final int DIGIT_HEIGHT = 7;
-    private static final char FIRST_COUNT_DIGIT = '\uE050';
-    private static final char COUNT_SLASH = '\uE05A';
-    private static final int COUNT_WIDTH = 5;
-    private static final int COUNT_HEIGHT = 7;
-    /** A count glyph's dark rim overlaps the next one's. */
-    private static final int COUNT_PITCH = 4;
+    private static final int ICON_INSET = 2;
+    private static final int ICON_ADVANCE = 21;
+    private static final int FILL_LEVELS = TILE - 2;
+    private static final int DIGIT_ADVANCE = 9;
+    /** A digit's dark rim overlaps the next one's. */
+    private static final int DIGIT_PITCH = 7;
+    private static final int DIGIT_WIDTH = 8;
+    private static final int DIGIT_HEIGHT = 11;
     private static final int MAX_SECONDS = 99;
+    private static final int PIP_ADVANCE = 7;
+    private static final int LETTER_ADVANCE = 4;
+    /** The pack draws these capitals two pixels wider, so their diagonals show. */
+    private static final String WIDE_LETTERS = "MNW";
+    private static final int WIDE_LETTER_ADVANCE = 6;
+    private static final int NAME_GAP = 4;
+    private static final char BACKING = '\uE000';
+    private static final char FRAME = '\uE001';
+    private static final char FIRST_ICON = '\uE010';
+    private static final char FIRST_COOLING_ICON = '\uE030';
+    private static final char FIRST_BADGE = '\uE050';
+    private static final char FIRST_FILL = '\uE060';
+    private static final char FIRST_DIGIT = '\uE080';
+    private static final char PIP_HELD = '\uE090';
+    private static final char PIP_SPENT = '\uE091';
 
     private AbilityPanel() {
     }
 
-    static Component render(List<Slot> slots) {
-        return HudPanel.render(Corner.BOTTOM_RIGHT, FONT, layout(slots));
+    /** {@code side} frames the tiles that are ready. */
+    static Component render(List<Slot> slots, Tint side) {
+        return HudPanel.render(Corner.BOTTOM_RIGHT, FONT, layout(slots, side));
     }
 
-    static List<Glyph> layout(List<Slot> slots) {
+    static List<Glyph> layout(List<Slot> slots, Tint side) {
         var glyphs = new ArrayList<Glyph>();
-        for (int index = 0; index < slots.size(); index++) {
-            glyphs.addAll(slot(slots.get(index), -TILE - index * PITCH));
+        for (int index = 0; index < Math.min(MAX_SLOTS, slots.size()); index++) {
+            glyphs.addAll(slot(slots.get(index), HEIGHT - TILE - index * PITCH, side));
         }
         return glyphs;
     }
 
-    private static List<Glyph> slot(Slot slot, int left) {
+    private static List<Glyph> slot(Slot slot, int top, Tint side) {
         var glyphs = new ArrayList<Glyph>();
-        var state = slot.state();
-        boolean bright = slot.icon().isPresent() && !(state instanceof State.Cooling);
-        glyphs.add(new Glyph(String.valueOf(TILE_GLYPH), left, TILE_TOP, state instanceof State.Armed ? Tint.SQUAD
-                : bright ? Tint.WHITE : Tint.DIMMED, false, TILE_ADVANCE));
-        slot.icon().ifPresent(icon -> glyphs.add(new Glyph(String.valueOf((char) (FIRST_ICON + icon.ordinal())),
-                left + ICON_INSET, TILE_TOP + ICON_INSET, bright ? Tint.WHITE : Tint.DIMMED, false, ICON_ADVANCE)));
-        glyphs.addAll(keycap(slot.binding(), left));
-        if (slot.icon().isEmpty()) {
-            return glyphs;
-        }
-        switch (state) {
-            case State.Cooling cooling -> {
-                var digits = digits(Math.clamp(cooling.seconds(), 1, MAX_SECONDS));
-                int width = digits.length() * SYMBOL_ADVANCE - 1;
-                glyphs.add(new Glyph(digits, left + (TILE - width) / 2, TILE_TOP + (TILE - DIGIT_HEIGHT) / 2, Tint.WHITE, true,
-                        digits.length() * SYMBOL_ADVANCE));
+        int left = -TILE;
+        boolean cooling = slot.state() instanceof State.Cooling;
+        glyphs.add(glyph(BACKING, left, top, Tint.WHITE, TILE_ADVANCE));
+        if (slot.state() instanceof State.Cooling(int seconds, double done)) {
+            int level = (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
+            if (level > 0) {
+                glyphs.add(glyph((char) (FIRST_FILL + level - 1), left, top, Tint.WHITE, TILE_ADVANCE));
             }
-            case State.Charged charged -> {
-                var count = charged.stored() + "/" + charged.capacity();
-                int x = left + TILE - 1 - (count.length() - 1) * COUNT_PITCH - COUNT_WIDTH;
-                for (int index = 0; index < count.length(); index++) {
-                    char character = count.charAt(index);
-                    char glyph = character == '/' ? COUNT_SLASH : (char) (FIRST_COUNT_DIGIT + character - '0');
-                    glyphs.add(new Glyph(String.valueOf(glyph), x + index * COUNT_PITCH, TILE_TOP + TILE - 1 - COUNT_HEIGHT,
-                            Tint.WHITE, false, COUNT_WIDTH + 1));
-                }
+        }
+        glyphs.add(glyph((char) ((cooling ? FIRST_COOLING_ICON : FIRST_ICON) + slot.icon().ordinal()), left + ICON_INSET,
+                top + ICON_INSET, Tint.WHITE, ICON_ADVANCE));
+        glyphs.add(glyph(FRAME, left, top, switch (slot.state()) {
+            case State.Ready _ -> side;
+            case State.Cooling _ -> Tint.DIMMED;
+            case State.Armed _ -> Tint.SQUAD;
+        }, TILE_ADVANCE));
+        if (slot.state() instanceof State.Cooling(int seconds, double done)) {
+            var digits = String.valueOf(Math.clamp(seconds, 1, MAX_SECONDS));
+            int width = DIGIT_WIDTH + (digits.length() - 1) * DIGIT_PITCH;
+            for (int index = 0; index < digits.length(); index++) {
+                glyphs.add(glyph((char) (FIRST_DIGIT + digits.charAt(index) - '0'), left + (TILE - width) / 2 + index * DIGIT_PITCH,
+                        top + (TILE - DIGIT_HEIGHT) / 2 + 1, Tint.WHITE, DIGIT_ADVANCE));
             }
-            case State.Ready _, State.Armed _ -> { }
         }
+        glyphs.add(glyph((char) (FIRST_BADGE + slot.binding().ordinal()), left, top, Tint.WHITE, slot.binding().advance));
+        glyphs.addAll(label(slot, top));
         return glyphs;
     }
 
-    private static List<Glyph> keycap(Binding binding, int left) {
-        boolean wide = binding.symbols.length > 1;
-        int width = KEYCAP_WIDTHS[wide ? 1 : 0];
-        int x = left + (TILE - width) / 2;
+    /**
+     * The name left of the tile, level with its middle, or above the pips when the ability holds several uses. It stays
+     * white while the tile recharges, because grey letters vanish against a bright floor.
+     */
+    private static List<Glyph> label(Slot slot, int top) {
         var glyphs = new ArrayList<Glyph>();
-        glyphs.add(new Glyph(String.valueOf(wide ? WIDE_KEYCAP : KEYCAP), x, 0, Tint.WHITE, false, width + 1));
-        for (int symbol = 0; symbol < binding.symbols.length; symbol++) {
-            glyphs.add(new Glyph(String.valueOf(binding.symbols[symbol]), x + 2 + symbol * SYMBOL_ADVANCE, 1, Tint.SHADOW, false,
-                    SYMBOL_ADVANCE));
+        var name = HudPanel.capitals(slot.name());
+        int right = -TILE - NAME_GAP;
+        var charges = slot.charges();
+        boolean pips = charges.capacity() > 1;
+        int width = name.chars().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_LETTER_ADVANCE : LETTER_ADVANCE).sum();
+        if (!name.isEmpty()) {
+            glyphs.add(new Glyph(name, right - width, top + (pips ? 4 : 8), Tint.WHITE, true, width));
+        }
+        if (pips) {
+            int x = right - charges.capacity() * PIP_ADVANCE + 1;
+            for (int pip = 0; pip < charges.capacity(); pip++) {
+                glyphs.add(glyph(pip < charges.stored() ? PIP_HELD : PIP_SPENT, x + pip * PIP_ADVANCE, top + 14, Tint.WHITE, PIP_ADVANCE));
+            }
         }
         return glyphs;
     }
 
-    private static String digits(int number) {
-        var digits = new StringBuilder();
-        String.valueOf(number).chars().forEach(digit -> digits.append((char) (FIRST_DIGIT + digit - '0')));
-        return digits.toString();
+    private static Glyph glyph(char glyph, int x, int y, Tint tint, int advance) {
+        return new Glyph(String.valueOf(glyph), x, y, tint, false, advance);
     }
 }

@@ -41,6 +41,7 @@ public final class Combat {
         private long raiseUntil;
         private boolean guarding;
         private long leapUntil;
+        private int leapTicks;
         private boolean jumping;
         private boolean jumped;
         private boolean leaped;
@@ -97,7 +98,14 @@ public final class Combat {
     }
 
     public void startLeapCooldown(Player player, int ticks) {
-        state(player).leapUntil = game.tick() + ticks;
+        var state = state(player);
+        state.leapUntil = game.tick() + ticks;
+        state.leapTicks = ticks;
+    }
+
+    /** How long the last leap's cooldown was in all. */
+    public int leapTicks(Player player) {
+        return state(player).leapTicks;
     }
 
     public static boolean holdsBlade(Player player) {

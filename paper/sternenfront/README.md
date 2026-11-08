@@ -148,19 +148,15 @@ deployment countdown. Hovering shows the post name, recommendation, selection, a
 the reason. The landing button names its target
 post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
-After spawning, the order bar shows the assault's priority post, or the nearest objective outside the assault, with its
-letter, horizontal distance and direction relative to the player's view. When all posts are safe, it points to the post
-nearest the enemy HQ for defence. The bearing updates every `respawn.navigation-update-ticks`, by default five ticks.
-Inside the target's capture area, it says that the post is here instead of showing a direction. It does not route around walls.
-Ability hints temporarily replace the bearing; the current order remains
-visible alongside both.
+After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
+objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence.
 
 ## Minimap
 
 A deployed player with the pack sees a map in the top-left corner, north up and centred on them, `minimap.radius` blocks
 to its rim. It shows the posts with the combat HUD's letter badges and ownership colours, both headquarters, the player's
 arrow at the nearest of sixteen headings, their squad as gold dots and other allies as smaller dots of their side's colour.
-Posts beyond the radius stay on the rim along their bearing. Headquarters and fighters beyond it are left out, so
+Posts beyond the radius stay on the rim along their bearing. Yellow corners frame the post to make for, as Redeployment describes. Headquarters and fighters beyond it are left out, so
 nothing on the rim hides a post's badge. An enemy shows for `minimap.enemy-ticks` after each shot it fires, and only
 while the player's client draws it, so a vanished player or a hidden body never shows. The list under the map names the
 player and their squad beside class marks, in the menu tiles' capitals, and dims anyone dead or choosing a spawn.
@@ -170,8 +166,8 @@ A player's squad is the fireteam that last took their order (see Bots). It stays
 and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
 
 The map is a boss bar line of its own that the pack's text shader moves into the corner, and it hides with the combat
-HUD for dialogues, screen effects and scenes. Its slot comes after the objective and order lines, so a post's capture bar
-or a hero's bar stands one slot lower than without it. It redraws every `minimap.update-ticks` and sends nothing while
+HUD for dialogues, screen effects and scenes. Its slot comes after the objective line, so a post's capture bar or a
+hero's bar stands one slot lower than without it. It redraws every `minimap.update-ticks` and sends nothing while
 nothing on it moved.
 
 ## Combat feedback
@@ -195,22 +191,27 @@ a multiple of that blaster's base in `combat-feedback.spread-steps`, so every bl
 cool and opens fully hot on the move. A scoped or spreadless long rifle shows none, and the vanilla crosshair stays inside
 the ticks. All three share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat or guard meter.
+A player with the pack sees their own kills, assists and death in the top-right corner, newest on top, at most four
+lines. A line reads killer, mark and victim in the minimap's capitals, with the player's own name in white and others
+in their side's colour: a skull for a kill or a death, its outline for an assist and a diamond beside it for a headshot.
+Bots go by their minimap call signs. A line greys out in its last second and is gone after `kill-feed.seconds`. It rides
+on the minimap's boss bar line, and stays up while the player is dead so the kill cam shows who it was. Sternenfront's
+own potion effects hide their icons, which would otherwise cover the feed.
 A grenade holds `abilities.grenade.charges` throws, full on each deployment, and they come back one at a time, each
-`cooldown-seconds` after the one before. The HUD shows the throws left as `1/2` and the seconds to the next only when none is
+`cooldown-seconds` after the one before. The HUD shows the throws left as pips and the seconds to the next only when none is
 left, which is also the only time the vanilla cooldown runs on its material. Bots keep a plain cooldown.
 Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` and `combat-feedback.elite-ready-ticks`;
 idle kill counts and point progress stay hidden.
 Nearby gains combine into one segment.
-A player with the pack sees each ability as a tile in the screen's bottom-right corner: Q against the corner, F left of
-it, each with its own icon under a keycap. A tile is bright when ready, shows the uses left as `2/2` while it holds more
-than one, and dims with the seconds left while it recharges; a key with nothing bound shows an empty dimmed tile. A bladed
-hero's leap gets a tile under a double-jump keycap while it recharges, and a kill streak's strike a gold-ringed tile under
-Shift+F until it is thrown. The tiles ride on the action bar: `CombatHud` puts them in the line's middle, which needs the
-line's width as the client measures it, and the pack's text shader moves them into the corner. Feedback that replaces
-the action bar, such as an ability's cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
-explains each binding on the existing order bar for `respawn.ability-hint-seconds`, and the deploy chat line gives the
-full names.
-Death or disconnect restarts an unfinished hint sequence on the next deployment. Completed hints stay hidden until the abilities change.
+A player with the pack sees their abilities as a column of tiles in the screen's bottom-right corner: F against the
+corner, Q above it, then a bladed hero's leap under a double-jump badge, and a kill streak's strike framed in gold under
+Shift+F until it is thrown. A key with nothing bound shows no tile. Each tile carries its key on a badge and the
+ability's full name beside it. A ready tile is bright and framed in the side's colour; a recharging one turns grey
+behind the seconds left and a fill that rises as it recharges. Several uses show as pips under the name. The tiles ride
+on the action bar: `CombatHud` puts them in the line's middle, which needs the line's width as the client measures it,
+and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
+cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
+explains each binding in chat with its key, full name and what it does.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
@@ -261,11 +262,10 @@ higher chime, and a killing headshot adds `heroes.points.headshot`. Both scale w
 players. A bot kill counts towards stats, pays `rewards.bot-kill` and fills the orbital strike's streak at `streaks.bots-per-kill`.
 A kill by something still flying after its owner fell pays as usual but does not count towards the next life's streak.
 
-`orders` gives each fighter one goal at a time, shown under the objective line, which pays points and coins when completed. Its muted HUD line shows the goal and progress; completion announces the reward. Battle
-points also feed the round's awards, which need two fighters and pay `rewards.award`, and a rank that lasts across rounds:
+Battle points also feed the round's awards, which need two fighters and pay `rewards.award`, and a rank that lasts across rounds:
 `bc_sternenfront_career` keeps every player's total and best round, `career.ranks` sets the thresholds and `career.rank.<index>`
-in `messages.yml` names them. The details button of the round recap in chat adds battle points, captured posts and
-completed orders to the shared results and rewards.
+in `messages.yml` names them. The details button of the round recap in chat adds battle points and captured posts to the
+shared results and rewards.
 
 ## Animated bodies
 

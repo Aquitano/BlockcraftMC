@@ -4,6 +4,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.sternenfront.bot.Bots;
 import me.blockcraft.sternenfront.combat.CombatHud;
+import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import me.blockcraft.sternenfront.game.MinimapLayout.Mark;
@@ -31,9 +32,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * The map and the squad in the screen's top-left corner while a player with the pack is deployed, on a boss bar line
- * of their own that the pack's text shader moves there. It redraws every few ticks and sends nothing while nothing on
- * it moved. An enemy shows only for a while after it fired, and only if the player's client draws it at all.
+ * The map and the squad in the screen's top-left corner while a player with the pack is deployed, and their
+ * {@link KillFeed} in the top-right while it has lines, on a boss bar line of their own that the pack's text shader
+ * moves into both corners. It redraws every few ticks and sends nothing while nothing on it moved. An enemy shows only
+ * for a while after it fired, and only if the player's client draws it at all.
  */
 final class Minimap implements Listener {
 
@@ -48,7 +50,8 @@ final class Minimap implements Listener {
 
     private static final class Panel {
         private final BossBar bar = BossBar.bossBar(Component.empty(), 0, BossBar.Color.PINK, BossBar.Overlay.NOTCHED_20);
-        private List<Glyph> drawn = List.of();
+        private List<Glyph> drawnMap = List.of();
+        private List<Glyph> drawnFeed = List.of();
         private boolean shown;
     }
 
@@ -75,10 +78,13 @@ final class Minimap implements Listener {
         }
         var field = game.combatants();
         for (var player : Bukkit.getOnlinePlayers()) {
-            if (game.onField(player) && BlockcraftApi.get().resourcePack().applied(player) && !CombatHud.covered(player)) {
-                draw(player, field, tick);
-            } else {
+            boolean seen = game.isPlaying(player) && BlockcraftApi.get().resourcePack().applied(player) && !CombatHud.covered(player);
+            var map = seen && game.onField(player) ? map(player, field, tick) : List.<Glyph>of();
+            var feed = seen ? KillFeed.layout(game.killFeed().live(player.getUniqueId(), tick), player.getName(), tick) : List.<Glyph>of();
+            if (map.isEmpty() && feed.isEmpty()) {
                 hide(player);
+            } else {
+                draw(player, map, feed);
             }
         }
     }
@@ -95,7 +101,7 @@ final class Minimap implements Listener {
         }
     }
 
-    private void draw(Player viewer, List<LivingEntity> field, long tick) {
+    private List<Glyph> map(Player viewer, List<LivingEntity> field, long tick) {
         var side = game.factionOf(viewer).orElseThrow();
         var here = viewer.getLocation();
         var view = new MinimapLayout.View(here.getX(), here.getZ(), settings.radius());
@@ -114,6 +120,10 @@ final class Minimap implements Listener {
                     view.clamped(centre.getX(), centre.getZ(), MinimapLayout.BADGE_REACH),
                     game.posts().owner(index).map(Tint::of).orElse(Tint.WHITE)));
         }
+        game.deployment().order(viewer).ifPresent(target -> {
+            var centre = game.map().posts().get(target).center();
+            glyphs.add(MinimapLayout.target(view.clamped(centre.getX(), centre.getZ(), MinimapLayout.BADGE_REACH)));
+        });
         var squadmates = game.bots().squadmates(viewer);
         var squadPlayers = game.bots().squadPlayers(viewer);
         var squad = new HashSet<>(squadPlayers);
@@ -148,10 +158,15 @@ final class Minimap implements Listener {
         glyphs.addAll(enemies);
         glyphs.add(MinimapLayout.arrow(here.getYaw()));
         glyphs.addAll(MinimapLayout.list(members(viewer, side, squadPlayers, squadmates)));
+        return glyphs;
+    }
+
+    private void draw(Player viewer, List<Glyph> map, List<Glyph> feed) {
         var panel = panels.computeIfAbsent(viewer.getUniqueId(), ignored -> new Panel());
-        if (!glyphs.equals(panel.drawn)) {
-            panel.drawn = List.copyOf(glyphs);
-            panel.bar.name(MinimapLayout.render(glyphs));
+        if (!map.equals(panel.drawnMap) || !feed.equals(panel.drawnFeed)) {
+            panel.drawnMap = List.copyOf(map);
+            panel.drawnFeed = List.copyOf(feed);
+            panel.bar.name(MinimapLayout.render(map).append(HudPanel.render(Corner.TOP_RIGHT, MinimapLayout.FONT, feed)));
         }
         if (!panel.shown) {
             viewer.showBossBar(panel.bar);
@@ -181,7 +196,7 @@ final class Minimap implements Listener {
         return game.heroOf(player).isPresent() ? Role.HERO : Role.of(game.fighter(player).combatClass());
     }
 
-    private String botName(Faction side, Bots.Squadmate mate) {
+    String botName(Faction side, Bots.Squadmate mate) {
         return botNames.computeIfAbsent(mate.number(), number -> PlainTextComponentSerializer.plainText().serialize(
                 game.messages().get("minimap.bot." + side.key() + "." + mate.role().key(), Formatter.number("number", number))));
     }
