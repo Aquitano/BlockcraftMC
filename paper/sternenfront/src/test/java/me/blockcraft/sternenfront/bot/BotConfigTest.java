@@ -13,8 +13,7 @@ public class BotConfigTest {
 
     @Test
     public void bundledPresetsIncreaseCombatPressureAndKeepContinuousFireForVeteran() {
-        var source = YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile());
-        var config = BotConfig.from(source, 6);
+        var config = BotConfig.from(bundled(), 6);
         var easy = config.profiles().get(BotDifficulty.EASY);
         var normal = config.profiles().get(BotDifficulty.NORMAL);
         var veteran = config.profiles().get(BotDifficulty.VETERAN);
@@ -36,20 +35,22 @@ public class BotConfigTest {
 
     @Test
     public void profileOverridesDoNotChangeTheOtherDifficulties() {
-        var source = new org.bukkit.configuration.MemoryConfiguration();
+        var source = bundled();
+        double easyDamage = BotConfig.from(source, 6).profiles().get(BotDifficulty.EASY).damageScale();
         source.set("bots.profiles.veteran.damage-scale", 0.8);
         source.set("bots.difficulty", "veteran");
         source.set("bots.step-height", 2);
         var config = BotConfig.from(source, 6);
         assertEquals(BotDifficulty.VETERAN, config.difficulty());
         assertEquals(0.8, config.profiles().get(BotDifficulty.VETERAN).damageScale(), 0.001);
-        assertEquals(0.6, config.profiles().get(BotDifficulty.EASY).damageScale(), 0.001);
+        assertEquals(easyDamage, config.profiles().get(BotDifficulty.EASY).damageScale(), 0.001);
         assertEquals(1, config.stepHeight(), 0.001);
     }
 
     @Test
     public void humansReplaceBotSeatsWithoutExceedingTheTarget() {
-        var source = new org.bukkit.configuration.MemoryConfiguration();
+        var source = bundled();
+        source.set("bots.fill-per-team", 6);
         var config = BotConfig.from(source, 6);
         assertEquals(6, config.needed(0));
         assertEquals(5, config.needed(1));
@@ -61,7 +62,7 @@ public class BotConfigTest {
 
     @Test
     public void coverAndVoiceOverridesKeepSearchAndChatterBounded() {
-        var source = new org.bukkit.configuration.MemoryConfiguration();
+        var source = bundled();
         source.set("bots.cover.search-radius", 100);
         source.set("bots.cover.peek-ticks", 0);
         source.set("bots.voice.range", 1000);
@@ -75,5 +76,10 @@ public class BotConfigTest {
         assertEquals(1, config.voice().volume(), 0.001);
         assertEquals(100, config.voice().soldierCooldownTicks());
         assertEquals(60, config.voice().globalCooldownTicks());
+    }
+
+    /** The plugin fills its config with the bundled values before reading it, as BundledDefaults does. */
+    private static YamlConfiguration bundled() {
+        return YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile());
     }
 }

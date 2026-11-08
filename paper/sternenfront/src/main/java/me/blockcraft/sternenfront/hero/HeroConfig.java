@@ -74,45 +74,45 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
         var rally = section(abilities, "rally");
         var rocket = section(abilities, "wrist-rocket");
         var lightning = section(abilities, "force-lightning");
-        int lightningTicks = Math.max(1, lightning.getInt("ticks", 30));
+        int lightningTicks = Math.max(1, lightning.getInt("ticks"));
         var healthByHero = new EnumMap<Hero, Double>(Hero.class);
         Arrays.stream(Hero.values()).filter(hero -> hero != Hero.CHAMPION)
-                .forEach(hero -> healthByHero.put(hero, Math.max(1, health.getDouble(hero.key(), 50))));
+                .forEach(hero -> healthByHero.put(hero, Math.max(1, health.getDouble(hero.key()))));
         var cooldowns = new EnumMap<HeroAbility, Integer>(HeroAbility.class);
         Arrays.stream(HeroAbility.values())
-                .forEach(ability -> cooldowns.put(ability, Math.max(1, section(abilities, ability.key()).getInt("cooldown-seconds", 15))));
+                .forEach(ability -> cooldowns.put(ability, Math.max(1, section(abilities, ability.key()).getInt("cooldown-seconds"))));
         return new HeroConfig(
-                Math.max(0, config.getInt("cost", 600)),
-                Math.max(1, config.getInt("per-faction", 1)),
-                new Points(Math.max(0, points.getInt("kill", 100)), Math.max(0, points.getInt("capture", 100)),
-                        Math.max(0, points.getInt("neutralise", 50)), Math.max(0, points.getInt("headshot", 25)),
-                        Math.max(0, points.getInt("multikill", 25))),
+                Math.max(0, config.getInt("cost")),
+                Math.max(1, config.getInt("per-faction")),
+                new Points(Math.max(0, points.getInt("kill")), Math.max(0, points.getInt("capture")),
+                        Math.max(0, points.getInt("neutralise")), Math.max(0, points.getInt("headshot")),
+                        Math.max(0, points.getInt("multikill"))),
                 Map.copyOf(healthByHero),
-                new Saber(Math.max(0, saber.getDouble("damage", 8)), Math.clamp(saber.getDouble("blocked-share", 0.3), 0, 1),
+                new Saber(Math.max(0, saber.getDouble("damage")), Math.clamp(saber.getDouble("blocked-share"), 0, 1),
                         color(colors, "jedi", 0x3D8BFF), color(colors, "sith", 0xFF2A2A), color(colors, "white", 0xF4F8FF),
                         color(colors, "relic", 0xF4F8FF),
-                        Math.max(0, saber.getInt("ignite-ticks", 6)), Math.max(10, saber.getInt("hum-ticks", 40)),
-                        Math.max(1, saber.getInt("leap-cooldown-seconds", 5)), saber.getDouble("leap-forward", 1.4),
-                        saber.getDouble("leap-up", 0.7)),
+                        Math.max(0, saber.getInt("ignite-ticks")), Math.max(10, saber.getInt("hum-ticks")),
+                        Math.max(1, saber.getInt("leap-cooldown-seconds")), saber.getDouble("leap-forward"),
+                        saber.getDouble("leap-up")),
                 Map.copyOf(cooldowns),
-                new Push(Math.max(1, push.getDouble("range", 7)), Math.clamp(push.getDouble("angle", 70), 1, 180),
-                        push.getDouble("strength", 1.7), push.getDouble("up", 0.5), Math.max(0, push.getDouble("damage", 2)),
-                        Math.clamp(push.getInt("wind-up-ticks", 5), 0, 20)),
-                new Throw(Math.max(1, saberThrow.getDouble("range", 14)), Math.max(0.2, saberThrow.getDouble("speed", 1.2)),
-                        Math.max(0, saberThrow.getDouble("damage", 9))),
-                new Grip(Math.max(1, grip.getDouble("range", 14)), Math.max(1, grip.getInt("seconds", 2)),
-                        Math.max(0, grip.getDouble("damage", 7)), Math.max(1, grip.getInt("pulse-ticks", 10))),
-                new Jetpack(Math.max(1, jetpack.getInt("seconds", 4)), Math.max(0, jetpack.getDouble("thrust", 0.4))),
-                new Grapple(Math.max(1, grapple.getDouble("range", 30)), Math.max(0.2, grapple.getDouble("speed", 2.2))),
-                new Orbital(Math.max(1, orbital.getInt("delay-ticks", 60)), Math.max(1, orbital.getDouble("radius", 5)),
-                        Math.max(1, orbital.getInt("blasts", 6)), Math.max(0, orbital.getDouble("damage", 24))),
-                new Rally(Math.max(1, rally.getDouble("radius", 12)), Math.max(1, rally.getInt("seconds", 6))),
-                new Rocket(Math.max(1, rocket.getDouble("range", 64)), Math.max(0.1, rocket.getDouble("speed", 1.6)),
-                        Math.max(0.1, rocket.getDouble("radius", 3.5)), Math.max(0, rocket.getDouble("damage", 18))),
-                new Lightning(Math.max(1, lightning.getDouble("range", 10)), Math.clamp(lightning.getDouble("angle", 50), 1, 180),
-                        lightningTicks, Math.clamp(lightning.getInt("pulse-ticks", 5), 1, lightningTicks),
-                        Math.max(1, lightning.getInt("targets", 3)), Math.max(0, lightning.getDouble("damage", 12))),
-                Math.max(0, root.getInt("rewards.hero", 15)));
+                new Push(Math.max(1, push.getDouble("range")), Math.clamp(push.getDouble("angle"), 1, 180),
+                        push.getDouble("strength"), push.getDouble("up"), Math.max(0, push.getDouble("damage")),
+                        Math.clamp(push.getInt("wind-up-ticks"), 0, 20)),
+                new Throw(Math.max(1, saberThrow.getDouble("range")), Math.max(0.2, saberThrow.getDouble("speed")),
+                        Math.max(0, saberThrow.getDouble("damage"))),
+                new Grip(Math.max(1, grip.getDouble("range")), Math.max(1, grip.getInt("seconds")),
+                        Math.max(0, grip.getDouble("damage")), Math.max(1, grip.getInt("pulse-ticks"))),
+                new Jetpack(Math.max(1, jetpack.getInt("seconds")), Math.max(0, jetpack.getDouble("thrust"))),
+                new Grapple(Math.max(1, grapple.getDouble("range")), Math.max(0.2, grapple.getDouble("speed"))),
+                new Orbital(Math.max(1, orbital.getInt("delay-ticks")), Math.max(1, orbital.getDouble("radius")),
+                        Math.max(1, orbital.getInt("blasts")), Math.max(0, orbital.getDouble("damage"))),
+                new Rally(Math.max(1, rally.getDouble("radius")), Math.max(1, rally.getInt("seconds"))),
+                new Rocket(Math.max(1, rocket.getDouble("range")), Math.max(0.1, rocket.getDouble("speed")),
+                        Math.max(0.1, rocket.getDouble("radius")), Math.max(0, rocket.getDouble("damage"))),
+                new Lightning(Math.max(1, lightning.getDouble("range")), Math.clamp(lightning.getDouble("angle"), 1, 180),
+                        lightningTicks, Math.clamp(lightning.getInt("pulse-ticks"), 1, lightningTicks),
+                        Math.max(1, lightning.getInt("targets")), Math.max(0, lightning.getDouble("damage"))),
+                Math.max(0, root.getInt("rewards.hero")));
     }
 
     public double health(Hero hero) {
