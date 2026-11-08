@@ -149,13 +149,13 @@ final class AnimatedBodies implements AutoCloseable {
         return drawn.containsKey(actor.getUniqueId());
     }
 
-    void draw(LivingEntity actor, RigBody body, Insignia insignia, double recoil, Collection<? extends Player> viewers) {
+    void draw(LivingEntity actor, RigBody body, Insignia insignia, boolean fired, Collection<? extends Player> viewers) {
         var trackers = drawn.computeIfAbsent(actor.getUniqueId(), id -> spawn(actor, body, insignia));
         trackers.wear(insignia, actor.getServer().getCurrentTick());
         for (var viewer : viewers) {
             trackers.showTo(viewer, outlined.test(viewer, actor));
         }
-        if (recoil >= 1) {
+        if (fired) {
             trackers.shoot();
         }
     }
