@@ -30,9 +30,14 @@ public final class CombatHud {
     /** A meter glyph's width with its spacing, which each vent window glyph laid over it shares. */
     private static final int METER_ADVANCE = 42;
 
-    public void show(Player player, Guard guard) {
+    /** Whether a dialogue, a screen effect or a scene has the screen, which the HUD then leaves to it. */
+    public static boolean covered(Player player) {
         var api = BlockcraftApi.get();
-        if (api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player)) return;
+        return api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
+    }
+
+    public void show(Player player, Guard guard) {
+        if (covered(player)) return;
         game.deployment().controlsChanged(player);
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();

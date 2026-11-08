@@ -460,6 +460,10 @@ scope:
 
 outlines: {enabled: true, range: 64, allies: false}
 
+# The map in the top-left corner while deployed, north up around the player: radius blocks reach its rim. It redraws every
+# update-ticks and sends nothing while nothing on it moved. An enemy shows for enemy-ticks after each shot it fires.
+minimap: {radius: 48, update-ticks: 4, enemy-ticks: 60}
+
 combat-feedback:
   marker-ticks: 8
   reward-ticks: 30

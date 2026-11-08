@@ -613,6 +613,20 @@ hud:
   objective: "<own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
   priority: "<accent>★"
 
+# A bot in the squad list under the minimap, drawn in the menu tiles' capitals.
+minimap:
+  bot:
+    kolonien:
+      soldier: "CT-<number>"
+      heavy: "CT-<number>"
+      scout: "CT-<number>"
+      medic: "CT-<number>"
+    hegemonie:
+      soldier: "B1-<number>"
+      heavy: "B2-<number>"
+      scout: "B1-<number>"
+      medic: "B1-<number>"
+
 killcam:
   watching: "<muted>Besiegt von <white><killer>"
 

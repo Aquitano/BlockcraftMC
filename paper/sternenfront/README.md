@@ -152,6 +152,25 @@ Inside the target's capture area, it says that the post is here instead of showi
 Ability hints temporarily replace the bearing; the current order remains
 visible alongside both.
 
+## Minimap
+
+A deployed player with the pack sees a map in the top-left corner, north up and centred on them, `minimap.radius` blocks
+to its rim. It shows the posts with the combat HUD's letter badges and ownership colours, both headquarters, the player's
+arrow at the nearest of sixteen headings, their squad as gold dots and other allies as smaller dots of their side's colour.
+Posts beyond the radius stay on the rim along their bearing. Headquarters and fighters beyond it are left out, so
+nothing on the rim hides a post's badge. An enemy shows for `minimap.enemy-ticks` after each shot it fires, and only
+while the player's client draws it, so a vanished player or a hidden body never shows. The list under the map names the
+player and their squad beside class marks, in the menu tiles' capitals, and dims anyone dead or choosing a spawn.
+`minimap.bot` in `messages.yml` names the bots.
+
+A player's squad is the fireteam that last took their order (see Bots). It stays theirs while no other team takes it,
+and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
+
+The map is a boss bar line of its own that the pack's text shader moves into the corner, and it hides with the combat
+HUD for dialogues, screen effects and scenes. Its slot comes after the objective and order lines, so a post's capture bar
+or a hero's bar stands one slot lower than without it. It redraws every `minimap.update-ticks` and sends nothing while
+nothing on it moved.
+
 ## Combat feedback
 
 During combat, enemies have red outlines with every weapon, without aiming or sneaking. This applies to players and
