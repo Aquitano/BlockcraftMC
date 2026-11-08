@@ -102,9 +102,8 @@ final class MinimapLayout {
                 .toList();
     }
 
-    static Glyph badge(int post, boolean hollow, Pixel at, Tint tint) {
-        return new Glyph(String.valueOf((char) (BADGE + post * 2 + (hollow ? 1 : 0))), at.x() - BADGE_HALF, at.y() - BADGE_HALF,
-                tint, true, BADGE_ADVANCE);
+    static Glyph badge(PostBadge badge, Pixel at, Tint tint) {
+        return new Glyph(String.valueOf(badge.glyph(BADGE)), at.x() - BADGE_HALF, at.y() - BADGE_HALF, tint, true, BADGE_ADVANCE);
     }
 
     /** Corners round the badge of the post the player should make for. */

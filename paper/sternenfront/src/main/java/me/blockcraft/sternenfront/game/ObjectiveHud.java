@@ -14,13 +14,13 @@ import java.util.Map;
 import java.util.stream.StreamSupport;
 
 /**
- * The round at the top of the screen: each player's own reinforcements on the left, a tile per command post in its
+ * The round at the top of the screen: each player's own reinforcements on the left, a badge per command post in its
  * holder's colour, the enemy's reinforcements on the right and the time left. It takes a boss bar's text line because
  * that is the one place text stays on top at every GUI scale; the pack draws this colour and overlay of bar as nothing.
  */
 final class ObjectiveHud {
 
-    private static final char FIRST_PIP = '\uE230';
+    private static final char FIRST_BADGE = '\uE230';
 
     private final SternenfrontGame game;
     private final Messages messages;
@@ -34,14 +34,14 @@ final class ObjectiveHud {
         }
     }
 
-    void update(Reinforcements reinforcements, int secondsLeft, long second) {
-        var tiles = Component.text();
+    void update(Reinforcements reinforcements, int secondsLeft, long tick) {
+        var badges = Component.text();
         for (int index : game.posts().indices()) {
-            tiles.append(tile(game.posts(), index, second)).append(Component.space());
+            badges.append(badge(game.posts(), index, tick)).append(Component.space());
         }
         bars.forEach((faction, bar) -> bar.name(messages.get("hud.objective",
                 Placeholder.component("own", Component.text(reinforcements.left(faction), faction.text())),
-                Placeholder.component("posts", tiles.build()),
+                Placeholder.component("posts", badges.build()),
                 Placeholder.component("enemy", Component.text(reinforcements.left(faction.enemy()), faction.enemy().text())),
                 Placeholder.unparsed("time", TimerBar.clock(secondsLeft)))));
         for (var viewer : Bukkit.getOnlinePlayers()) {
@@ -60,11 +60,10 @@ final class ObjectiveHud {
         }
     }
 
-    private Component tile(Posts posts, int index, long second) {
-        boolean hollow = posts.contested(index) && second % 2 == 0;
+    private Component badge(Posts posts, int index, long tick) {
         var colour = posts.owner(index).map(Faction::text).orElse(NamedTextColor.WHITE);
-        var pip = UiFont.glyph((char) (FIRST_PIP + index * 2 + (hollow ? 1 : 0))).color(colour);
-        return posts.priority(index) ? messages.get("hud.priority").append(pip) : pip;
+        var badge = UiFont.glyph(PostBadge.of(posts, index, tick).glyph(FIRST_BADGE)).color(colour);
+        return posts.priority(index) ? messages.get("hud.priority").append(badge) : badge;
     }
 
     void clear() {

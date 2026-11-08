@@ -30,7 +30,7 @@ final class KillFeed {
 
     static final int ROWS = 4;
     static final int ROW = 9;
-    private static final int FADE_TICKS = 20;
+    private static final int FADE_TICKS = SternenfrontGame.TICKS_PER_SECOND;
     private static final int GAP = 3;
     static final char SKULL = '\uE050';
     private static final char HOLLOW_SKULL = SKULL + 1;
@@ -47,7 +47,7 @@ final class KillFeed {
     }
 
     static KillFeed from(ConfigurationSection config) {
-        return new KillFeed(Math.clamp(config.getInt("kill-feed.seconds", 5), 1, 30) * 20);
+        return new KillFeed(Math.clamp(config.getInt("kill-feed.seconds", 5), 1, 30) * SternenfrontGame.TICKS_PER_SECOND);
     }
 
     void add(UUID player, Kind kind, Optional<Named> other, long tick) {

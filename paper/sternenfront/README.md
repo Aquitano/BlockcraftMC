@@ -212,7 +212,7 @@ on the action bar: `CombatHud` puts them in the line's middle, which needs the l
 and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
 cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
 explains each binding in chat with its key, full name and what it does.
-`ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
+`ObjectiveHud` shows reinforcements, a badge per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
 stay steadier walking and the repeater wants a crouch. A sprint shows the lowered pose of the held blaster, which cannot

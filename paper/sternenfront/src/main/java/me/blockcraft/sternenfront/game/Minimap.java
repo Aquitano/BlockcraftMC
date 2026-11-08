@@ -110,13 +110,12 @@ final class Minimap implements Listener {
             var centre = headquarters.zone().getCenter();
             view.inside(centre.getX(), centre.getZ()).ifPresent(pixel -> glyphs.add(MinimapLayout.mark(Mark.HEADQUARTERS, pixel, Tint.of(faction))));
         });
-        long second = tick / 20;
         // Posts on one bearing share the rim with nearer ones, and the nearer badge goes on top.
         var farthestFirst = game.posts().indices().stream()
                 .sorted(Comparator.comparingDouble((Integer index) -> -across(game.map().posts().get(index).center(), here))).toList();
         for (int index : farthestFirst) {
             var centre = game.map().posts().get(index).center();
-            glyphs.add(MinimapLayout.badge(index, game.posts().contested(index) && second % 2 == 0,
+            glyphs.add(MinimapLayout.badge(PostBadge.of(game.posts(), index, tick),
                     view.clamped(centre.getX(), centre.getZ(), MinimapLayout.BADGE_REACH),
                     game.posts().owner(index).map(Tint::of).orElse(Tint.WHITE)));
         }

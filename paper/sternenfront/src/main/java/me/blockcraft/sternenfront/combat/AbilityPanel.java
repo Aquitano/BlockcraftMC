@@ -64,6 +64,8 @@ final class AbilityPanel {
     private static final int DIGIT_PITCH = 7;
     private static final int DIGIT_WIDTH = 8;
     private static final int DIGIT_HEIGHT = 11;
+    /** The seconds centred on the tile, the odd pixel above them. */
+    private static final int DIGIT_TOP = (TILE - DIGIT_HEIGHT + 1) / 2;
     private static final int MAX_SECONDS = 99;
     private static final int PIP_ADVANCE = 7;
     /** The pack draws these capitals two pixels wider, so their diagonals show. */
@@ -96,35 +98,37 @@ final class AbilityPanel {
         return glyphs;
     }
 
+    /** The tile from its backing up: a recharging one adds its fill under a grey icon and its seconds over the frame. */
     private static List<Glyph> slot(Slot slot, int top, Tint side) {
-        var glyphs = new ArrayList<Glyph>();
         int left = -TILE;
-        boolean cooling = slot.state() instanceof State.Cooling;
+        var glyphs = new ArrayList<Glyph>();
         glyphs.add(glyph(BACKING, left, top, Tint.WHITE, TILE_ADVANCE));
-        if (slot.state() instanceof State.Cooling(int seconds, double done)) {
-            int level = (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
-            if (level > 0) {
-                glyphs.add(glyph((char) (FIRST_FILL + level - 1), left, top, Tint.WHITE, TILE_ADVANCE));
-            }
-        }
-        glyphs.add(glyph((char) ((cooling ? FIRST_COOLING_ICON : FIRST_ICON) + slot.icon().ordinal()), left + ICON_INSET,
-                top + ICON_INSET, Tint.WHITE, ICON_ADVANCE));
-        glyphs.add(glyph(FRAME, left, top, switch (slot.state()) {
-            case State.Ready _ -> side;
-            case State.Cooling _ -> Tint.DIMMED;
-            case State.Armed _ -> Tint.SQUAD;
-        }, TILE_ADVANCE));
-        if (slot.state() instanceof State.Cooling(int seconds, double done)) {
-            var digits = String.valueOf(Math.clamp(seconds, 1, MAX_SECONDS));
-            int width = DIGIT_WIDTH + (digits.length() - 1) * DIGIT_PITCH;
-            for (int index = 0; index < digits.length(); index++) {
-                glyphs.add(glyph((char) (FIRST_DIGIT + digits.charAt(index) - '0'), left + (TILE - width) / 2 + index * DIGIT_PITCH,
-                        top + (TILE - DIGIT_HEIGHT) / 2 + 1, Tint.WHITE, DIGIT_ADVANCE));
+        switch (slot.state()) {
+            case State.Ready _ -> glyphs.addAll(face(FIRST_ICON, slot, side, left, top));
+            case State.Armed _ -> glyphs.addAll(face(FIRST_ICON, slot, Tint.SQUAD, left, top));
+            case State.Cooling(int seconds, double done) -> {
+                int level = (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
+                if (level > 0) {
+                    glyphs.add(glyph((char) (FIRST_FILL + level - 1), left, top, Tint.WHITE, TILE_ADVANCE));
+                }
+                glyphs.addAll(face(FIRST_COOLING_ICON, slot, Tint.DIMMED, left, top));
+                var digits = String.valueOf(Math.clamp(seconds, 1, MAX_SECONDS));
+                int width = DIGIT_WIDTH + (digits.length() - 1) * DIGIT_PITCH;
+                for (int index = 0; index < digits.length(); index++) {
+                    glyphs.add(glyph((char) (FIRST_DIGIT + digits.charAt(index) - '0'), left + (TILE - width) / 2 + index * DIGIT_PITCH,
+                            top + DIGIT_TOP, Tint.WHITE, DIGIT_ADVANCE));
+                }
             }
         }
         glyphs.add(glyph((char) (FIRST_BADGE + slot.binding().ordinal()), left, top, Tint.WHITE, slot.binding().advance));
         glyphs.addAll(label(slot, top));
         return glyphs;
+    }
+
+    /** The ability's icon from the run starting at {@code firstIcon}, framed in {@code frame}. */
+    private static List<Glyph> face(char firstIcon, Slot slot, Tint frame, int left, int top) {
+        return List.of(glyph((char) (firstIcon + slot.icon().ordinal()), left + ICON_INSET, top + ICON_INSET, Tint.WHITE, ICON_ADVANCE),
+                glyph(FRAME, left, top, frame, TILE_ADVANCE));
     }
 
     /**

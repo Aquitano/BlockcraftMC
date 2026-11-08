@@ -73,7 +73,7 @@ public class MinimapLayoutTest {
         for (int post = 0; post < 5; post++) {
             double angle = post * Math.PI * 2 / 5;
             var rim = view.clamped(Math.sin(angle) * 900, -Math.cos(angle) * 900, MinimapLayout.BADGE_REACH);
-            glyphs.add(MinimapLayout.badge(post, post % 2 == 0, rim, Tint.REPUBLIC));
+            glyphs.add(MinimapLayout.badge(new PostBadge(post, post % 2 == 0), rim, Tint.REPUBLIC));
             glyphs.add(MinimapLayout.target(rim));
         }
         for (var mark : Mark.values()) {
