@@ -198,18 +198,19 @@ Bots go by their minimap call signs. A line greys out in its last second and is 
 on the minimap's boss bar line, and stays up while the player is dead so the kill cam shows who it was. Sternenfront's
 own potion effects hide their icons, which would otherwise cover the feed.
 A grenade holds `abilities.grenade.charges` throws, full on each deployment, and they come back one at a time, each
-`cooldown-seconds` after the one before. The HUD shows the throws left as `1/2` and the seconds to the next only when none is
+`cooldown-seconds` after the one before. The HUD shows the throws left as pips and the seconds to the next only when none is
 left, which is also the only time the vanilla cooldown runs on its material. Bots keep a plain cooldown.
 Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` and `combat-feedback.elite-ready-ticks`;
 idle kill counts and point progress stay hidden.
 Nearby gains combine into one segment.
-A player with the pack sees each ability as a tile in the screen's bottom-right corner: Q against the corner, F left of
-it, each with its own icon under a keycap. A tile is bright when ready, shows the uses left as `2/2` while it holds more
-than one, and dims with the seconds left while it recharges; a key with nothing bound shows an empty dimmed tile. A bladed
-hero's leap gets a tile under a double-jump keycap while it recharges, and a kill streak's strike a gold-ringed tile under
-Shift+F until it is thrown. The tiles ride on the action bar: `CombatHud` puts them in the line's middle, which needs the
-line's width as the client measures it, and the pack's text shader moves them into the corner. Feedback that replaces
-the action bar, such as an ability's cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
+A player with the pack sees their abilities as a column of tiles in the screen's bottom-right corner: F against the
+corner, Q above it, then a bladed hero's leap under a double-jump badge, and a kill streak's strike framed in gold under
+Shift+F until it is thrown. A key with nothing bound shows no tile. Each tile carries its key on a badge and the
+ability's full name beside it. A ready tile is bright and framed in the side's colour; a recharging one turns grey
+behind the seconds left and a fill that rises as it recharges. Several uses show as pips under the name. The tiles ride
+on the action bar: `CombatHud` puts them in the line's middle, which needs the line's width as the client measures it,
+and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
+cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
 explains each binding in chat with its key, full name and what it does.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.

@@ -13,8 +13,9 @@ const int BLOCKCRAFT_PANEL_FIRST_TINT = 176;
 const vec2 BLOCKCRAFT_PANEL_CORNER = vec2(4.0, 4.0);
 // The top-right panel's top-right corner, from the top-right corner of the screen.
 const vec2 BLOCKCRAFT_TOP_RIGHT_PANEL_CORNER = vec2(-4.0, 4.0);
-// The action bar panel's top-right corner, from the bottom-right corner of the screen.
-const vec2 BLOCKCRAFT_ACTION_PANEL_CORNER = vec2(-3.0, -28.0);
+// The action bar panel's top-right corner, from the bottom-right corner of the screen: a column of four ability tiles,
+// AbilityPanel.HEIGHT pixels, ends three pixels above the bottom.
+const vec2 BLOCKCRAFT_ACTION_PANEL_CORNER = vec2(-3.0, -111.0);
 const int BLOCKCRAFT_PANEL_TINT_COUNT = 7;
 const vec3 BLOCKCRAFT_PANEL_TINTS[BLOCKCRAFT_PANEL_TINT_COUNT] = vec3[](
     vec3(1.0),                          // white

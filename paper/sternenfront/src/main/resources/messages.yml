@@ -480,6 +480,8 @@ reinforcement:
 
 hero:
   head: "<white>Heldenrüstung"
+  leap:
+    name: "<white>Machtsprung"
   saber-lore:
     - "<left>Trifft alle Gegner im Schwung vor dir."
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"

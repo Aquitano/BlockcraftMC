@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.ShadowColor;
 import net.kyori.adventure.text.format.TextColor;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Glyphs the pack's text shader moves into a corner of the screen. Each glyph's colour names the corner, its row below
@@ -43,6 +44,8 @@ public final class HudPanel {
     public record Glyph(String text, int x, int y, Tint tint, boolean shadow, int advance) { }
 
     private static final int FIRST_TINT = 176;
+    /** The menu tiles' capitals, which the panels' fonts share, with an underscore and a space of the panels' own. */
+    private static final String CAPITALS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&_ ";
 
     private HudPanel() {
     }
@@ -66,6 +69,14 @@ public final class HudPanel {
             line.append(UiFont.space(-cursor));
         }
         return line.build();
+    }
+
+    /** {@code text} in the capitals, with a question mark for any letter they lack. */
+    public static String capitals(String text) {
+        var letters = new StringBuilder();
+        text.toUpperCase(Locale.ROOT).codePoints().forEach(codepoint ->
+                letters.appendCodePoint(CAPITALS.indexOf(codepoint) >= 0 ? codepoint : '?'));
+        return letters.toString();
     }
 
     private static TextColor colour(Corner corner, int row, Tint tint) {

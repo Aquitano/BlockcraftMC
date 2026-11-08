@@ -1,9 +1,14 @@
 {
   "providers": [
-    {"type":"bitmap","file":"blockcraft:font/ability_tile.png","ascent":7,"height":20,"chars":["\ue000"]},
-    {"type":"bitmap","file":"blockcraft:font/ability_icons.png","ascent":7,"height":16,"chars":["\ue010\ue011\ue012\ue013\ue014\ue015\ue016\ue017\ue018\ue019\ue01a\ue01b\ue01c\ue01d\ue01e\ue01f\ue020"]},
-    {"type":"bitmap","file":"blockcraft:font/ability_keys.png","ascent":7,"height":9,"chars":["\ue030\ue031"]},
-    {"type":"bitmap","file":"blockcraft:font/ability_symbols.png","ascent":7,"height":7,"chars":["\ue040\ue041\ue042\ue043\ue044\ue045\ue046\ue047\ue048\ue049\ue04a\ue04b\ue04c\ue04d"]},
-    {"type":"bitmap","file":"blockcraft:font/ability_counts.png","ascent":7,"height":7,"chars":["\ue050\ue051\ue052\ue053\ue054\ue055\ue056\ue057\ue058\ue059\ue05a"]}
+    {"type":"space","advances":{" ":4}},
+    {"type":"bitmap","file":"blockcraft:font/ability_tile.png","ascent":7,"height":24,"chars":["\ue000"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_frame.png","ascent":7,"height":24,"chars":["\ue001"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_icons.png","ascent":7,"height":20,"chars":["\ue010\ue011\ue012\ue013\ue014\ue015\ue016\ue017\ue018\ue019\ue01a\ue01b\ue01c\ue01d\ue01e\ue01f\ue020"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_icons_cooling.png","ascent":7,"height":20,"chars":["\ue030\ue031\ue032\ue033\ue034\ue035\ue036\ue037\ue038\ue039\ue03a\ue03b\ue03c\ue03d\ue03e\ue03f\ue040"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_keys.png","ascent":7,"height":9,"chars":["\ue050\ue051\ue052\ue053"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_fill.png","ascent":7,"height":24,"chars":["\ue060\ue061\ue062\ue063\ue064\ue065\ue066\ue067\ue068\ue069\ue06a\ue06b\ue06c\ue06d\ue06e\ue06f\ue070\ue071\ue072\ue073\ue074\ue075"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_digits.png","ascent":7,"height":11,"chars":["\ue080\ue081\ue082\ue083\ue084\ue085\ue086\ue087\ue088\ue089"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_pips.png","ascent":7,"height":7,"chars":["\ue090\ue091"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_letters.png","ascent":7,"height":7,"chars":["\u0041\u0042\u0043\u0044\u0045\u0046\u0047\u0048\u0049\u004a\u004b\u004c\u004d\u004e\u004f\u0050\u0051\u0052\u0053\u0054\u0055\u0056\u0057\u0058\u0059\u005a\u0030\u0031\u0032\u0033\u0034\u0035\u0036\u0037\u0038\u0039\u00c4\u00d6\u00dc\u002d\u002e\u003a\u0021\u003f\u2026\u002f\u002b\u0026"]}
   ]
 }

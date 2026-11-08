@@ -3,6 +3,8 @@ import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Arc2D;
@@ -10,19 +12,21 @@ import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class HudArt {
 
     private static final int PIP = 13;
+    private static final int OUTLINE = 0xFF0F141D;
 
     /** Corners around the crosshair for a hit, a headshot and a kill, each stronger and in the colour of its news; a headshot adds a diamond above. */
     private static BufferedImage crosshairMarks() {
@@ -214,7 +218,7 @@ public final class HudArt {
         ImageIO.write(onTheCrosshair(crosshairMarks(), true), "PNG", root.resolve("crosshair_marks.png").toFile());
         ImageIO.write(onTheCrosshair(spreadTicks(), true), "PNG", root.resolve("spread_ticks.png").toFile());
         minimap(root);
-        abilities(root);
+        abilities(root, args.length > 1 ? Path.of(args[1]) : null);
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
@@ -664,148 +668,7 @@ public final class HudArt {
         return y >= 0 && y < art.length && x >= 0 && x < art[0].length() && art[y].charAt(x) != '.';
     }
 
-    /**
-     * The ability tiles' font in the screen's bottom-right corner: a tile, an icon for every ability in the order of
-     * Sternenfront's {@code AbilityIcon}, two keycaps, the cooldown's digits and the keys' symbols, and the small digits
-     * of a charge count. Every glyph hangs from the line's top, which the text shader moves into the corner.
-     */
-    private static void abilities(Path root) throws Exception {
-        ImageIO.write(abilityTile(), "PNG", root.resolve("ability_tile.png").toFile());
-        var icons = new BufferedImage(ICON * ABILITY_ICONS.size(), ICON, BufferedImage.TYPE_INT_ARGB);
-        int left = 0;
-        for (var art : ABILITY_ICONS.values()) {
-            drawIcon(icons, left, art);
-            padAdvance(icons, left + ICON - 1, 0, ICON);
-            left += ICON;
-        }
-        ImageIO.write(icons, "PNG", root.resolve("ability_icons.png").toFile());
-        ImageIO.write(abilityKeys(), "PNG", root.resolve("ability_keys.png").toFile());
-        ImageIO.write(pixelRow(SYMBOLS, 5, 0xFFFFFFFF), "PNG", root.resolve("ability_symbols.png").toFile());
-        ImageIO.write(outlinedCounts(), "PNG", root.resolve("ability_counts.png").toFile());
-        Files.writeString(root.getParent().getParent().resolve("font/abilities.json"), String.join(",\n    ",
-                "{\n  \"providers\": [",
-                topAligned("ability_tile.png", TILE, run(0xE000, 1)),
-                topAligned("ability_icons.png", ICON, run(0xE010, ABILITY_ICONS.size())),
-                topAligned("ability_keys.png", KEY_HEIGHT, run(0xE030, KEY_WIDTHS.length)),
-                topAligned("ability_symbols.png", 7, run(0xE040, SYMBOLS.length)),
-                topAligned("ability_counts.png", 7, run(0xE050, COUNTS.length))).replace("[,", "[") + "\n  ]\n}\n");
-    }
-
-    private static final int TILE = 20;
-    private static final int ICON = 16;
-    private static final int[] KEY_WIDTHS = {9, 15};
-    private static final int KEY_HEIGHT = 9;
-    private static final int OUTLINE = 0xFF0F141D;
-
-    /** A rounded tile in light grey on dark glass, which the shader dims while its ability cools down. */
-    private static BufferedImage abilityTile() {
-        var image = new BufferedImage(TILE, TILE, BufferedImage.TYPE_INT_ARGB);
-        for (int y = 0; y < TILE; y++) {
-            for (int x = 0; x < TILE; x++) {
-                boolean edgeX = x == 0 || x == TILE - 1;
-                boolean edgeY = y == 0 || y == TILE - 1;
-                if (edgeX && edgeY) {
-                    continue;
-                }
-                boolean rim = edgeX || edgeY;
-                boolean bevel = !rim && (x == 1 || y == 1 || x == TILE - 2 || y == TILE - 2);
-                image.setRGB(x, y, rim ? 0xFFB8C4D6 : bevel ? 0xE0263042 : 0xC8101722);
-            }
-        }
-        return image;
-    }
-
-    /** A keycap for one symbol and one for two, light with a dark rim so a dark letter reads on any sky. */
-    private static BufferedImage abilityKeys() {
-        var image = new BufferedImage(KEY_WIDTHS[1] * KEY_WIDTHS.length, KEY_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-        for (int key = 0; key < KEY_WIDTHS.length; key++) {
-            int width = KEY_WIDTHS[key];
-            for (int y = 0; y < KEY_HEIGHT; y++) {
-                for (int x = 0; x < width; x++) {
-                    boolean rim = x == 0 || y == 0 || x == width - 1 || y == KEY_HEIGHT - 1;
-                    boolean corner = (x == 0 || x == width - 1) && (y == 0 || y == KEY_HEIGHT - 1);
-                    if (!corner) {
-                        image.setRGB(key * KEY_WIDTHS[1] + x, y, rim ? OUTLINE : y == KEY_HEIGHT - 2 ? 0xFFAEB8C6 : 0xFFE6ECF4);
-                    }
-                }
-            }
-        }
-        return image;
-    }
-
-    /** The charge count's digits and slash, three pixels by five in white, ringed dark so they read over any icon. */
-    private static BufferedImage outlinedCounts() {
-        var image = new BufferedImage(5 * COUNTS.length, 7, BufferedImage.TYPE_INT_ARGB);
-        for (int glyph = 0; glyph < COUNTS.length; glyph++) {
-            for (int y = 0; y < 7; y++) {
-                for (int x = 0; x < 5; x++) {
-                    if (countInk(glyph, x - 1, y - 1)) {
-                        image.setRGB(glyph * 5 + x, y, 0xFFFFFFFF);
-                    } else if (nearCountInk(glyph, x - 1, y - 1)) {
-                        image.setRGB(glyph * 5 + x, y, OUTLINE);
-                    }
-                }
-            }
-        }
-        return image;
-    }
-
-    private static boolean nearCountInk(int glyph, int x, int y) {
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
-                if (countInk(glyph, x + dx, y + dy)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static boolean countInk(int glyph, int x, int y) {
-        return x >= 0 && y >= 0 && x < 3 && y < 5 && COUNTS[glyph][y].charAt(x) == '#';
-    }
-
-    /** Glyphs drawn as rows of {@code #}, each {@code width} wide, in one colour; the last column fixes every advance. */
-    private static BufferedImage pixelRow(String[][] glyphs, int width, int colour) {
-        var image = new BufferedImage(width * glyphs.length, glyphs[0].length, BufferedImage.TYPE_INT_ARGB);
-        for (int glyph = 0; glyph < glyphs.length; glyph++) {
-            for (int y = 0; y < glyphs[glyph].length; y++) {
-                for (int x = 0; x < width; x++) {
-                    if (glyphs[glyph][y].charAt(x) == '#') {
-                        image.setRGB(glyph * width + x, y, colour);
-                    }
-                }
-            }
-            padAdvance(image, glyph * width + width - 1, 0, glyphs[glyph].length);
-        }
-        return image;
-    }
-
-    /** {@code art}'s letters in their colours at {@code left}, ringed by a dark outline wherever ink meets a clear side. */
-    private static void drawIcon(BufferedImage image, int left, String[] art) {
-        for (int y = 0; y < ICON; y++) {
-            for (int x = 0; x < ICON; x++) {
-                char ink = art[y].charAt(x);
-                if (ink != '.') {
-                    image.setRGB(left + x, y, INK.get(ink));
-                }
-            }
-        }
-        var rim = new ArrayList<int[]>();
-        for (int y = 0; y < ICON; y++) {
-            for (int x = 0; x < ICON; x++) {
-                if (art[y].charAt(x) == '.' && (inked(art, x - 1, y) || inked(art, x + 1, y) || inked(art, x, y - 1) || inked(art, x, y + 1))) {
-                    rim.add(new int[] {x, y});
-                }
-            }
-        }
-        rim.forEach(texel -> image.setRGB(left + texel[0], texel[1], OUTLINE));
-    }
-
-    private static boolean inked(String[] art, int x, int y) {
-        return x >= 0 && y >= 0 && x < ICON && y < ICON && art[y].charAt(x) != '.';
-    }
-
+    /** The colours that a badge's art names by letter besides {@code #}. */
     private static final Map<Character, Integer> INK = Map.ofEntries(
             Map.entry('k', OUTLINE), Map.entry('w', 0xFFFFFFFF), Map.entry('l', 0xFFD9E0EA), Map.entry('m', 0xFF9AA6B8),
             Map.entry('d', 0xFF5A667A), Map.entry('e', 0xFF323B4C), Map.entry('r', 0xFFFF5B4B), Map.entry('R', 0xFFB0342C),
@@ -814,334 +677,666 @@ public final class HudArt {
             Map.entry('P', 0xFF9B6BFF), Map.entry('V', 0xFF5C37C0), Map.entry('u', 0xFFFFD447), Map.entry('U', 0xFFC48A12),
             Map.entry('n', 0xFFA8743F), Map.entry('N', 0xFF6A4524));
 
-    /** One icon per ability on a native 16-pixel grid, lit from the upper left; a dark outline is added round each. */
-    private static final Map<String, String[]> ABILITY_ICONS = linked(
-            "grenade", new String[] {
-                    "................",
-                    ".......lm.......",
-                    ".......md.......",
-                    ".....mlllmd.....",
-                    "....mlwwllmd....",
-                    "...mlwwlllmmd...",
-                    "...llwllllmmd...",
-                    "..eeeeeeeeeeee..",
-                    "..eoeyeoeyeoee..",
-                    "..mmmmmmmmmddd..",
-                    "...mmmmmmmddd...",
-                    "...dmmmmmdddd...",
-                    "....ddmmdddd....",
-                    ".....dddddd.....",
-                    "................",
-                    "................"},
-            "adrenaline", new String[] {
-                    "................",
-                    "............rl..",
-                    "...........rrm..",
-                    "..........wrR...",
-                    ".........wlRR...",
-                    "........wlmR....",
-                    ".......wgmd.....",
-                    "......wgGd......",
-                    ".....wgGd.......",
-                    "....wgGd........",
-                    "....lGd.........",
-                    "...dmd..........",
-                    "...dd...........",
-                    "..l.............",
-                    ".l..............",
-                    "................"},
-            "shield_wall", new String[] {
-                    "................",
-                    "................",
-                    "..cccccccccccC..",
-                    "..cwcccccccCCB..",
-                    "..ccCCCCCCCCCB..",
-                    "..cCCCCCCCCCCB..",
-                    "..cCcccccccCCB..",
-                    "..cCCCCCCCCCBB..",
-                    "..cCCCCCCCCCBB..",
-                    "...cCcccccCBB...",
-                    "...cCCCCCCCBB...",
-                    "....cCCCCCBB....",
-                    ".....cCCCBB.....",
-                    "......cCBB......",
-                    ".......BB.......",
-                    "................"},
-            "jump_pack", new String[] {
-                    "................",
-                    "................",
-                    ".......wwwwwww..",
-                    "........wllllm..",
-                    ".........wlllm..",
-                    ".........wlllm..",
-                    "........wllmlm..",
-                    ".......wlm..mm..",
-                    "......wlm....m..",
-                    ".....wlm........",
-                    "....wlm.........",
-                    "...wlm..........",
-                    ".oolm...........",
-                    ".yym............",
-                    ".oyo............",
-                    "................"},
-            "med_station", new String[] {
-                    "................",
-                    "......wwww......",
-                    "......wggw......",
-                    "......wggw......",
-                    "...wwwwggwwww...",
-                    "...wggggggggw...",
-                    "...wgggggggGw...",
-                    "...wwwwggwwww...",
-                    "......wgGw......",
-                    "......wgGw......",
-                    "......wwww......",
-                    "................",
-                    "...llllllllll...",
-                    "..mmmmmmmmmmmm..",
-                    "..dddddddddddd..",
-                    "................"},
-            "siege_mode", new String[] {
-                    "................",
-                    "................",
-                    "............dd..",
-                    ".llllllllllldd..",
-                    ".mmmmmmmmmmmddy.",
-                    "...dmmmmd...dd..",
-                    "...deeeed.......",
-                    "....dddd........",
-                    ".....dd.........",
-                    "....dddd........",
-                    "...dd.dd.d......",
-                    "..dd..dd..d.....",
-                    ".dd...dd...d....",
-                    ".mmm.mmmm.mmm...",
-                    "................",
-                    "................"},
-            "mining_charge", new String[] {
-                    "................",
-                    "...........r....",
-                    "...........d....",
-                    "..........d.....",
-                    "..........d.....",
-                    "..llllllllllll..",
-                    "..lrlmmmmmmmmd..",
-                    "..lmmmmmmmmmmd..",
-                    "..yyeeyyeeyyed..",
-                    "..yeeyyeeyyeed..",
-                    "..lmmmmmmmmmmd..",
-                    "..mmmmmmmmmmmd..",
-                    "..dddddddddddd..",
-                    "................",
-                    "................",
-                    "................"},
-            "force_push", new String[] {
-                    "................",
-                    "...l.l..........",
-                    "..ll.ll.l.......",
-                    "..ll.ll.ll...c..",
-                    "..ll.ll.ll....c.",
-                    "..lllllllll...c.",
-                    ".llllllllll.c.c.",
-                    ".lwlllllllm.c.c.",
-                    ".llllllllmm.c.c.",
-                    "..lllllllmm...c.",
-                    "...llllmmm....c.",
-                    "....lmmmm....c..",
-                    "................",
-                    "................",
-                    "................",
-                    "................"},
-            "saber_throw", new String[] {
-                    "................",
-                    ".............c..",
-                    "............cwc.",
-                    "...........cwc..",
-                    "..........cwc...",
-                    ".........cwc..l.",
-                    "........cwc...l.",
-                    ".......cwc....l.",
-                    "......cwc.....l.",
-                    ".....cwc.....l..",
-                    "....dwc.....ll..",
-                    "...mkd......l...",
-                    "..mkd.....ll....",
-                    "..dd.....ll.....",
-                    "....llll........",
-                    "................"},
-            "force_grip", new String[] {
-                    "................",
-                    ".....pppppp.....",
-                    "...ppp....ppp...",
-                    "..pp........PP..",
-                    "..p....ww....P..",
-                    ".pp....ww....PP.",
-                    ".p....wwww....P.",
-                    ".p...w.ww.w...P.",
-                    ".p.....ww.....P.",
-                    ".p....w..w....P.",
-                    ".pp...w..w...PP.",
-                    "..p..........P..",
-                    "..pp........PP..",
-                    "...PPP....PPP...",
-                    ".....PPPPPP.....",
-                    "................"},
-            "force_lightning", new String[] {
-                    "................",
-                    "........ppppp...",
-                    ".......pwwwP....",
-                    "......pwwwP.....",
-                    ".....pwwwP......",
-                    "....pwwwwpppp...",
-                    "...pppppwwwwP...",
-                    "........pwwP....",
-                    ".......pwwP.....",
-                    "......pwwP......",
-                    ".....pwwP.......",
-                    "....pwP.........",
-                    "...pP...........",
-                    "..P.............",
-                    "................",
-                    "................"},
-            "jetpack", new String[] {
-                    "................",
-                    "....ll....ll....",
-                    "...llll..llll...",
-                    "...lwlm..lwlm...",
-                    "...lwlmddlwlm...",
-                    "...lllmddlllm...",
-                    "...mmmmddmmmm...",
-                    "...mmmmddmmmm...",
-                    "...dmmdddmmmd...",
-                    "...ddddddddd....",
-                    "....dd...dd.....",
-                    "....oo...oo.....",
-                    "....yo...yo.....",
-                    "....oy...oy.....",
-                    ".....o....o.....",
-                    "................"},
-            "wrist_rocket", new String[] {
-                    "................",
-                    "................",
-                    "................",
-                    "................",
-                    ".....dd.........",
-                    ".....dlllllllr..",
-                    "..oy.wllllllllr.",
-                    ".oyy.mmmmmmmmRR.",
-                    "..oy.dmmmmmmmR..",
-                    ".....dd.........",
-                    "................",
-                    "................",
-                    "................",
-                    "................",
-                    "................",
-                    "................"},
-            "grapple", new String[] {
-                    "................",
-                    ".nN.............",
-                    "..nN............",
-                    "...nN...........",
-                    "....nN...mm.....",
-                    ".....nNNlm.m....",
-                    ".........mmm....",
-                    ".........l......",
-                    ".........l......",
-                    ".........l......",
-                    "...l.....l.....l",
-                    "...l....lll....l",
-                    "...ll..lmlml..ll",
-                    "....lllm...mlll.",
-                    ".....mm.....mm..",
-                    "................"},
-            "orbital_strike", new String[] {
-                    "......oyyo......",
-                    "......oyyo......",
-                    "......oyyo......",
-                    "......oyyo......",
-                    "......oyyo......",
-                    "......oyyo......",
-                    ".....ooyyoo.....",
-                    ".....oywwyo.....",
-                    "..rrroywwyoRRR..",
-                    ".r...ooyyoo...R.",
-                    "r......oo......R",
-                    "r..............R",
-                    ".r............R.",
-                    "..rrr......RRR..",
-                    ".....RRRRRR.....",
-                    "................"},
-            "rally", new String[] {
-                    "................",
-                    "..l.............",
-                    "..luuuuuu.......",
-                    "..luuuuuuuuu....",
-                    "..luuUuuuuuuuu..",
-                    "..luuUUuuuuuu...",
-                    "..luuUuuuuuUU...",
-                    "..luuuuuuUU.....",
-                    "..lUUU..........",
-                    "..m.............",
-                    "..m.............",
-                    "..m.............",
-                    "..m.............",
-                    ".dmd............",
-                    ".ddd............",
-                    "................"},
-            "leap", new String[] {
-                    "................",
-                    "................",
-                    ".......ww.......",
-                    "......wwww......",
-                    ".....ww..ww.....",
-                    "....ww....ww....",
-                    "...ww......ww...",
-                    "................",
-                    ".......cc.......",
-                    "......cccc......",
-                    ".....cc..cc.....",
-                    "....cc....cc....",
-                    "...cc......cc...",
-                    "................",
-                    "................",
-                    "................"});
+    /**
+     * The ability tiles' font in the screen's bottom-right corner, drawn at twice the resolution of its GUI size so a tile
+     * shows finer detail at GUI scale 2 and up: a dark backing, a frame the shader tints by state, a fill that rises
+     * while an ability recharges, every ability's icon in colour and in grey in the order of Sternenfront's
+     * {@code AbilityIcon}, the keys' badges, the cooldown's digits, charge pips and the label letters of the names.
+     * Every glyph hangs from the line's top, which the text shader moves into the corner.
+     */
+    private static void abilities(Path root, Path contactSheet) throws Exception {
+        var icons = new BufferedImage(2 * ICON * ABILITY_ICONS.size(), 2 * ICON, BufferedImage.TYPE_INT_ARGB);
+        var cooling = new BufferedImage(icons.getWidth(), icons.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        int left = 0;
+        for (var art : ABILITY_ICONS.values()) {
+            var icon = outlined(drawn(2 * ICON, art));
+            icons.createGraphics().drawImage(icon, left, 0, null);
+            cooling.createGraphics().drawImage(greyed(icon), left, 0, null);
+            padAdvance(icons, left + 2 * ICON - 1, 0, 2 * ICON);
+            padAdvance(cooling, left + 2 * ICON - 1, 0, 2 * ICON);
+            left += 2 * ICON;
+        }
+        ImageIO.write(tileBacking(), "PNG", root.resolve("ability_tile.png").toFile());
+        ImageIO.write(tileFrame(), "PNG", root.resolve("ability_frame.png").toFile());
+        ImageIO.write(tileFills(), "PNG", root.resolve("ability_fill.png").toFile());
+        ImageIO.write(icons, "PNG", root.resolve("ability_icons.png").toFile());
+        ImageIO.write(cooling, "PNG", root.resolve("ability_icons_cooling.png").toFile());
+        ImageIO.write(keyBadges(), "PNG", root.resolve("ability_keys.png").toFile());
+        ImageIO.write(cooldownDigits(), "PNG", root.resolve("ability_digits.png").toFile());
+        ImageIO.write(chargePips(), "PNG", root.resolve("ability_pips.png").toFile());
+        ImageIO.write(nameLetters(ImageIO.read(root.resolve("labels.png").toFile())), "PNG", root.resolve("ability_letters.png").toFile());
+        Files.writeString(root.getParent().getParent().resolve("font/abilities.json"), String.join(",\n    ",
+                "{\n  \"providers\": [\n    {\"type\":\"space\",\"advances\":{\" \":4}}",
+                topAligned("ability_tile.png", TILE, run(0xE000, 1)),
+                topAligned("ability_frame.png", TILE, run(0xE001, 1)),
+                topAligned("ability_icons.png", ICON, run(0xE010, ABILITY_ICONS.size())),
+                topAligned("ability_icons_cooling.png", ICON, run(0xE030, ABILITY_ICONS.size())),
+                topAligned("ability_keys.png", BADGE, run(0xE050, BADGES.length)),
+                topAligned("ability_fill.png", TILE, run(0xE060, FILL_LEVELS)),
+                topAligned("ability_digits.png", DIGIT, run(0xE080, DIGITS.length)),
+                topAligned("ability_pips.png", CHARGE_PIP, run(0xE090, 2)),
+                topAligned("ability_letters.png", 7, LABEL_LETTERS)) + "\n  ]\n}\n");
+        if (contactSheet != null) {
+            Files.createDirectories(contactSheet.toAbsolutePath().getParent());
+            ImageIO.write(contactSheet(icons, cooling), "PNG", contactSheet.toFile());
+        }
+    }
 
-    private static Map<String, String[]> linked(Object... namesAndArt) {
-        var art = new LinkedHashMap<String, String[]>();
-        for (int index = 0; index < namesAndArt.length; index += 2) {
-            var rows = (String[]) namesAndArt[index + 1];
-            if (rows.length != ICON || Arrays.stream(rows).anyMatch(row -> row.length() != ICON)) {
-                throw new IllegalStateException(namesAndArt[index] + " is not 16 by 16");
+    private static final int TILE = 24;
+    private static final int ICON = 20;
+    private static final int BADGE = 9;
+    private static final int DIGIT = 11;
+    /** A pip's cell is as tall as the line's ascent, which no bitmap may exceed, with the pip in its top four pixels. */
+    private static final int CHARGE_PIP = 7;
+    private static final int PIP_HEIGHT = 4;
+    /** One fill per GUI pixel of the tile's inside, which the frame's pixel borders on every side. */
+    private static final int FILL_LEVELS = TILE - 2;
+    private static final Color LIGHT = new Color(0xF2F6FB);
+    private static final Color SHADE = new Color(0xAEB9C9);
+    private static final Color STEEL = new Color(0x68758A);
+    private static final Color DEEP = new Color(0x283041);
+    private static final Color ORANGE = new Color(0xFF9D2E);
+    private static final Color YELLOW = new Color(0xFFE27A);
+    private static final Color RED = new Color(0xFF4B3E);
+    private static final Color GREEN = new Color(0x5FE07F);
+    private static final Color BLUE = new Color(0x3E9BFF);
+    private static final Color VIOLET = new Color(0xB48CFF);
+
+    /** Dark glass with rounded corners, a little lighter at the top. */
+    private static BufferedImage tileBacking() {
+        int size = 2 * TILE;
+        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        var g = smooth(image);
+        var shape = new RoundRectangle2D.Double(0, 0, size, size, 8, 8);
+        g.setPaint(new GradientPaint(0, 0, new Color(0x1C2638, false), 0, size, new Color(0x0B1019, false)));
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.86f));
+        g.fill(shape);
+        g.dispose();
+        padAdvance(image, size - 1, 0, size);
+        return image;
+    }
+
+    /** A ring a GUI pixel wide in white, so the shader's tint colours it, with brighter corners. */
+    private static BufferedImage tileFrame() {
+        int size = 2 * TILE;
+        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        var g = smooth(image);
+        var ring = new Area(new RoundRectangle2D.Double(0, 0, size, size, 8, 8));
+        ring.subtract(new Area(new RoundRectangle2D.Double(2, 2, size - 4, size - 4, 5, 5)));
+        g.setColor(new Color(0xFFFFFF));
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.78f));
+        g.fill(ring);
+        g.setComposite(AlphaComposite.SrcOver);
+        for (int corner = 0; corner < 4; corner++) {
+            var bracket = new Area(new Rectangle2D.Double(corner % 2 == 0 ? 0 : size - 9, corner < 2 ? 0 : size - 9, 9, 9));
+            bracket.intersect(ring);
+            g.fill(bracket);
+        }
+        g.dispose();
+        return image;
+    }
+
+    /** The recharge fill at each height, a pale wash with a bright edge on top, inside the frame. */
+    private static BufferedImage tileFills() {
+        int size = 2 * TILE;
+        var image = new BufferedImage(size * FILL_LEVELS, size, BufferedImage.TYPE_INT_ARGB);
+        var g = smooth(image);
+        for (int level = 1; level <= FILL_LEVELS; level++) {
+            int left = (level - 1) * size;
+            int top = size - 2 - 2 * level;
+            var inside = new Area(new RoundRectangle2D.Double(left + 2, 2, size - 4, size - 4, 5, 5));
+            var fill = new Area(new Rectangle2D.Double(left, top, size, size));
+            fill.intersect(inside);
+            g.setColor(new Color(0x7FB6E8));
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.34f));
+            g.fill(fill);
+            var edge = new Area(new Rectangle2D.Double(left, top, size, 1));
+            edge.intersect(inside);
+            g.setColor(new Color(0xCFE8FF));
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f));
+            g.fill(edge);
+            padAdvance(image, left + size - 1, 0, size);
+        }
+        g.dispose();
+        return image;
+    }
+
+    /** The key in a dark badge with a light rim: F, Q, Shift and F, and a double jump's two chevrons. */
+    private static BufferedImage keyBadges() {
+        int height = 2 * BADGE;
+        int cell = 2 * WIDE_BADGE;
+        var image = new BufferedImage(cell * BADGES.length, height, BufferedImage.TYPE_INT_ARGB);
+        for (int badge = 0; badge < BADGES.length; badge++) {
+            var symbols = BADGES[badge];
+            int width = 2 * (symbols.length == 1 ? BADGE : WIDE_BADGE);
+            var g = smooth(image);
+            g.translate(badge * cell, 0);
+            g.setColor(new Color(0xE6ECF4));
+            g.fill(new RoundRectangle2D.Double(0, 0, width, height, 6, 6));
+            g.setColor(new Color(0x111722));
+            g.fill(new RoundRectangle2D.Double(2, 2, width - 4, height - 4, 4, 4));
+            g.dispose();
+            int symbolsWidth = symbols.length * 10 + (symbols.length - 1) * 2;
+            int x = badge * cell + (width - symbolsWidth) / 2;
+            for (var symbol : symbols) {
+                for (int y = 0; y < symbol.length; y++) {
+                    for (int column = 0; column < symbol[y].length(); column++) {
+                        if (symbol[y].charAt(column) == '#') {
+                            image.setRGB(x + column, 2 + y, 0xFFF2F6FB);
+                        }
+                    }
+                }
+                x += 12;
             }
-            art.put((String) namesAndArt[index], rows);
+        }
+        return image;
+    }
+
+    private static final int WIDE_BADGE = 15;
+    /** Ten by fourteen texels each: F, Q, an outlined arrow up for Shift, and two chevrons for the double jump. */
+    private static final String[] KEY_F = {
+            "..........", ".########.", ".########.", ".##.......", ".##.......", ".######...", ".######...",
+            ".##.......", ".##.......", ".##.......", ".##.......", ".##.......", "..........", ".........."};
+    private static final String[] KEY_Q = {
+            "..........", "..######..", ".##....##.", ".##....##.", ".##....##.", ".##....##.", ".##....##.",
+            ".##....##.", ".##.##.##.", ".##..####.", "..#######.", "........##", "..........", ".........."};
+    private static final String[] KEY_SHIFT = {
+            "....##....", "...####...", "..##..##..", ".##....##.", "###....###", "..##..##..", "..##..##..",
+            "..##..##..", "..##..##..", "..######..", "..........", "..........", "..........", ".........."};
+    private static final String[] KEY_JUMPS = {
+            "....##....", "...####...", "..##..##..", ".##....##.", "##......##", "..........", "....##....",
+            "...####...", "..##..##..", ".##....##.", "##......##", "..........", "..........", ".........."};
+    private static final String[][][] BADGES = {{KEY_F}, {KEY_Q}, {KEY_SHIFT, KEY_F}, {KEY_JUMPS}};
+
+    /** Bold digits for the seconds left, six by nine GUI pixels, ringed dark so they read over any icon. */
+    private static BufferedImage cooldownDigits() {
+        int width = 2 * DIGIT_CELL;
+        var image = new BufferedImage(width * DIGITS.length, 2 * DIGIT, BufferedImage.TYPE_INT_ARGB);
+        for (int digit = 0; digit < DIGITS.length; digit++) {
+            var art = DIGITS[digit];
+            for (int y = -1; y <= art.length; y++) {
+                for (int x = -1; x <= art[0].length(); x++) {
+                    boolean ink = digitInk(art, x, y);
+                    boolean rim = !ink && (digitInk(art, x - 1, y) || digitInk(art, x + 1, y) || digitInk(art, x, y - 1)
+                            || digitInk(art, x, y + 1) || digitInk(art, x - 1, y - 1) || digitInk(art, x + 1, y + 1)
+                            || digitInk(art, x - 1, y + 1) || digitInk(art, x + 1, y - 1));
+                    if (ink || rim) {
+                        for (int dy = 0; dy < 2; dy++) {
+                            for (int dx = 0; dx < 2; dx++) {
+                                image.setRGB(digit * width + 2 * (x + 1) + dx, 2 * (y + 1) + dy, ink ? 0xFFFFFFFF : 0xE00B0F17);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return image;
+    }
+
+    private static boolean digitInk(String[] art, int x, int y) {
+        return y >= 0 && x >= 0 && y < art.length && x < art[y].length() && art[y].charAt(x) == '#';
+    }
+
+    private static final int DIGIT_CELL = 8;
+    private static final String[][] DIGITS = {
+            {".####.", "##..##", "##..##", "##..##", "##..##", "##..##", "##..##", "##..##", ".####."},
+            {"..##..", ".###..", "####..", "..##..", "..##..", "..##..", "..##..", "..##..", "######"},
+            {".####.", "##..##", "....##", "....##", "...##.", "..##..", ".##...", "##....", "######"},
+            {".####.", "##..##", "....##", "....##", "..###.", "....##", "....##", "##..##", ".####."},
+            {"...##.", "..###.", ".####.", "##.##.", "##.##.", "######", "...##.", "...##.", "...##."},
+            {"######", "##....", "##....", "#####.", "....##", "....##", "....##", "##..##", ".####."},
+            {"..###.", ".##...", "##....", "#####.", "##..##", "##..##", "##..##", "##..##", ".####."},
+            {"######", "....##", "....##", "...##.", "...##.", "..##..", "..##..", "..##..", "..##.."},
+            {".####.", "##..##", "##..##", "##..##", ".####.", "##..##", "##..##", "##..##", ".####."},
+            {".####.", "##..##", "##..##", "##..##", ".#####", "....##", "....##", "...##.", ".###.."}};
+
+    /** A charge held and one spent, each a short bar with a dark rim. */
+    private static BufferedImage chargePips() {
+        int width = 2 * PIP_WIDTH;
+        int height = 2 * PIP_HEIGHT;
+        var image = new BufferedImage(2 * width, 2 * CHARGE_PIP, BufferedImage.TYPE_INT_ARGB);
+        var g = smooth(image);
+        for (int pip = 0; pip < 2; pip++) {
+            g.setColor(new Color(OUTLINE, true));
+            g.fill(new RoundRectangle2D.Double(pip * width, 0, width, height, 3, 3));
+            g.setColor(pip == 0 ? LIGHT : new Color(0x3A4558));
+            g.fill(new RoundRectangle2D.Double(pip * width + 2, 2, width - 4, height - 4, 2, 2));
+        }
+        g.dispose();
+        return image;
+    }
+
+    private static final int PIP_WIDTH = 6;
+
+    /**
+     * The menu tiles' capitals at twice the resolution for the abilities' names, each in a cell wide enough for M, N
+     * and W, which take five pixels instead of three so their diagonals show; a three-pixel M reads as an N.
+     */
+    private static BufferedImage nameLetters(BufferedImage labels) {
+        int cell = 2 * 5;
+        int height = 2 * labels.getHeight();
+        var image = new BufferedImage(cell * LABEL_LETTERS.length(), height, BufferedImage.TYPE_INT_ARGB);
+        for (int letter = 0; letter < LABEL_LETTERS.length(); letter++) {
+            var wide = WIDE_LETTERS.get(LABEL_LETTERS.charAt(letter));
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < cell; x++) {
+                    boolean ink = wide != null ? y >= height - wide.length && wide[y - (height - wide.length)].charAt(x) == '#'
+                            : x < 6 && (labels.getRGB(letter * 3 + x / 2, y / 2) >>> 24) != 0;
+                    if (ink) {
+                        image.setRGB(letter * cell + x, y, 0xFFFFFFFF);
+                    }
+                }
+            }
+        }
+        return image;
+    }
+
+    private static final Map<Character, String[]> WIDE_LETTERS = Map.of(
+            'M', new String[] {"##......##", "###....###", "####..####", "##.####.##", "##..##..##", "##......##", "##......##",
+                    "##......##", "##......##", "##......##"},
+            'N', new String[] {"##......##", "###.....##", "####....##", "##.##...##", "##..##..##", "##...##.##", "##....####",
+                    "##.....###", "##......##", "##......##"},
+            'W', new String[] {"##......##", "##......##", "##......##", "##......##", "##......##", "##..##..##", "##.####.##",
+                    "####..####", "###....###", "##......##"});
+
+    private static Graphics2D smooth(BufferedImage image) {
+        var g = image.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        return g;
+    }
+
+    private static BufferedImage drawn(int size, Consumer<Graphics2D> art) {
+        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        var g = smooth(image);
+        art.accept(g);
+        g.dispose();
+        return image;
+    }
+
+    /** The icon over a dark rim two texels wide, a GUI pixel, round everything at least half covered. */
+    private static BufferedImage outlined(BufferedImage art) {
+        int size = art.getWidth();
+        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                if (covered(art, x, y)) {
+                    continue;
+                }
+                double nearest = Double.MAX_VALUE;
+                for (int dy = -3; dy <= 3; dy++) {
+                    for (int dx = -3; dx <= 3; dx++) {
+                        if (covered(art, x + dx, y + dy)) {
+                            nearest = Math.min(nearest, Math.hypot(dx, dy));
+                        }
+                    }
+                }
+                if (nearest <= 2.2) {
+                    image.setRGB(x, y, nearest <= 1.6 ? 0xF00B0F17 : 0x900B0F17);
+                }
+            }
+        }
+        var g = image.createGraphics();
+        g.drawImage(art, 0, 0, null);
+        g.dispose();
+        return image;
+    }
+
+    private static boolean covered(BufferedImage art, int x, int y) {
+        return x >= 0 && y >= 0 && x < art.getWidth() && y < art.getHeight() && (art.getRGB(x, y) >>> 24) >= 128;
+    }
+
+    /** The icon in grey and darker, as it shows while it recharges. */
+    private static BufferedImage greyed(BufferedImage icon) {
+        var image = new BufferedImage(icon.getWidth(), icon.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < icon.getHeight(); y++) {
+            for (int x = 0; x < icon.getWidth(); x++) {
+                int argb = icon.getRGB(x, y);
+                int luma = (int) Math.round(0.3 * (argb >> 16 & 255) + 0.59 * (argb >> 8 & 255) + 0.11 * (argb & 255));
+                int grey = (int) Math.round(luma * 0.55);
+                image.setRGB(x, y, argb & 0xFF000000 | grey << 16 | grey << 8 | grey);
+            }
+        }
+        return image;
+    }
+
+    private static void fill(Graphics2D g, Shape shape, Color colour) {
+        g.setPaint(colour);
+        g.fill(shape);
+    }
+
+    /** {@code shape} lit from the upper left: {@code lit} there, {@code shaded} towards the lower right. */
+    private static void lit(Graphics2D g, Shape shape, Color lit, Color shaded) {
+        var bounds = shape.getBounds2D();
+        g.setPaint(new GradientPaint((float) bounds.getMinX(), (float) bounds.getMinY(), lit,
+                (float) bounds.getMaxX(), (float) bounds.getMaxY(), shaded));
+        g.fill(shape);
+    }
+
+    private static void stroke(Graphics2D g, Shape shape, Color colour, double width) {
+        g.setPaint(colour);
+        g.setStroke(new BasicStroke((float) width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.draw(shape);
+    }
+
+    private static Path2D path(double... points) {
+        var path = new Path2D.Double();
+        path.moveTo(points[0], points[1]);
+        for (int index = 2; index < points.length; index += 2) {
+            path.lineTo(points[index], points[index + 1]);
+        }
+        return path;
+    }
+
+    private static Path2D closed(double... points) {
+        var path = path(points);
+        path.closePath();
+        return path;
+    }
+
+    private static Path2D curve(double fromX, double fromY, double viaX, double viaY, double toX, double toY) {
+        var path = new Path2D.Double();
+        path.moveTo(fromX, fromY);
+        path.quadTo(viaX, viaY, toX, toY);
+        return path;
+    }
+
+    /** A flame pointing down from ({@code x}, {@code top}), orange with a yellow core. */
+    private static void flame(Graphics2D g, double x, double top, double width, double length) {
+        var outer = new Path2D.Double();
+        outer.moveTo(x - width / 2, top);
+        outer.quadTo(x - width / 2, top + length * 0.6, x, top + length);
+        outer.quadTo(x + width / 2, top + length * 0.6, x + width / 2, top);
+        outer.closePath();
+        fill(g, outer, ORANGE);
+        var inner = new Path2D.Double();
+        inner.moveTo(x - width / 4, top);
+        inner.quadTo(x - width / 4, top + length * 0.4, x, top + length * 0.65);
+        inner.quadTo(x + width / 4, top + length * 0.4, x + width / 4, top);
+        inner.closePath();
+        fill(g, inner, YELLOW);
+    }
+
+    /** One icon per ability on a 40-texel grid, a light silhouette with one colour that names it. */
+    private static final Map<String, Consumer<Graphics2D>> ABILITY_ICONS = linked(
+            "grenade", (Consumer<Graphics2D>) g -> {
+                fill(g, new RoundRectangle2D.Double(15, 3, 10, 8, 3, 3), SHADE);
+                fill(g, new Rectangle2D.Double(17, 1, 6, 3), STEEL);
+                var body = new Ellipse2D.Double(5, 9, 30, 30);
+                lit(g, body, LIGHT, SHADE);
+                var band = new Area(new Rectangle2D.Double(4, 21, 32, 7));
+                band.intersect(new Area(body));
+                fill(g, band, STEEL);
+                for (double x : new double[] {10, 18.5, 27}) {
+                    fill(g, new RoundRectangle2D.Double(x, 22.5, 3.5, 4, 1.5, 1.5), ORANGE);
+                }
+                fill(g, new Ellipse2D.Double(11, 13, 7, 5), Color.WHITE);
+            },
+            "adrenaline", (Consumer<Graphics2D>) g -> {
+                g.translate(20, 20);
+                g.rotate(-Math.PI / 4);
+                fill(g, new Rectangle2D.Double(-19, -1, 8, 2), LIGHT);
+                fill(g, closed(-12, -3, -8, -5, -8, 5, -12, 3), SHADE);
+                lit(g, new RoundRectangle2D.Double(-9, -6.5, 18, 13, 4, 4), LIGHT, SHADE);
+                fill(g, new RoundRectangle2D.Double(-6.5, -3.5, 12, 7, 2, 2), GREEN);
+                fill(g, new Rectangle2D.Double(-6.5, -3.5, 12, 2), new Color(0xB9FFC9));
+                fill(g, new RoundRectangle2D.Double(8, -9, 3, 18, 1.5, 1.5), SHADE);
+                fill(g, new Rectangle2D.Double(11, -2, 5, 4), STEEL);
+                fill(g, new RoundRectangle2D.Double(15.5, -6.5, 3.5, 13, 1.5, 1.5), LIGHT);
+            },
+            "shield_wall", (Consumer<Graphics2D>) g -> {
+                var shield = new Path2D.Double();
+                shield.moveTo(9, 5);
+                shield.quadTo(20, 1, 34, 5);
+                shield.lineTo(34, 19);
+                shield.quadTo(33, 31, 21.5, 38);
+                shield.quadTo(10, 31, 9, 19);
+                shield.closePath();
+                g.setPaint(new GradientPaint(0, 3, new Color(0xC2F8FF), 0, 36, new Color(0x2295D6)));
+                g.fill(shield);
+                var lines = new Path2D.Double();
+                for (double y : new double[] {14, 21, 28}) {
+                    lines.moveTo(5, y);
+                    lines.lineTo(38, y);
+                }
+                var scan = new Area(new BasicStroke(1.4f).createStrokedShape(lines));
+                scan.intersect(new Area(shield));
+                fill(g, scan, new Color(0x5BC4F0));
+                var rim = new Path2D.Double();
+                rim.moveTo(12.5, 8);
+                rim.quadTo(21, 5, 30.5, 8);
+                rim.lineTo(30.5, 19);
+                rim.quadTo(30, 28, 21.5, 33.5);
+                stroke(g, rim, new Color(0xF2FDFF), 1.8);
+                stroke(g, path(1, 3, 9.5, 11), new Color(0xFF6A4A), 3.2);
+                stroke(g, path(2, 4, 9.5, 11), new Color(0xFFE2D6), 1.2);
+                fill(g, closed(9, 7, 10.5, 10, 14, 10.5, 10.5, 11.5, 9.5, 15, 8.5, 11.5, 5, 11, 8.5, 10), YELLOW);
+            },
+            "jump_pack", (Consumer<Graphics2D>) g -> {
+                flame(g, 9, 29, 7, 10);
+                flame(g, 15.5, 31, 5, 7);
+                stroke(g, curve(10, 30, 12, 12, 28, 9), LIGHT, 6);
+                fill(g, closed(24, 1, 37, 8.5, 25, 17), LIGHT);
+            },
+            "med_station", (Consumer<Graphics2D>) g -> {
+                for (double radius : new double[] {14, 19}) {
+                    var box = new Rectangle2D.Double(20 - radius, 16 - radius, 2 * radius, 2 * radius);
+                    stroke(g, new Arc2D.Double(box, -35, 70, Arc2D.OPEN), new Color(0x9CF2B0), 2.2);
+                    stroke(g, new Arc2D.Double(box, 145, 70, Arc2D.OPEN), new Color(0x9CF2B0), 2.2);
+                }
+                fill(g, closed(11, 37, 29, 37, 26, 30, 14, 30), STEEL);
+                var cross = new Area(new RoundRectangle2D.Double(15, 4, 10, 25, 3, 3));
+                cross.add(new Area(new RoundRectangle2D.Double(7.5, 11.5, 25, 10, 3, 3)));
+                lit(g, cross, new Color(0xA8FFBA), new Color(0x22B14C));
+                fill(g, new Rectangle2D.Double(17, 6, 2, 8), new Color(0xE6FFEA));
+            },
+            "siege_mode", (Consumer<Graphics2D>) g -> {
+                fill(g, new Rectangle2D.Double(1, 34, 38, 4), STEEL);
+                fill(g, closed(7, 25, 15, 25, 11, 37), SHADE);
+                fill(g, closed(25, 25, 33, 25, 29, 37), SHADE);
+                lit(g, new RoundRectangle2D.Double(5, 21, 30, 6, 2, 2), SHADE, STEEL);
+                lit(g, new RoundRectangle2D.Double(3, 7, 22, 15, 4, 4), LIGHT, SHADE);
+                fill(g, new Rectangle2D.Double(25, 9, 12, 4), SHADE);
+                fill(g, new Rectangle2D.Double(25, 15.5, 12, 4), SHADE);
+                fill(g, new Rectangle2D.Double(7, 11, 10, 3), STEEL);
+                fill(g, new Rectangle2D.Double(36, 8, 3, 12.5), ORANGE);
+            },
+            "mining_charge", (Consumer<Graphics2D>) g -> {
+                fill(g, closed(29, 1, 31.5, 7, 38, 5, 33.5, 10, 39, 15, 32, 14.5, 30, 20, 27, 14, 21, 15, 25, 10, 21, 5, 27, 7),
+                        YELLOW);
+                lit(g, new RoundRectangle2D.Double(3, 14, 30, 23, 4, 4), new Color(0xE3A25A), new Color(0x8E5420));
+                fill(g, new Rectangle2D.Double(8, 14, 3, 23), DEEP);
+                fill(g, new Rectangle2D.Double(25, 14, 3, 23), DEEP);
+                fill(g, new RoundRectangle2D.Double(12.5, 19, 11, 9, 2, 2), DEEP);
+                fill(g, new Rectangle2D.Double(14.5, 21, 3, 5), RED);
+                fill(g, new Rectangle2D.Double(19, 21, 3, 5), RED);
+                stroke(g, curve(17, 14, 15, 7, 22, 6), RED, 1.8);
+            },
+            "force_push", (Consumer<Graphics2D>) g -> {
+                for (int wave = 0; wave < 3; wave++) {
+                    double radius = 9 + wave * 5.5;
+                    stroke(g, new Arc2D.Double(12 - radius, 20 - radius, 2 * radius, 2 * radius, -45, 90, Arc2D.OPEN),
+                            wave == 0 ? new Color(0xBFE3FF) : BLUE, 2.6);
+                }
+                var hand = new Area(new RoundRectangle2D.Double(3, 15, 13, 17, 5, 5));
+                double[][] fingers = {{3, 7}, {6.5, 4}, {10, 5}, {13.5, 8}};
+                for (var finger : fingers) {
+                    hand.add(new Area(new RoundRectangle2D.Double(finger[0], finger[1], 3.2, 16 - finger[1] + 4, 3, 3)));
+                }
+                hand.add(new Area(new BasicStroke(3.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                        .createStrokedShape(path(15, 26, 19, 21))));
+                lit(g, hand, LIGHT, SHADE);
+            },
+            "saber_throw", (Consumer<Graphics2D>) g -> {
+                stroke(g, new Arc2D.Double(3, 3, 34, 34, 110, 110, Arc2D.OPEN), LIGHT, 2.4);
+                fill(g, closed(3, 25, 9, 29, 3, 31), LIGHT);
+                stroke(g, path(13, 27, 33, 7), new Color(0x7FE2FF), 6);
+                stroke(g, path(13, 27, 33, 7), Color.WHITE, 2.6);
+                stroke(g, path(7, 33, 13, 27), STEEL, 5);
+                stroke(g, path(9.5, 30.5, 11, 29), SHADE, 5);
+            },
+            "force_grip", (Consumer<Graphics2D>) g -> {
+                var aura = new Color(0xC9A8FF);
+                fill(g, new Ellipse2D.Double(11, 34, 18, 4.5), new Color(0x9A0B0F17, true));
+                for (int side = -1; side <= 1; side += 2) {
+                    stroke(g, new Arc2D.Double(20 - 15, 4, 30, 30, side < 0 ? 140 : -40, 80, Arc2D.OPEN), aura, 2);
+                    stroke(g, new Arc2D.Double(20 - 19, 2, 38, 34, side < 0 ? 150 : -30, 60, Arc2D.OPEN), VIOLET, 1.6);
+                }
+                var body = new Area(new Ellipse2D.Double(16.5, 3, 8, 8));
+                body.add(new Area(new RoundRectangle2D.Double(15, 12, 11, 12, 5, 5)));
+                var limbs = new Path2D.Double();
+                limbs.append(path(18, 22, 17, 30), false);
+                limbs.append(path(23, 22, 24.5, 30), false);
+                limbs.append(path(15.5, 15, 13.5, 21), false);
+                limbs.append(path(25.5, 15, 27.5, 21), false);
+                body.add(new Area(new BasicStroke(3.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND).createStrokedShape(limbs)));
+                lit(g, body, LIGHT, SHADE);
+                stroke(g, new Ellipse2D.Double(14, 9.5, 13, 4), VIOLET, 2.2);
+            },
+            "force_lightning", (Consumer<Graphics2D>) g -> {
+                stroke(g, path(16, 19, 8, 24, 5, 31), new Color(0xD7C2FF), 1.6);
+                stroke(g, path(25, 23, 33, 26, 35, 33), new Color(0xD7C2FF), 1.6);
+                var bolt = closed(17, 1, 8, 20, 17, 20, 11, 39, 32, 15, 22, 15, 29, 1);
+                lit(g, bolt, new Color(0xF4EDFF), VIOLET);
+                stroke(g, path(20, 5, 15, 17), Color.WHITE, 1.5);
+            },
+            "jetpack", (Consumer<Graphics2D>) g -> {
+                flame(g, 13.5, 27, 6, 12);
+                flame(g, 26.5, 27, 6, 12);
+                fill(g, closed(20, 1, 23, 7, 17, 7), RED);
+                lit(g, new RoundRectangle2D.Double(8, 6, 11, 20, 6, 6), LIGHT, SHADE);
+                lit(g, new RoundRectangle2D.Double(21, 6, 11, 20, 6, 6), LIGHT, SHADE);
+                fill(g, new Rectangle2D.Double(17, 10, 6, 5), STEEL);
+                fill(g, closed(10, 25, 17, 25, 16, 29, 11, 29), DEEP);
+                fill(g, closed(23, 25, 30, 25, 29, 29, 24, 29), DEEP);
+            },
+            "wrist_rocket", (Consumer<Graphics2D>) g -> {
+                fill(g, new Ellipse2D.Double(1, 30, 7, 7), new Color(0x8C96A6));
+                fill(g, new Ellipse2D.Double(5, 26, 6, 6), new Color(0xA7B0BE));
+                g.translate(21, 19);
+                g.rotate(-Math.PI / 4);
+                var exhaust = new Path2D.Double();
+                exhaust.moveTo(-8, -3.5);
+                exhaust.quadTo(-16, -3, -19, 0);
+                exhaust.quadTo(-16, 3, -8, 3.5);
+                exhaust.closePath();
+                fill(g, exhaust, ORANGE);
+                fill(g, closed(-8, -2, -14, 0, -8, 2), YELLOW);
+                fill(g, closed(-8, -4, -3, -4, -6, -9), SHADE);
+                fill(g, closed(-8, 4, -3, 4, -6, 9), SHADE);
+                lit(g, new RoundRectangle2D.Double(-8, -4, 17, 8, 3, 3), LIGHT, SHADE);
+                fill(g, closed(8, -4, 16, 0, 8, 4), RED);
+            },
+            "grapple", (Consumer<Graphics2D>) g -> {
+                var rope = new Path2D.Double();
+                rope.moveTo(3, 38);
+                rope.curveTo(5, 30, 12, 31, 16.5, 23.5);
+                stroke(g, rope, SHADE, 2.2);
+                stroke(g, new Ellipse2D.Double(14.5, 21.5, 5, 5), LIGHT, 1.8);
+                var hook = new Path2D.Double();
+                hook.append(path(18.5, 21.5, 31, 9), false);
+                hook.append(curve(28, 12, 35, 16, 30, 21), false);
+                hook.append(curve(28, 12, 24, 5, 19, 10), false);
+                stroke(g, hook, LIGHT, 3.8);
+                fill(g, closed(29, 18, 33, 23, 27.5, 22), LIGHT);
+                fill(g, closed(22, 7, 17, 11, 18, 5.5), LIGHT);
+                fill(g, closed(31, 4, 36, 4, 33.5, 9.5), LIGHT);
+            },
+            "orbital_strike", (Consumer<Graphics2D>) g -> {
+                fill(g, new Ellipse2D.Double(4, 27, 32, 11), new Color(0x60FF4B3E, true));
+                stroke(g, new Ellipse2D.Double(4, 27, 32, 11), RED, 2.4);
+                stroke(g, path(1, 32.5, 6, 32.5), RED, 2);
+                stroke(g, path(34, 32.5, 39, 32.5), RED, 2);
+                g.setPaint(new GradientPaint(0, 0, YELLOW, 0, 32, ORANGE));
+                g.fill(closed(15, 0, 25, 0, 24, 31, 16, 31));
+                fill(g, new Rectangle2D.Double(18.5, 0, 3, 31), Color.WHITE);
+                fill(g, new Ellipse2D.Double(11, 27.5, 18, 7), YELLOW);
+                fill(g, new Ellipse2D.Double(15, 29, 10, 4), Color.WHITE);
+            },
+            "rally", (Consumer<Graphics2D>) g -> {
+                lit(g, new RoundRectangle2D.Double(7, 4, 4, 34, 2, 2), LIGHT, SHADE);
+                fill(g, new Ellipse2D.Double(6, 1, 6, 6), LIGHT);
+                var flag = new Path2D.Double();
+                flag.moveTo(11, 6);
+                flag.curveTo(18, 2, 24, 10, 36, 6);
+                flag.lineTo(36, 21);
+                flag.curveTo(24, 25, 18, 17, 11, 21);
+                flag.closePath();
+                lit(g, flag, new Color(0xFFE38A), new Color(0xE08E1A));
+                stroke(g, path(17, 17, 23, 11, 29, 17), new Color(0xFFFBEA), 2.6);
+            },
+            "leap", (Consumer<Graphics2D>) g -> {
+                stroke(g, curve(3, 38, 6, 22, 19, 23), new Color(0x7FC8FF), 2.4);
+                stroke(g, curve(9, 38, 11, 28, 18, 28), new Color(0x4FA5F2), 1.8);
+                fill(g, new Ellipse2D.Double(25, 2, 8, 8), LIGHT);
+                var body = new Path2D.Double();
+                body.append(path(27, 11, 21, 21), false);
+                body.append(path(21, 21, 29, 24, 26, 32), false);
+                body.append(path(21, 21, 14, 27, 9, 25), false);
+                body.append(path(26, 13, 34, 17), false);
+                body.append(path(25, 13, 17, 10), false);
+                var figure = new Area(new BasicStroke(4.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND).createStrokedShape(body));
+                lit(g, figure, LIGHT, SHADE);
+            });
+
+    private static <T> Map<String, T> linked(Object... namesAndArt) {
+        var art = new LinkedHashMap<String, T>();
+        for (int index = 0; index < namesAndArt.length; index += 2) {
+            @SuppressWarnings("unchecked") var drawing = (T) namesAndArt[index + 1];
+            art.put((String) namesAndArt[index], drawing);
         }
         return art;
     }
 
-    /** Zero to nine and a slash, three pixels wide. */
-    private static final String[][] COUNTS = {
-            {"###", "#.#", "#.#", "#.#", "###"}, {".#.", "##.", ".#.", ".#.", "###"}, {"###", "..#", "###", "#..", "###"},
-            {"###", "..#", ".##", "..#", "###"}, {"#.#", "#.#", "###", "..#", "..#"}, {"###", "#..", "###", "..#", "###"},
-            {"###", "#..", "###", "#.#", "###"}, {"###", "..#", "..#", ".#.", ".#."}, {"###", "#.#", "###", "#.#", "###"},
-            {"###", "#.#", "###", "..#", "###"}, {"..#", "..#", ".#.", "#..", "#.."}};
+    /** Every icon at four times its GUI size, ready and recharging, on its tile: the sheet to judge the set by. */
+    private static BufferedImage contactSheet(BufferedImage icons, BufferedImage cooling) {
+        int zoom = 4;
+        int cell = 2 * TILE * zoom / 2;
+        int columns = 6;
+        int rows = (ABILITY_ICONS.size() + columns - 1) / columns;
+        int labelHeight = 18;
+        var sheet = new BufferedImage(columns * (2 * cell + 24), rows * (cell + labelHeight + 16) + 8, BufferedImage.TYPE_INT_ARGB);
+        var g = sheet.createGraphics();
+        g.setColor(new Color(0x5A6676));
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        var backing = tileBacking();
+        var frame = tileFrame();
+        int index = 0;
+        for (var name : ABILITY_ICONS.keySet()) {
+            int x = (index % columns) * (2 * cell + 24) + 8;
+            int y = (index / columns) * (cell + labelHeight + 16) + 8;
+            for (int state = 0; state < 2; state++) {
+                int left = x + state * (cell + 8);
+                g.drawImage(backing, left, y, cell, cell, null);
+                var source = state == 0 ? icons : cooling;
+                int iconLeft = left + 2 * zoom;
+                g.drawImage(source.getSubimage(index * 2 * ICON, 0, 2 * ICON, 2 * ICON), iconLeft, y + 2 * zoom, 2 * ICON * zoom / 2,
+                        2 * ICON * zoom / 2, null);
+                g.drawImage(tinted(frame, state == 0 ? 0xFFFFFFFF : 0xFF999999), left, y, cell, cell, null);
+            }
+            g.setColor(Color.WHITE);
+            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+            g.drawString(name, x, y + cell + labelHeight - 2);
+            index++;
+        }
+        g.dispose();
+        return sheet;
+    }
 
-    /**
-     * The cooldown's digits, five pixels wide like the vanilla ones, then F, Q, shift as an outlined arrow up, and two
-     * chevrons for the double jump.
-     */
-    private static final String[][] SYMBOLS = {
-            {".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."},
-            {"..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."},
-            {".###.", "#...#", "....#", "..##.", ".#...", "#....", "#####"},
-            {".###.", "#...#", "....#", "..##.", "....#", "#...#", ".###."},
-            {"...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."},
-            {"#####", "#....", "####.", "....#", "....#", "#...#", ".###."},
-            {"..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."},
-            {"#####", "....#", "...#.", "..#..", "..#..", "..#..", "..#.."},
-            {".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."},
-            {".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."},
-            {"#####", "#....", "#....", "####.", "#....", "#....", "#...."},
-            {".###.", "#...#", "#...#", "#...#", "#.#.#", "#..#.", ".##.#"},
-            {"..#..", ".#.#.", "#...#", "##.##", ".#.#.", ".#.#.", ".###."},
-            {"..#..", ".#.#.", "#...#", ".....", "..#..", ".#.#.", "#...#"}};
+    private static BufferedImage tinted(BufferedImage image, int tint) {
+        var out = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int argb = image.getRGB(x, y);
+                int r = (argb >> 16 & 255) * (tint >> 16 & 255) / 255;
+                int gg = (argb >> 8 & 255) * (tint >> 8 & 255) / 255;
+                int b = (argb & 255) * (tint & 255) / 255;
+                out.setRGB(x, y, argb & 0xFF000000 | r << 16 | gg << 8 | b);
+            }
+        }
+        return out;
+    }
 }

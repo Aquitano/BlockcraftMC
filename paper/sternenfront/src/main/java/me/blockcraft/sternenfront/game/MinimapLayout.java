@@ -8,7 +8,6 @@ import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -40,7 +39,6 @@ final class MinimapLayout {
     static final int ROWS = 6;
     private static final int NAME_X = CLASS_ADVANCE;
     private static final int NAME_LETTERS = (MAP - NAME_X) / LETTER_ADVANCE;
-    private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&_ ";
 
     private static final char DISC = '\uE000';
     private static final char BADGE = '\uE010';
@@ -143,10 +141,8 @@ final class MinimapLayout {
 
     /** The name in the menu tiles' capitals, cut to the panel's width, with a question mark for any letter they lack. */
     static String label(String name) {
-        var letters = new StringBuilder();
-        name.toUpperCase(Locale.ROOT).codePoints().forEach(codepoint ->
-                letters.appendCodePoint(LETTERS.indexOf(codepoint) >= 0 ? codepoint : '?'));
-        return letters.length() <= NAME_LETTERS ? letters.toString() : letters.substring(0, NAME_LETTERS - 1) + "…";
+        var letters = HudPanel.capitals(name);
+        return letters.length() <= NAME_LETTERS ? letters : letters.substring(0, NAME_LETTERS - 1) + "…";
     }
 
     /** A boss bar line that starts in the screen's middle whatever it shows, which the shader moves into the corner. */

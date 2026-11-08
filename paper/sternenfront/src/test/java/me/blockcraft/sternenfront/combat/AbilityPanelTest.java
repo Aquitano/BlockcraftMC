@@ -2,20 +2,23 @@ package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Binding;
+import me.blockcraft.sternenfront.combat.AbilityPanel.Charges;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Slot;
 import me.blockcraft.sternenfront.combat.AbilityPanel.State;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.AbilityIcon;
+import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import me.blockcraft.sternenfront.hero.HeroAbility;
 import net.kyori.adventure.key.Key;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
@@ -24,40 +27,62 @@ public class AbilityPanelTest {
 
     /**
      * The client centres the action bar on its width and the shader expects the panel to start in the line's middle, so
-     * the panel must take no room. Every glyph lies left of the corner and below the panel's top, inside a colour byte.
+     * the panel must take no room. Every glyph lies left of the corner and inside the column the shader makes room for.
      */
     @Test
     public void everyStateOfEveryTileTakesNoRoomAndStaysInTheCorner() throws IOException {
-        var states = List.of(new State.Ready(), new State.Cooling(1), new State.Cooling(99), new State.Charged(2, 2),
-                new State.Charged(1, 2), new State.Armed());
+        var states = List.of(new State.Ready(), new State.Cooling(1, 0), new State.Cooling(99, 0.5), new State.Cooling(7, 1),
+                new State.Armed());
+        var charges = List.of(Charges.ONE, new Charges(2, 2), new Charges(0, 3));
         var bindings = Binding.values();
         var slots = new ArrayList<Slot>();
         for (var icon : AbilityIcon.values()) {
-            slots.add(new Slot(bindings[icon.ordinal() % bindings.length], Optional.of(icon), states.get(icon.ordinal() % states.size())));
+            slots.add(new Slot(bindings[icon.ordinal() % bindings.length], icon, "Belagerungsmodus Ä", states.get(icon.ordinal() % states.size()),
+                    charges.get(icon.ordinal() % charges.size())));
         }
-        slots.add(new Slot(Binding.Q, Optional.empty(), new State.Ready()));
 
-        var fonts = Map.of(Key.key("blockcraft", "ui"), PackFonts.advances("ui"), AbilityPanel.FONT, PackFonts.advances("abilities"));
-        for (int first = 0; first < slots.size(); first += 4) {
-            var four = slots.subList(first, Math.min(slots.size(), first + 4));
-            assertEquals(four.toString(), 0, PackFonts.width(AbilityPanel.render(four), fonts));
-            for (var glyph : AbilityPanel.layout(four)) {
-                assertTrue(glyph.toString(), glyph.x() < 0 && glyph.y() >= 0 && glyph.y() <= 255);
-                int advance = glyph.text().codePoints().map(codepoint -> fonts.get(AbilityPanel.FONT).get(codepoint)).sum();
-                assertEquals(glyph.toString(), advance, glyph.advance());
+        var abilities = PackFonts.advances("abilities");
+        var fonts = Map.of(Key.key("blockcraft", "ui"), PackFonts.advances("ui"), AbilityPanel.FONT, abilities);
+        var heights = new HashMap<Integer, Integer>();
+        for (var provider : PackFonts.providers("abilities")) {
+            var json = provider.getAsJsonObject();
+            if (json.has("chars")) {
+                json.getAsJsonArray("chars").forEach(row -> row.getAsString().codePoints()
+                        .forEach(codepoint -> heights.put(codepoint, json.get("height").getAsInt())));
             }
         }
+        for (int first = 0; first < slots.size(); first += AbilityPanel.MAX_SLOTS) {
+            var column = slots.subList(first, Math.min(slots.size(), first + AbilityPanel.MAX_SLOTS));
+            for (var glyph : AbilityPanel.layout(column, Tint.REPUBLIC)) {
+                int height = glyph.text().codePoints().map(codepoint -> heights.getOrDefault(codepoint, 0)).max().orElseThrow();
+                assertTrue(glyph.toString(), glyph.x() < 0 && glyph.y() >= 0 && glyph.y() + height <= AbilityPanel.HEIGHT);
+                assertEquals(glyph.toString(), glyph.advance(), glyph.text().codePoints().map(abilities::get).sum());
+            }
+            assertEquals(column.toString(), 0, PackFonts.width(AbilityPanel.render(column, Tint.REPUBLIC), fonts));
+        }
         for (var provider : PackFonts.providers("abilities")) {
-            assertEquals(provider.toString(), 7, provider.getAsJsonObject().get("ascent").getAsInt());
+            var json = provider.getAsJsonObject();
+            if (json.has("ascent")) {
+                assertEquals(json.toString(), 7, json.get("ascent").getAsInt());
+                assertTrue("the client drops a font with a glyph shorter than its ascent: " + json, json.get("height").getAsInt() >= 7);
+            }
         }
     }
 
+    /** The shader hangs the panel from its top, which must stand a full column above the corner. */
     @Test
-    public void everyAbilityHasAPictureOfItsOwnInThePack() throws IOException {
+    public void theShaderMakesRoomForAFullColumn() throws IOException {
+        var shader = Files.readString(PackFonts.FONTS.resolveSibling("shaders/include/hud_panel.glsl"));
+        assertTrue(shader.contains("BLOCKCRAFT_ACTION_PANEL_CORNER = vec2(-3.0, -" + (AbilityPanel.HEIGHT + 3) + ".0);"));
+    }
+
+    @Test
+    public void everyAbilityHasAPictureOfItsOwnInThePackReadyAndRecharging() throws IOException {
         var icons = Stream.concat(Arrays.stream(Ability.values()).map(Ability::icon), Arrays.stream(HeroAbility.values()).map(HeroAbility::icon)).toList();
         assertEquals(icons.size(), icons.stream().distinct().count());
         var drawn = PackFonts.providers("abilities").asList().stream().map(provider -> provider.getAsJsonObject())
-                .filter(provider -> provider.get("file").getAsString().endsWith("ability_icons.png")).findFirst().orElseThrow();
-        assertEquals(AbilityIcon.values().length, drawn.getAsJsonArray("chars").get(0).getAsString().length());
+                .filter(provider -> provider.has("file") && provider.get("file").getAsString().contains("ability_icons")).toList();
+        assertEquals(2, drawn.size());
+        drawn.forEach(provider -> assertEquals(AbilityIcon.values().length, provider.getAsJsonArray("chars").get(0).getAsString().length()));
     }
 }
