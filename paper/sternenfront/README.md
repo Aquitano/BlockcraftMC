@@ -149,7 +149,9 @@ the reason. The landing button names its target
 post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
 After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
-objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence.
+objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence. The top
+line frames the assault's priority post in the same corners. The first deployment of a round ends its chat lines with
+one that names the yellow corners as the player's target. The star stays the deploy menu's recommended spawn.
 
 ## Minimap
 

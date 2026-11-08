@@ -173,6 +173,13 @@
     },
     {
       "type": "bitmap",
+      "file": "blockcraft:font/minimap_target.png",
+      "ascent": 10,
+      "height": 13,
+      "chars": ["\ue225"]
+    },
+    {
+      "type": "bitmap",
       "file": "blockcraft:font/objective_pips.png",
       "ascent": 9,
       "height": 11,
