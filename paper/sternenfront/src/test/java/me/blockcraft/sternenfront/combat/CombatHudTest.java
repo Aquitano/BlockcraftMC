@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
@@ -9,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.map.MinecraftFont;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +35,17 @@ public class CombatHudTest {
         for (var key : List.of("guarding", "broken", "hot", "venting")) {
             var state = messages.getString("combat." + key).replace("<seconds>", "99").replaceAll("<[^>]+>", "");
             assertTrue(state, MinecraftFont.Font.getWidth(state) + 1 <= CombatHud.STATE_WIDTH);
+        }
+    }
+
+    /** The ability panel goes in the action bar's middle, which the HUD finds from these widths. */
+    @Test
+    public void theMetersGlyphsAreAsWideAsTheHudCounts() throws IOException {
+        var ui = PackFonts.advances("ui");
+        assertEquals(CombatHud.METER_ICON_ADVANCE, (int) ui.get(0xE221));
+        assertEquals(CombatHud.METER_ICON_ADVANCE, (int) ui.get(0xE222));
+        for (int cells = 0; cells <= 10; cells++) {
+            assertEquals(CombatHud.METER_ADVANCE, (int) ui.get(0xE240 + cells));
         }
     }
 }

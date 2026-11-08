@@ -1,10 +1,10 @@
 package me.blockcraft.sternenfront.game;
 
-import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.sternenfront.game.HudPanel.Corner;
+import me.blockcraft.sternenfront.game.HudPanel.Glyph;
+import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.ShadowColor;
-import net.kyori.adventure.text.format.TextColor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +13,8 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 /**
- * Where the corner panel draws what, in the pixels of the pack's {@code blockcraft:minimap} font: a disc 63 pixels
- * across, north up around the player, and the squad's names under it. The text shader reads each glyph's colour as
- * its row below the panel's top and its tint, so the glyphs' own heights never move them.
+ * Where the top-left {@link HudPanel} draws what, in the pixels of the pack's {@code blockcraft:minimap} font: a disc 63
+ * pixels across, north up around the player, and the squad's names under it.
  */
 final class MinimapLayout {
 
@@ -47,17 +46,6 @@ final class MinimapLayout {
     private static final char BADGE = '';
     private static final char ARROW = '';
     private static final char CLASS_MARK = '';
-    private static final int MARKER_RED = 231;
-    private static final int FIRST_TINT = 176;
-
-    /** The shader's colours for a glyph, in the order of its table; the factions' are those of {@link Faction#text()}. */
-    enum Tint {
-        WHITE, DIMMED, REPUBLIC, SEPARATISTS, SQUAD, SHADOW;
-
-        static Tint of(Faction faction) {
-            return faction == Faction.KOLONIEN ? REPUBLIC : SEPARATISTS;
-        }
-    }
 
     enum Mark {
         SQUADMATE(''), ALLY(''), ENEMY(''), HEADQUARTERS('');
@@ -84,9 +72,6 @@ final class MinimapLayout {
     }
 
     record Pixel(int x, int y) { }
-
-    /** {@code text} drawn from {@code x} pixels after the panel's left edge and {@code y} below its top. */
-    record Glyph(String text, int x, int y, Tint tint, boolean shadow, int advance) { }
 
     /** The map's scale: {@code radius} blocks from ({@code x}, {@code z}) reach the dots' rim. */
     record View(double x, double z, double radius) {
@@ -156,29 +141,9 @@ final class MinimapLayout {
         return letters.length() <= NAME_LETTERS ? letters.toString() : letters.substring(0, NAME_LETTERS - 1) + "…";
     }
 
-    /**
-     * The glyphs as one line that ends where it began, so the client starts it in the screen's middle whatever it
-     * shows. Each glyph's colour carries its row and tint; its shadow, when it has one, carries the same row.
-     */
+    /** A boss bar line that starts in the screen's middle whatever it shows, which the shader moves into the corner. */
     static Component render(List<Glyph> glyphs) {
-        var line = Component.text();
-        int cursor = 0;
-        for (var glyph : glyphs) {
-            if (glyph.x() != cursor) {
-                line.append(UiFont.space(glyph.x() - cursor));
-            }
-            line.append(Component.text(glyph.text(), colour(glyph.y(), glyph.tint())).font(FONT).shadowColor(glyph.shadow()
-                    ? ShadowColor.shadowColor(0xFF000000 | colour(glyph.y(), Tint.SHADOW).value()) : ShadowColor.none()));
-            cursor = glyph.x() + glyph.advance();
-        }
-        if (cursor != 0) {
-            line.append(UiFont.space(-cursor));
-        }
-        return line.build();
-    }
-
-    private static TextColor colour(int row, Tint tint) {
-        return TextColor.color(MARKER_RED, row, FIRST_TINT + tint.ordinal());
+        return HudPanel.render(Corner.TOP_LEFT, FONT, glyphs);
     }
 
     /** Rows in the order the panel stacks them, the viewer's own first. */
