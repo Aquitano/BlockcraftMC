@@ -152,14 +152,14 @@ public final class CombatFeedback {
             return messages.get(key, Formatter.number("points", points), Formatter.number("kills", inARow));
         }
 
-        /** The corner panel goes in the line's middle, which needs the line's width as the client measures it. */
+        /** The meter centred under the crosshair, the popup left of it, and the corner panel in the line's middle. */
         Component compose(Component feedback, Optional<Component> course) {
             var line = UiFont.after(feedback, REWARD_WIDTH).append(Component.space());
             if (course.isPresent()) {
                 return line.append(course.get());
             }
-            int width = Math.max(REWARD_WIDTH, UiFont.width(feedback)) + UiFont.width(Component.space()) + hud.width();
-            return UiFont.centredOn(line.append(hud.meter()), width, hud.corner());
+            int side = Math.max(REWARD_WIDTH, UiFont.width(feedback)) + UiFont.width(Component.space());
+            return UiFont.centredOn(line.append(hud.meter()).append(UiFont.space(side)), 2 * side + hud.width(), hud.corner());
         }
     }
 

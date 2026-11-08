@@ -67,7 +67,7 @@ public class CombatFeedbackTest {
             assertEquals(corner, parts.get(1));
             int rest = PackFonts.width(Component.empty().append(parts.get(2)).append(parts.get(3)), fonts) + PackFonts.width(parts.get(0), fonts);
             assertEquals(feedback.toString(), rest / 2, PackFonts.width(parts.get(0), fonts));
-            assertTrue(plain(parts.get(3)).endsWith(plain(feedback) + " Deckung"));
+            assertTrue(plain(parts.get(3)).contains(plain(feedback) + " Deckung"));
         }
     }
 
@@ -80,7 +80,7 @@ public class CombatFeedbackTest {
         assertTrue(plain(state.compose(Component.empty(), timer)).endsWith(" Kraninspektion 2,00 s · Tor 2/4"));
         assertTrue(plain(state.compose(Component.text("+25 KP"), timer)).endsWith("+25 KP Kraninspektion 2,00 s · Tor 2/4"));
         assertFalse(plain(state.compose(Component.empty(), timer)).contains("Tiles"));
-        assertTrue(plain(state.compose(Component.empty(), Optional.empty())).endsWith(" Deckung"));
+        assertTrue(plain(state.compose(Component.empty(), Optional.empty())).contains(" Deckung"));
     }
 
     @Test
