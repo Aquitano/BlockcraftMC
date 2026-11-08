@@ -69,7 +69,7 @@ public final class BattleEffects {
     private static final Vector STILL = new Vector();
     private static final int VENT_INTERVAL = 3;
     /** A bot's barrel steams from this heat share on, whether or not its gun is venting. */
-    private static final double VENTING_HEAT = 0.85;
+    private static final double STEAMING_HEAT = 0.85;
     /** A shot from a barrel above this heat share leaves smoke at the muzzle. */
     private static final double HOT_BARREL = 0.65;
     private static final double OFF_THE_WALL = 0.12;
@@ -546,7 +546,7 @@ public final class BattleEffects {
         }
         ambience.tick(tick);
         if (tick % VENT_INTERVAL == 0) {
-            game.combatants().stream().filter(actor -> venting(actor, tick)).forEach(this::vent);
+            game.combatants().stream().filter(actor -> steaming(actor, tick)).forEach(this::steam);
         }
         if (tick % config.damaged().intervalTicks() == 0) {
             game.combatants().stream().filter(this::badlyHurt).forEach(BattleEffects::smoulder);
@@ -568,13 +568,14 @@ public final class BattleEffects {
         }
     }
 
-    private boolean venting(LivingEntity actor, long tick) {
+    /** A player's barrel steams while it vents; a bot's from {@link #STEAMING_HEAT} on. */
+    private boolean steaming(LivingEntity actor, long tick) {
         return actor instanceof Player player
                 ? game.fighter(player).heat().venting(tick)
-                : game.bots().heat(actor) >= VENTING_HEAT;
+                : game.bots().heat(actor) >= STEAMING_HEAT;
     }
 
-    private void vent(LivingEntity actor) {
+    private void steam(LivingEntity actor) {
         var at = muzzle(actor, actor.getEyeLocation().getDirection());
         spawnForOthers(actor, at, Particle.CLOUD, 0.06, 0.03);
         spawnForOthers(actor, at, Particle.WHITE_SMOKE, 0.05, 0.02);
