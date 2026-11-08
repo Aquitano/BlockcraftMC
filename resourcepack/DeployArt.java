@@ -72,9 +72,10 @@ public final class DeployArt {
             "reinforcement_arc_trooper", "reinforcement_commando_droid", "hero_jedi", "hero_commander", "hero_sith", "hero_bounty_hunter");
 
     static final String LABELS = PackArt.TileArt.LETTERS + "%,()·";
+    /** Letters the menu tiles lack, and a 1 with its stem in the middle, since theirs reads as a ] beside KP. */
     static final Map<Character, String> EXTRA_LABELS = Map.of(
             '%', "101001010100101", ',', "000000000001010", '(', "001010010010001", ')', "100010010010100",
-            '·', "000000010000000");
+            '·', "000000010000000", '1', "010110010010111");
     static final String UMLAUTS = "äöüÄÖÜß·…";
     static final int PORTRAIT_WELL = 30;
 
