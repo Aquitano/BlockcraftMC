@@ -322,6 +322,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return rigs.map(bodies -> bodies.drawnAs(viewer, entity)).orElse(entity);
     }
 
+    /** Whether BetterModel draws {@code entity}, whose own equipment then shows to nobody. */
+    public boolean animated(Entity entity) {
+        return rigs.filter(bodies -> bodies.animates(entity)).isPresent();
+    }
+
     public Gadgets gadgets() {
         return gadgets;
     }

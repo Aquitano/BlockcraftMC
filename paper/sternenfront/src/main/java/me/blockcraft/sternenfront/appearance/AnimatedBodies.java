@@ -9,6 +9,7 @@ import kr.toxicity.model.api.tracker.EntityTracker;
 import kr.toxicity.model.api.tracker.TrackerModifier;
 import kr.toxicity.model.api.tracker.TrackerUpdateAction;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -48,6 +49,8 @@ final class AnimatedBodies implements AutoCloseable {
         private final LivingEntity actor;
         private final EntityTracker plain;
         private final EntityTracker outlined;
+        /** Which model each viewer was last shown, so a tick changes trackers only for viewers whose outline changed. */
+        private final Map<UUID, Boolean> outlinedFor = new HashMap<>();
         private Insignia insignia;
         private int calmFrom;
 
@@ -75,9 +78,13 @@ final class AnimatedBodies implements AutoCloseable {
             }
         }
 
-        void showTo(PlatformPlayer viewer, boolean outlinedView) {
-            toggle(outlined, viewer, outlinedView);
-            toggle(plain, viewer, !outlinedView);
+        void showTo(Player viewer, boolean outlinedView) {
+            if (Boolean.valueOf(outlinedView).equals(outlinedFor.put(viewer.getUniqueId(), outlinedView))) {
+                return;
+            }
+            var platform = BukkitAdapter.adapt(viewer);
+            toggle(outlined, platform, outlinedView);
+            toggle(plain, platform, !outlinedView);
         }
 
         private static void toggle(EntityTracker tracker, PlatformPlayer viewer, boolean visible) {
@@ -138,15 +145,24 @@ final class AnimatedBodies implements AutoCloseable {
         return bodies.contains(body);
     }
 
+    boolean drawing(Entity actor) {
+        return drawn.containsKey(actor.getUniqueId());
+    }
+
     void draw(LivingEntity actor, RigBody body, Insignia insignia, double recoil, Collection<? extends Player> viewers) {
         var trackers = drawn.computeIfAbsent(actor.getUniqueId(), id -> spawn(actor, body, insignia));
         trackers.wear(insignia, actor.getServer().getCurrentTick());
         for (var viewer : viewers) {
-            trackers.showTo(BukkitAdapter.adapt(viewer), outlined.test(viewer, actor));
+            trackers.showTo(viewer, outlined.test(viewer, actor));
         }
         if (recoil >= 1) {
             trackers.shoot();
         }
+    }
+
+    /** A viewer who left or changed worlds is decided afresh on return. */
+    void forget(Player viewer) {
+        drawn.values().forEach(trackers -> trackers.outlinedFor.remove(viewer.getUniqueId()));
     }
 
     void hurt(LivingEntity actor) {

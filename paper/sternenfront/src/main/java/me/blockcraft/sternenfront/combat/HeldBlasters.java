@@ -56,7 +56,7 @@ public final class HeldBlasters {
 
     private void show(LivingEntity actor, long tick) {
         var equipment = actor.getEquipment();
-        if (equipment == null) {
+        if (equipment == null || game.animated(actor)) {
             return;
         }
         var shot = lastShots.get(actor.getUniqueId());

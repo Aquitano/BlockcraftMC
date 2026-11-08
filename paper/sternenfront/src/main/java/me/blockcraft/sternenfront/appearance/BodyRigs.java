@@ -92,6 +92,10 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return rig != null && rig.shownTo(viewer) ? rig.torso() : actor;
     }
 
+    public boolean animates(Entity actor) {
+        return animated.filter(bodies -> bodies.drawing(actor)).isPresent();
+    }
+
     public List<Entity> outlineParts(LivingEntity actor, Player viewer) {
         var rig = rigs.get(actor.getUniqueId());
         return rig != null && rig.shownTo(viewer) ? rig.outlineParts() : viewer.canSee(actor) ? List.of(actor) : List.of();
@@ -193,12 +197,14 @@ public final class BodyRigs implements Listener, AutoCloseable {
     public void onWorld(PlayerChangedWorldEvent event) {
         remove(event.getPlayer().getUniqueId());
         rigs.values().forEach(rig -> rig.refresh(event.getPlayer()));
+        animated.ifPresent(bodies -> bodies.forget(event.getPlayer()));
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         remove(event.getPlayer().getUniqueId());
         rigs.values().forEach(rig -> rig.forget(event.getPlayer()));
+        animated.ifPresent(bodies -> bodies.forget(event.getPlayer()));
     }
 
     @EventHandler
