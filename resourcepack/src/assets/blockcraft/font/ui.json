@@ -206,6 +206,15 @@
     },
     {
       "type": "bitmap",
+      "file": "blockcraft:font/readiness.png",
+      "ascent": 28,
+      "height": 32,
+      "chars": [
+        "\ue255\ue256"
+      ]
+    },
+    {
+      "type": "bitmap",
       "file": "blockcraft:font/damage_arcs.png",
       "ascent": 28,
       "height": 32,

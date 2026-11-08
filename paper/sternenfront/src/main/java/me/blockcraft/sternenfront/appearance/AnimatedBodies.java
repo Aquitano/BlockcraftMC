@@ -9,6 +9,7 @@ import kr.toxicity.model.api.tracker.EntityTracker;
 import kr.toxicity.model.api.tracker.TrackerModifier;
 import kr.toxicity.model.api.tracker.TrackerUpdateAction;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -26,8 +27,8 @@ import java.util.logging.Logger;
  * Bots whose bodies BetterModel draws and animates, from the models resourcepack/RigModels.py writes, instead of a
  * {@link BodyRig}. The {@code appearance.animated-bodies} list in config.yml chooses which. BetterModel plays idle, walk
  * and death by itself. Its parts exist only as packets and a tracker has one glow for all its viewers, so each body is
- * two trackers: an outlined model for viewers who get an outline by the rules of {@link TargetOutlines}, and a plain one
- * for everyone else. A body's markings and a leader's pauldrons are bones of their own, which take the unit colour as a tint.
+ * two trackers: an outlined model for viewers who see the actor outlined as an enemy by {@link TargetOutlines.Rule}, and
+ * a plain one for everyone else. A body's markings and a leader's pauldrons are bones of their own, which take the unit colour as a tint.
  */
 final class AnimatedBodies implements AutoCloseable {
 
@@ -48,6 +49,8 @@ final class AnimatedBodies implements AutoCloseable {
         private final LivingEntity actor;
         private final EntityTracker plain;
         private final EntityTracker outlined;
+        /** Which model each viewer was last shown, so a tick changes trackers only for viewers whose outline changed. */
+        private final Map<UUID, Boolean> outlinedFor = new HashMap<>();
         private Insignia insignia;
         private int calmFrom;
 
@@ -75,9 +78,13 @@ final class AnimatedBodies implements AutoCloseable {
             }
         }
 
-        void showTo(PlatformPlayer viewer, boolean outlinedView) {
-            toggle(outlined, viewer, outlinedView);
-            toggle(plain, viewer, !outlinedView);
+        void showTo(Player viewer, boolean outlinedView) {
+            if (Boolean.valueOf(outlinedView).equals(outlinedFor.put(viewer.getUniqueId(), outlinedView))) {
+                return;
+            }
+            var platform = BukkitAdapter.adapt(viewer);
+            toggle(outlined, platform, outlinedView);
+            toggle(plain, platform, !outlinedView);
         }
 
         private static void toggle(EntityTracker tracker, PlatformPlayer viewer, boolean visible) {
@@ -138,15 +145,24 @@ final class AnimatedBodies implements AutoCloseable {
         return bodies.contains(body);
     }
 
-    void draw(LivingEntity actor, RigBody body, Insignia insignia, double recoil, Collection<? extends Player> viewers) {
+    boolean drawing(Entity actor) {
+        return drawn.containsKey(actor.getUniqueId());
+    }
+
+    void draw(LivingEntity actor, RigBody body, Insignia insignia, boolean fired, Collection<? extends Player> viewers) {
         var trackers = drawn.computeIfAbsent(actor.getUniqueId(), id -> spawn(actor, body, insignia));
         trackers.wear(insignia, actor.getServer().getCurrentTick());
         for (var viewer : viewers) {
-            trackers.showTo(BukkitAdapter.adapt(viewer), outlined.test(viewer, actor));
+            trackers.showTo(viewer, outlined.test(viewer, actor));
         }
-        if (recoil >= 1) {
+        if (fired) {
             trackers.shoot();
         }
+    }
+
+    /** A viewer who left or changed worlds is decided afresh on return. */
+    void forget(Player viewer) {
+        drawn.values().forEach(trackers -> trackers.outlinedFor.remove(viewer.getUniqueId()));
     }
 
     void hurt(LivingEntity actor) {

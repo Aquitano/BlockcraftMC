@@ -12,6 +12,7 @@ import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
@@ -33,12 +34,24 @@ import java.util.function.Predicate;
 public final class Bolts {
 
     private static final double HIT_SIZE = 0.1;
-    private static final double VISUAL_LEAD = 1.6;
+    /**
+     * Where a bolt's model first shows, ahead of the eyes. Seen end-on from there its tail covers the crosshair for a
+     * tick, half as wide for each doubling; below a blaster's speed, so the first move still carries it away.
+     */
+    private static final double VISUAL_LEAD = 3;
     private static final double PARRY_CLEARANCE = 0.8;
     private static final double TRAIL_CLEAR_OF_EYES = 1.4;
+    private static final double CLEAR_OF_EYES = 2.5;
+    /** How far the client draws a particle that is not forced. */
+    private static final double UNFORCED_RANGE = 32;
     private static final float MODEL_LENGTH = 1.22f;
     private static final double HEAD_BELOW_EYES = 0.25;
     private static final float IMPACT_VOLUME = 0.6f;
+
+    /** What a bolt met this tick: a map's marked target, a fighter nearer than it, or neither. */
+    private record Struck(RayTraceResult mark, Optional<LagCompensation.Hit> fighter) {
+        static final Struck NOTHING = new Struck(null, Optional.empty());
+    }
 
     /** {@code rewind} is how many ticks behind the server the shooter saw the other fighters. */
     private record Shot(Faction faction, Blaster blaster, double damage, double headshot, double speed, double rewind) { }
@@ -153,9 +166,9 @@ public final class Bolts {
         var start = bolt.position.toVector();
         var wall = world.rayTraceBlocks(bolt.position, bolt.direction, step, FluidCollisionMode.NEVER, true);
         double reach = wall == null ? step : wall.getHitPosition().distance(start);
-        var mark = reach <= 0 ? null : world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE, Bolts::isTarget);
-        var fighter = reach <= 0 ? Optional.<LagCompensation.Hit>empty() : fighterHit(bolt, start, reach)
-                .filter(hit -> mark == null || hit.at().distanceSquared(start) < mark.getHitPosition().distanceSquared(start));
+        var struck = reach <= 0 ? Struck.NOTHING : struck(bolt, start, reach);
+        var mark = struck.mark();
+        var fighter = struck.fighter();
         double travelled = fighter.map(hit -> hit.at().distance(start))
                 .orElse(mark == null ? reach : mark.getHitPosition().distance(start));
         trail(bolt, travelled);
@@ -194,17 +207,26 @@ public final class Bolts {
         return true;
     }
 
-    /** Players' shots meet the fighters where the shooter saw them; terrain and map targets stand still and stay live. */
-    private Optional<LagCompensation.Hit> fighterHit(Bolt bolt, Vector start, double reach) {
+    /**
+     * Players' shots meet the fighters where the shooter saw them; terrain and map targets stand still and stay live. A
+     * shot without rewind finds the nearer of a target and a fighter in one trace.
+     */
+    private Struck struck(Bolt bolt, Vector start, double reach) {
         Predicate<LivingEntity> hittable = target -> game.hittable(bolt.shot.faction(), target);
+        var world = bolt.position.getWorld();
         if (bolt.shot.rewind() > 0) {
-            return lag.trace(start, bolt.direction, reach, HIT_SIZE, bolt.seen, hittable);
+            var mark = world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE, Bolts::isTarget);
+            return new Struck(mark, lag.trace(start, bolt.direction, reach, HIT_SIZE, bolt.seen, hittable)
+                    .filter(hit -> mark == null || hit.at().distanceSquared(start) < mark.getHitPosition().distanceSquared(start)));
         }
-        var hit = bolt.position.getWorld().rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE,
-                entity -> entity instanceof LivingEntity target && hittable.test(target));
-        return hit != null && hit.getHitEntity() instanceof LivingEntity victim
-                ? Optional.of(new LagCompensation.Hit(victim, hit.getHitPosition(), victim.getEyeLocation().getY()))
-                : Optional.empty();
+        var hit = world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE,
+                entity -> isTarget(entity) || entity instanceof LivingEntity target && hittable.test(target));
+        if (hit == null) {
+            return Struck.NOTHING;
+        }
+        return hit.getHitEntity() instanceof LivingEntity victim
+                ? new Struck(null, Optional.of(new LagCompensation.Hit(victim, hit.getHitPosition(), victim.getEyeLocation().getY())))
+                : new Struck(hit, Optional.empty());
     }
 
     private void strike(Bolt bolt, LagCompensation.Hit hit, Location at, double travelled) {
@@ -232,8 +254,10 @@ public final class Bolts {
     }
 
     /**
-     * Dots along what the bolt covered this tick, clear of the shooter's eyes where it starts. Only every few dots is
-     * forced, so a far player gets a sparse line and a near one a dense line without the near rate going to everyone.
+     * Dots along what the bolt covered this tick, for everyone but the shooter: from behind the bolt its dots line up
+     * on the crosshair, and the nearest draw large enough to hide what it aims at. Nor does anyone get a dot within
+     * {@link #CLEAR_OF_EYES} blocks of their eyes, such as a bolt passing them. Only every few dots goes past
+     * {@link #UNFORCED_RANGE}, so a far player gets a sparse line and a near one a dense line.
      */
     private void trail(Bolt bolt, double length) {
         var look = game.effects().config().bolt();
@@ -244,13 +268,23 @@ public final class Bolts {
         }
         double step = hitscan ? look.trailStep() * 2 : look.trailStep();
         var dust = new Particle.DustOptions(bolt.shot.faction().bolt(), look.trailSize());
+        var viewers = bolt.position.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(bolt.shooter))
+                .map(viewer -> new Viewer(viewer, viewer.getEyeLocation())).toList();
         double along = bolt.nextDot;
         for (; along < length; along += step) {
             var point = bolt.position.clone().add(bolt.direction.clone().multiply(along));
-            point.getWorld().spawnParticle(Particle.DUST, point, 1, 0, 0, 0, 0, dust, bolt.dots++ % look.farEvery() == 0);
+            boolean far = bolt.dots++ % look.farEvery() == 0;
+            for (var viewer : viewers) {
+                double distance = viewer.eye().distanceSquared(point);
+                if (distance > CLEAR_OF_EYES * CLEAR_OF_EYES && (far || distance < UNFORCED_RANGE * UNFORCED_RANGE)) {
+                    viewer.player().spawnParticle(Particle.DUST, point, 1, 0, 0, 0, 0, dust, far);
+                }
+            }
         }
         bolt.nextDot = along - length;
     }
+
+    private record Viewer(Player player, Location eye) { }
 
     private static boolean isTarget(Entity entity) {
         return entity instanceof Interaction target && target.getPersistentDataContainer().has(TargetShotEvent.MARK);

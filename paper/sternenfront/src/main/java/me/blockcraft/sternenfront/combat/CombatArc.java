@@ -26,4 +26,12 @@ public final class CombatArc {
     public static boolean hits(Vector origin, Vector direction, BoundingBox target, double reach) {
         return reach > 0 && (target.contains(origin) || target.rayTrace(origin, direction, reach) != null);
     }
+
+    /** Whether a blade {@code radius} wide, carried in a straight line from {@code from} to {@code to}, meets the target. */
+    public static boolean sweeps(Vector from, Vector to, BoundingBox target, double radius) {
+        var bounds = target.clone().expand(radius);
+        var direction = to.clone().subtract(from);
+        double distance = direction.length();
+        return bounds.contains(from) || distance > 0 && bounds.rayTrace(from, direction.multiply(1 / distance), distance) != null;
+    }
 }

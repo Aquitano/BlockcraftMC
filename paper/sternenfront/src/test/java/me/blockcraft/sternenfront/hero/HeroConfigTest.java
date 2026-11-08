@@ -37,6 +37,16 @@ public class HeroConfigTest {
     }
 
     @Test
+    public void aForceGripDealsAllItsDamageOverTheTicksItHolds() {
+        var grip = HeroConfig.from(YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile())).grip();
+        double dealt = 0;
+        for (long ticksLeft = grip.ticks() - 1; ticksLeft > 0; ticksLeft--) {
+            dealt += grip.pulsesWith(ticksLeft) ? grip.damagePerPulse() : 0;
+        }
+        assertEquals(grip.damage(), dealt, 0.001);
+    }
+
+    @Test
     public void clampsInvalidRocketAndLightningSettingsBeforeTheyReachTheTickLoop() {
         var yaml = new YamlConfiguration();
         yaml.set("heroes.abilities.wrist-rocket.speed", 0);

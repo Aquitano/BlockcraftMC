@@ -225,14 +225,15 @@ final class BodyRig implements AutoCloseable {
         return entity;
     }
 
-    void tick(double recoil) {
+    /** {@code fired} starts a soldier's kick; a hero's follows the gun's {@code recoil} as it eases off. */
+    void tick(boolean fired, double recoil) {
         var at = actor.getLocation();
         double moved = Math.hypot(at.getX() - previous.getX(), at.getZ() - previous.getZ());
         stride += motion.map(profile -> profile.advance(moved)).orElseGet(() -> Math.min(moved, HERO_STRIDE_CAP_BLOCKS) * HERO_STRIDE_PER_BLOCK);
         var movement = motion.map(profile -> profile.pose(stride,
                 actor.isOnGround() && !actor.isInsideVehicle() ? moved : 0))
                 .orElseGet(() -> new RigMotion.Pose((float) (Math.sin(stride) * Math.min(moved * HERO_STEP_PER_BLOCK, HERO_MAX_STEP)), 0, 0, 0));
-        if (recoil >= 1) recoilLeft = motion.map(RigMotion::recoilTicks).orElse(0);
+        if (fired) recoilLeft = motion.map(RigMotion::recoilTicks).orElse(0);
         double kick = motion.map(profile -> (double) recoilLeft / profile.recoilTicks()).orElse(recoil);
         float recoilPitch = (float) -Math.toRadians(motion.map(RigMotion::recoilDegrees).orElse(0.0) * kick);
         float recoilDistance = (float) (motion.map(RigMotion::recoilBlocks).orElse(HERO_RECOIL_BLOCKS) * kick);

@@ -8,8 +8,11 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /** The blasters in fighters' hands, drawn in the pose of their last shot or sprint and glowing with their heat. */
 public final class HeldBlasters {
@@ -26,6 +29,8 @@ public final class HeldBlasters {
     private final SternenfrontGame game;
     private final HeatGlow.Steps glow;
     private final Map<UUID, LastShot> lastShots = new HashMap<>();
+    /** Shooters whose last shot no body has kicked back for yet. */
+    private final Set<UUID> unkicked = new HashSet<>();
     private final Map<UUID, Look> shown = new HashMap<>();
 
     HeldBlasters(SternenfrontGame game) {
@@ -35,7 +40,13 @@ public final class HeldBlasters {
 
     void fired(LivingEntity shooter, long tick) {
         lastShots.put(shooter.getUniqueId(), new LastShot(shooter, tick));
+        unkicked.add(shooter.getUniqueId());
         show(shooter, tick);
+    }
+
+    /** True once for each shot, for the body that kicks back with it, whichever runs first in a tick. */
+    public boolean kick(LivingEntity actor) {
+        return unkicked.remove(actor.getUniqueId());
     }
 
     public double recoil(LivingEntity actor) {
@@ -47,16 +58,22 @@ public final class HeldBlasters {
         lastShots.values().removeIf(shot -> {
             if (!shot.shooter().isValid() || tick - shot.tick() >= FIRING_TICKS) {
                 restore(shot);
+                unkicked.remove(shot.shooter().getUniqueId());
                 return true;
             }
             return false;
         });
-        game.combatants().forEach(actor -> show(actor, tick));
+        var actors = game.combatants();
+        actors.forEach(actor -> show(actor, tick));
+        if (tick % REFRESH_TICKS == 0) {
+            var present = actors.stream().map(LivingEntity::getUniqueId).collect(Collectors.toSet());
+            shown.keySet().retainAll(present);
+        }
     }
 
     private void show(LivingEntity actor, long tick) {
         var equipment = actor.getEquipment();
-        if (equipment == null) {
+        if (equipment == null || game.animated(actor)) {
             return;
         }
         var shot = lastShots.get(actor.getUniqueId());
@@ -95,6 +112,7 @@ public final class HeldBlasters {
     void clear() {
         lastShots.values().forEach(HeldBlasters::restore);
         lastShots.clear();
+        unkicked.clear();
         shown.clear();
     }
 }

@@ -103,7 +103,9 @@ presentation:
   saber-mark: {cooldown-ticks: 8, glow-ticks: 30, ticks: 300, fade-ticks: 40, scale: 1.5, tilt-degrees: 20}
   saber-trail-ticks: 3
   muzzle-flash: {ticks: 2, scale: 0.3, heavy-scale: 0.5}
-  bolt: {width: 1.8, length: 1.6, trail-size: 1.1, trail-step: 0.9, far-every: 3, impact-flash: 0.4}
+  # A hit shows a flash impact-flash blocks across for impact-ticks and sparks of impact-dust size, small enough to leave
+  # a fighter at the crosshair in sight.
+  bolt: {width: 1.8, length: 1.6, trail-size: 1.1, trail-step: 0.9, far-every: 3, impact-flash: 0.15, impact-ticks: 1, impact-dust: 0.5}
   explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 12}
   damaged: {below: 0.35, interval-ticks: 12}
   ambient: {interval-ticks: 10, range: 72}
@@ -333,20 +335,20 @@ classes:
 # deviation per block. A hit above the shoulders multiplies damage by headshot. Both gun heroes use the
 # twin-pistol profile.
 blasters:
-  carbine: {damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 3.5, range: 90}
-  repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 3.5, range: 60}
-  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 3.5, range: 75}
-  commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 3.5, range: 28}
-  long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0, speed: 5, range: 160}
-  pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 3.5, range: 70}
-  twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 4, range: 80}
+  carbine: {damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 4.5, range: 90}
+  repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 4.5, range: 60}
+  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 4.5, range: 75}
+  commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 4.5, range: 28}
+  long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0, speed: 6, range: 160}
+  pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 4.5, range: 70}
+  twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 5, range: 80}
   # Separatist weapons inherit their matching Republic profile unless overridden here.
   e5: {}
   wrist-blaster: {}
   e5s: {}
   se14: {}
   westar-pistols: {}
-  heavy-rifle: {damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 4, range: 100}
+  heavy-rifle: {damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 5, range: 100}
 
 # These slots are independent of named heroes. A purchase lasts one life; limit: 0 disables a unit.
 reinforcement-units:
@@ -467,6 +469,11 @@ combat-feedback:
   reward-ticks: 30
   hero-ready-ticks: 60
   elite-ready-ticks: 60
+  # How long the line beside the heat meter says why a key did nothing, such as an ability still recharging.
+  notice-ticks: 30
+  # A sprint lowers the gun, which a mark under the crosshair shows in place of the spread until it can fire again; then
+  # another mark shows for raised-ticks.
+  raised-ticks: 8
   multikill-seconds: 4
   sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
   # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples

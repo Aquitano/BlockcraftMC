@@ -5,6 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.combat.BattleEffects;
+import me.blockcraft.sternenfront.combat.CombatArc;
 import me.blockcraft.sternenfront.combat.Stance;
 import me.blockcraft.sternenfront.game.Blast;
 import me.blockcraft.sternenfront.game.Faction;
@@ -101,6 +102,7 @@ public final class Powers {
         private long markedAt;
         private List<Location> impacts = List.of();
         private TextDisplay warning;
+        private long warnedSeconds = -1;
 
         private Barrage(Player thrower, Faction faction, Item beacon, long thrownAt) {
             this.thrower = thrower;
@@ -243,12 +245,12 @@ public final class Powers {
         if (hit == null || !(hit.getHitEntity() instanceof LivingEntity victim)) {
             return false;
         }
-        int ticks = grip.seconds() * 20;
+        int ticks = grip.ticks();
         victim.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, GRIP_LEVITATION_AMPLIFIER, false, false, false));
         victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, GRIP_SLOWNESS_AMPLIFIER, false, false, false));
         SoundCue.FORCE_GRIP.play(victim.getLocation(), 1.2f);
         grips.removeIf(each -> each.victim().equals(victim));
-        grips.add(new Grip(player, victim, tick + ticks, grip.damage() / Math.max(1, ticks / grip.pulseTicks())));
+        grips.add(new Grip(player, victim, tick + ticks, grip.damagePerPulse()));
         return true;
     }
 
@@ -382,7 +384,7 @@ public final class Powers {
         for (var target : game.targets()) {
             if (!target.getWorld().equals(position.getWorld()) || !game.hittable(flight.faction(), target)
                     || flight.struck().contains(target.getUniqueId())
-                    || !SaberSweep.hits(position.toVector(), next.toVector(), target.getBoundingBox(), SABER_REACH)) {
+                    || !CombatArc.sweeps(position.toVector(), next.toVector(), target.getBoundingBox(), SABER_REACH)) {
                 continue;
             }
             var toward = target.getLocation().add(0, target.getHeight() / 2, 0).toVector().subtract(position.toVector());
@@ -419,7 +421,7 @@ public final class Powers {
             return true;
         }
         game.effects().grip(grip.gripper(), victim, tick);
-        if ((grip.endsAt() - tick) % config.grip().pulseTicks() == 0) {
+        if (config.grip().pulsesWith(grip.endsAt() - tick)) {
             game.strike(grip.gripper(), victim, grip.perPulse(), DamageType.MAGIC);
         }
         return false;
@@ -481,10 +483,14 @@ public final class Powers {
         var at = barrage.marked;
         long since = tick - barrage.markedAt;
         if (since < orbital.delayTicks()) {
-            barrage.warning.text(game.messages().get("combat.orbital-warning",
-                    Placeholder.styling("tint", barrage.faction.text()),
-                    Placeholder.component("faction", game.messages().get("faction." + barrage.faction.key() + ".name")),
-                    Formatter.number("seconds", (orbital.delayTicks() - since + 19) / 20)));
+            long seconds = (orbital.delayTicks() - since + 19) / 20;
+            if (seconds != barrage.warnedSeconds) {
+                barrage.warnedSeconds = seconds;
+                barrage.warning.text(game.messages().get("combat.orbital-warning",
+                        Placeholder.styling("tint", barrage.faction.text()),
+                        Placeholder.component("faction", game.messages().get("faction." + barrage.faction.key() + ".name")),
+                        Formatter.number("seconds", seconds)));
+            }
             if (since % 5 == 0) {
                 var dust = new Particle.DustOptions(BEAM_COLOUR, 1.4f);
                 for (var impact : barrage.impacts) {

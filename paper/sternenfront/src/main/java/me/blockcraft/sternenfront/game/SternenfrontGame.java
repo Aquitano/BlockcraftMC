@@ -164,6 +164,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final RoundTally tally = new RoundTally();
     private final Career career;
     private final Map<UUID, Fighter> fighters = new HashMap<>();
+    private List<LivingEntity> combatants = List.of();
+    private int combatantsAt = -1;
     /** While the round deals damage itself, which marks its own hits. */
     private boolean dealing;
     private boolean dealingHeadshot;
@@ -320,6 +322,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return rigs.map(bodies -> bodies.drawnAs(viewer, entity)).orElse(entity);
     }
 
+    /** Whether BetterModel draws {@code entity}, whose own equipment then shows to nobody. */
+    public boolean animated(Entity entity) {
+        return rigs.filter(bodies -> bodies.animates(entity)).isPresent();
+    }
+
     public Gadgets gadgets() {
         return gadgets;
     }
@@ -390,11 +397,20 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return (int) round.players().stream().filter(player -> factionOf(player).filter(faction::equals).isPresent()).count();
     }
 
+    /**
+     * Everyone on the field, players and bots, gathered once a server tick because a dozen systems ask every tick. A
+     * fighter who falls or deploys during the tick joins or leaves the list on the next.
+     */
     public List<LivingEntity> combatants() {
-        var field = new ArrayList<LivingEntity>();
-        round.players().stream().filter(this::onField).forEach(field::add);
-        field.addAll(bots.entities());
-        return field;
+        int now = Bukkit.getCurrentTick();
+        if (now != combatantsAt) {
+            var field = new ArrayList<LivingEntity>();
+            round.players().stream().filter(this::onField).forEach(field::add);
+            field.addAll(bots.entities());
+            combatants = List.copyOf(field);
+            combatantsAt = now;
+        }
+        return combatants;
     }
 
     public List<LivingEntity> targets() {
@@ -1194,7 +1210,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         if (!heroes.powers().use(player, faction.get(), hero.get(), ability, tick)) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("hero.no-target"));
+            feedback.notice(player, messages.get("hero.no-target"));
             Sounds.MENU_DENY.play(player);
             return;
         }
@@ -1216,8 +1232,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void cooling(Player player, Component ability, int ticks) {
-        BlockcraftApi.get().notifications().feedback(player, messages.get("ability.cooldown",
+        feedback.notice(player, messages.get("ability.cooldown",
                 Placeholder.component("ability", ability), Formatter.number("seconds", (ticks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND)));
+        Sounds.MENU_DENY.play(player);
     }
 
     public boolean strikeReady(Player player) {
@@ -1237,7 +1254,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         if (!gadgets.use(player, fighter, faction.get(), ability, tick)) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("ability.no-room"));
+            feedback.notice(player, messages.get("ability.no-room"));
             Sounds.MENU_DENY.play(player);
             return;
         }

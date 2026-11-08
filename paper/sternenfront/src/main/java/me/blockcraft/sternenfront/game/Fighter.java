@@ -68,7 +68,7 @@ public final class Fighter {
     private Optional<Choosing> choosing = Optional.empty();
     private Heat heat;
     private long protectedUntil;
-    private long lastHurt;
+    private long lastHurt = LONG_AGO;
     private long fallSafeUntil;
     private long sprintedAt = LONG_AGO;
     private final Map<Ability, Charges> charges = new EnumMap<>(Ability.class);
@@ -105,11 +105,13 @@ public final class Fighter {
         return heat;
     }
 
-    /** A fresh deploy: a cold gun, protection until {@code protectedUntil}, as {@code hero} or as the class. */
+    /** A fresh deploy: a cold gun, unhurt, protection until {@code protectedUntil}, as {@code hero} or as the class. */
     public void deployed(Heat.Rules heatRules, long protectedUntil, Optional<Hero> hero) {
         this.choosing = Optional.empty();
         this.heat = new Heat(heatRules);
         this.protectedUntil = protectedUntil;
+        this.lastHurt = LONG_AGO;
+        this.fallSafeUntil = 0;
         this.sprintedAt = LONG_AGO;
         this.charges.clear();
         this.hero = hero;

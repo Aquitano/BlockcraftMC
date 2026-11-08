@@ -7,6 +7,7 @@ import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Color;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
@@ -18,12 +19,16 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 /**
  * What a fight looks like: muzzle flashes, impacts, shockwaves, explosions, tethers, exhaust, vent steam and damaged
@@ -38,6 +43,9 @@ public final class BattleEffects {
     private static final String SABER_CRESCENT = "sternenfront/fx/saber_crescent";
     private static final String SABER_SCAR = "sternenfront/fx/saber_slash_cold";
     private static final String SMOKE_PUFF = "sternenfront/fx/smoke_puff";
+    private static final Set<Material> SPARKING = Arrays.stream(Material.values())
+            .filter(material -> material.name().matches(".*(IRON|COPPER|CHAIN|ANVIL|LANTERN|CAULDRON|HOPPER).*"))
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(Material.class)));
     private static final Color PUSH_COLOUR = Color.fromRGB(0xB8E5FF);
     private static final Color TETHER_COLOUR = Color.fromRGB(0xD0E2EE);
     private static final Color GRIP_COLOUR = Color.fromRGB(0xC050FF);
@@ -61,7 +69,7 @@ public final class BattleEffects {
     private static final Vector STILL = new Vector();
     private static final int VENT_INTERVAL = 3;
     /** A bot's barrel steams from this heat share on, whether or not its gun is venting. */
-    private static final double VENTING_HEAT = 0.85;
+    private static final double STEAMING_HEAT = 0.85;
     /** A shot from a barrel above this heat share leaves smoke at the muzzle. */
     private static final double HOT_BARREL = 0.65;
     private static final double OFF_THE_WALL = 0.12;
@@ -70,7 +78,6 @@ public final class BattleEffects {
     private static final double BLOCK_BEHIND = 0.01;
     private static final float SIZZLE_VOLUME = 0.35f;
     private static final int GROUND_PROBE = 4;
-    private static final int FLASH_TICKS = 2;
     private static final double PARTICLE_RANGE_SQUARED = 32 * 32;
     private static final double CLEAR_OF_EYES_SQUARED = 2.5 * 2.5;
     private static final int TRACER_TICKS = 3;
@@ -136,7 +143,8 @@ public final class BattleEffects {
     }
 
     private void flashSparing(LivingEntity owner, Faction faction, Location at, float scale, int ticks) {
-        flares.flash(flashModel(faction), at, scale, ticks).ifPresent(shown -> {
+        // Hidden as it spawns: hidden after, the owner's client may already have drawn it for a frame.
+        flares.flash(flashModel(faction), at, scale, ticks, shown -> {
             if (owner instanceof Player player) {
                 player.hideEntity(game.plugin(), shown);
             }
@@ -267,9 +275,9 @@ public final class BattleEffects {
             return;
         }
         spawnSparingOwner(player, at, Particle.ELECTRIC_SPARK, null);
-        spawnSparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), 1f));
+        spawnSparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), config.bolt().impactDust()));
         if (enabled) {
-            flashSparing(player, faction, at, config.bolt().impactFlash(), FLASH_TICKS);
+            flashSparing(player, faction, at, config.bolt().impactFlash(), config.bolt().impactTicks());
         }
     }
 
@@ -284,7 +292,7 @@ public final class BattleEffects {
      */
     public void boltOnWall(Location at, Vector normal, Block block, boolean shield, Faction faction) {
         var clear = at.clone().add(normal.clone().multiply(OFF_THE_WALL));
-        if (block.getType().name().matches(".*(IRON|COPPER|CHAIN|ANVIL|LANTERN|CAULDRON|HOPPER).*")) {
+        if (SPARKING.contains(block.getType())) {
             at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, clear, 3, 0.05, 0.05, 0.05, 0.12, null, true);
         }
         burst(clear, faction);
@@ -344,9 +352,9 @@ public final class BattleEffects {
     private void burst(Location at, Faction faction) {
         var world = at.getWorld();
         world.spawnParticle(Particle.ELECTRIC_SPARK, at, 4, 0.08, 0.08, 0.08, 0.1, null, true);
-        world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), 1f), true);
+        world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), config.bolt().impactDust()), true);
         if (enabled) {
-            flares.flash(flashModel(faction), at, config.bolt().impactFlash(), FLASH_TICKS);
+            flares.flash(flashModel(faction), at, config.bolt().impactFlash(), config.bolt().impactTicks(), shown -> { });
         }
     }
 
@@ -539,7 +547,7 @@ public final class BattleEffects {
         }
         ambience.tick(tick);
         if (tick % VENT_INTERVAL == 0) {
-            game.combatants().stream().filter(actor -> venting(actor, tick)).forEach(this::vent);
+            game.combatants().stream().filter(actor -> steaming(actor, tick)).forEach(this::steam);
         }
         if (tick % config.damaged().intervalTicks() == 0) {
             game.combatants().stream().filter(this::badlyHurt).forEach(BattleEffects::smoulder);
@@ -561,13 +569,14 @@ public final class BattleEffects {
         }
     }
 
-    private boolean venting(LivingEntity actor, long tick) {
+    /** A player's barrel steams while it vents; a bot's from {@link #STEAMING_HEAT} on. */
+    private boolean steaming(LivingEntity actor, long tick) {
         return actor instanceof Player player
                 ? game.fighter(player).heat().venting(tick)
-                : game.bots().heat(actor) >= VENTING_HEAT;
+                : game.bots().heat(actor) >= STEAMING_HEAT;
     }
 
-    private void vent(LivingEntity actor) {
+    private void steam(LivingEntity actor) {
         var at = muzzle(actor, actor.getEyeLocation().getDirection());
         spawnForOthers(actor, at, Particle.CLOUD, 0.06, 0.03);
         spawnForOthers(actor, at, Particle.WHITE_SMOKE, 0.05, 0.02);
