@@ -5,90 +5,6 @@
     "index": 0,
     "cases": [
       {
-        "when": "blockcraft:sternenfront/e5s",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/e5s",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
-        }
-      },
-      {
-        "when": "blockcraft:sternenfront/e5s_firing",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/e5s_firing",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
-        }
-      },
-      {
-        "when": "blockcraft:sternenfront/e5s_lowered",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/e5s_lowered",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
-        }
-      },
-      {
-        "when": "blockcraft:sternenfront/long_rifle",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/long_rifle",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
-        }
-      },
-      {
-        "when": "blockcraft:sternenfront/long_rifle_firing",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/long_rifle_firing",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
-        }
-      },
-      {
-        "when": "blockcraft:sternenfront/long_rifle_lowered",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/long_rifle_lowered",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
-        }
-      },
-      {
         "when": "blockcraft:zombies/sniper",
         "model": {
           "type": "minecraft:model",
@@ -100,6 +16,5 @@
       "type": "minecraft:model",
       "model": "minecraft:item/diamond_hoe"
     }
-  },
-  "hand_animation_on_swap": false
+  }
 }

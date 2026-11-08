@@ -29,14 +29,11 @@ public final class PackOverrides {
     /** What a tinted model's blade shows on an item that names no colour: its texture's own. */
     static final int UNTINTED = -1;
 
-    /**
-     * The model a case draws, whether the item's first custom_model_data colour tints it, and whether it draws
-     * {@code <model>_guard} instead while the item is in use.
-     */
-    record Case(String model, boolean tinted, boolean guarded) {
+    /** The model a case draws, whether the item's first custom_model_data colour tints it, and what it turns into. */
+    record Case(String model, boolean tinted, PackModel.Stance stance) {
 
-        String guard() {
-            return model + "_guard";
+        String variant() {
+            return model + stance.suffix();
         }
     }
 
@@ -47,10 +44,10 @@ public final class PackOverrides {
     static Map<String, Map<String, Case>> cases() {
         var cases = new TreeMap<String, Map<String, Case>>();
         for (var icon : MenuIcon.values()) {
-            add(cases, icon.fallback(), icon.modelData(), new Case("blockcraft:item/" + icon.key(), false, false));
+            add(cases, icon.fallback(), icon.modelData(), new Case("blockcraft:item/" + icon.key(), false, PackModel.Stance.NONE));
         }
         for (var model : PackModel.values()) {
-            add(cases, model.fallback(), model.key(), new Case(model.model().asString(), model.tinted(), model.guarded()));
+            add(cases, model.fallback(), model.key(), new Case(model.model().asString(), model.tinted(), model.stance()));
         }
         return cases;
     }
@@ -112,13 +109,44 @@ public final class PackOverrides {
         return model;
     }
 
-    private static JsonObject guarded(Case drawn) {
+    private static JsonObject drawn(Case drawn) {
+        return switch (drawn.stance()) {
+            case NONE -> model(drawn.model(), drawn.tinted());
+            case GUARD -> condition("minecraft:using_item", drawn);
+            case AIM -> aimed(drawn);
+        };
+    }
+
+    private static JsonObject condition(String property, Case drawn) {
         var condition = new JsonObject();
         condition.addProperty("type", "minecraft:condition");
-        condition.addProperty("property", "minecraft:using_item");
-        condition.add("on_true", model(drawn.guard(), drawn.tinted()));
+        condition.addProperty("property", property);
+        condition.add("on_true", model(drawn.variant(), drawn.tinted()));
         condition.add("on_false", model(drawn.model(), drawn.tinted()));
         return condition;
+    }
+
+    /**
+     * The client's own sneak key, not the server's word, so the gun comes up the moment the key goes down. Only the
+     * first-person hands ask, since everyone else who draws this item would be asking about their own key.
+     */
+    private static JsonObject aimed(Case drawn) {
+        var sneaking = condition("minecraft:keybind_down", drawn);
+        sneaking.addProperty("keybind", "key.sneak");
+        var contexts = new JsonArray();
+        contexts.add("firstperson_righthand");
+        contexts.add("firstperson_lefthand");
+        var firstPerson = new JsonObject();
+        firstPerson.add("when", contexts);
+        firstPerson.add("model", sneaking);
+        var cases = new JsonArray();
+        cases.add(firstPerson);
+        var select = new JsonObject();
+        select.addProperty("type", "minecraft:select");
+        select.addProperty("property", "minecraft:display_context");
+        select.add("cases", cases);
+        select.add("fallback", model(drawn.model(), drawn.tinted()));
+        return select;
     }
 
     private static JsonObject select(Map<String, Case> cases, JsonObject fallback) {
@@ -127,7 +155,7 @@ public final class PackOverrides {
             var drawn = entry.getValue();
             var match = new JsonObject();
             match.addProperty("when", entry.getKey());
-            match.add("model", drawn.guarded() ? guarded(drawn) : model(drawn.model(), drawn.tinted()));
+            match.add("model", drawn(drawn));
             list.add(match);
         });
         var select = new JsonObject();

@@ -136,15 +136,17 @@ combat:
     parry-ticks: 5
     cost-per-damage: 2
   melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
-  # Spread multiplies while moving, crouched and off the ground, and grows by hot times the barrel's heat. A sprint lowers
-  # the gun, which cannot fire until sprint-recovery-ticks after the sprint ends. Damage holds to falloff-from of a
-  # weapon's range, then thins to falloff-minimum of itself at the end of it. blasters overrides the factors per blaster;
-  # a Separatist blaster or hero gun without its own takes its Republic profile's.
+  # Spread multiplies while moving, aiming (sneaking with the blaster) and off the ground, and grows by hot times the
+  # barrel's heat. In a long rifle's scope it then shrinks to nothing over settle-ticks. A sprint lowers the gun, which
+  # cannot fire until sprint-recovery-ticks after the sprint ends. Damage holds to falloff-from of a weapon's range, then
+  # thins to falloff-minimum of itself at the end of it. blasters overrides the factors per blaster; a Separatist blaster
+  # or hero gun without its own takes its Republic profile's.
   handling:
     moving: 1.4
-    crouched: 0.6
+    aiming: 0.5
     airborne: 1.8
     hot: 0.5
+    settle-ticks: 12
     sprint-recovery-ticks: 5
     falloff-from: 0.5
     falloff-minimum: 0.6
@@ -153,7 +155,7 @@ combat:
       twin-pistol: {moving: 1.25, sprint-recovery-ticks: 3}
       heavy-rifle: {sprint-recovery-ticks: 6}
       long-rifle: {sprint-recovery-ticks: 8}
-      repeater: {moving: 1.7, crouched: 0.5, airborne: 2.2, sprint-recovery-ticks: 10}
+      repeater: {moving: 1.7, aiming: 0.4, airborne: 2.2, sprint-recovery-ticks: 10}
   # A player's bolts and long-rifle shots meet enemies where that player's screen showed them: their ping plus
   # interpolation-ms, the client's smoothing of other fighters, in the past, but never more than max-ms. A high-ping shooter
   # can then hit an enemy who has just stepped behind cover on their own screen; max-ms bounds how far behind that can be.
@@ -339,7 +341,7 @@ blasters:
   repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 4.5, range: 60}
   arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 4.5, range: 75}
   commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 4.5, range: 28}
-  long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0, speed: 6, range: 160}
+  long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0.025, speed: 6, range: 160}
   pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 4.5, range: 70}
   twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 5, range: 80}
   # Separatist weapons inherit their matching Republic profile unless overridden here.
@@ -450,9 +452,15 @@ streaks:
 career:
   ranks: [0, 1500, 4000, 8000, 15000, 25000, 40000, 60000, 90000, 130000]
 
-# Sneaking with the long rifle slows the walk by this share, which clients with FOV effects on show as a zoom.
-scope:
-  slowdown: 0.9
+# Sneaking with a blaster aims it: the gun comes up to the sights and combat.handling's aiming tightens its spread. The walk
+# slows to walk of its normal pace and the view narrows to zoom of its width. The client narrows the view only from a
+# slower walking speed and only with FOV effects on, so zoom slows the walk too and a crouch makes up the rest. Holding
+# right click with a long rifle looks through its scope, which the client zooms tenfold whatever its settings, at
+# scoped-walk of the normal pace.
+aim:
+  zoom: 0.92
+  walk: 0.5
+  scoped-walk: 0.3
 
 outlines: {enabled: true, range: 64, allies: false}
 
@@ -477,9 +485,9 @@ combat-feedback:
   multikill-seconds: 4
   sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
   # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples
-  # of its own base spread. Standing still and cold is 1 and crouching 0.6, so both show the tightest step;
+  # of its own base spread. Aiming is 0.5 and shows the tightest step, standing still and cold is 1 and shows the next;
   # combat.handling sets how far walking, jumping and heat open it.
-  spread-steps: [1.0, 1.25, 1.55, 1.85]
+  spread-steps: [0.8, 1.0, 1.25, 1.55]
 
 intro:
   enabled: true

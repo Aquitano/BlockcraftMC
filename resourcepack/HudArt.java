@@ -256,11 +256,78 @@ public final class HudArt {
         var letters = labelLetters(root.getParent().getParent().resolve("font"));
         minimap(root, letters);
         abilities(root, args.length > 1 ? Path.of(args[1]) : null, letters);
+        var misc = root.getParent().getParent().getParent().resolve("minecraft/textures/misc");
+        Files.createDirectories(misc);
+        ImageIO.write(scope(), "PNG", misc.resolve("spyglass_scope.png").toFile());
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
         for (var sprite : new String[] {"pink_background", "pink_progress", "notched_20_background", "notched_20_progress"}) {
             ImageIO.write(hidden, "PNG", sprites.resolve(sprite + ".png").toFile());
+        }
+    }
+
+    private static final int SCOPE = 256, SCOPE_RADIUS = 110, SCOPE_GAP = 9, SCOPE_POST = 50, SCOPE_TICKS = 10;
+
+    /**
+     * The long rifle's sight picture, which the client draws over the spyglass's view in every game: a dark tube with
+     * an upper-left lit rim, the glass darkening toward it in steps, and a duplex reticle whose posts thin to lines
+     * with a tick every ten pixels. The middle stays open for the crosshair and its marks. The client draws the square
+     * an eighth taller than the screen, so the circle's 220 of 256 pixels just fit.
+     */
+    private static BufferedImage scope() {
+        var image = new BufferedImage(SCOPE, SCOPE, BufferedImage.TYPE_INT_ARGB);
+        double middle = (SCOPE - 1) / 2.0;
+        for (int y = 0; y < SCOPE; y++) {
+            for (int x = 0; x < SCOPE; x++) {
+                double dx = x - middle, dy = y - middle;
+                double from = Math.hypot(dx, dy);
+                double inside = SCOPE_RADIUS - from;
+                boolean lit = Math.atan2(dy, dx) < -Math.PI / 2 && Math.atan2(dy, dx) > -Math.PI + .35;
+                int colour;
+                if (inside < 0) {
+                    colour = 0xFF07090D;
+                } else if (inside < 2) {
+                    colour = lit ? 0xFF627187 : 0xFF2B3545;
+                } else if (inside < 4) {
+                    colour = 0xFF141C29;
+                } else if (inside < 9) {
+                    colour = 0xB007090D;
+                } else if (inside < 16) {
+                    colour = 0x7007090D;
+                } else if (inside < 26) {
+                    colour = 0x3807090D;
+                } else {
+                    colour = lit && inside > 64 && inside < 70 ? 0x18B8C4D6 : 0x10162A3A;
+                }
+                image.setRGB(x, y, colour);
+            }
+        }
+        int centre = SCOPE / 2;
+        for (int along = SCOPE_GAP; along < SCOPE_RADIUS; along++) {
+            boolean post = along > SCOPE_POST;
+            int half = post ? 1 : 0;
+            for (int across = -half; across <= half; across++) {
+                reticle(image, centre + along, centre + across);
+                reticle(image, centre - along - 1, centre + across);
+                reticle(image, centre + across, centre + along);
+                reticle(image, centre + across, centre - along - 1);
+            }
+            if (!post && along % SCOPE_TICKS == 0) {
+                for (int across = -2; across <= 2; across++) {
+                    reticle(image, centre + along, centre + across);
+                    reticle(image, centre - along - 1, centre + across);
+                    reticle(image, centre + across, centre + along);
+                    reticle(image, centre + across, centre - along - 1);
+                }
+            }
+        }
+        return image;
+    }
+
+    private static void reticle(BufferedImage image, int x, int y) {
+        if (Math.hypot(x - (SCOPE - 1) / 2.0, y - (SCOPE - 1) / 2.0) < SCOPE_RADIUS - 4) {
+            image.setRGB(x, y, 0xE80B0F14);
         }
     }
 

@@ -4,19 +4,22 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
+import java.util.OptionalInt;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class WeaponHandlingTest {
 
-    private static final WeaponHandling.Posture STILL = new WeaponHandling.Posture(false, false, false);
+    private static final WeaponHandling.Posture STILL = new WeaponHandling.Posture(false, false, false, OptionalInt.empty());
 
     private static WeaponHandling handling() throws InvalidConfigurationException {
         var config = new YamlConfiguration();
         config.loadFromString("""
                 moving: 2
-                crouched: 0.5
+                aiming: 0.5
+                settle-ticks: 10
                 airborne: 1.5
                 hot: 1
                 sprint-recovery-ticks: 5
@@ -29,19 +32,27 @@ public class WeaponHandlingTest {
     }
 
     @Test
-    public void movingAirborneAndHeatOpenTheAimAndCrouchingTightensIt() throws InvalidConfigurationException {
+    public void movingAirborneAndHeatOpenTheAimAndAimingTightensIt() throws InvalidConfigurationException {
         var handling = handling();
         assertEquals(0.01, handling.spread(Blaster.CARBINE, 0.01, STILL, 0), 1e-9);
-        assertEquals(0.02, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(true, false, false), 0), 1e-9);
-        assertEquals(0.005, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(false, true, false), 0), 1e-9);
-        assertEquals(0.015, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(false, false, true), 0), 1e-9);
+        assertEquals(0.02, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(true, false, false, OptionalInt.empty()), 0), 1e-9);
+        assertEquals(0.005, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(false, true, false, OptionalInt.empty()), 0), 1e-9);
+        assertEquals(0.015, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(false, false, true, OptionalInt.empty()), 0), 1e-9);
         assertEquals(0.02, handling.spread(Blaster.CARBINE, 0.01, STILL, 1), 1e-9);
+    }
+
+    @Test
+    public void aScopeSettlesTheSpreadToNothingOverItsSettleTicks() throws InvalidConfigurationException {
+        var handling = handling();
+        assertEquals(0.01, handling.spread(Blaster.LONG_RIFLE, 0.01, new WeaponHandling.Posture(false, false, false, OptionalInt.of(0)), 0), 1e-9);
+        assertEquals(0.004, handling.spread(Blaster.LONG_RIFLE, 0.01, new WeaponHandling.Posture(false, false, false, OptionalInt.of(6)), 0), 1e-9);
+        assertEquals(0, handling.spread(Blaster.LONG_RIFLE, 0.01, new WeaponHandling.Posture(true, false, false, OptionalInt.of(10)), 0), 1e-9);
     }
 
     @Test
     public void aBlasterOverridesOnlyWhatItNamesAndASeparatistOneTakesItsProfiles() throws InvalidConfigurationException {
         var handling = handling();
-        var moving = new WeaponHandling.Posture(true, true, false);
+        var moving = new WeaponHandling.Posture(true, true, false, OptionalInt.empty());
         assertEquals(0.006, handling.spread(Blaster.PISTOL, 0.01, moving, 0), 1e-9);
         assertEquals(0.006, handling.spread(Blaster.SE14, 0.01, moving, 0), 1e-9);
         assertEquals(0.01, handling.spread(Blaster.E5, 0.01, moving, 0), 1e-9);

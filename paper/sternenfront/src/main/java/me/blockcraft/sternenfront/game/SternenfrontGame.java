@@ -98,6 +98,7 @@ import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
+import java.util.function.DoubleUnaryOperator;
 
 /**
  * One server, one round of Sternenfront: the Kolonien against the Hegemonie for the map's command posts. Players
@@ -115,7 +116,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private static final float SHOT_VOLUME = 2f;
     private static final float BOT_SHOT_VOLUME = 1.5f;
     private static final float SHOT_SHIFT = 0.06f;
-    private static final NamespacedKey SCOPE = new NamespacedKey("sternenfront", "scope");
+    private static final NamespacedKey AIM = new NamespacedKey("sternenfront", "aim");
     private static final int BANNER_TICKS = 55;
 
     private record Burst(Player shooter, Blaster blaster, long at) { }
@@ -197,7 +198,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.map = map;
         this.lobby = lobby;
         this.teams = new Teams(config.playersPerTeam());
-        this.loadouts = new Loadouts(messages, config);
+        this.loadouts = new Loadouts(messages, config, feel.aim());
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         this.botConfig = BotConfig.from(plugin.getConfig(), config.playersPerTeam());
@@ -613,7 +614,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         gadgets.release(player);
         player.leaveVehicle();
         fallen(player, Optional.empty());
-        unscope(player);
+        lowerAim(player);
     }
 
     private void forfeited(UUID player) {
@@ -872,7 +873,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 }
                 fighter.heat().tick(tick);
                 player.setExp(fighter.heat().level());
-                scope(player, fighter);
+                aim(player);
                 combat.tick(player);
                 feedback.aim(player);
             } else {
@@ -1075,6 +1076,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         fighter.endProtection();
         Bukkit.getPluginManager().callEvent(new ShotEvent(player));
         shoot(player, faction.get(), blaster);
+        var inHand = player.getInventory().getItemInMainHand();
+        if (HotbarItem.of(inHand, Blaster.class).filter(Blaster::isLongRifle).isPresent()) {
+            // The client then cannot raise the scope again until the next shot is ready, and shades the slot meanwhile.
+            player.setCooldown(inHand, stats.cooldownTicks());
+        }
         for (int bolt = 1; bolt < stats.bolts(); bolt++) {
             bursts.add(new Burst(player, blaster, tick + (long) bolt * stats.burstTicks()));
         }
@@ -1508,7 +1514,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         });
         streaks.death(victim.getUniqueId());
         summary.death(victim);
-        unscope(victim);
+        lowerAim(victim);
         fallen(victim, death.killer());
         factionOf(victim).ifPresent(faction -> reinforcements.lose(faction, 1));
         round.respawn(victim, RESPAWN_TICKS);
@@ -1568,7 +1574,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         Bukkit.broadcast(Component.empty());
         for (var player : Bukkit.getOnlinePlayers()) {
             deployment.reveal(player);
-            unscope(player);
+            lowerAim(player);
             player.setGlowing(false);
             if (!player.isDead()) {
                 PlayerReset.reset(player, GameMode.ADVENTURE);
@@ -1680,32 +1686,39 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         BlockcraftApi.get().notifications().reward(killer, messages.get("streak.earned", Formatter.number("kills", feel.orbitalStreak())));
     }
 
-    /** Sneaking with the long rifle slows the walk, which the client draws as a zoom; anything else lets go of it. */
-    private void scope(Player player, Fighter fighter) {
-        var speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
-        if (speed == null) {
+    /**
+     * Sneaking with a blaster aims it, and the slower walk that comes with it narrows a client's view. With a blaster in
+     * hand a crouch keeps more of the walk, so aiming slows a little rather than to a crawl. A scope zooms on its own.
+     */
+    private void aim(Player player) {
+        var aim = feel.aim();
+        boolean armed = !player.isInsideVehicle()
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
+        scaled(player, Attribute.SNEAKING_SPEED, armed, base -> aim.crouchShare() / base - 1);
+        scaled(player, Attribute.MOVEMENT_SPEED, armed && player.isSneaking() && !lowered(player) && !scoped(player),
+                base -> aim.speedShare() - 1);
+    }
+
+    private static void scaled(Player player, Attribute attribute, boolean on, DoubleUnaryOperator change) {
+        var instance = player.getAttribute(attribute);
+        if (instance == null || on == (instance.getModifier(AIM) != null)) {
             return;
         }
-        boolean aiming = scoped(player);
-        boolean scoped = speed.getModifier(SCOPE) != null;
-        if (aiming && !scoped) {
-            AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, SCOPE, -feel.scopeSlowdown());
-        } else if (!aiming && scoped) {
-            AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, SCOPE);
+        if (on) {
+            AttributeScale.apply(player, attribute, AIM, change.applyAsDouble(instance.getBaseValue()));
+        } else {
+            AttributeScale.remove(player, attribute, AIM);
         }
     }
 
-    static void unscope(Player player) {
-        if (player.getAttribute(Attribute.MOVEMENT_SPEED) != null) {
-            AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, SCOPE);
-        }
+    static void lowerAim(Player player) {
+        scaled(player, Attribute.SNEAKING_SPEED, false, base -> 0);
+        scaled(player, Attribute.MOVEMENT_SPEED, false, base -> 0);
     }
 
-    public boolean scoped(Player player) {
-        var fighter = fighters.get(player.getUniqueId());
-        return onField(player) && !player.isInsideVehicle() && fighter != null && player.isSneaking()
-                && factionOf(player).flatMap(fighter::blaster).filter(Blaster::isLongRifle).isPresent()
-                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::isLongRifle).isPresent();
+    /** Looking through a long rifle's scope, which the client does while right click is held on it. */
+    public static boolean scoped(Player player) {
+        return HotbarItem.of(player.getActiveItem(), Blaster.class).filter(Blaster::isLongRifle).isPresent();
     }
 
     private Component factionDisplay(Faction faction) {

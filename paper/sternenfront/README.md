@@ -114,7 +114,13 @@ also removes them from that viewer's tab list.
 A recording holds the bare fighters. `RecordedModel` marks a bot with its model, so a replay server with BetterModel draws
 and animates it again; without the plugin it plays back as an equipped skeleton. Players play back as mannequins.
 
-Scope zoom uses movement slowdown. Clients with FOV effects disabled see the slowdown without a narrower view.
+A held left click on air sends nothing after the first click, and the client drops every click while an item is in
+use, so fire stays on right click, which the client repeats every four ticks while it is held. Aiming is sneaking:
+the server sees it, and the item's model sees the client's own sneak key. The client narrows its view only from a slower
+walk and only with FOV effects on, so aiming zooms only for those clients. A spyglass is the one item the client scopes
+with whatever its settings, which is why a long rifle is a spyglass to the client and fires when right click is let go.
+The scope's look, `textures/misc/spyglass_scope.png`, is the pack's for every server, so a spyglass in another game shows
+the same reticle.
 Music and cantina audio use the Music category. Combat effects use the Players category.
 
 Launched rockets and orbital strikes continue after their owner falls. Lightning channels end with the caster.
@@ -230,8 +236,8 @@ Hits, headshots, and kills have distinct sounds and immediate marks around the c
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. While a player with the pack holds a blaster that has spread,
 four ticks around the crosshair show it. They open one step each time the spread, worked out as for the next shot, passes
-a multiple of that blaster's base in `combat-feedback.spread-steps`, so every blaster closes standing still, crouched or
-cool and opens fully hot on the move. A scoped or spreadless long rifle shows none, and the vanilla crosshair stays inside
+a multiple of that blaster's base in `combat-feedback.spread-steps`, so every blaster closes fully at the sights, one
+step wider standing still, and opens fully hot on the move. A scoped long rifle shows none, and the vanilla crosshair stays inside
 the ticks. All three share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat or guard meter.
 A player with the pack sees their own kills, assists and death in the top-right corner, newest on top, at most four
@@ -256,16 +262,28 @@ its tile's bottom-right corner, as the hotbar counts a stack, and shows no count
 on the action bar: `CombatHud` puts them in the line's middle, which needs the line's width as the client measures it,
 and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
 cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
-explains each binding in chat with its key, full name and what it does. Chat, the round's opening line and the class
-cards name the key the player bound to swapping hands and dropping, which the client fills in. The badges and the deploy
+explains each binding in chat with its key, full name and what it does, after a line on the weapon: a blaster's fire
+and aim, a long rifle's scope, or a blade's swing and guard. Chat, the round's opening line and the class cards name the
+keys the player bound to sneaking, swapping hands and dropping, which the client fills in. The badges and the deploy
 screen always show F and Q: their text's width is counted, and a binding's name, such as `Maustaste 4`, has a width
 only the client knows and does not fit a badge.
 `ObjectiveHud` shows a player in the round their own reinforcements after `Wir`, a badge per post, the enemy's
 reinforcements and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing.
 A spectator has no side to call `Wir` and sees no such line. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
+
+Holding the sneak key with a blaster aims it. In first person the gun swaps to its `_aim` model the moment the key goes
+down, with the top of its sights just under the crosshair, and kicks back there with a shot. The spread multiplies by
+`combat.handling`'s `aiming`, and right click still fires automatically. A blaster in hand lets the crouch keep more of
+the walk, so aiming walks at `aim.walk` of the normal pace. Part of that slowing is on the movement speed, which a client
+with FOV effects on draws as a view narrowed to `aim.zoom`; without FOV effects the view keeps its width.
+A long rifle looks through its scope while right click is held: the client zooms tenfold, hides the gun and draws the
+pack's scope, with or without FOV effects, and the walk drops to `aim.scoped-walk`. Letting go fires, so a tap fires
+from the hip. In the scope the spread shrinks to nothing over `settle-ticks`, after which a shot goes exactly where the
+reticle points. After a shot the client cannot raise the scope again, and shades the slot, until the rifle is ready. To
+lower the scope without firing, switch slots. Other viewers see the rifle held to the eye. Bots aim as before.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
-stay steadier walking and the repeater wants a crouch. A sprint shows the lowered pose of the held blaster, which cannot
+stay steadier walking and the repeater wants aiming. A sprint shows the lowered pose of the held blaster, which cannot
 fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair ticks use the same factors as the shot.
 A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 

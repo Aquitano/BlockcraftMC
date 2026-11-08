@@ -141,6 +141,7 @@ blaster:
     lore:
       - "<muted>Langsam, schwer und weit."
       - "<muted>Kopftreffer zählen fast doppelt."
+      - "<muted>Zielfernrohr: Rechtsklick halten, loslassen schießt."
   pistol:
     name: "<white>DC-17-Blasterpistole"
     lore:
@@ -165,7 +166,7 @@ blaster:
     name: "<white>E-5s-Scharfschützengewehr"
     lore:
       - "<muted>Präzise Schüsse auf große Entfernung."
-      - "<muted>Schleichen verengt das Sichtfeld."
+      - "<muted>Zielfernrohr: Rechtsklick halten, loslassen schießt."
   se14:
     name: "<white>SE-14-Blasterpistole"
     lore:
@@ -352,6 +353,8 @@ deploy:
   dropship-plain: "<white>Landungsschiff"
   controls: "<prefix><accent><key> <dark>· <white><name><muted>: <ability>"
   saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
+  blaster-controls: "<prefix><right>Halten für Dauerfeuer <dark>· <accent><key:key.sneak> <muted>halten: über Kimme und Korn zielen, enger streuen."
+  scope-controls: "<prefix><right>Halten: Zielfernrohr, loslassen: Schuss, antippen: aus der Hüfte <dark>· <muted>Im Fernrohr kurz ruhig halten trifft genau."
   target: "<prefix><accent>Gelbe Ecken <muted>um einen Posten auf der Karte und oben zeigen dein Ziel."
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
@@ -453,7 +456,7 @@ round:
   music-credit: "<muted>Musik: <click:open_url:'https://www.scottbuckley.com.au/library/'><primary>Scott Buckley</click> <muted>· Legionnaire und Juggernaut · CC BY 4.0"
   faction: "<arrow><faction><dark>: <accent><players>"
   start:
-    - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent><key:key.swapOffhand> <muted>und <accent><key:key.drop> <muted>für Fähigkeiten."
+    - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent><key:key.sneak> <muted>halten zum Zielen <dark>· <accent><key:key.swapOffhand> <muted>und <accent><key:key.drop> <muted>für Fähigkeiten."
   winner: "<prefix><primary>Sieg für <faction> <primary>mit <accent><tickets> <primary>Verstärkung!"
   draw: "<prefix><muted>Die Zeit ist um. Beide Fraktionen haben gleich viel Verstärkung."
 

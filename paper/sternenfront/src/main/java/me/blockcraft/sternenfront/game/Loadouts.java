@@ -2,11 +2,13 @@ package me.blockcraft.sternenfront.game;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
+import io.papermc.paper.datacomponent.item.UseEffects;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.hero.Sabers;
 import net.kyori.adventure.text.Component;
@@ -46,10 +48,12 @@ public final class Loadouts {
 
     private final Messages messages;
     private final SternenfrontConfig config;
+    private final FeelConfig.Aim aim;
 
-    public Loadouts(Messages messages, SternenfrontConfig config) {
+    public Loadouts(Messages messages, SternenfrontConfig config, FeelConfig.Aim aim) {
         this.messages = messages;
         this.config = config;
+        this.aim = aim;
     }
 
     public void equip(Player player, Faction faction, CombatClass combatClass) {
@@ -81,8 +85,12 @@ public final class Loadouts {
         lore.addAll(messages.getLines("blaster.stats", StatIcon.TAG,
                 Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS),
                 Formatter.number("range", Math.round(stats.range()))));
-        return blaster.build(blaster.model().item().name(messages.get("blaster." + blaster.key() + ".name")).lore(lore)
+        var item = blaster.build(blaster.model().item().name(messages.get("blaster." + blaster.key() + ".name")).lore(lore)
                 .hideAttributes().edit(meta -> meta.setUnbreakable(true)));
+        if (blaster.isLongRifle()) {
+            item.setData(DataComponentTypes.USE_EFFECTS, UseEffects.useEffects().canSprint(false).speedMultiplier((float) aim.scopedWalk()).build());
+        }
+        return item;
     }
 
     /** An ability as the class menu's read-out shows it, with the key it sits on. */

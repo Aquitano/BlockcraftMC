@@ -297,6 +297,9 @@ final class Commands {
         if (body.has("fov")) {
             options.fov().set(body.get("fov").getAsInt());
         }
+        if (body.has("fov_effects")) {
+            options.fovEffectScale().set(body.get("fov_effects").getAsDouble());
+        }
         if (body.has("render_distance")) {
             options.renderDistance().set(body.get("render_distance").getAsInt());
         }

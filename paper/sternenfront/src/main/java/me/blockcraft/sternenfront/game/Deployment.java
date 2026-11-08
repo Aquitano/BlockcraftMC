@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -127,7 +128,7 @@ public final class Deployment {
             return;
         }
         var fighter = game.fighter(player);
-        SternenfrontGame.unscope(player);
+        SternenfrontGame.lowerAim(player);
         PlayerReset.reset(player, GameMode.ADVENTURE);
         player.teleport(game.map().overview());
         player.setGlowing(false);
@@ -413,9 +414,6 @@ public final class Deployment {
         player.setSaturation(20);
         Sounds.TELEPORT.play(player);
         controlsChanged(player);
-        if (hero.filter(chosen -> chosen.weapon() instanceof Hero.Weapon.Saber).isPresent()) {
-            player.sendMessage(messages.get("deploy.saber-controls"));
-        }
         presentation.deployed(player, spawn);
         sidebarChanged.run();
         return true;
@@ -428,9 +426,14 @@ public final class Deployment {
         if (faction.isEmpty()) return;
         var keys = fighter.hero().map(chosen -> chosen.abilities().stream().map(ability -> "hero.ability." + ability.key()).toList())
                 .orElseGet(() -> fighter.abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
-        var previous = controls.put(player.getUniqueId(), keys);
-        if (keys.equals(previous)) return;
+        var weapon = fighter.hero().filter(chosen -> chosen.weapon() instanceof Hero.Weapon.Saber).map(chosen -> "deploy.saber-controls")
+                .or(() -> fighter.blaster(faction.get()).map(blaster -> blaster.isLongRifle() ? "deploy.scope-controls" : "deploy.blaster-controls"));
+        var told = new ArrayList<>(keys);
+        weapon.ifPresent(told::add);
+        var previous = controls.put(player.getUniqueId(), told);
+        if (told.equals(previous)) return;
         var messages = game.messages();
+        weapon.ifPresent(line -> player.sendMessage(messages.get(line)));
         for (int index = 0; index < Math.min(keys.size(), CONTROL_KEYS.size()); index++) {
             var key = keys.get(index);
             player.sendMessage(messages.get("deploy.controls", Placeholder.component("key", Component.keybind(CONTROL_BINDINGS.get(index))),
