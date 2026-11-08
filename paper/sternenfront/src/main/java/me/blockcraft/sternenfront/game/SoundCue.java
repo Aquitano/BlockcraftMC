@@ -63,10 +63,6 @@ public enum SoundCue {
         this.key = "blockcraft:sternenfront." + key;
     }
 
-    public static SoundCue shot(Blaster blaster) {
-        return valueOf("BLASTER_" + blaster.profile().name());
-    }
-
     public void play(Location at, float volume) {
         play(at, volume, 1f);
     }

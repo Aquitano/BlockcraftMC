@@ -128,7 +128,7 @@ public final class BattleEffects {
         var muzzle = muzzle(actor, direction);
         if (muzzle.getBlock().isPassable()) {
             var flash = config.muzzleFlash();
-            boolean heavy = blaster.precision() || blaster.profile() == Blaster.REPEATER;
+            boolean heavy = blaster.isLongRifle() || blaster.profile() == Blaster.REPEATER;
             // The barrel sits under a block from the eyes, where even a small flash covers the shooter's aim.
             flashSparing(actor, faction, muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks());
             forOthers(actor, muzzle, Particle.ELECTRIC_SPARK, 0.04, 0.03);
@@ -637,11 +637,11 @@ public final class BattleEffects {
             return;
         }
         var main = equipment.getItemInMainHand();
-        if (HotbarItem.of(main, Blaster.class).filter(blaster -> blaster.show(main, pose, heat)).isPresent()) {
+        if (HotbarItem.of(main, Blaster.class).filter(blaster -> blaster.updateLook(main, pose, heat)).isPresent()) {
             equipment.setItemInMainHand(main);
         }
         var off = equipment.getItemInOffHand();
-        if (HotbarItem.of(off, Blaster.class).filter(blaster -> blaster.show(off, pose, heat)).isPresent()) {
+        if (HotbarItem.of(off, Blaster.class).filter(blaster -> blaster.updateLook(off, pose, heat)).isPresent()) {
             equipment.setItemInOffHand(off);
         }
     }
@@ -656,7 +656,7 @@ public final class BattleEffects {
             var inventory = player.getInventory();
             for (int slot = 0; slot < inventory.getSize(); slot++) {
                 var item = inventory.getItem(slot);
-                if (HotbarItem.of(item, Blaster.class).filter(blaster -> blaster.show(item, Blaster.Pose.READY, HeatGlow.COLD)).isPresent()) {
+                if (HotbarItem.of(item, Blaster.class).filter(blaster -> blaster.updateLook(item, Blaster.Pose.READY, HeatGlow.COLD)).isPresent()) {
                     inventory.setItem(slot, item);
                 }
             }

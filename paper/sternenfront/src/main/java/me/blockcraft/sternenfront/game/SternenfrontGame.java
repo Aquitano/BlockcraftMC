@@ -1093,7 +1093,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         fighter.endProtection();
         Bukkit.getPluginManager().callEvent(new ShotEvent(rider));
         bolts.fire(rider, faction, Blaster.SPEEDER_CANNON, stats, muzzle, nose);
-        SoundCue.shot(Blaster.SPEEDER_CANNON).play(muzzle, SHOT_VOLUME);
+        Blaster.SPEEDER_CANNON.shotSound().play(muzzle, SHOT_VOLUME);
         rider.setExp(fighter.heat().level());
         return true;
     }
@@ -1125,7 +1125,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private static void shotSound(LivingEntity shooter, Blaster blaster, float volume) {
-        SoundCue.shot(blaster).playFrom(shooter, volume, 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT));
+        blaster.shotSound().playFrom(shooter, volume, 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT));
     }
 
     private void fireBursts() {
@@ -1679,8 +1679,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public boolean scoped(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         return onField(player) && !player.isInsideVehicle() && fighter != null && player.isSneaking()
-                && factionOf(player).flatMap(fighter::blaster).filter(Blaster::precision).isPresent()
-                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::precision).isPresent();
+                && factionOf(player).flatMap(fighter::blaster).filter(Blaster::isLongRifle).isPresent()
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::isLongRifle).isPresent();
     }
 
     private Component factionDisplay(Faction faction) {

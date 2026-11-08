@@ -50,8 +50,8 @@ public class ReinforcementLoadoutTest {
         assertTrue(units.stats(COMMANDO_DROID).speed() > units.stats(ARC_TROOPER).speed());
         assertEquals(List.of(Ability.SHIELD_WALL, Ability.ADRENALINE), ARC_TROOPER.abilities());
         assertEquals(List.of(Ability.JUMP_PACK, Ability.GRENADE), COMMANDO_DROID.abilities());
-        assertEquals(SoundCue.BLASTER_REPEATER, SoundCue.shot(ARC_TROOPER.blaster()));
-        assertEquals(SoundCue.BLASTER_CARBINE, SoundCue.shot(COMMANDO_DROID.blaster()));
+        assertEquals(SoundCue.BLASTER_REPEATER, ARC_TROOPER.blaster().shotSound());
+        assertEquals(SoundCue.BLASTER_CARBINE, COMMANDO_DROID.blaster().shotSound());
     }
 
     @Test

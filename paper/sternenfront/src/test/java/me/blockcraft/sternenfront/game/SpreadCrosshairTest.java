@@ -38,7 +38,7 @@ public class SpreadCrosshairTest {
             double base = config.stats(blaster).spread();
             for (var each : CASES) {
                 var size = CROSSHAIR.size(base, HANDLING.spread(blaster, base, each.posture(), each.heat()));
-                assertEquals(blaster + " " + each.name(), blaster.precision() ? Optional.empty() : Optional.of(each.size()), size);
+                assertEquals(blaster + " " + each.name(), blaster.isLongRifle() ? Optional.empty() : Optional.of(each.size()), size);
             }
         }
     }

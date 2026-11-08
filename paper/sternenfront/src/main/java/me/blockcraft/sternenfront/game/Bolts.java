@@ -89,7 +89,7 @@ public final class Bolts {
             direction.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
                     random.nextDouble(-spread, spread))).normalize();
         }
-        if (blaster.precision() && game.combat().config().precisionHitscan()) {
+        if (blaster.isLongRifle() && game.combat().config().precisionHitscan()) {
             launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.range(), lag.rewind(shooter)),
                     shooter.getEyeLocation(), direction, stats.range(), true);
         } else {

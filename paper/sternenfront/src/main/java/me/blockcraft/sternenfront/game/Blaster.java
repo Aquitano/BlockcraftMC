@@ -15,20 +15,34 @@ import java.util.Locale;
  * stats come from {@code speeders.cannon}.
  */
 public enum Blaster implements HotbarItem {
-    CARBINE(PackModel.STERNENFRONT_CARBINE),
-    REPEATER(PackModel.STERNENFRONT_REPEATER),
-    LONG_RIFLE(PackModel.STERNENFRONT_LONG_RIFLE),
-    PISTOL(PackModel.STERNENFRONT_PISTOL),
-    TWIN_PISTOL(PackModel.STERNENFRONT_TWIN_PISTOL),
-    HEAVY_RIFLE(PackModel.STERNENFRONT_HEAVY_RIFLE),
-    E5(PackModel.STERNENFRONT_E5),
-    WRIST_BLASTER(PackModel.STERNENFRONT_WRIST_BLASTER),
-    E5S(PackModel.STERNENFRONT_E5S),
-    SE14(PackModel.STERNENFRONT_SE14),
-    WESTAR_PISTOLS(PackModel.STERNENFRONT_WESTAR_PISTOLS),
-    ARC_REPEATER(PackModel.STERNENFRONT_REPEATER),
-    COMMANDO_CARBINE(PackModel.STERNENFRONT_E5),
-    SPEEDER_CANNON(PackModel.STERNENFRONT_HEAVY_RIFLE);
+    CARBINE(PackModel.STERNENFRONT_CARBINE, PackModel.STERNENFRONT_CARBINE_FIRING, PackModel.STERNENFRONT_CARBINE_LOWERED,
+            SoundCue.BLASTER_CARBINE),
+    REPEATER(PackModel.STERNENFRONT_REPEATER, PackModel.STERNENFRONT_REPEATER_FIRING, PackModel.STERNENFRONT_REPEATER_LOWERED,
+            SoundCue.BLASTER_REPEATER),
+    LONG_RIFLE(PackModel.STERNENFRONT_LONG_RIFLE, PackModel.STERNENFRONT_LONG_RIFLE_FIRING, PackModel.STERNENFRONT_LONG_RIFLE_LOWERED,
+            SoundCue.BLASTER_LONG_RIFLE),
+    PISTOL(PackModel.STERNENFRONT_PISTOL, PackModel.STERNENFRONT_PISTOL_FIRING, PackModel.STERNENFRONT_PISTOL_LOWERED,
+            SoundCue.BLASTER_PISTOL),
+    TWIN_PISTOL(PackModel.STERNENFRONT_TWIN_PISTOL, PackModel.STERNENFRONT_TWIN_PISTOL_FIRING, PackModel.STERNENFRONT_TWIN_PISTOL_LOWERED,
+            SoundCue.BLASTER_TWIN_PISTOL),
+    HEAVY_RIFLE(PackModel.STERNENFRONT_HEAVY_RIFLE, PackModel.STERNENFRONT_HEAVY_RIFLE_FIRING, PackModel.STERNENFRONT_HEAVY_RIFLE_LOWERED,
+            SoundCue.BLASTER_HEAVY_RIFLE),
+    E5(PackModel.STERNENFRONT_E5, PackModel.STERNENFRONT_E5_FIRING, PackModel.STERNENFRONT_E5_LOWERED,
+            SoundCue.BLASTER_CARBINE),
+    WRIST_BLASTER(PackModel.STERNENFRONT_WRIST_BLASTER, PackModel.STERNENFRONT_WRIST_BLASTER_FIRING, PackModel.STERNENFRONT_WRIST_BLASTER_LOWERED,
+            SoundCue.BLASTER_REPEATER),
+    E5S(PackModel.STERNENFRONT_E5S, PackModel.STERNENFRONT_E5S_FIRING, PackModel.STERNENFRONT_E5S_LOWERED,
+            SoundCue.BLASTER_LONG_RIFLE),
+    SE14(PackModel.STERNENFRONT_SE14, PackModel.STERNENFRONT_SE14_FIRING, PackModel.STERNENFRONT_SE14_LOWERED,
+            SoundCue.BLASTER_PISTOL),
+    WESTAR_PISTOLS(PackModel.STERNENFRONT_WESTAR_PISTOLS, PackModel.STERNENFRONT_WESTAR_PISTOLS_FIRING, PackModel.STERNENFRONT_WESTAR_PISTOLS_LOWERED,
+            SoundCue.BLASTER_TWIN_PISTOL),
+    ARC_REPEATER(PackModel.STERNENFRONT_REPEATER, PackModel.STERNENFRONT_REPEATER_FIRING, PackModel.STERNENFRONT_REPEATER_LOWERED,
+            SoundCue.BLASTER_REPEATER),
+    COMMANDO_CARBINE(PackModel.STERNENFRONT_E5, PackModel.STERNENFRONT_E5_FIRING, PackModel.STERNENFRONT_E5_LOWERED,
+            SoundCue.BLASTER_CARBINE),
+    SPEEDER_CANNON(PackModel.STERNENFRONT_HEAVY_RIFLE, PackModel.STERNENFRONT_HEAVY_RIFLE_FIRING, PackModel.STERNENFRONT_HEAVY_RIFLE_LOWERED,
+            SoundCue.BLASTER_SPEEDER_CANNON);
 
     /**
      * {@code bolts} leave the muzzle {@code burstTicks} apart for one pull of the trigger; {@code speed} is in blocks
@@ -42,9 +56,15 @@ public enum Blaster implements HotbarItem {
     public enum Pose { READY, FIRING, LOWERED }
 
     private final PackModel model;
+    private final PackModel firingModel;
+    private final PackModel loweredModel;
+    private final SoundCue shotSound;
 
-    Blaster(PackModel model) {
+    Blaster(PackModel model, PackModel firingModel, PackModel loweredModel, SoundCue shotSound) {
         this.model = model;
+        this.firingModel = firingModel;
+        this.loweredModel = loweredModel;
+        this.shotSound = shotSound;
     }
 
     public String key() {
@@ -66,7 +86,7 @@ public enum Blaster implements HotbarItem {
         };
     }
 
-    public boolean precision() {
+    public boolean isLongRifle() {
         return profile() == LONG_RIFLE;
     }
 
@@ -77,13 +97,17 @@ public enum Blaster implements HotbarItem {
     public PackModel model(Pose pose) {
         return switch (pose) {
             case READY -> model;
-            case FIRING -> firingModel();
-            case LOWERED -> loweredModel();
+            case FIRING -> firingModel;
+            case LOWERED -> loweredModel;
         };
     }
 
+    public SoundCue shotSound() {
+        return shotSound;
+    }
+
     /** Draws {@code item} in {@code pose} with its vents in {@code glow}; false when it already looked so. */
-    public boolean show(ItemStack item, Pose pose, HeatGlow glow) {
+    public boolean updateLook(ItemStack item, Pose pose, HeatGlow glow) {
         var key = model(pose).key();
         var current = item.getData(DataComponentTypes.CUSTOM_MODEL_DATA);
         if (current != null && current.strings().equals(List.of(key)) && current.colors().equals(List.of(glow.colour()))) {
@@ -91,37 +115,5 @@ public enum Blaster implements HotbarItem {
         }
         item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData().addString(key).addColor(glow.colour()).build());
         return true;
-    }
-
-    private PackModel loweredModel() {
-        return switch (this) {
-            case CARBINE -> PackModel.STERNENFRONT_CARBINE_LOWERED;
-            case REPEATER, ARC_REPEATER -> PackModel.STERNENFRONT_REPEATER_LOWERED;
-            case LONG_RIFLE -> PackModel.STERNENFRONT_LONG_RIFLE_LOWERED;
-            case PISTOL -> PackModel.STERNENFRONT_PISTOL_LOWERED;
-            case TWIN_PISTOL -> PackModel.STERNENFRONT_TWIN_PISTOL_LOWERED;
-            case HEAVY_RIFLE, SPEEDER_CANNON -> PackModel.STERNENFRONT_HEAVY_RIFLE_LOWERED;
-            case E5, COMMANDO_CARBINE -> PackModel.STERNENFRONT_E5_LOWERED;
-            case WRIST_BLASTER -> PackModel.STERNENFRONT_WRIST_BLASTER_LOWERED;
-            case E5S -> PackModel.STERNENFRONT_E5S_LOWERED;
-            case SE14 -> PackModel.STERNENFRONT_SE14_LOWERED;
-            case WESTAR_PISTOLS -> PackModel.STERNENFRONT_WESTAR_PISTOLS_LOWERED;
-        };
-    }
-
-    private PackModel firingModel() {
-        return switch (this) {
-            case CARBINE -> PackModel.STERNENFRONT_CARBINE_FIRING;
-            case REPEATER, ARC_REPEATER -> PackModel.STERNENFRONT_REPEATER_FIRING;
-            case LONG_RIFLE -> PackModel.STERNENFRONT_LONG_RIFLE_FIRING;
-            case PISTOL -> PackModel.STERNENFRONT_PISTOL_FIRING;
-            case TWIN_PISTOL -> PackModel.STERNENFRONT_TWIN_PISTOL_FIRING;
-            case HEAVY_RIFLE, SPEEDER_CANNON -> PackModel.STERNENFRONT_HEAVY_RIFLE_FIRING;
-            case E5, COMMANDO_CARBINE -> PackModel.STERNENFRONT_E5_FIRING;
-            case WRIST_BLASTER -> PackModel.STERNENFRONT_WRIST_BLASTER_FIRING;
-            case E5S -> PackModel.STERNENFRONT_E5S_FIRING;
-            case SE14 -> PackModel.STERNENFRONT_SE14_FIRING;
-            case WESTAR_PISTOLS -> PackModel.STERNENFRONT_WESTAR_PISTOLS_FIRING;
-        };
     }
 }
