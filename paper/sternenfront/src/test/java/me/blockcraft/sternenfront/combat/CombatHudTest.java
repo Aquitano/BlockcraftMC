@@ -33,7 +33,9 @@ public class CombatHudTest {
         Stream.concat(nameKeys, Stream.of("hero.leap")).forEach(key -> {
             var name = messages.getString(key + ".name");
             assertNotNull(key, name);
-            assertFalse(name, HudPanel.capitals(name.replaceAll("<[^>]+>", "")).contains("?"));
+            var capitals = HudPanel.capitals(name.replaceAll("<[^>]+>", ""));
+            assertFalse(name, capitals.contains("?"));
+            assertTrue(name, HudPanel.width(capitals) <= AbilityPanel.NAME_WIDTH);
         });
         Stream.concat(Arrays.stream(Ability.values()).map(Ability::key), Arrays.stream(HeroAbility.values()).map(HeroAbility::key))
                 .forEach(key -> assertNotNull(key, messages.getString("combat.hints." + key)));

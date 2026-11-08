@@ -74,6 +74,7 @@ public class AbilityPanelTest {
     public void theShaderMakesRoomForAFullColumn() throws IOException {
         var shader = Files.readString(PackFonts.FONTS.resolveSibling("shaders/include/hud_panel.glsl"));
         assertTrue(shader.contains("const float BLOCKCRAFT_ABILITY_COLUMN = " + AbilityPanel.HEIGHT + ".0;"));
+        assertTrue(shader.contains("const float BLOCKCRAFT_ABILITY_NAME_WIDTH = " + AbilityPanel.NAME_WIDTH + ".0;"));
     }
 
     @Test

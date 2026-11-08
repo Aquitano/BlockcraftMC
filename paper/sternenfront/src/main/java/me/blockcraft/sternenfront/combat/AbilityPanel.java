@@ -77,6 +77,8 @@ final class AbilityPanel {
     /** The name's capitals level with the tile's middle. */
     private static final int NAME_TOP = 8;
     private static final int NAME_GAP = 4;
+    /** The widest name, cut short beyond it; the shader leaves the names out where the GUI has no room for this. */
+    static final int NAME_WIDTH = 68;
     static final char BACKING = '\uE000';
     static final char FRAME = '\uE001';
     static final char FIRST_ICON = '\uE010';
@@ -159,8 +161,8 @@ final class AbilityPanel {
      * vanish against a bright floor.
      */
     private static List<Glyph> label(Slot slot, int top) {
-        var name = HudPanel.capitals(slot.name());
-        return name.isEmpty() ? List.of() : List.of(HudPanel.label(name, -TILE - NAME_GAP - HudPanel.width(name), top + NAME_TOP, Tint.WHITE));
+        var name = HudPanel.fitted(HudPanel.capitals(slot.name()), NAME_WIDTH);
+        return name.isEmpty() ? List.of() : List.of(HudPanel.label(name, -TILE - NAME_GAP - HudPanel.width(name), top + NAME_TOP, Tint.LABEL));
     }
 
     private static Glyph glyph(char glyph, int x, int y, Tint tint, int advance) {

@@ -139,15 +139,7 @@ final class MinimapLayout {
 
     /** The name in the menu tiles' capitals, cut to the panel's width, with a question mark for any letter they lack. */
     static String label(String name) {
-        var letters = HudPanel.capitals(name);
-        if (HudPanel.width(letters) <= NAME_WIDTH) {
-            return letters;
-        }
-        int end = letters.length() - 1;
-        while (end > 0 && HudPanel.width(letters.substring(0, end) + "…") > NAME_WIDTH) {
-            end--;
-        }
-        return letters.substring(0, end) + "…";
+        return HudPanel.fitted(HudPanel.capitals(name), NAME_WIDTH);
     }
 
     /** A boss bar line that starts in the screen's middle whatever it shows, which the shader moves into the corner. */

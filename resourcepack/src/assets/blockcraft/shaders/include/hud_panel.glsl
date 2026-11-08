@@ -10,7 +10,7 @@
 //   232  row    176 + tint  a panel in the bottom-right corner, on the action bar        HudPanel.Corner.BOTTOM_RIGHT
 //   231  1-5    197         a text effect from text_effect.glsl                          TextMotion
 //
-// Blue 176 to 182 is a panel tint, an index into BLOCKCRAFT_PANEL_TINTS in the order of HudPanel.Tint. Blue 197 is a
+// Blue 176 to 183 is a panel tint, an index into BLOCKCRAFT_PANEL_TINTS in the order of HudPanel.Tint. Blue 197 is a
 // text effect and never a tint.
 //
 // The server starts a panel in the screen's middle and lays it out to take no width; a right-hand panel's glyphs lie
@@ -20,7 +20,7 @@ const int BLOCKCRAFT_TOP_LEFT_RED = 231;
 const int BLOCKCRAFT_BOTTOM_RIGHT_RED = 232;
 const int BLOCKCRAFT_TOP_RIGHT_RED = 233;
 const int BLOCKCRAFT_PANEL_FIRST_TINT = 176;
-const int BLOCKCRAFT_PANEL_TINT_COUNT = 7;
+const int BLOCKCRAFT_PANEL_TINT_COUNT = 8;
 const vec3 BLOCKCRAFT_PANEL_TINTS[BLOCKCRAFT_PANEL_TINT_COUNT] = vec3[](
     vec3(1.0),                          // WHITE
     vec3(0.6),                          // DIMMED
@@ -28,8 +28,11 @@ const vec3 BLOCKCRAFT_PANEL_TINTS[BLOCKCRAFT_PANEL_TINT_COUNT] = vec3[](
     vec3(255.0, 85.0, 85.0) / 255.0,    // SEPARATISTS, red
     vec3(255.0, 170.0, 0.0) / 255.0,    // SQUAD, gold: the player's fireteam
     vec3(0.12),                         // SHADOW
-    vec3(255.0, 255.0, 85.0) / 255.0    // ACCENT, yellow: where to go
+    vec3(255.0, 255.0, 85.0) / 255.0,   // ACCENT, yellow: where to go
+    vec3(1.0)                           // LABEL, white: an ability's name, which a narrow GUI leaves out
 );
+const int BLOCKCRAFT_SHADOW_TINT = 5;
+const int BLOCKCRAFT_LABEL_TINT = 7;
 
 // Each panel's corner, from the screen's corner of the same name. The bottom-right panel hangs from the top of a full
 // column of ability tiles, AbilityPanel.HEIGHT pixels tall.
@@ -39,6 +42,13 @@ const float BLOCKCRAFT_ABILITY_COLUMN = 108.0;
 const float BLOCKCRAFT_BOTTOM_RIGHT_MARGIN = 3.0;
 const vec2 BLOCKCRAFT_BOTTOM_RIGHT_CORNER = vec2(-BLOCKCRAFT_BOTTOM_RIGHT_MARGIN,
         -BLOCKCRAFT_BOTTOM_RIGHT_MARGIN - BLOCKCRAFT_ABILITY_COLUMN);
+
+// The ability names stand left of their tiles, level with the hotbar and the food bar. They need a tile, a gap and the
+// widest name AbilityPanel draws between the hotbar's right end and the margin; a narrower GUI, such as a 4:3 or 5:4
+// window at its automatic scale, leaves them out with their shadows, the only shadows that panel draws.
+const float BLOCKCRAFT_HOTBAR_HALF = 91.0;
+const float BLOCKCRAFT_ABILITY_NAME_WIDTH = 68.0;
+const float BLOCKCRAFT_ABILITY_NAME_ROOM = 24.0 + 4.0 + BLOCKCRAFT_ABILITY_NAME_WIDTH;
 
 // Where the client draws the lines that carry panels: boss bar text lines from 3 pixels below the screen's top and 19
 // apart, and the action bar 72 pixels above its bottom. A panel's vertices, shadows included, lie from one pixel above
@@ -55,8 +65,18 @@ int blockcraft_panel_tint(ivec3 marker) {
 }
 
 // The client centres a line on half its rounded-up GUI size, while the projection spans the unrounded one.
+vec2 blockcraft_gui_size(mat4 projection) {
+    return ceil(2.0 / abs(vec2(projection[0][0], projection[1][1])) - 0.001);
+}
+
+bool blockcraft_panel_hidden(ivec3 marker, int tint, mat4 projection) {
+    bool name = marker.r == BLOCKCRAFT_BOTTOM_RIGHT_RED && (tint == BLOCKCRAFT_LABEL_TINT || tint == BLOCKCRAFT_SHADOW_TINT);
+    return name && blockcraft_gui_size(projection).x / 2.0 - BLOCKCRAFT_HOTBAR_HALF
+            < BLOCKCRAFT_BOTTOM_RIGHT_MARGIN + BLOCKCRAFT_ABILITY_NAME_ROOM;
+}
+
 vec2 blockcraft_panel_position(vec2 position, ivec3 marker, mat4 projection) {
-    vec2 gui = ceil(2.0 / abs(vec2(projection[0][0], projection[1][1])) - 0.001);
+    vec2 gui = blockcraft_gui_size(projection);
     float fromMiddle = position.x - floor(gui.x / 2.0);
     if (marker.r == BLOCKCRAFT_BOTTOM_RIGHT_RED) {
         float lineTop = gui.y - BLOCKCRAFT_ACTION_BAR_TOP;

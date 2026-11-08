@@ -46,7 +46,7 @@ void main() {
     int panelTint = blockcraft_panel_tint(marker);
     if (panelTint >= 0) {
         position.xy = blockcraft_panel_position(Position.xy, marker, ProjMat);
-        textColor = vec4(BLOCKCRAFT_PANEL_TINTS[panelTint], Color.a);
+        textColor = vec4(BLOCKCRAFT_PANEL_TINTS[panelTint], blockcraft_panel_hidden(marker, panelTint, ProjMat) ? 0.0 : Color.a);
     }
 #endif
     textHorizontal = Position.x;

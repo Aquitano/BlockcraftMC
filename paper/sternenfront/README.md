@@ -239,7 +239,8 @@ Nearby gains combine into one segment.
 A player with the pack sees their abilities as a column of tiles in the screen's bottom-right corner: F against the
 corner, Q above it, then a bladed hero's leap under a badge with the space bar twice, and a kill streak's strike framed in gold under
 Shift+F until it is thrown. A key with nothing bound shows no tile. Each tile carries its key on a badge and the
-ability's full name beside it. A ready tile is bright and framed in the side's colour; a recharging one turns grey
+ability's full name beside it. The names stand level with the hotbar and the food bar, so on a GUI narrower than 380
+pixels, such as a 4:3 or 5:4 window at its automatic scale, the pack's shader leaves them out and the tiles stay. A ready tile is bright and framed in the side's colour; a recharging one turns grey
 behind the seconds left and a fill that rises as it recharges. An ability that holds several uses counts those left in
 its tile's bottom-right corner, as the hotbar counts a stack, and shows no count once it is empty. The tiles ride
 on the action bar: `CombatHud` puts them in the line's middle, which needs the line's width as the client measures it,

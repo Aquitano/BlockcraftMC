@@ -32,7 +32,9 @@ public final class HudPanel {
 
     /** The shader's colours for a glyph, in the order of its tint table; the factions' are those of {@link Faction#text()}. */
     public enum Tint {
-        WHITE, DIMMED, REPUBLIC, SEPARATISTS, SQUAD, SHADOW, ACCENT;
+        WHITE, DIMMED, REPUBLIC, SEPARATISTS, SQUAD, SHADOW, ACCENT,
+        /** White like {@link #WHITE}, for an ability's name, which the shader leaves out on a GUI too narrow for it. */
+        LABEL;
 
         public static Tint of(Faction faction) {
             return faction == Faction.KOLONIEN ? REPUBLIC : SEPARATISTS;
@@ -81,6 +83,18 @@ public final class HudPanel {
     /** How wide the panels' fonts draw {@code capitals}. */
     public static int width(String capitals) {
         return capitals.codePoints().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_ADVANCE : UiFont.LABEL_ADVANCE).sum();
+    }
+
+    /** {@code capitals} cut short with an ellipsis where they would draw wider than {@code width}. */
+    public static String fitted(String capitals, int width) {
+        if (width(capitals) <= width) {
+            return capitals;
+        }
+        int end = capitals.length() - 1;
+        while (end > 0 && width(capitals.substring(0, end) + "…") > width) {
+            end--;
+        }
+        return capitals.substring(0, end) + "…";
     }
 
     /** {@code capitals} as a line of text on a panel, shadowed so it reads over a bright floor. */
