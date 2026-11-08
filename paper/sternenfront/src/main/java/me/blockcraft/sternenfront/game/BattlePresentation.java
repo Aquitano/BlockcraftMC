@@ -7,12 +7,10 @@ import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.title.Title;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +18,10 @@ import java.util.UUID;
 import java.util.function.DoubleConsumer;
 
 final class BattlePresentation implements AutoCloseable {
+
+    /** What a title's fading in and out added to the time an announcement stood, which a line without fades keeps. */
+    private static final int FADE_TICKS = 10;
+
     private final SternenfrontGame game;
     private final Map<UUID, PresentationScope> deployments = new HashMap<>();
     private final Map<Integer, PresentationScope> captures = new HashMap<>();
@@ -90,9 +92,7 @@ final class BattlePresentation implements AutoCloseable {
             case Spawn.Dropship ignored -> game.messages().get("deploy.dropship-plain");
         };
         int ticks = Math.clamp(game.plugin().getConfig().getInt("presentation.deployment.banner-ticks"), 1, 100);
-        BlockcraftApi.get().notifications().important(player, Title.title(Component.empty(),
-                game.messages().get("deploy.location", Placeholder.component("location", location)),
-                Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(ticks * 50L), Duration.ofMillis(300))));
+        game.announce(player, game.messages().get("deploy.location", Placeholder.component("location", location)), ticks + FADE_TICKS);
     }
 
     void captured(int index, Faction faction, List<Player> present) {
@@ -129,9 +129,8 @@ final class BattlePresentation implements AutoCloseable {
             }
         }.runTaskTimer(game.plugin(), 0, 2);
         scope.own(task::cancel);
-        var title = Title.title(Component.empty(), game.messages().get("post.capture-banner", game.posts().name(index)),
-                Title.Times.times(Duration.ofMillis(150), Duration.ofMillis(duration * 50L), Duration.ofMillis(400)));
-        present.stream().filter(player -> !busy(player)).forEach(player -> BlockcraftApi.get().notifications().important(player, title));
+        var banner = game.messages().get("post.capture-banner", game.posts().name(index));
+        present.stream().filter(player -> !busy(player)).forEach(player -> game.announce(player, banner, duration + FADE_TICKS));
     }
 
     private static boolean busy(Player player) {

@@ -304,8 +304,7 @@ radio:
     lost: 'Posten verloren. Rückeroberung einleiten.'
 
 secret:
-  found-title: "<sternenfront>Secret gefunden!"
-  found-subtitle: "<accent>+<coins> Coins"
+  found-banner: "<sternenfront>Secret gefunden! <accent>+<coins> Coins"
   found: "<prefix><success>Secret gefunden: <accent><secret><muted>! <accent>+<coins> Coins"
   known: "<prefix><muted>Dieses Secret kennst du schon: <accent><secret>"
   kyber-count: "<prefix><muted>Kyberkristalle: <accent><found><dark>/<white><total>"

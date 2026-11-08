@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ShotEvent;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.bot.Bots;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
@@ -37,7 +38,8 @@ import java.util.UUID;
  * while after it fired, and only if the player's client draws it at all.
  * <p>
  * The line stays for as long as a player with the pack is in the round, empty while dead or behind a cutscene, so the
- * capture and hero bars below it keep their slots.
+ * capture and hero bars below it keep their slots. Its own text, centred like any boss bar's, is a short announcement,
+ * under the objective at the chat's size where a subtitle would cross the crosshair.
  */
 final class Minimap implements Listener {
 
@@ -53,6 +55,9 @@ final class Minimap implements Listener {
         private final BossBar bar = BossBar.bossBar(Component.empty(), 0, BossBar.Color.PINK, BossBar.Overlay.NOTCHED_20);
         private List<Glyph> drawnMap = List.of();
         private List<Glyph> drawnFeed = List.of();
+        private Component announcement = Component.empty();
+        private long announcedUntil;
+        private Component drawnAnnouncement = Component.empty();
         private boolean shown;
     }
 
@@ -88,8 +93,20 @@ final class Minimap implements Listener {
             boolean seen = !CombatFeedback.covered(player);
             var map = seen && game.onField(player) ? map(player, field, tick) : List.<Glyph>of();
             var feed = seen ? KillFeed.layout(game.killFeed().live(player.getUniqueId(), tick), player.getName(), tick) : List.<Glyph>of();
-            draw(player, map, feed);
+            draw(player, map, feed, tick);
         }
+    }
+
+    /** {@code line} under the objective for {@code ticks}, in place of the one before; false for a player without this line. */
+    boolean announce(Player player, Component line, int ticks) {
+        var panel = panels.get(player.getUniqueId());
+        if (panel == null || !panel.shown) {
+            return false;
+        }
+        panel.announcement = line;
+        panel.announcedUntil = game.tick() + ticks;
+        draw(player, panel.drawnMap, panel.drawnFeed, game.tick());
+        return true;
     }
 
     /**
@@ -169,12 +186,15 @@ final class Minimap implements Listener {
         return glyphs;
     }
 
-    private void draw(Player viewer, List<Glyph> map, List<Glyph> feed) {
+    private void draw(Player viewer, List<Glyph> map, List<Glyph> feed, long tick) {
         var panel = panels.computeIfAbsent(viewer.getUniqueId(), ignored -> new Panel());
-        if (!map.equals(panel.drawnMap) || !feed.equals(panel.drawnFeed)) {
+        var announcement = tick < panel.announcedUntil && !CombatFeedback.covered(viewer) ? panel.announcement : Component.empty();
+        if (!map.equals(panel.drawnMap) || !feed.equals(panel.drawnFeed) || !announcement.equals(panel.drawnAnnouncement)) {
             panel.drawnMap = List.copyOf(map);
             panel.drawnFeed = List.copyOf(feed);
-            panel.bar.name(MinimapLayout.render(map).append(HudPanel.render(Corner.TOP_RIGHT, MinimapLayout.FONT, feed)));
+            panel.drawnAnnouncement = announcement;
+            var corners = MinimapLayout.render(map).append(HudPanel.render(Corner.TOP_RIGHT, MinimapLayout.FONT, feed));
+            panel.bar.name(announcement.equals(Component.empty()) ? corners : UiFont.centredOn(announcement, corners));
         }
         if (!panel.shown) {
             viewer.showBossBar(panel.bar);

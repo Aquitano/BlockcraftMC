@@ -5,17 +5,16 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.sternenfront.game.SoundCue;
+import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Sabers;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.time.Duration;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,17 +28,19 @@ import java.util.UUID;
  */
 final class Discoveries implements Listener {
 
-    private static final Title.Times TITLE_TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(500));
+    private static final int BANNER_TICKS = 56;
 
     private record Found(boolean first, int crystals, boolean saber) {
     }
 
+    private final SternenfrontGame game;
     private final Messages messages;
     private final int coins;
     private final UnlockRewards rewards;
     private final Map<UUID, Set<Secret>> answered = new HashMap<>();
 
-    Discoveries(Messages messages, int coins) {
+    Discoveries(SternenfrontGame game, Messages messages, int coins) {
+        this.game = game;
         this.messages = messages;
         this.coins = coins;
         this.rewards = new UnlockRewards(BlockcraftApi.get().database());
@@ -69,8 +70,8 @@ final class Discoveries implements Listener {
             return;
         }
         var coinsTag = Formatter.number("coins", coins);
-        BlockcraftApi.get().notifications().reward(player,
-                Title.title(messages.get("secret.found-title"), messages.get("secret.found-subtitle", coinsTag), TITLE_TIMES), Sounds.SECRET);
+        game.announce(player, messages.get("secret.found-banner", coinsTag), BANNER_TICKS);
+        BlockcraftApi.get().notifications().rewardSound(player, Sounds.SECRET);
         player.sendMessage(messages.get("secret.found", secretName, coinsTag));
         if (secret.crystal()) {
             SoundCue.KYBER_FOUND.playTo(player, 1f);

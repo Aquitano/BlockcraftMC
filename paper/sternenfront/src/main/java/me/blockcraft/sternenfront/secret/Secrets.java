@@ -42,7 +42,7 @@ public final class Secrets implements Listener, AutoCloseable {
         secrets.listen(holiday);
         secrets.cleanup.add(holiday::close);
         game.map().secrets().ifPresent(spots -> {
-            var discoveries = new Discoveries(messages, config.coins());
+            var discoveries = new Discoveries(game, messages, config.coins());
             var feedback = BlockcraftApi.get().notifications();
             secrets.listen(discoveries);
             if (!spots.crystals().isEmpty()) {

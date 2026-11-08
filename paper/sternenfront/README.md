@@ -203,6 +203,12 @@ post's capture bar and the heroes' bars. A bar that arrives late, such as the ob
 puts the ones after it back below it. The map redraws every `minimap.update-ticks` and sends nothing while nothing on it
 moved.
 
+The map's line also carries the round's short announcements as its own centred text, at chat size just under the
+objective, where a subtitle would cross the crosshair: the spawn's name on arrival, a post secured, the relic appearing,
+an act beginning and a secret found. Each stays a few seconds, a new one replaces it, and it hides with the combat HUD.
+A player without the line, such as a spectator, gets the same text as a subtitle. The subtitle itself carries only the
+crosshair's marks.
+
 ## Combat feedback
 
 During combat, enemies have red outlines with every weapon, without aiming or sneaking. This applies to players and
