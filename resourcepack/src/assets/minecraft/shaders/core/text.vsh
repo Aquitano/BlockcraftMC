@@ -10,6 +10,7 @@
 #include <minecraft:projection.glsl>
 #include <minecraft:globals.glsl>
 #include <blockcraft:text_effect.glsl>
+#include <blockcraft:hud_panel.glsl>
 
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec4 Color;
@@ -37,6 +38,13 @@ void main() {
     vec4 textColor = textEffect != 0 ? vec4(1.0, 1.0, 1.0, Color.a) : Color;
     if (markerShadow) textColor.a = 0.0;
     vec3 position = Position + vec3(blockcraft_text_offset(textEffect, GameTime * 1200.0), 0.0);
+#ifdef IS_GUI
+    int panelTint = blockcraft_panel_tint(marker);
+    if (panelTint >= 0) {
+        position.xy = blockcraft_panel_position(Position.xy, marker.g, ProjMat);
+        textColor = vec4(BLOCKCRAFT_PANEL_TINTS[panelTint], Color.a);
+    }
+#endif
     textHorizontal = Position.x;
     gl_Position = ProjMat * ModelViewMat * vec4(position, 1.0);
 
