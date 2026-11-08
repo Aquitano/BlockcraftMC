@@ -152,6 +152,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final BattleIntro intro;
     private final BattlePresentation presentation;
     private final ObjectiveHud objective;
+    private final Minimap minimap;
     private final Battlefield battlefield;
     private final SupportRewards support;
     private final Gadgets gadgets;
@@ -232,6 +233,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.spawnSpots = new SpawnSpots(this);
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
+        this.minimap = new Minimap(this, Minimap.Settings.from(plugin.getConfig()));
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
@@ -280,6 +282,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public Bots bots() {
         return bots;
+    }
+
+    Minimap minimap() {
+        return minimap;
     }
 
     public BattleRadio radio() {
@@ -576,6 +582,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         botDifficultyVotes.withdraw(player.getUniqueId());
         standDown(player);
         deployment.forget(player);
+        minimap.forget(player);
         if (round.stepOut(player, this::forfeited)) {
             refreshAll();
             return;
@@ -857,6 +864,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 deployment.deployWhenDue(player, fighter);
             }
         }
+        minimap.tick(tick);
         int navigationTicks = Math.clamp(plugin.getConfig().getInt("respawn.navigation-update-ticks"), 1, 20);
         if (tick % TICKS_PER_SECOND == 0) {
             second();
@@ -1587,6 +1595,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         combat.clear();
         feedback.clear();
         objective.clear();
+        minimap.clear();
         speeders.clear();
         battlefield.clear();
         support.clear();

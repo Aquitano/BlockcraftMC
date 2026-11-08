@@ -48,7 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -168,6 +167,7 @@ public final class Bots implements Listener {
     private final Map<UUID, Soldier> bodies = new HashMap<>();
     private final Map<UUID, Faction> identities = new HashMap<>();
     private final List<Fireteam> teams = new ArrayList<>();
+    private final Map<UUID, Fireteam> squads = new HashMap<>();
     private double sightShare = 1;
     private int nextNumber;
     private int nextTeam;
@@ -335,6 +335,7 @@ public final class Bots implements Listener {
         }
         if (tick % ROUTE_TICKS == 0) {
             teams.forEach(team -> command(team, tick));
+            adopt();
         }
         if (tick % THINK_TICKS == 0) {
             teams.forEach(this::mark);
@@ -679,12 +680,15 @@ public final class Bots implements Listener {
         if (squad.isEmpty()) {
             team.leader = -1;
             team.trail.clear();
+            team.following = null;
             return;
         }
         var leader = lead(team, squad);
         var at = leader.body.getLocation();
         int previous = team.objective;
-        int next = followed(team, at, tick).orElseGet(() -> objectiveFor(team, at, tick));
+        var order = followed(team, at, tick);
+        team.following = order.map(Order::player).orElse(null);
+        int next = order.map(Order::post).orElseGet(() -> objectiveFor(team, at, tick));
         if (next != previous) {
             if (previous >= 0) {
                 call(leader, "advance", tick);
@@ -829,15 +833,56 @@ public final class Bots implements Listener {
                 .filter(soldier -> soldier.guarding < 0).findFirst();
     }
 
+    private record Order(UUID player, int post) { }
+
     /** The order of the nearest player of the team's faction within reach of its leader, which the team takes as its own. */
-    private Optional<Integer> followed(Fireteam team, Location leader, long tick) {
+    private Optional<Order> followed(Fireteam team, Location leader, long tick) {
         double range = config.squad().followRange();
         return game.combatants().stream().filter(Player.class::isInstance).map(Player.class::cast).filter(game::onField)
                 .filter(player -> game.factionOf(player).filter(team.faction::equals).isPresent())
                 .filter(player -> player.getWorld().equals(leader.getWorld()) && player.getLocation().distanceSquared(leader) <= range * range)
                 .min(Comparator.comparingDouble(player -> player.getLocation().distanceSquared(leader)))
-                .map(game.deployment()::order).filter(OptionalInt::isPresent).map(OptionalInt::getAsInt)
-                .filter(post -> !team.avoiding(post, tick));
+                .flatMap(player -> {
+                    var post = game.deployment().order(player);
+                    return post.isPresent() && !team.avoiding(post.getAsInt(), tick)
+                            ? Optional.of(new Order(player.getUniqueId(), post.getAsInt())) : Optional.empty();
+                });
+    }
+
+    /**
+     * A player's squad is the fireteam that last took their order. It stays theirs while no other team does, and
+     * passes to the next team that takes their order once it follows someone else or nobody.
+     */
+    private void adopt() {
+        squads.values().removeIf(team -> !teams.contains(team));
+        teams.stream().filter(team -> team.following != null).sorted(Comparator.comparingInt(team -> team.id)).forEach(team -> {
+            var current = squads.get(team.following);
+            if (current == null || !team.following.equals(current.following)) {
+                squads.put(team.following, team);
+            }
+        });
+    }
+
+    /** A bot of a player's squad: its number and class, and its body while it is deployed. */
+    public record Squadmate(int number, CombatClass role, Optional<Mob> body) { }
+
+    /** The bots of the player's squad, its leader first, or none before a fireteam took the player's order. */
+    public List<Squadmate> squadmates(Player player) {
+        var team = squads.get(player.getUniqueId());
+        if (team == null) {
+            return List.of();
+        }
+        return members(team).stream().sorted(Comparator.comparing((Soldier soldier) -> soldier.number != team.leader))
+                .map(soldier -> new Squadmate(soldier.number, soldier.role, deployed(soldier) ? Optional.of(soldier.body) : Optional.empty()))
+                .toList();
+    }
+
+    /** The other players whose squad is the same fireteam. */
+    public List<UUID> squadPlayers(Player player) {
+        var team = squads.get(player.getUniqueId());
+        return team == null ? List.of() : squads.entrySet().stream()
+                .filter(entry -> entry.getValue() == team && !entry.getKey().equals(player.getUniqueId()))
+                .map(Map.Entry::getKey).toList();
     }
 
     private int objectiveFor(Fireteam team, Location from, long tick) {
@@ -1503,6 +1548,7 @@ public final class Bots implements Listener {
         soldiers.forEach(this::remove);
         soldiers.clear();
         teams.clear();
+        squads.clear();
         bodies.clear();
         identities.clear();
     }

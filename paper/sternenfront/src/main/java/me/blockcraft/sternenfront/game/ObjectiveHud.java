@@ -14,6 +14,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 /**
  * The round at the top of the screen: each player's own reinforcements on the left, a tile per command post in its
@@ -51,7 +52,11 @@ final class ObjectiveHud {
             var side = game.factionOf(viewer).orElse(Faction.KOLONIEN);
             bars.forEach((faction, bar) -> {
                 if (faction == side) {
+                    boolean added = StreamSupport.stream(bar.viewers().spliterator(), false).noneMatch(viewer::equals);
                     viewer.showBossBar(bar);
+                    if (added) {
+                        game.minimap().restack(viewer);
+                    }
                 } else {
                     viewer.hideBossBar(bar);
                 }
@@ -66,10 +71,14 @@ final class ObjectiveHud {
         game.deployment().guidance(viewer).map(navigation -> order
                 .map(task -> navigation.append(messages.get("hud.separator")).append(task)).orElse(navigation))
                 .or(() -> order).ifPresentOrElse(line -> {
+            boolean added = !orderBars.containsKey(viewer.getUniqueId());
             var bar = orderBars.computeIfAbsent(viewer.getUniqueId(),
                     ignored -> BossBar.bossBar(Component.empty(), 0, BossBar.Color.PINK, BossBar.Overlay.NOTCHED_20));
             bar.name(line);
             viewer.showBossBar(bar);
+            if (added) {
+                game.minimap().restack(viewer);
+            }
         }, () -> {
             var bar = orderBars.remove(viewer.getUniqueId());
             if (bar != null) {

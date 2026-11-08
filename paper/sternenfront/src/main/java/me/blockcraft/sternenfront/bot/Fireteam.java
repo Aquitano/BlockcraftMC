@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 /** What one fireteam goes for together: its members by number, leader first, and the post and route they share. */
@@ -32,6 +33,8 @@ final class Fireteam {
     Location alarm;
     long alarmUntil;
     int flanker = -1;
+    /** The player whose order the team took when it last chose its objective, if it took one. */
+    UUID following;
     final FallBack fallBack = new FallBack();
     boolean fallingBack;
     final Bounding bounding = new Bounding();

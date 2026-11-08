@@ -4,11 +4,16 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Area;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public final class HudArt {
@@ -202,12 +207,215 @@ public final class HudArt {
         postMarkers(root.getParent().getParent());
         ImageIO.write(onTheCrosshair(crosshairMarks(), true), "PNG", root.resolve("crosshair_marks.png").toFile());
         ImageIO.write(onTheCrosshair(spreadTicks(), true), "PNG", root.resolve("spread_ticks.png").toFile());
+        minimap(root);
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
         for (var sprite : new String[] {"pink_background", "pink_progress", "notched_20_background", "notched_20_progress"}) {
             ImageIO.write(hidden, "PNG", sprites.resolve(sprite + ".png").toFile());
         }
+    }
+
+    /**
+     * The minimap's font: the disc in strips, the HUD's post badges, map marks, class marks and the menu tiles'
+     * letters, every glyph with its top at the line's top. The text shader moves the line into the corner and finds the
+     * boss bar line it came from by where a glyph lies inside it, so no glyph may reach more than 16 pixels down.
+     */
+    private static void minimap(Path root) throws Exception {
+        ImageIO.write(minimapDisc(), "PNG", root.resolve("minimap_disc.png").toFile());
+        ImageIO.write(minimapMarks(), "PNG", root.resolve("minimap_marks.png").toFile());
+        ImageIO.write(classMarks(), "PNG", root.resolve("minimap_classes.png").toFile());
+        var underscore = new BufferedImage(3, 7, BufferedImage.TYPE_INT_ARGB);
+        for (int x = 0; x < 3; x++) {
+            underscore.setRGB(x, 6, 0xFFFFFFFF);
+        }
+        ImageIO.write(underscore, "PNG", root.resolve("minimap_underscore.png").toFile());
+        var disc = new String[MAP_STRIPS];
+        for (int strip = 0; strip < MAP_STRIPS; strip++) {
+            disc[strip] = String.valueOf((char) (0xE000 + strip));
+        }
+        Files.writeString(root.getParent().getParent().resolve("font/minimap.json"), String.join(",\n    ",
+                "{\n  \"providers\": [\n    {\"type\":\"space\",\"advances\":{\" \":4}}",
+                topAligned("minimap_disc.png", MAP_STRIP, disc),
+                topAligned("objective_pips.png", 11, run(0xE010, 10)),
+                topAligned("minimap_marks.png", MARK, run(0xE020, MARKS)),
+                topAligned("minimap_classes.png", 7, run(0xE040, CLASS_MARKS.length)),
+                topAligned("labels.png", 7, LABEL_LETTERS),
+                topAligned("minimap_underscore.png", 7, "_")) + "\n  ]\n}\n");
+    }
+
+    private static final int MAP_STRIP = 16;
+    private static final int MAP_STRIPS = 4;
+    private static final int MAP_CENTRE = 31;
+    private static final int MARK = 9;
+    private static final int HEADINGS = 16;
+    private static final int MARKS = HEADINGS + 4;
+    /** PackArt's label letters, in the order its sheet draws them. */
+    private static final String LABEL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
+    private static final String NORTH = "10011101101110011001";
+    /** Soldier, heavy, scout, medic and hero, five rows of five. */
+    private static final String[] CLASS_MARKS = {
+            "0010000100011100111011111", "1111111111111110111000100", "0010001010100010101000100",
+            "0010000100111110010000100", "0010001110111110111001010"};
+
+    private static String run(int first, int count) {
+        var glyphs = new StringBuilder();
+        for (int index = 0; index < count; index++) {
+            glyphs.append((char) (first + index));
+        }
+        return glyphs.toString();
+    }
+
+    /** A bitmap provider whose glyphs hang from the line's top, each row of {@code rows} one row of cells in the file. */
+    private static String topAligned(String file, int height, String... rows) {
+        var encoded = new StringBuilder();
+        for (var row : rows) {
+            encoded.append(encoded.isEmpty() ? "\"" : ",\"");
+            row.chars().forEach(glyph -> encoded.append(String.format(Locale.ROOT, "\\u%04x", glyph)));
+            encoded.append('"');
+        }
+        return "{\"type\":\"bitmap\",\"file\":\"blockcraft:font/" + file + "\",\"ascent\":7,\"height\":" + height
+                + ",\"chars\":[" + encoded + "]}";
+    }
+
+    /**
+     * A disc 63 pixels across with a ring at half its radius, short cross hairs and N at the top, cut into strips. A nearly
+     * clear texel in each strip's last column gives every strip the disc's full advance.
+     */
+    private static BufferedImage minimapDisc() {
+        var image = new BufferedImage(MAP_STRIP * MAP_STRIPS, MAP_STRIP * MAP_STRIPS, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y <= 2 * MAP_CENTRE; y++) {
+            for (int x = 0; x <= 2 * MAP_CENTRE; x++) {
+                double from = Math.hypot(x - MAP_CENTRE, y - MAP_CENTRE);
+                if (from > MAP_CENTRE + 0.5) {
+                    continue;
+                }
+                boolean guide = Math.abs(from - MAP_CENTRE / 2.0) < 0.5
+                        || from < MAP_CENTRE - 7 && (x == MAP_CENTRE || y == MAP_CENTRE);
+                image.setRGB(x, y, from > MAP_CENTRE - 0.5 ? 0xFF627187 : guide ? 0xFF2B3545 : 0xB8141C29);
+            }
+        }
+        for (int index = 0; index < NORTH.length(); index++) {
+            if (NORTH.charAt(index) == '1') {
+                image.setRGB(MAP_CENTRE - 2 + index % 4, 3 + index / 4, 0xFFB8C4D6);
+            }
+        }
+        for (int strip = 0; strip < MAP_STRIPS; strip++) {
+            padAdvance(image, 2 * MAP_CENTRE, strip * MAP_STRIP, MAP_STRIP);
+        }
+        return image;
+    }
+
+    /**
+     * The player's arrow at sixteen headings clockwise from north, then a squadmate, another ally, an enemy and a
+     * headquarters, each centred in a nine-pixel cell, in white so a tint colours them. They are drawn at twice the
+     * resolution, because a nine-pixel arrow cannot tell sixteen headings apart.
+     */
+    private static BufferedImage minimapMarks() {
+        int cell = 2 * MARK;
+        double middle = MARK / 2.0;
+        var image = new BufferedImage(cell * MARKS, cell, BufferedImage.TYPE_INT_ARGB);
+        for (int heading = 0; heading < HEADINGS; heading++) {
+            double angle = Math.toRadians(heading * 360.0 / HEADINGS);
+            var arrow = new Path2D.Double();
+            double[][] corners = {{0, 4.3}, {2.55, 3.9}, {Math.PI, 2.2}, {-2.55, 3.9}};
+            for (var corner : corners) {
+                double x = middle + Math.sin(angle + corner[0]) * corner[1];
+                double y = middle - Math.cos(angle + corner[0]) * corner[1];
+                if (arrow.getCurrentPoint() == null) {
+                    arrow.moveTo(x, y);
+                } else {
+                    arrow.lineTo(x, y);
+                }
+            }
+            arrow.closePath();
+            paint(image, heading * cell, arrow);
+            outline(image, heading * cell, cell);
+        }
+        paint(image, HEADINGS * cell, new Ellipse2D.Double(middle - 2.5, middle - 2.5, 5, 5));
+        paint(image, (HEADINGS + 1) * cell, new Rectangle2D.Double(middle - 1.5, middle - 1.5, 3, 3));
+        var diamond = new Path2D.Double();
+        diamond.moveTo(middle, middle - 2.5);
+        diamond.lineTo(middle + 2.5, middle);
+        diamond.lineTo(middle, middle + 2.5);
+        diamond.lineTo(middle - 2.5, middle);
+        diamond.closePath();
+        paint(image, (HEADINGS + 2) * cell, diamond);
+        var headquarters = new Area(new Rectangle2D.Double(middle - 3.5, middle - 3.5, 7, 7));
+        headquarters.subtract(new Area(new Rectangle2D.Double(middle - 2.5, middle - 2.5, 5, 5)));
+        headquarters.add(new Area(new Rectangle2D.Double(middle - 1.5, middle - 1.5, 3, 3)));
+        paint(image, (HEADINGS + 3) * cell, headquarters);
+        for (int mark = 0; mark < MARKS; mark++) {
+            padAdvance(image, mark * cell + cell - 1, 0, cell);
+        }
+        return image;
+    }
+
+    /** A dark rim round the cell's ink, so the arrow stays readable over a white post badge where the player stands. */
+    private static void outline(BufferedImage image, int left, int cell) {
+        var rim = new ArrayList<int[]>();
+        for (int y = 0; y < cell; y++) {
+            for (int x = 0; x < cell; x++) {
+                if ((image.getRGB(left + x, y) >>> 24) == 0 && touchesInk(image, left, cell, x, y)) {
+                    rim.add(new int[] {x, y});
+                }
+            }
+        }
+        rim.forEach(texel -> image.setRGB(left + texel[0], texel[1], 0xFF141C29));
+    }
+
+    private static boolean touchesInk(BufferedImage image, int left, int cell, int x, int y) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int nx = x + dx;
+                int ny = y + dy;
+                if (nx >= 0 && ny >= 0 && nx < cell && ny < cell && image.getRGB(left + nx, ny) == 0xFFFFFFFF) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Whites every texel of the double-resolution cell at {@code left} that {@code shape}, in font pixels, mostly covers. */
+    private static void paint(BufferedImage image, int left, Shape shape) {
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getHeight(); x++) {
+                int inside = 0;
+                for (int sample = 0; sample < 16; sample++) {
+                    if (shape.contains((x + (sample % 4 + 0.5) / 4) / 2, (y + (sample / 4 + 0.5) / 4) / 2)) {
+                        inside++;
+                    }
+                }
+                if (inside >= 8) {
+                    image.setRGB(left + x, y, 0xFFFFFFFF);
+                }
+            }
+        }
+    }
+
+    /** A class mark five pixels square in a cell as tall as a label letter, standing on the letters' baseline. */
+    private static BufferedImage classMarks() {
+        var image = new BufferedImage(6 * CLASS_MARKS.length, 7, BufferedImage.TYPE_INT_ARGB);
+        for (int mark = 0; mark < CLASS_MARKS.length; mark++) {
+            for (int index = 0; index < 25; index++) {
+                if (CLASS_MARKS[mark].charAt(index) == '1') {
+                    image.setRGB(mark * 6 + index % 5, 2 + index / 5, 0xFFFFFFFF);
+                }
+            }
+            padAdvance(image, mark * 6 + 5, 0, 7);
+        }
+        return image;
+    }
+
+    /** The client measures an advance up to the last inked column, so a texel the shader discards fixes it at {@code column}. */
+    private static void padAdvance(BufferedImage image, int column, int top, int height) {
+        for (int y = top; y < top + height; y++) {
+            if ((image.getRGB(column, y) >>> 24) != 0) {
+                return;
+            }
+        }
+        image.setRGB(column, top + height - 1, 0x01000000);
     }
 
     private static void postMarkers(Path assets) throws Exception {
