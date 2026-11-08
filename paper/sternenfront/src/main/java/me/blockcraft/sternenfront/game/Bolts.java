@@ -34,7 +34,11 @@ import java.util.function.Predicate;
 public final class Bolts {
 
     private static final double HIT_SIZE = 0.1;
-    private static final double VISUAL_LEAD = 1.6;
+    /**
+     * Where a bolt's model first shows, ahead of the eyes. Seen end-on from there its tail covers the crosshair for a
+     * tick, half as wide for each doubling; below a blaster's speed, so the first move still carries it away.
+     */
+    private static final double VISUAL_LEAD = 3;
     private static final double PARRY_CLEARANCE = 0.8;
     private static final double TRAIL_CLEAR_OF_EYES = 1.4;
     private static final double CLEAR_OF_EYES = 2.5;
