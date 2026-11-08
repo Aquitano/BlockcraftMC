@@ -104,13 +104,27 @@ public class CombatFeedbackTest {
     @Test
     public void crosshairRedrawsWhenTheSpreadChangesSizeAndBeforeItsTitleRunsOut() {
         var state = new CombatFeedback.PlayerFeedback();
-        assertTrue(state.crosshairChanged(0, Optional.empty(), 0, Optional.of(0)));
-        assertFalse(state.crosshairChanged(1, Optional.empty(), 0, Optional.of(0)));
-        assertTrue(state.crosshairChanged(2, Optional.empty(), 0, Optional.of(3)));
-        assertFalse(state.crosshairChanged(21, Optional.empty(), 0, Optional.of(3)));
-        assertTrue(state.crosshairChanged(22, Optional.empty(), 0, Optional.of(3)));
+        assertTrue(state.crosshairChanged(0, Optional.empty(), 0, Optional.of('\uE250')));
+        assertFalse(state.crosshairChanged(1, Optional.empty(), 0, Optional.of('\uE250')));
+        assertTrue(state.crosshairChanged(2, Optional.empty(), 0, Optional.of('\uE253')));
+        assertFalse(state.crosshairChanged(21, Optional.empty(), 0, Optional.of('\uE253')));
+        assertTrue(state.crosshairChanged(22, Optional.empty(), 0, Optional.of('\uE253')));
         assertTrue(state.crosshairChanged(23, Optional.empty(), 0, Optional.empty()));
         assertFalse(state.crosshairChanged(60, Optional.empty(), 0, Optional.empty()));
+    }
+
+    @Test
+    public void aSprintShowsTheGunDownAndThenUpForAMoment() {
+        var state = new CombatFeedback.PlayerFeedback();
+        assertEquals(Optional.empty(), state.readiness(true, false, 0, 8));
+        assertEquals(Optional.of(CombatFeedback.Readiness.LOWERED), state.readiness(true, true, 1, 8));
+        assertEquals(Optional.of(CombatFeedback.Readiness.LOWERED), state.readiness(true, true, 5, 8));
+        assertEquals(Optional.of(CombatFeedback.Readiness.RAISED), state.readiness(true, false, 6, 8));
+        assertEquals(Optional.of(CombatFeedback.Readiness.RAISED), state.readiness(true, false, 13, 8));
+        assertEquals(Optional.empty(), state.readiness(true, false, 14, 8));
+        state.readiness(true, true, 20, 8);
+        assertEquals("a gun put away while down never comes up", Optional.empty(), state.readiness(false, false, 21, 8));
+        assertEquals(Optional.empty(), state.readiness(true, false, 22, 8));
     }
 
     @Test

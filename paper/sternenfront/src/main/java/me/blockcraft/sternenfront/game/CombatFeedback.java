@@ -38,6 +38,9 @@ public final class CombatFeedback {
 
     public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE, HEADSHOT, CHAIN }
 
+    /** Under the crosshair in place of the spread: the gun is down from a sprint, or has just come up and can fire. */
+    enum Readiness { LOWERED, RAISED }
+
     /**
      * What the combat HUD puts on the action bar: {@code meter}, {@code meterWidth} pixels wide, centred under the
      * crosshair, and the {@code abilities} panel, which takes no room and which the pack's shader moves into the
@@ -72,8 +75,10 @@ public final class CombatFeedback {
         boolean drawnMarked;
         Optional<DamageDirection> drawnHurt = Optional.empty();
         long drawnHurtUntil;
-        Optional<Integer> drawnSpread = Optional.empty();
-        long spreadRefreshAt;
+        Optional<Character> drawnAim = Optional.empty();
+        long aimRefreshAt;
+        boolean lowered;
+        long raisedUntil;
         ActionBar actionBar = ActionBar.NONE;
 
         boolean eliteAvailable(boolean available, long tick, int duration) {
@@ -103,17 +108,33 @@ public final class CombatFeedback {
             return Optional.of(marker);
         }
 
-        /** A shown spread is sent again before its title runs out, since the title is all that keeps it on screen. */
-        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt, long hurtUntil, Optional<Integer> spread) {
+        /**
+         * Whether the gun in hand is down from a sprint, or came up within the last {@code raisedTicks}. Putting the gun
+         * away while it is down shows nothing coming up.
+         */
+        Optional<Readiness> readiness(boolean aiming, boolean lowered, long tick, int raisedTicks) {
+            boolean down = aiming && lowered;
+            if (this.lowered && !down && aiming) {
+                raisedUntil = tick + raisedTicks;
+            }
+            this.lowered = down;
+            return down ? Optional.of(Readiness.LOWERED) : aiming && tick < raisedUntil ? Optional.of(Readiness.RAISED) : Optional.empty();
+        }
+
+        /**
+         * {@code aim} is the glyph round the crosshair, the spread or the gun's readiness. A shown one is sent again before
+         * its title runs out, since the title is all that keeps it on screen.
+         */
+        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt, long hurtUntil, Optional<Character> aim) {
             boolean marked = tick < markerUntil;
             boolean changed = takeMarker(tick).isPresent() || marked != drawnMarked || !hurt.equals(drawnHurt) || hurtUntil != drawnHurtUntil
-                    || !spread.equals(drawnSpread) || spread.isPresent() && tick >= spreadRefreshAt;
+                    || !aim.equals(drawnAim) || aim.isPresent() && tick >= aimRefreshAt;
             drawnMarked = marked;
             drawnHurt = hurt;
             drawnHurtUntil = hurtUntil;
-            drawnSpread = spread;
+            drawnAim = aim;
             if (changed) {
-                spreadRefreshAt = tick + SPREAD_REFRESH_TICKS;
+                aimRefreshAt = tick + AIM_REFRESH_TICKS;
             }
             return changed;
         }
@@ -170,12 +191,13 @@ public final class CombatFeedback {
     private static final char FIRST_DAMAGE_ARC = '\uE228';
     private static final char FIRST_CROSSHAIR_MARK = '\uE23A';
     private static final char FIRST_SPREAD_TICKS = '\uE250';
-    private static final int SPREAD_REFRESH_TICKS = 20;
+    private static final char FIRST_READINESS = '\uE255';
+    private static final int AIM_REFRESH_TICKS = 20;
     /**
      * The client counts the title down in its own ticks, so twice the refresh keeps the ticks up while the server runs at
      * half speed; any longer and they would linger into a cinematic, which stops the refresh.
      */
-    private static final int SPREAD_HOLD_TICKS = 40;
+    private static final int AIM_HOLD_TICKS = 40;
     /** Wide enough for the longest popup, so the line does not slide when one appears. */
     private static final int REWARD_WIDTH = 104;
     private static final double LOW_HEALTH = 0.4;
@@ -190,6 +212,7 @@ public final class CombatFeedback {
     private final int heroReadyTicks;
     private final int eliteReadyTicks;
     private final int noticeTicks;
+    private final int raisedTicks;
     private final double hotAt;
     private final float hitVolume;
     private final float headshotVolume;
@@ -207,6 +230,7 @@ public final class CombatFeedback {
         heroReadyTicks = Math.clamp(config.getInt("combat-feedback.hero-ready-ticks", 60), 1, 200);
         eliteReadyTicks = Math.clamp(config.getInt("combat-feedback.elite-ready-ticks"), 1, 200);
         noticeTicks = Math.clamp(config.getInt("combat-feedback.notice-ticks"), 1, 100);
+        raisedTicks = Math.clamp(config.getInt("combat-feedback.raised-ticks"), 1, 40);
         hotAt = Math.clamp(config.getDouble("heat.warning-level", 0.8), 0.1, 0.99);
         hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
@@ -344,27 +368,32 @@ public final class CombatFeedback {
 
     private void drawCrosshair(Player player, PlayerFeedback state, long tick) {
         var hurt = game.combat().damageDirection(player);
-        var spread = spreadSize(player);
-        if (!state.crosshairChanged(tick, hurt, hurt.isPresent() ? tick + game.combat().hurtTicks(player) : 0, spread)) {
+        boolean aiming = aiming(player);
+        var aim = state.readiness(aiming, aiming && game.lowered(player), tick, raisedTicks)
+                .map(readiness -> (char) (FIRST_READINESS + readiness.ordinal()))
+                .or(() -> aiming ? spreadSize(player).map(size -> (char) (FIRST_SPREAD_TICKS + size)) : Optional.empty());
+        if (!state.crosshairChanged(tick, hurt, hurt.isPresent() ? tick + game.combat().hurtTicks(player) : 0, aim)) {
             return;
         }
         var notifications = BlockcraftApi.get().notifications();
-        if (!state.drawnMarked && hurt.isEmpty() && spread.isEmpty()) {
+        if (!state.drawnMarked && hurt.isEmpty() && aim.isEmpty()) {
             notifications.clearMarker(player);
             return;
         }
-        var ticks = spread.map(size -> UiFont.centredBehind((char) (FIRST_SPREAD_TICKS + size))).orElse(Component.empty());
+        var ticks = aim.map(UiFont::centredBehind).orElse(Component.empty());
         var arc = hurt.map(direction -> UiFont.centredBehind((char) (FIRST_DAMAGE_ARC + direction.ordinal()))).orElse(Component.empty());
         var marker = state.drawnMarked ? UiFont.centredBehind((char) (FIRST_CROSSHAIR_MARK + state.marker.ordinal())) : Component.empty();
-        long held = Math.max(Math.max(state.markerUntil - tick, game.combat().hurtTicks(player)), spread.isPresent() ? SPREAD_HOLD_TICKS : 0);
+        long held = Math.max(Math.max(state.markerUntil - tick, game.combat().hurtTicks(player)), aim.isPresent() ? AIM_HOLD_TICKS : 0);
         notifications.markerNow(player, ticks.append(arc).append(marker), held);
     }
 
+    /** A blaster in hand, on foot and unscoped, for a client whose pack draws the marks round the crosshair. */
+    private boolean aiming(Player player) {
+        return BlockcraftApi.get().resourcePack().applied(player) && !player.isInsideVehicle() && !game.scoped(player)
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
+    }
+
     private Optional<Integer> spreadSize(Player player) {
-        if (!BlockcraftApi.get().resourcePack().applied(player) || player.isInsideVehicle() || game.scoped(player)
-                || HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isEmpty()) {
-            return Optional.empty();
-        }
         var fighter = game.fighter(player);
         return game.factionOf(player).flatMap(fighter::blaster).flatMap(blaster -> {
             double base = game.config().stats(blaster).spread();
