@@ -35,6 +35,9 @@ import java.util.UUID;
  * with the pack is deployed, and their {@link KillFeed}, top-right while it has lines; the pack's text shader moves each
  * into its corner. It redraws every few ticks and sends nothing while nothing on it moved. An enemy shows only for a
  * while after it fired, and only if the player's client draws it at all.
+ * <p>
+ * The line stays for as long as a player with the pack is in the round, empty while dead or behind a cutscene, so the
+ * capture and hero bars below it keep their slots.
  */
 final class Minimap implements Listener {
 
@@ -78,27 +81,33 @@ final class Minimap implements Listener {
         }
         var field = game.combatants();
         for (var player : Bukkit.getOnlinePlayers()) {
-            boolean seen = game.isPlaying(player) && BlockcraftApi.get().resourcePack().applied(player) && !CombatFeedback.covered(player);
+            if (!game.isPlaying(player) || !BlockcraftApi.get().resourcePack().applied(player)) {
+                hide(player);
+                continue;
+            }
+            boolean seen = !CombatFeedback.covered(player);
             var map = seen && game.onField(player) ? map(player, field, tick) : List.<Glyph>of();
             var feed = seen ? KillFeed.layout(game.killFeed().live(player.getUniqueId(), tick), player.getName(), tick) : List.<Glyph>of();
-            if (map.isEmpty() && feed.isEmpty()) {
-                hide(player);
-            } else {
-                draw(player, map, feed);
-            }
+            draw(player, map, feed);
         }
     }
 
     /**
-     * The client stacks boss bars in the order they arrive, and this line takes a slot like any other; it goes after a
-     * line shown later, so the lines above it keep their places.
+     * The client stacks boss bars in the order they arrive, and this line takes a slot like any other. It goes after the
+     * objective line, which may arrive later, and the capture and hero bars go after it.
      */
     void restack(Player viewer) {
         var panel = panels.get(viewer.getUniqueId());
         if (panel != null && panel.shown) {
             viewer.hideBossBar(panel.bar);
             viewer.showBossBar(panel.bar);
+            restackBelow(viewer);
         }
+    }
+
+    private void restackBelow(Player viewer) {
+        game.posts().restack(viewer);
+        game.heroes().restack(viewer);
     }
 
     private List<Glyph> map(Player viewer, List<LivingEntity> field, long tick) {
@@ -170,6 +179,7 @@ final class Minimap implements Listener {
         if (!panel.shown) {
             viewer.showBossBar(panel.bar);
             panel.shown = true;
+            restackBelow(viewer);
         }
     }
 

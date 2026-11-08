@@ -196,10 +196,12 @@ a cross for a medic and a crown for a hero. `minimap.bot` in `messages.yml` name
 A player's squad is the fireteam that last took their order (see Bots). It stays theirs while no other team takes it,
 and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
 
-The map is a boss bar line of its own that the pack's text shader moves into the corner, and it hides with the combat
-HUD for dialogues, screen effects and scenes. Its slot comes after the objective line, so a post's capture bar or a
-hero's bar stands one slot lower than without it. It redraws every `minimap.update-ticks` and sends nothing while
-nothing on it moved.
+The map is a boss bar line of its own that the pack's text shader moves into the corner, and it empties with the combat
+HUD for dialogues, screen effects and scenes and while the player is dead. The line itself stays for as long as a player
+with the pack is in the round, so the bars keep one order and never jump a slot: the objective line, the map's, then a
+post's capture bar and the heroes' bars. A bar that arrives late, such as the objective line for a player who rejoins,
+puts the ones after it back below it. The map redraws every `minimap.update-ticks` and sends nothing while nothing on it
+moved.
 
 ## Combat feedback
 
@@ -244,8 +246,9 @@ on the action bar: `CombatHud` puts them in the line's middle, which needs the l
 and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
 cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
 explains each binding in chat with its key, full name and what it does.
-`ObjectiveHud` shows the player's own reinforcements after `Wir`, a badge per post, the enemy's reinforcements and the
-time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
+`ObjectiveHud` shows a player in the round their own reinforcements after `Wir`, a badge per post, the enemy's
+reinforcements and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing.
+A spectator has no side to call `Wir` and sees no such line. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
 stay steadier walking and the repeater wants a crouch. A sprint shows the lowered pose of the held blaster, which cannot
