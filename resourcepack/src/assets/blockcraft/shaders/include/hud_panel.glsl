@@ -11,19 +11,21 @@ const int BLOCKCRAFT_PANEL_FIRST_TINT = 176;
 const vec2 BLOCKCRAFT_PANEL_CORNER = vec2(4.0, 4.0);
 // The action bar panel's top-right corner, from the bottom-right corner of the screen.
 const vec2 BLOCKCRAFT_ACTION_PANEL_CORNER = vec2(-3.0, -28.0);
-const vec3 BLOCKCRAFT_PANEL_TINTS[6] = vec3[](
+const int BLOCKCRAFT_PANEL_TINT_COUNT = 7;
+const vec3 BLOCKCRAFT_PANEL_TINTS[BLOCKCRAFT_PANEL_TINT_COUNT] = vec3[](
     vec3(1.0),                          // white
     vec3(0.6),                          // dimmed
     vec3(85.0, 255.0, 255.0) / 255.0,   // aqua, the Republic
     vec3(255.0, 85.0, 85.0) / 255.0,    // red, the Separatists
     vec3(255.0, 170.0, 0.0) / 255.0,    // gold, the player's fireteam
-    vec3(0.12)                          // shadow
+    vec3(0.12),                         // shadow
+    vec3(255.0, 255.0, 85.0) / 255.0    // yellow, where to go
 );
 
 int blockcraft_panel_tint(ivec3 marker) {
     int tint = marker.b - BLOCKCRAFT_PANEL_FIRST_TINT;
     bool panel = marker.r == BLOCKCRAFT_PANEL_RED || marker.r == BLOCKCRAFT_ACTION_PANEL_RED;
-    return panel && tint >= 0 && tint < 6 ? tint : -1;
+    return panel && tint >= 0 && tint < BLOCKCRAFT_PANEL_TINT_COUNT ? tint : -1;
 }
 
 // The client centres a line on half its rounded-up GUI size, while the projection spans the unrounded one. Boss bar

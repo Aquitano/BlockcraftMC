@@ -842,11 +842,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             }
         }
         minimap.tick(tick);
-        int navigationTicks = Math.clamp(plugin.getConfig().getInt("respawn.navigation-update-ticks"), 1, 20);
         if (tick % TICKS_PER_SECOND == 0) {
             second();
-        } else if (tick % navigationTicks == 0) {
-            round.players().stream().filter(this::onField).forEach(objective::order);
         }
     }
 
@@ -1388,7 +1385,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     /** A hero fell or left: their slot opens, a champion's relic goes home, and whoever beat them is paid. */
     private void fallen(Player victim, Optional<Player> killer) {
-        deployment.interruptHints(victim);
         releaseReinforcement(victim);
         var fighter = fighters.get(victim.getUniqueId());
         if (fighter == null || fighter.hero().isEmpty()) {

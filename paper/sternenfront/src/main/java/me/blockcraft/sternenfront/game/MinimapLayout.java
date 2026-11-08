@@ -45,6 +45,9 @@ final class MinimapLayout {
     private static final char DISC = '\uE000';
     private static final char BADGE = '\uE010';
     private static final char ARROW = '\uE020';
+    private static final char TARGET = '\uE034';
+    private static final int TARGET_HALF = 6;
+    private static final int TARGET_ADVANCE = 14;
     private static final char CLASS_MARK = '\uE040';
 
     enum Mark {
@@ -104,6 +107,11 @@ final class MinimapLayout {
     static Glyph badge(int post, boolean hollow, Pixel at, Tint tint) {
         return new Glyph(String.valueOf((char) (BADGE + post * 2 + (hollow ? 1 : 0))), at.x() - BADGE_HALF, at.y() - BADGE_HALF,
                 tint, true, BADGE_ADVANCE);
+    }
+
+    /** Corners round the badge of the post the player should make for. */
+    static Glyph target(Pixel badge) {
+        return new Glyph(String.valueOf(TARGET), badge.x() - TARGET_HALF, badge.y() - TARGET_HALF, Tint.ACCENT, true, TARGET_ADVANCE);
     }
 
     static Glyph mark(Mark mark, Pixel at, Tint tint) {

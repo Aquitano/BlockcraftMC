@@ -281,9 +281,7 @@ respawn:
   seconds: 5
   auto-seconds: 15
   protection-seconds: 3
-  ability-hint-seconds: 3
   enemy-clearance: 12
-  navigation-update-ticks: 5
 
 # What an enemy inside a faction's headquarters takes every second.
 headquarters:

@@ -11,7 +11,6 @@ import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import me.blockcraft.sternenfront.reinforcement.ReinforcementRoster;
 import me.blockcraft.sternenfront.menu.DeployMenu;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -34,6 +33,7 @@ public final class Deployment {
     private static final long TICKS_PER_SECOND = 20;
     private static final int DEPLOY_SLOT = 4;
     private static final long KILLER_FOCUS_TICKS = 2;
+    private static final List<String> CONTROL_KEYS = List.of("F", "Q");
 
     private final SternenfrontGame game;
     private final SpawnSpots spawnSpots;
@@ -43,7 +43,8 @@ public final class Deployment {
     private final Map<UUID, DeployMenu> deployMenus = new HashMap<>();
     /** Whose kill a dead player watches before they choose where to deploy. */
     private final Map<UUID, UUID> killers = new HashMap<>();
-    private final Map<UUID, AbilityHints> abilityHints = new HashMap<>();
+    /** The abilities each player was last told about, so the chat explains them again only when they change. */
+    private final Map<UUID, List<String>> controls = new HashMap<>();
     private final Map<UUID, Spawn> remembered = new HashMap<>();
 
     Deployment(SternenfrontGame game, SpawnSpots spawnSpots, FeelConfig feel, BattlePresentation presentation, Runnable sidebarChanged) {
@@ -208,7 +209,7 @@ public final class Deployment {
         if (game.choosing(player)) choose(player, suggested(player), false);
     }
 
-    /** The post the order bar sends the player to. */
+    /** The post the minimap marks for the player: the assault's priority, the nearest one to take, or the one to hold. */
     public OptionalInt order(Player player) {
         return game.factionOf(player).flatMap(faction -> BattleNavigation.target(navigationPosts(faction), point(player.getLocation()),
                 headquarters(faction.enemy()))).map(target -> OptionalInt.of(target.index())).orElseGet(OptionalInt::empty);
@@ -228,32 +229,6 @@ public final class Deployment {
 
     private static BattleNavigation.Point point(Location location) {
         return new BattleNavigation.Point(location.getX(), location.getZ());
-    }
-
-    Optional<Component> guidance(Player player) {
-        var faction = game.factionOf(player);
-        if (!game.onField(player) || faction.isEmpty()) return Optional.empty();
-        int hintTicks = Math.clamp(game.plugin().getConfig().getInt("respawn.ability-hint-seconds"), 0, 30) * 20;
-        var hints = abilityHints.get(player.getUniqueId());
-        var hint = hints == null ? OptionalInt.empty() : hints.index(game.tick(), hintTicks);
-        if (hint.isPresent()) {
-            int index = hint.getAsInt();
-            var key = hints.keys().get(index);
-            return Optional.of(game.messages().get("deploy.ability-hint", Placeholder.unparsed("key", index == 0 ? "F" : "Q"),
-                    Placeholder.component("name", game.messages().get(key + ".name")),
-                    Placeholder.component("ability", game.messages().get("combat.hints."
-                            + key.substring(key.lastIndexOf('.') + 1)))));
-        }
-        var origin = player.getLocation();
-        return BattleNavigation.target(navigationPosts(faction.get()), point(origin), headquarters(faction.get().enemy())).map(target -> {
-            if (game.map().posts().get(target.index()).contains(origin)) {
-                return game.messages().get(target.objective() ? "deploy.navigate-here" : "deploy.defend-here", game.posts().name(target.index()));
-            }
-            return game.messages().get(target.objective() ? "deploy.navigate" : "deploy.defend", game.posts().name(target.index()),
-                    Formatter.number("distance", Math.round(Math.sqrt(point(origin).distanceSquared(target.center())))),
-                    Placeholder.component("direction", game.messages().get("deploy.direction."
-                            + BattleNavigation.direction(point(origin), origin.getYaw(), target.center()))));
-        });
     }
 
     void deployWhenDue(Player player, Fighter fighter) {
@@ -402,12 +377,14 @@ public final class Deployment {
         if (faction.isEmpty()) return;
         var keys = fighter.hero().map(chosen -> chosen.abilities().stream().map(ability -> "hero.ability." + ability.key()).toList())
                 .orElseGet(() -> fighter.abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
-        if (!abilityHints.computeIfAbsent(player.getUniqueId(), ignored -> new AbilityHints()).start(keys, game.tick())) return;
+        if (keys.equals(controls.put(player.getUniqueId(), keys))) return;
         var messages = game.messages();
-        var abilities = keys.stream().map(key -> messages.get(key + ".name")).toList();
-        player.sendMessage(messages.get("deploy.controls",
-                Placeholder.component("first", abilities.isEmpty() ? messages.get("deploy.no-ability") : abilities.getFirst()),
-                Placeholder.component("second", abilities.size() < 2 ? messages.get("deploy.no-ability") : abilities.get(1))));
+        for (int index = 0; index < Math.min(keys.size(), CONTROL_KEYS.size()); index++) {
+            var key = keys.get(index);
+            player.sendMessage(messages.get("deploy.controls", Placeholder.unparsed("key", CONTROL_KEYS.get(index)),
+                    Placeholder.component("name", messages.get(key + ".name")),
+                    Placeholder.component("ability", messages.get("combat.hints." + key.substring(key.lastIndexOf('.') + 1)))));
+        }
     }
 
     /** Back to normal: seen by everyone, hurtable, on foot, at their own size and pace. */
@@ -427,14 +404,10 @@ public final class Deployment {
         killers.remove(player.getUniqueId());
     }
 
-    void interruptHints(Player player) {
-        Optional.ofNullable(abilityHints.get(player.getUniqueId())).ifPresent(AbilityHints::interrupt);
-    }
-
     void clear() {
         killers.clear();
         deployMenus.clear();
         remembered.clear();
-        abilityHints.clear();
+        controls.clear();
     }
 }

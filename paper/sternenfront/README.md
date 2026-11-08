@@ -148,18 +148,15 @@ deployment countdown. Hovering shows the post name, recommendation, selection, a
 the reason. The landing button names its target
 post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
-After spawning, the order bar shows the assault's priority post, or the nearest objective outside the assault, with its
-letter, horizontal distance and direction relative to the player's view. When all posts are safe, it points to the post
-nearest the enemy HQ for defence. The bearing updates every `respawn.navigation-update-ticks`, by default five ticks.
-Inside the target's capture area, it says that the post is here instead of showing a direction. It does not route around walls.
-Ability hints temporarily replace the bearing.
+After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
+objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence.
 
 ## Minimap
 
 A deployed player with the pack sees a map in the top-left corner, north up and centred on them, `minimap.radius` blocks
 to its rim. It shows the posts with the combat HUD's letter badges and ownership colours, both headquarters, the player's
 arrow at the nearest of sixteen headings, their squad as gold dots and other allies as smaller dots of their side's colour.
-Posts beyond the radius stay on the rim along their bearing. Headquarters and fighters beyond it are left out, so
+Posts beyond the radius stay on the rim along their bearing. Yellow corners frame the post to make for, as Redeployment describes. Headquarters and fighters beyond it are left out, so
 nothing on the rim hides a post's badge. An enemy shows for `minimap.enemy-ticks` after each shot it fires, and only
 while the player's client draws it, so a vanished player or a hidden body never shows. The list under the map names the
 player and their squad beside class marks, in the menu tiles' capitals, and dims anyone dead or choosing a spawn.
@@ -169,8 +166,8 @@ A player's squad is the fireteam that last took their order (see Bots). It stays
 and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
 
 The map is a boss bar line of its own that the pack's text shader moves into the corner, and it hides with the combat
-HUD for dialogues, screen effects and scenes. Its slot comes after the objective and order lines, so a post's capture bar
-or a hero's bar stands one slot lower than without it. It redraws every `minimap.update-ticks` and sends nothing while
+HUD for dialogues, screen effects and scenes. Its slot comes after the objective line, so a post's capture bar or a
+hero's bar stands one slot lower than without it. It redraws every `minimap.update-ticks` and sends nothing while
 nothing on it moved.
 
 ## Combat feedback
@@ -207,9 +204,7 @@ hero's leap gets a tile under a double-jump keycap while it recharges, and a kil
 Shift+F until it is thrown. The tiles ride on the action bar: `CombatHud` puts them in the line's middle, which needs the
 line's width as the client measures it, and the pack's text shader moves them into the corner. Feedback that replaces
 the action bar, such as an ability's cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
-explains each binding on the existing order bar for `respawn.ability-hint-seconds`, and the deploy chat line gives the
-full names.
-Death or disconnect restarts an unfinished hint sequence on the next deployment. Completed hints stay hidden until the abilities change.
+explains each binding in chat with its key, full name and what it does.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols

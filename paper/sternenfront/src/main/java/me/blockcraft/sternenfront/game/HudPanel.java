@@ -30,7 +30,7 @@ public final class HudPanel {
 
     /** The shader's colours for a glyph, in the order of its table; the factions' are those of {@link Faction#text()}. */
     public enum Tint {
-        WHITE, DIMMED, REPUBLIC, SEPARATISTS, SQUAD, SHADOW;
+        WHITE, DIMMED, REPUBLIC, SEPARATISTS, SQUAD, SHADOW, ACCENT;
 
         public static Tint of(Faction faction) {
             return faction == Faction.KOLONIEN ? REPUBLIC : SEPARATISTS;

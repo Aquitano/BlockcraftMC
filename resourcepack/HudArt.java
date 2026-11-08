@@ -231,6 +231,7 @@ public final class HudArt {
     private static void minimap(Path root) throws Exception {
         ImageIO.write(minimapDisc(), "PNG", root.resolve("minimap_disc.png").toFile());
         ImageIO.write(minimapMarks(), "PNG", root.resolve("minimap_marks.png").toFile());
+        ImageIO.write(minimapTarget(), "PNG", root.resolve("minimap_target.png").toFile());
         ImageIO.write(classMarks(), "PNG", root.resolve("minimap_classes.png").toFile());
         var underscore = new BufferedImage(3, 7, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < 3; x++) {
@@ -246,6 +247,7 @@ public final class HudArt {
                 topAligned("minimap_disc.png", MAP_STRIP, disc),
                 topAligned("objective_pips.png", 11, run(0xE010, 10)),
                 topAligned("minimap_marks.png", MARK, run(0xE020, MARKS)),
+                topAligned("minimap_target.png", TARGET, run(0xE034, 1)),
                 topAligned("minimap_classes.png", 7, run(0xE040, CLASS_MARKS.length)),
                 topAligned("labels.png", 7, LABEL_LETTERS),
                 topAligned("minimap_underscore.png", 7, "_")) + "\n  ]\n}\n");
@@ -257,6 +259,8 @@ public final class HudArt {
     private static final int MARK = 9;
     private static final int HEADINGS = 16;
     private static final int MARKS = HEADINGS + 4;
+    private static final int TARGET = 13;
+    private static final int TARGET_ARM = 7;
     /** PackArt's label letters, in the order its sheet draws them. */
     private static final String LABEL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
     private static final String NORTH = "10011101101110011001";
@@ -354,6 +358,26 @@ public final class HudArt {
         paint(image, (HEADINGS + 3) * cell, headquarters);
         for (int mark = 0; mark < MARKS; mark++) {
             padAdvance(image, mark * cell + cell - 1, 0, cell);
+        }
+        return image;
+    }
+
+    /**
+     * Corners round a post's badge, which mark the post the player should make for. They are drawn at twice the
+     * resolution, so they stay thin beside the badge.
+     */
+    private static BufferedImage minimapTarget() {
+        int cell = 2 * TARGET;
+        var image = new BufferedImage(cell, cell, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < cell; y++) {
+            for (int x = 0; x < cell; x++) {
+                int fromEdgeX = Math.min(x, cell - 1 - x);
+                int fromEdgeY = Math.min(y, cell - 1 - y);
+                boolean arm = fromEdgeX < 2 && fromEdgeY < TARGET_ARM || fromEdgeY < 2 && fromEdgeX < TARGET_ARM;
+                if (arm) {
+                    image.setRGB(x, y, 0xFFFFFFFF);
+                }
+            }
         }
         return image;
     }
