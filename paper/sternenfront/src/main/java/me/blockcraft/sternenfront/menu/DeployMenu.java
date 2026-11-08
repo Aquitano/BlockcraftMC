@@ -34,6 +34,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,13 +42,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static me.blockcraft.sternenfront.menu.DeployScreen.BUTTONS;
 import static me.blockcraft.sternenfront.menu.DeployScreen.CLASS_CARDS;
 import static me.blockcraft.sternenfront.menu.DeployScreen.SPECIALS;
 
 /**
  * Where a dead player chooses whom to deploy as and where, on one screen: the class cards, the reinforcement and the
- * heroes in the chest, the spawns on a map in the player's own inventory, which the menu borrows while it is open. The
+ * heroes in the chest, the spawns on a map in the player's own inventory, which the menu borrows while it is open, and
+ * the deploy button across the hotbar under it, one of whose slots draws the seconds left. The
  * pack draws {@link DeployScreen} around it. That picture is fixed while the chest is open, so a choice or a change
  * it shows, such as the player's battle points, opens the menu again with a new one. A spawn locking, opening or
  * becoming the recommendation must hold for a while first, since an enemy at a post's edge flips it back and forth and
@@ -56,10 +57,15 @@ import static me.blockcraft.sternenfront.menu.DeployScreen.SPECIALS;
 public final class DeployMenu extends Menu {
 
     private static final int ROWS = 6;
-    private static final int CLOSE = BUTTONS.get(0);
-    private static final int DEPLOY = BUTTONS.get(1);
+    private static final int CLOSE = DeployScreen.CLOSE;
     /** The map's top-left cell, the first slot the menu borrows from the player. */
     private static final int MAP = ROWS * 9;
+    /** The hotbar under the map, all of it the deploy button. */
+    private static final int BUTTON = MAP + TacticalLayout.COLUMNS * TacticalLayout.ROWS;
+    private static final int BUTTON_SLOTS = TacticalLayout.COLUMNS;
+    private static final Key COUNTDOWN = Key.key("blockcraft", "deploy/countdown");
+    /** The countdown item's places for a digit in each field: the field's left and right, and its middle for one alone. */
+    private static final int DIGIT_PLACES = 3;
     private static final long TICKS_PER_SECOND = 20;
     private static final int MAX_COUNTDOWN = 99;
     private static final double TO_HEARTS = 2;
@@ -81,8 +87,6 @@ public final class DeployMenu extends Menu {
         this.shown = view();
         this.mapSlots = shown.map(view -> mapSlots(view.faction())).orElse(Map.of());
         this.settleTicks = Math.clamp(game.plugin().getConfig().getInt("respawn.screen-settle-ticks"), 0, 200);
-        area(CLOSE, DeployScreen.buttonColumns(0), 1);
-        area(DEPLOY, DeployScreen.buttonColumns(1), 1);
         CLASS_CARDS.forEach(slot -> area(slot, DeployScreen.CLASS_CARD_COLUMNS, DeployScreen.CLASS_CARD_ROWS));
         SPECIALS.forEach(slot -> area(slot, DeployScreen.SPECIAL_COLUMNS, 1));
         draw();
@@ -125,9 +129,23 @@ public final class DeployMenu extends Menu {
         if (confirmed || !unavailable) summary.add(messages.get(confirmed ? "deploy.queued" : paid.isPresent() ? "deploy.confirm-paid" : "deploy.quick-lore"));
         if (!confirmed) summary.add(messages.get("deploy.auto-free"));
         if (unavailable || confirmed && paid.isPresent()) summary.add(messages.get("deploy.paid-fallback"));
-        set(CLOSE, MenuIcon.TOOL_CLOSE.item().name(messages.get("deploy.close")).lore(messages.getLines("deploy.close-lore")).build());
-        set(DEPLOY, MenuIcon.DEPLOY.item().name(messages.get("deploy.deploy", Placeholder.component("target", targetName(suggested))))
-                .lore(summary).build());
+        set(CLOSE, Items.of(MenuIcon.TOOL_CLOSE.fallback()).model(MenuIcon.EMPTY_MODEL).name(messages.get("deploy.close"))
+                .lore(messages.getLines("deploy.close-lore")).build());
+        var button = Items.of(MenuIcon.DEPLOY.fallback()).name(messages.get("deploy.deploy", Placeholder.component("target", targetName(suggested))))
+                .lore(summary).build();
+        int field = DeployScreen.countdownField(view.button());
+        long seconds = Math.min(MAX_COUNTDOWN, confirmed || deployment.waitSeconds(viewer) > 0
+                ? deployment.waitSeconds(viewer) : deployment.autoSeconds(viewer));
+        for (int column = 0; column < BUTTON_SLOTS; column++) {
+            var slot = button.clone();
+            if (column == field / 2) {
+                Items.of(slot).model(COUNTDOWN);
+                slot.setData(DataComponentTypes.CUSTOM_MODEL_DATA, countdown(seconds, field % 2));
+            } else {
+                Items.of(slot).model(MenuIcon.EMPTY_MODEL);
+            }
+            set(BUTTON + column, slot);
+        }
         var classes = CombatClass.values();
         for (int index = 0; index < classes.length && index < CLASS_CARDS.size(); index++) {
             boolean selected = view.classes().get(index).selected();
@@ -146,6 +164,22 @@ public final class DeployMenu extends Menu {
         var places = view.places().stream().collect(Collectors.toMap(DeployScreen.Place::spawn, place -> place));
         mapSlots.forEach((spawn, slot) -> set(slot, Optional.ofNullable(places.get(spawn))
                 .map(place -> marker(faction, place, suggested, cost)).orElse(null)));
+    }
+
+    /**
+     * The seconds as the countdown item draws them: in the field that starts at its left edge or {@code half} a slot
+     * further, two digits at the field's sides or one in its middle.
+     */
+    private static CustomModelData countdown(long seconds, int half) {
+        var digits = new ArrayList<>(Collections.nCopies(DIGIT_PLACES * 2, ""));
+        int first = half * DIGIT_PLACES;
+        if (seconds >= 10) {
+            digits.set(first, String.valueOf(seconds / 10));
+            digits.set(first + 1, String.valueOf(seconds % 10));
+        } else {
+            digits.set(first + 2, String.valueOf(seconds));
+        }
+        return CustomModelData.customModelData().addStrings(digits).build();
     }
 
     /**
@@ -206,9 +240,18 @@ public final class DeployMenu extends Menu {
         }
         game.front().ifPresent(front -> places.add(place(side, new Spawn.Dropship(), plain("deploy.screen.dropship",
                 Placeholder.unparsed("letter", Posts.letter(front.post()))), recommended)));
-        var buttons = List.of(plain("deploy.screen.close"), plain("deploy.screen.deploy"));
-        return Optional.of(new DeployScreen.View(side, game.messages().get("deploy.title"), buttons, role, cards, specials, places,
-                hint(specials)));
+        return Optional.of(new DeployScreen.View(side, game.messages().get("deploy.title"), plain("deploy.screen.units"),
+                button(fighter), role, cards, specials, places, hint(specials)));
+    }
+
+    /**
+     * What a click on the deploy button does, around the seconds it shows: deploy once the wait ends, deploy now with the
+     * automatic deployment's seconds as the fallback, or the confirmed deployment's wait.
+     */
+    private DeployScreen.Button button(Fighter fighter) {
+        String state = fighter.choosing().filter(Fighter.Choosing::confirmed).isPresent() ? "queued"
+                : game.deployment().waitSeconds(viewer) > 0 ? "waiting" : "ready";
+        return new DeployScreen.Button(plain("deploy.screen.button." + state), plain("deploy.screen.button.seconds"));
     }
 
     private DeployScreen.Place place(Faction side, Spawn spawn, String name, Spawn recommended) {
@@ -345,7 +388,7 @@ public final class DeployMenu extends Menu {
     /**
      * A spawn's marker. The pack frames the chosen spawn, gold while it waits for a confirmation and green once
      * confirmed, marks the recommended spawn with a star and a locked one with a padlock. The spawn the player will
-     * land at counts down the seconds to it. Without the pack its block says what the badge says: a banner for a spawn,
+     * land at names the seconds to it. Without the pack its block says what the badge says: a banner for a spawn,
      * glass for a locked one, concrete for a contested one.
      */
     private ItemStack marker(Faction faction, DeployScreen.Place place, Spawn suggested, Optional<Component> cost) {
@@ -376,10 +419,6 @@ public final class DeployMenu extends Menu {
             item.glow();
         }
         var marker = item.build();
-        if (landing) {
-            marker.setData(DataComponentTypes.MAX_STACK_SIZE, MAX_COUNTDOWN);
-            marker.setAmount((int) Math.min(MAX_COUNTDOWN, countdown));
-        }
         var look = CustomModelData.customModelData()
                 .addString(available && selected ? confirmed ? "chosen" : "pending" : "")
                 .addString(!available ? "locked" : recommended ? "recommended" : "");
@@ -456,7 +495,7 @@ public final class DeployMenu extends Menu {
             return;
         }
         game.deployment().clearRefusal(player);
-        if (slot == DEPLOY) {
+        if (slot >= BUTTON && slot < BUTTON + BUTTON_SLOTS) {
             game.deployment().quickDeploy(player);
             return;
         }

@@ -403,8 +403,12 @@ deploy:
     points-value: "<points> KP"
     cost: "Kosten"
     balance: "Deine Kampfpunkte"
-    close: "Schließen"
-    deploy: "Einsetzen"
+    units: "Einheit wählen"
+    button:
+      waiting: "Einsetzen in"
+      ready: "Jetzt einsetzen · auto in"
+      queued: "Einsatz in"
+      seconds: "s"
     free: "Kostenlos"
     map: "Einsatzort"
     places: "Einsatzorte"
@@ -434,8 +438,6 @@ deploy:
       pending: "Erneut anklicken"
       locked: "Gesperrt"
       contested: "Blinkt: umkämpft"
-      countdown: "Sekunden bis zum Einsatz"
-      countdown-sample: "13"
 
 death:
   self-explosion: "<prefix><white><player> <muted>wurde von der eigenen Explosion erwischt."
