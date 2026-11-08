@@ -590,7 +590,7 @@ career:
     "9": "General"
 
 hud:
-  objective: "<own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
+  objective: "<muted>Wir <own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
   priority: "<accent>★"
 
 # A bot in the squad list under the minimap, drawn in the menu tiles' capitals.
