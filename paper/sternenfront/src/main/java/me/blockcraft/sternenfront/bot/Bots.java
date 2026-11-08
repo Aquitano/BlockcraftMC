@@ -1520,11 +1520,18 @@ public final class Bots implements Listener {
         double range = config.hearingRange();
         long tick = game.tick();
         soldiers.stream().filter(Bots::deployed).filter(soldier -> soldier.faction != faction.get())
-                .filter(soldier -> soldier.body.getWorld().equals(at.getWorld()) && soldier.body.getLocation().distanceSquared(at) <= range * range)
+                .filter(soldier -> soldier.body.getWorld().equals(at.getWorld()) && squaredDistance(soldier.body, at) <= range * range)
                 .forEach(soldier -> {
                     soldier.heard = at;
                     soldier.heardUntil = tick + config.alarmTicks();
                 });
+    }
+
+    private static double squaredDistance(Entity entity, Location at) {
+        double x = entity.getX() - at.getX();
+        double y = entity.getY() - at.getY();
+        double z = entity.getZ() - at.getZ();
+        return x * x + y * y + z * z;
     }
 
     private void remove(Soldier soldier) {

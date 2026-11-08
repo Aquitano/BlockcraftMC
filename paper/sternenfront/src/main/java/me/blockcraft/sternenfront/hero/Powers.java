@@ -101,6 +101,7 @@ public final class Powers {
         private long markedAt;
         private List<Location> impacts = List.of();
         private TextDisplay warning;
+        private long warnedSeconds = -1;
 
         private Barrage(Player thrower, Faction faction, Item beacon, long thrownAt) {
             this.thrower = thrower;
@@ -481,10 +482,14 @@ public final class Powers {
         var at = barrage.marked;
         long since = tick - barrage.markedAt;
         if (since < orbital.delayTicks()) {
-            barrage.warning.text(game.messages().get("combat.orbital-warning",
-                    Placeholder.styling("tint", barrage.faction.text()),
-                    Placeholder.component("faction", game.messages().get("faction." + barrage.faction.key() + ".name")),
-                    Formatter.number("seconds", (orbital.delayTicks() - since + 19) / 20)));
+            long seconds = (orbital.delayTicks() - since + 19) / 20;
+            if (seconds != barrage.warnedSeconds) {
+                barrage.warnedSeconds = seconds;
+                barrage.warning.text(game.messages().get("combat.orbital-warning",
+                        Placeholder.styling("tint", barrage.faction.text()),
+                        Placeholder.component("faction", game.messages().get("faction." + barrage.faction.key() + ".name")),
+                        Formatter.number("seconds", seconds)));
+            }
             if (since % 5 == 0) {
                 var dust = new Particle.DustOptions(BEAM_COLOUR, 1.4f);
                 for (var impact : barrage.impacts) {

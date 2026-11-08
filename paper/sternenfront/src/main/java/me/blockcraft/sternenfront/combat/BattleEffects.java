@@ -7,6 +7,7 @@ import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Color;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
@@ -18,12 +19,16 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 /**
  * What a fight looks like: muzzle flashes, impacts, shockwaves, explosions, tethers, exhaust, vent steam and damaged
@@ -38,6 +43,9 @@ public final class BattleEffects {
     private static final String SABER_CRESCENT = "sternenfront/fx/saber_crescent";
     private static final String SABER_SCAR = "sternenfront/fx/saber_slash_cold";
     private static final String SMOKE_PUFF = "sternenfront/fx/smoke_puff";
+    private static final Set<Material> SPARKING = Arrays.stream(Material.values())
+            .filter(material -> material.name().matches(".*(IRON|COPPER|CHAIN|ANVIL|LANTERN|CAULDRON|HOPPER).*"))
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(Material.class)));
     private static final Color PUSH_COLOUR = Color.fromRGB(0xB8E5FF);
     private static final Color TETHER_COLOUR = Color.fromRGB(0xD0E2EE);
     private static final Color GRIP_COLOUR = Color.fromRGB(0xC050FF);
@@ -283,7 +291,7 @@ public final class BattleEffects {
      */
     public void boltOnWall(Location at, Vector normal, Block block, boolean shield, Faction faction) {
         var clear = at.clone().add(normal.clone().multiply(OFF_THE_WALL));
-        if (block.getType().name().matches(".*(IRON|COPPER|CHAIN|ANVIL|LANTERN|CAULDRON|HOPPER).*")) {
+        if (SPARKING.contains(block.getType())) {
             at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, clear, 3, 0.05, 0.05, 0.05, 0.12, null, true);
         }
         burst(clear, faction);
