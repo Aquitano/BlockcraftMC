@@ -108,7 +108,7 @@ public final class CombatHud {
     }
 
     private static Component icon(int index) {
-        return UiFont.glyph((char) ('' + index));
+        return UiFont.glyph((char) ('\uE220' + index));
     }
 
     private static Component bar(double level) {
@@ -116,14 +116,14 @@ public final class CombatHud {
     }
 
     private static Component meter(int cells) {
-        return UiFont.glyph((char) ('' + Math.clamp(cells, 0, Heat.METER_CELLS)));
+        return UiFont.glyph((char) ('\uE240' + Math.clamp(cells, 0, Heat.METER_CELLS)));
     }
 
     /** The cooling meter with the vent's window bracketed over it, so a pull is timed against what the player sees. */
     private Component vent(Heat heat) {
         long tick = game.tick();
         var window = heat.window(tick).map(cells -> IntStream.range(cells.low(), cells.high())
-                .mapToObj(cell -> UiFont.over((char) ('' + cell), METER_ADVANCE))
+                .mapToObj(cell -> UiFont.over((char) ('\uE260' + cell), METER_ADVANCE))
                 .reduce(Component.empty(), Component::append)).orElse(Component.empty());
         return meter(heat.litCells(tick)).append(window.color(NamedTextColor.AQUA));
     }

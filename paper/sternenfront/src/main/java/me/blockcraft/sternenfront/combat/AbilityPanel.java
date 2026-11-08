@@ -23,7 +23,7 @@ final class AbilityPanel {
 
     /** What a tile's keycap shows. */
     enum Binding {
-        F(''), Q(''), SHIFT_F('', ''), DOUBLE_JUMP('');
+        F('\uE04A'), Q('\uE04B'), SHIFT_F('\uE04C', '\uE04A'), DOUBLE_JUMP('\uE04D');
 
         private final char[] symbols;
 
@@ -53,11 +53,11 @@ final class AbilityPanel {
     private static final int PITCH = TILE + 3;
     private static final int TILE_TOP = 6;
     private static final int ICON_INSET = 2;
-    private static final char TILE_GLYPH = '';
-    private static final char FIRST_ICON = '';
-    private static final char KEYCAP = '';
-    private static final char WIDE_KEYCAP = '';
-    private static final char FIRST_DIGIT = '';
+    private static final char TILE_GLYPH = '\uE000';
+    private static final char FIRST_ICON = '\uE010';
+    private static final char KEYCAP = '\uE030';
+    private static final char WIDE_KEYCAP = '\uE031';
+    private static final char FIRST_DIGIT = '\uE040';
     private static final int TILE_ADVANCE = TILE + 1;
     private static final int ICON_ADVANCE = 17;
     private static final int[] KEYCAP_WIDTHS = {9, 15};

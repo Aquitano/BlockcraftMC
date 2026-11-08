@@ -20,7 +20,7 @@ public final class UiFont {
 
     /** A transparent picture as large as the 6-row panel, which a menu with a fixed layout draws on top of it. */
     public enum Overlay {
-        STERNENFRONT_CLASS(''), STERNENFRONT_CLASS_WITH_BOTS(''), STERNENFRONT_DEPLOY('');
+        STERNENFRONT_CLASS('\uE130'), STERNENFRONT_CLASS_WITH_BOTS('\uE131'), STERNENFRONT_DEPLOY('\uE132');
 
         private final char glyph;
 

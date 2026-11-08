@@ -42,13 +42,13 @@ final class MinimapLayout {
     private static final int NAME_LETTERS = (MAP - NAME_X) / LETTER_ADVANCE;
     private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&_ ";
 
-    private static final char DISC = '';
-    private static final char BADGE = '';
-    private static final char ARROW = '';
-    private static final char CLASS_MARK = '';
+    private static final char DISC = '\uE000';
+    private static final char BADGE = '\uE010';
+    private static final char ARROW = '\uE020';
+    private static final char CLASS_MARK = '\uE040';
 
     enum Mark {
-        SQUADMATE(''), ALLY(''), ENEMY(''), HEADQUARTERS('');
+        SQUADMATE('\uE030'), ALLY('\uE031'), ENEMY('\uE032'), HEADQUARTERS('\uE033');
 
         private final char glyph;
 
