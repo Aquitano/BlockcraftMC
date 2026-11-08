@@ -56,7 +56,11 @@ public final class Powers {
     private static final long THROW_TIMEOUT = 100;
     private static final int WHIRL_TICKS = 5;
     private static final float WHIRL_VOLUME = 0.7f;
-    private static final int GRIP_PULSE_TICKS = 10;
+    private static final double GRIP_AIM_MARGIN = 0.6;
+    private static final int GRIP_LEVITATION_AMPLIFIER = 0;
+    private static final int GRIP_SLOWNESS_AMPLIFIER = 3;
+    private static final int RALLY_SPEED_AMPLIFIER = 0;
+    private static final int RALLY_RESISTANCE_AMPLIFIER = 0;
     /** How long the off hand stays thrust forward after a push. */
     private static final int THRUST_TICKS = 6;
     private static final double WIND_UP_BACK = 0.4;
@@ -66,6 +70,8 @@ public final class Powers {
     private static final int JETPACK_SOUND_TICKS = 8;
     private static final long FALL_SAFE_TICKS = 100;
     private static final double GRAPPLE_LIFT = 0.35;
+    private static final double GRAPPLE_BASE_PULL = 0.4;
+    private static final double GRAPPLE_PULL_PER_BLOCK = 0.12;
     private static final double BEACON_LIFT = 0.15;
     private static final double BEACON_THROW = 1.0;
     private static final long BEACON_LANDS_LATEST = 40;
@@ -86,7 +92,7 @@ public final class Powers {
 
     private record WindUp(Player hero, Faction faction, long releaseAt) { }
 
-    private static final class Strike {
+    private static final class Barrage {
         private final Player thrower;
         private final Faction faction;
         private final Item beacon;
@@ -96,7 +102,7 @@ public final class Powers {
         private List<Location> impacts = List.of();
         private TextDisplay warning;
 
-        private Strike(Player thrower, Faction faction, Item beacon, long thrownAt) {
+        private Barrage(Player thrower, Faction faction, Item beacon, long thrownAt) {
             this.thrower = thrower;
             this.faction = faction;
             this.beacon = beacon;
@@ -114,7 +120,7 @@ public final class Powers {
     private final List<WindUp> windUps = new ArrayList<>();
     private final Map<UUID, Long> thrusts = new HashMap<>();
     private final Map<UUID, Long> jetpacks = new HashMap<>();
-    private final List<Strike> strikes = new ArrayList<>();
+    private final List<Barrage> barrages = new ArrayList<>();
 
     public Powers(SternenfrontGame game, HeroConfig config, Sabers sabers) {
         this.game = game;
@@ -232,17 +238,17 @@ public final class Powers {
         var facing = eye.getDirection();
         var wall = player.getWorld().rayTraceBlocks(eye, facing, grip.range(), FluidCollisionMode.NEVER, true);
         double reach = wall == null ? grip.range() : wall.getHitPosition().distance(eye.toVector());
-        var hit = player.getWorld().rayTraceEntities(eye, facing, reach, 0.6,
+        var hit = player.getWorld().rayTraceEntities(eye, facing, reach, GRIP_AIM_MARGIN,
                 entity -> entity instanceof LivingEntity target && game.hittable(faction, target) && !game.isProtected(target));
         if (hit == null || !(hit.getHitEntity() instanceof LivingEntity victim)) {
             return false;
         }
         int ticks = grip.seconds() * 20;
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, 0, false, false, true));
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, 3, false, false, true));
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, GRIP_LEVITATION_AMPLIFIER, false, false, true));
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, GRIP_SLOWNESS_AMPLIFIER, false, false, true));
         SoundCue.FORCE_GRIP.play(victim.getLocation(), 1.2f);
         grips.removeIf(each -> each.victim().equals(victim));
-        grips.add(new Grip(player, victim, tick + ticks, grip.damage() / Math.max(1, ticks / GRIP_PULSE_TICKS)));
+        grips.add(new Grip(player, victim, tick + ticks, grip.damage() / Math.max(1, ticks / grip.pulseTicks())));
         return true;
     }
 
@@ -266,7 +272,7 @@ public final class Powers {
         double distance = line.length();
         game.effects().grapple(player, anchor.toLocation(player.getWorld()));
         var pull = anchor.clone().subtract(player.getLocation().toVector()).normalize()
-                .multiply(Math.min(grapple.speed(), 0.4 + distance * 0.12));
+                .multiply(Math.min(grapple.speed(), GRAPPLE_BASE_PULL + distance * GRAPPLE_PULL_PER_BLOCK));
         player.setVelocity(pull.setY(Math.max(pull.getY(), 0) + GRAPPLE_LIFT));
         game.fighter(player).makeFallSafeUntil(tick + FALL_SAFE_TICKS);
         SoundCue.GRAPPLE.play(eye, 1f);
@@ -285,7 +291,7 @@ public final class Powers {
             dropped.setWillAge(false);
             dropped.setVelocity(eye.getDirection().multiply(BEACON_THROW).add(new Vector(0, BEACON_LIFT, 0)));
         });
-        strikes.add(new Strike(player, faction, beacon, tick));
+        barrages.add(new Barrage(player, faction, beacon, tick));
         return true;
     }
 
@@ -297,8 +303,8 @@ public final class Powers {
             if (ally.getWorld().equals(player.getWorld())
                     && ally.getLocation().distanceSquared(player.getLocation()) <= rally.radius() * rally.radius()
                     && game.onField(ally) && game.factionOf(ally).filter(faction::equals).isPresent()) {
-                ally.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 0, false, false, true));
-                ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, ticks, 0, false, false, true));
+                ally.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, RALLY_SPEED_AMPLIFIER, false, false, true));
+                ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, ticks, RALLY_RESISTANCE_AMPLIFIER, false, false, true));
                 ally.getWorld().spawnParticle(Particle.DUST, ally.getLocation().add(0, 1, 0), 8, .3, .5, .3, 0,
                         new Particle.DustOptions(faction.bolt(), 1.2f), true);
             }
@@ -330,7 +336,7 @@ public final class Powers {
             }
         }
         jetpacks.entrySet().removeIf(entry -> thrust(entry.getKey(), entry.getValue(), tick));
-        strikes.removeIf(strike -> rain(strike, tick));
+        barrages.removeIf(barrage -> rain(barrage, tick));
     }
 
     /** One tick of a thrown saber; null once it is back in its hero's hand or gone. */
@@ -413,7 +419,7 @@ public final class Powers {
             return true;
         }
         game.effects().grip(grip.gripper(), victim, tick);
-        if ((grip.endsAt() - tick) % GRIP_PULSE_TICKS == 0) {
+        if ((grip.endsAt() - tick) % config.grip().pulseTicks() == 0) {
             game.strike(grip.gripper(), victim, grip.perPulse(), DamageType.MAGIC);
         }
         return false;
@@ -449,39 +455,39 @@ public final class Powers {
     }
 
     /** True once the last blast fell, or the beacon vanished before it marked a spot. */
-    private boolean rain(Strike strike, long tick) {
+    private boolean rain(Barrage barrage, long tick) {
         var orbital = config.orbital();
-        if (strike.marked == null) {
-            var beacon = strike.beacon;
+        if (barrage.marked == null) {
+            var beacon = barrage.beacon;
             if (!beacon.isValid()) {
                 return true;
             }
-            if (beacon.isOnGround() || tick - strike.thrownAt >= BEACON_LANDS_LATEST) {
-                strike.marked = beacon.getLocation();
-                strike.markedAt = tick;
-                strike.impacts = BlastPattern.plan(orbital.blasts(), orbital.radius(), ThreadLocalRandom.current()).stream()
-                        .map(impact -> strike.marked.clone().add(impact.x(), 0.5, impact.z())).toList();
-                strike.warning = strike.marked.getWorld().spawn(strike.marked.clone().add(0, 3, 0), TextDisplay.class, label -> {
+            if (beacon.isOnGround() || tick - barrage.thrownAt >= BEACON_LANDS_LATEST) {
+                barrage.marked = beacon.getLocation();
+                barrage.markedAt = tick;
+                barrage.impacts = BlastPattern.plan(orbital.blasts(), orbital.radius(), ThreadLocalRandom.current()).stream()
+                        .map(impact -> barrage.marked.clone().add(impact.x(), 0.5, impact.z())).toList();
+                barrage.warning = barrage.marked.getWorld().spawn(barrage.marked.clone().add(0, 3, 0), TextDisplay.class, label -> {
                     label.setPersistent(false);
                     label.setBillboard(Display.Billboard.CENTER);
                     label.setSeeThrough(false);
                     label.setBrightness(Displays.LIT);
                     label.setShadowed(true);
                 });
-                SoundCue.ORBITAL_INCOMING.play(strike.marked, 3f);
+                SoundCue.ORBITAL_INCOMING.play(barrage.marked, 3f);
             }
             return false;
         }
-        var at = strike.marked;
-        long since = tick - strike.markedAt;
+        var at = barrage.marked;
+        long since = tick - barrage.markedAt;
         if (since < orbital.delayTicks()) {
-            strike.warning.text(game.messages().get("combat.orbital-warning",
-                    Placeholder.styling("tint", strike.faction.text()),
-                    Placeholder.component("faction", game.messages().get("faction." + strike.faction.key() + ".name")),
+            barrage.warning.text(game.messages().get("combat.orbital-warning",
+                    Placeholder.styling("tint", barrage.faction.text()),
+                    Placeholder.component("faction", game.messages().get("faction." + barrage.faction.key() + ".name")),
                     Formatter.number("seconds", (orbital.delayTicks() - since + 19) / 20)));
             if (since % 5 == 0) {
                 var dust = new Particle.DustOptions(BEAM_COLOUR, 1.4f);
-                for (var impact : strike.impacts) {
+                for (var impact : barrage.impacts) {
                     for (int step = 0; step < 24; step++) {
                         double angle = step * Math.PI * 2 / 24;
                         var point = impact.clone().add(Math.cos(angle) * BLAST_RADIUS, -0.35, Math.sin(angle) * BLAST_RADIUS);
@@ -498,25 +504,25 @@ public final class Powers {
             return false;
         }
         long blast = since - orbital.delayTicks();
-        strike.warning.remove();
+        barrage.warning.remove();
         if (blast % BLAST_GAP_TICKS == 0 && blast / BLAST_GAP_TICKS < orbital.blasts()) {
-            blast(strike, strike.impacts.get((int) (blast / BLAST_GAP_TICKS)));
+            blast(barrage, barrage.impacts.get((int) (blast / BLAST_GAP_TICKS)));
         }
         if (blast / BLAST_GAP_TICKS >= orbital.blasts() - 1) {
-            strike.beacon.remove();
+            barrage.beacon.remove();
             return true;
         }
         return false;
     }
 
-    private void blast(Strike strike, Location at) {
-        game.effects().explosion(at, strike.faction, BLAST_RADIUS);
+    private void blast(Barrage barrage, Location at) {
+        game.effects().explosion(at, barrage.faction, BLAST_RADIUS);
         at.getWorld().spawnParticle(Particle.FLAME, at, 20, 1, 0.5, 1, 0.05, null, true);
         SoundCue.ORBITAL_IMPACT.play(at, 2.5f);
-        game.blastAround(at, new Blast(strike.thrower, strike.faction, BLAST_RADIUS, config.orbital().damage(), false), (target, away) -> { });
+        game.blastAround(at, new Blast(barrage.thrower, barrage.faction, BLAST_RADIUS, config.orbital().damage(), false), (target, away) -> { });
     }
 
-    /** The hero fell or left. Channels end; rockets and strikes already launched finish their flight. */
+    /** The hero fell or left. Channels end; rockets and barrages already launched finish their flight. */
     public void forget(Player player) {
         lightning.forget(player);
         jetpacks.remove(player.getUniqueId());
@@ -548,12 +554,12 @@ public final class Powers {
         grips.forEach(grip -> letGo(grip.victim()));
         grips.clear();
         jetpacks.clear();
-        strikes.forEach(strike -> {
-            strike.beacon.remove();
-            if (strike.warning != null) {
-                strike.warning.remove();
+        barrages.forEach(barrage -> {
+            barrage.beacon.remove();
+            if (barrage.warning != null) {
+                barrage.warning.remove();
             }
         });
-        strikes.clear();
+        barrages.clear();
     }
 }
