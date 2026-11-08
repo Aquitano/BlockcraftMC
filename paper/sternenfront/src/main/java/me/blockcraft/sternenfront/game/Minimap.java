@@ -221,6 +221,7 @@ final class Minimap implements Listener {
     void forget(Player player) {
         hide(player);
         panels.remove(player.getUniqueId());
+        shots.remove(player.getUniqueId());
     }
 
     void clear() {
