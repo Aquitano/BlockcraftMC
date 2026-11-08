@@ -14,7 +14,7 @@ import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -98,10 +98,12 @@ public final class Flares {
         live = new LiveCap<>(limit);
     }
 
-    /** One still frame, as long as the cap has room. */
-    public Optional<ItemDisplay> flash(String model, Location at, float scale, int ticks) {
-        return live.hasRoom() ? Optional.of(show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, 0,
-                Display.Billboard.CENTER, true, null))) : Optional.empty();
+    /** One still frame, as long as the cap has room; {@code setup} runs before any client hears of it. */
+    public void flash(String model, Location at, float scale, int ticks, Consumer<ItemDisplay> setup) {
+        if (live.hasRoom()) {
+            show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, 0,
+                    Display.Billboard.CENTER, true, null), setup);
+        }
     }
 
     public void burst(String model, Location at, float from, float to, int ticks) {
@@ -186,6 +188,10 @@ public final class Flares {
     }
 
     private ItemDisplay show(Location at, Plan plan) {
+        return show(at, plan, ignored -> { });
+    }
+
+    private ItemDisplay show(Location at, Plan plan, Consumer<ItemDisplay> setup) {
         var spot = plan.turn() == UNTURNED ? at.clone() : at.clone().setRotation(0, 0);
         var display = Displays.item(spot, plan.look(), spawned -> {
             spawned.setBillboard(plan.billboard());
@@ -194,6 +200,7 @@ public final class Flares {
             if (plan.lit()) {
                 spawned.setBrightness(Displays.LIT);
             }
+            setup.accept(spawned);
         });
         live.admit(new Flare(display, plan)).ifPresent(oldest -> oldest.display.remove());
         return display;

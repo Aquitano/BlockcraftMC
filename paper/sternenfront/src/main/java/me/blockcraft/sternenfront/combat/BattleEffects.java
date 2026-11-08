@@ -143,7 +143,8 @@ public final class BattleEffects {
     }
 
     private void flashSparing(LivingEntity owner, Faction faction, Location at, float scale, int ticks) {
-        flares.flash(flashModel(faction), at, scale, ticks).ifPresent(shown -> {
+        // Hidden as it spawns: hidden after, the owner's client may already have drawn it for a frame.
+        flares.flash(flashModel(faction), at, scale, ticks, shown -> {
             if (owner instanceof Player player) {
                 player.hideEntity(game.plugin(), shown);
             }
@@ -353,7 +354,7 @@ public final class BattleEffects {
         world.spawnParticle(Particle.ELECTRIC_SPARK, at, 4, 0.08, 0.08, 0.08, 0.1, null, true);
         world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), config.bolt().impactDust()), true);
         if (enabled) {
-            flares.flash(flashModel(faction), at, config.bolt().impactFlash(), config.bolt().impactTicks());
+            flares.flash(flashModel(faction), at, config.bolt().impactFlash(), config.bolt().impactTicks(), shown -> { });
         }
     }
 
