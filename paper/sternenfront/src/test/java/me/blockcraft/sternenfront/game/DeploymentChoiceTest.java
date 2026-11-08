@@ -48,7 +48,7 @@ public class DeploymentChoiceTest {
 
     @Test
     public void aNewLifeKeepsTheFreeClassWithoutRepurchasingTheLastHero() {
-        var fighter = new Fighter(new Heat.Rules(5, 1, 20, 0.2, 0.25));
+        var fighter = new Fighter(new Heat.Rules(5, 1, 20, 0.2, 0.25), ability -> new Charges(1, 1));
         fighter.combatClass(CombatClass.MEDIC);
         fighter.hero(Optional.of(Hero.JEDI));
         fighter.choosing(Optional.of(new Fighter.Choosing(100, 50, Optional.empty(), Optional.empty())));

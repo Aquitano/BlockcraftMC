@@ -460,7 +460,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     public Fighter fighter(Player player) {
-        return fighters.computeIfAbsent(player.getUniqueId(), ignored -> new Fighter(config.heat()));
+        return fighters.computeIfAbsent(player.getUniqueId(), ignored -> new Fighter(config.heat(),
+                ability -> new Charges(config.charges(ability), config.cooldownTicks(ability))));
     }
 
     Optional<Fighter> fighterIfAny(Player player) {
@@ -1233,7 +1234,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 || !fighter.abilities(faction.get()).contains(ability)) {
             return;
         }
-        var charges = charges(fighter, ability);
+        var charges = fighter.charges(ability);
         if (charges.stored(tick) == 0) {
             cooling(player, messages.get(ability.messageKey(faction.get()) + ".name"), charges.ticksToNext(tick));
             return;
@@ -1248,10 +1249,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         charges.use(tick);
         player.setCooldown(ability.material(), charges.stored(tick) == 0 ? charges.ticksToNext(tick) : 0);
-    }
-
-    public Charges charges(Fighter fighter, Ability ability) {
-        return fighter.charges(ability, config.charges(ability), config.cooldownTicks(ability));
     }
 
     /** The second jump, or the champion's F ability, leaps with the blade. */

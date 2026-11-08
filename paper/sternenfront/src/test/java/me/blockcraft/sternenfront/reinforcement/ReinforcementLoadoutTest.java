@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.reinforcement;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.Blaster;
+import me.blockcraft.sternenfront.game.Charges;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Fighter;
@@ -72,7 +73,7 @@ public class ReinforcementLoadoutTest {
     @Test
     public void aUnitKeepsItsOwnWeaponsAndAbilitiesAndRelicOrRespawnRemovesThem() {
         var heat = new Heat.Rules(8, 3, 40, 0.2, 0.25);
-        var fighter = new Fighter(heat);
+        var fighter = new Fighter(heat, ability -> new Charges(1, 1));
         fighter.combatClass(CombatClass.MEDIC);
         fighter.reinforcement(Optional.of(COMMANDO_DROID));
         assertFalse(fighter.hero().isPresent());
