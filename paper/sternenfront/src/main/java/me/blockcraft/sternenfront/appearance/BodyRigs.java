@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class BodyRigs implements Listener, AutoCloseable {
@@ -41,25 +42,23 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private final Plugin plugin;
     private final SternenfrontGame game;
     private final Map<UUID, BodyRig> rigs = new HashMap<>();
-    private final Map<UUID, BodyRig> targets = new HashMap<>();
+    private final Map<UUID, BodyRig> byHitBox = new HashMap<>();
     private final BukkitTask task;
-    private final boolean droids;
-    private final boolean infantry;
+    private final Set<Faction> riggedSides;
     private final float turnDegrees;
     private final Map<CombatClass, RigMotion> motions = new EnumMap<>(CombatClass.class);
     private final Optional<AnimatedBodies> animated;
     private final Color hurtTint;
-    private final UnitColours units;
+    private final UnitColours unitColours;
 
-    private BodyRigs(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
+    private BodyRigs(Plugin plugin, SternenfrontGame game, Set<Faction> riggedSides) {
         this.plugin = plugin;
         this.game = game;
-        this.droids = droids;
-        this.infantry = infantry;
+        this.riggedSides = Set.copyOf(riggedSides);
         turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
         hurtTint = Color.fromRGB(Optional.ofNullable(TextColor.fromHexString("#" + game.plugin().getConfig().getString("appearance.hurt-tint", "")))
                 .map(TextColor::value).orElse(0xFF5050));
-        units = UnitColours.from(game.plugin().getConfig().getConfigurationSection("appearance"));
+        unitColours = UnitColours.from(game.plugin().getConfig().getConfigurationSection("appearance"));
         for (var role : CombatClass.values()) {
             motions.put(role, RigMotion.from(game.plugin().getConfig(), role));
         }
@@ -71,8 +70,8 @@ public final class BodyRigs implements Listener, AutoCloseable {
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
-    public static BodyRigs start(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
-        return new BodyRigs(plugin, game, droids, infantry);
+    public static BodyRigs start(Plugin plugin, SternenfrontGame game, Set<Faction> riggedSides) {
+        return new BodyRigs(plugin, game, riggedSides);
     }
 
     private boolean outlined(Player viewer, LivingEntity actor) {
@@ -119,14 +118,14 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var faction = game.factionOf(actor).orElseThrow();
             var body = unit.map(RigBody::of).orElseGet(() -> RigBody.of(faction, game.combatClassOf(actor), hero));
             var squad = game.bots().squad(actor);
-            var markings = new Markings(units.of(faction, squad.map(Bots.Squad::fireteam).orElse(0)),
+            var insignia = new Insignia(unitColours.colourOf(faction, squad.map(Bots.Squad::fireteam).orElse(0)),
                     squad.filter(Bots.Squad::leads).isPresent());
             if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
-                animated.get().keep(actor, body, markings, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
+                animated.get().draw(actor, body, insignia, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
                 continue;
             }
             var existing = rigs.get(id);
-            if (existing != null && existing.body() != body) {
+            if (existing != null && existing.kind() != body) {
                 remove(id);
             }
             var rig = rigs.computeIfAbsent(id, ignored -> {
@@ -134,12 +133,12 @@ public final class BodyRigs implements Listener, AutoCloseable {
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
                         hero.isPresent() ? Optional.empty() : Optional.of(motions.get(unit
                                 .map(chosen -> chosen == Reinforcement.ARC_TROOPER ? CombatClass.HEAVY : CombatClass.SCOUT)
-                                .orElseGet(() -> game.combatClassOf(actor)))), markings,
+                                .orElseGet(() -> game.combatClassOf(actor)))), insignia,
                         actor instanceof Player player ? () -> game.combat().stance(player) : Optional::empty);
-                targets.put(created.targetId(), created);
+                byHitBox.put(created.hitBoxId(), created);
                 return created;
             });
-            rig.mark(markings);
+            rig.wear(insignia);
             rig.tick(game.effects().recoil(actor));
         }
         animated.ifPresent(bodies -> bodies.forgetAbsent(present));
@@ -152,14 +151,13 @@ public final class BodyRigs implements Listener, AutoCloseable {
 
     private boolean eligible(LivingEntity actor) {
         return actor.isValid() && game.onField(actor) && actor.getWorld().equals(game.map().world())
-                && (droids && game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent()
-                || infantry && game.factionOf(actor).filter(Faction.KOLONIEN::equals).isPresent())
+                && game.factionOf(actor).filter(riggedSides::contains).isPresent()
                 && (!(actor instanceof Player player) || !BlockcraftApi.get().buildMode().isEnabled(player));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onAttack(EntityDamageByEntityEvent event) {
-        var rig = targets.get(event.getEntity().getUniqueId());
+        var rig = byHitBox.get(event.getEntity().getUniqueId());
         if (rig == null) {
             return;
         }
@@ -223,7 +221,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private void remove(UUID id) {
         var rig = rigs.remove(id);
         if (rig != null) {
-            targets.remove(rig.targetId());
+            byHitBox.remove(rig.hitBoxId());
             rig.close();
         }
     }
@@ -232,7 +230,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
         animated.ifPresent(AnimatedBodies::close);
         rigs.values().forEach(BodyRig::close);
         rigs.clear();
-        targets.clear();
+        byHitBox.clear();
     }
 
     @Override

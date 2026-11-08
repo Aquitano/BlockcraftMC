@@ -54,13 +54,13 @@ enum RigBody {
     private final float armLift;
     private final float gripTurn;
     private final boolean showsWeapon;
-    private final String leftArm;
+    private final String leftArmPart;
 
     RigBody(Faction faction) {
         this(faction, true, "arm");
     }
 
-    RigBody(Faction faction, boolean showsWeapon, String leftArm) {
+    RigBody(Faction faction, boolean showsWeapon, String leftArmPart) {
         var layout = section(Layout.FILE, "bodies." + family());
         this.faction = faction;
         this.joints = Joints.from(section(Layout.FILE, "joints." + layout.getString("joints")));
@@ -68,7 +68,7 @@ enum RigBody {
         this.armLift = number(layout, "arm-lift");
         this.gripTurn = number(layout, "grip-turn");
         this.showsWeapon = showsWeapon;
-        this.leftArm = leftArm;
+        this.leftArmPart = leftArmPart;
     }
 
     /** Holds the file apart because an enum builds its constants before its own static fields. */
@@ -137,7 +137,7 @@ enum RigBody {
         return this == HERO_COMMANDER || this == HERO_BOUNTY_HUNTER;
     }
 
-    String leftArm() {
-        return leftArm;
+    String leftArmPart() {
+        return leftArmPart;
     }
 }

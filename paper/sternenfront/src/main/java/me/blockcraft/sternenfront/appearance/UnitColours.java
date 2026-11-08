@@ -25,7 +25,7 @@ record UnitColours(Map<Faction, List<Integer>> colours) {
     }
 
     /** A side with more fireteams than colours starts over at its first colour. */
-    int of(Faction faction, int fireteam) {
+    int colourOf(Faction faction, int fireteam) {
         var own = colours.get(faction);
         return own.get(Math.floorMod(fireteam, own.size()));
     }
