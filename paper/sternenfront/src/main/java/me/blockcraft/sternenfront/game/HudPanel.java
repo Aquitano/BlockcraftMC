@@ -7,7 +7,6 @@ import net.kyori.adventure.text.format.ShadowColor;
 import net.kyori.adventure.text.format.TextColor;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Glyphs the pack's text shader moves into a corner of the screen. Each glyph's colour names the corner, its row below
@@ -44,8 +43,11 @@ public final class HudPanel {
     public record Glyph(String text, int x, int y, Tint tint, boolean shadow, int advance) { }
 
     static final int FIRST_TINT = 176;
-    /** The menu tiles' capitals, which the panels' fonts share, with an underscore and a space of the panels' own. */
-    private static final String CAPITALS = UiFont.LABEL_LETTERS + "_ ";
+    /** The menu tiles' capitals, which the panels' fonts share, with an underscore of the panels' own. */
+    private static final String CAPITALS = UiFont.LABEL_LETTERS + "_";
+    /** The capitals the panels' fonts draw two pixels wider, so their diagonals show; a three-pixel M reads as an N. */
+    private static final String WIDE_LETTERS = "MNW";
+    private static final int WIDE_ADVANCE = UiFont.LABEL_ADVANCE + 2;
 
     private HudPanel() {
     }
@@ -73,10 +75,17 @@ public final class HudPanel {
 
     /** {@code text} in the capitals, with a question mark for any letter they lack. */
     public static String capitals(String text) {
-        var letters = new StringBuilder();
-        text.toUpperCase(Locale.ROOT).codePoints().forEach(codepoint ->
-                letters.appendCodePoint(CAPITALS.indexOf(codepoint) >= 0 ? codepoint : '?'));
-        return letters.toString();
+        return UiFont.capitals(text, CAPITALS);
+    }
+
+    /** How wide the panels' fonts draw {@code capitals}. */
+    public static int width(String capitals) {
+        return capitals.codePoints().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_ADVANCE : UiFont.LABEL_ADVANCE).sum();
+    }
+
+    /** {@code capitals} as a line of text on a panel, shadowed so it reads over a bright floor. */
+    public static Glyph label(String capitals, int x, int y, Tint tint) {
+        return new Glyph(capitals, x, y, tint, true, width(capitals));
     }
 
     private static TextColor colour(Corner corner, int row, Tint tint) {

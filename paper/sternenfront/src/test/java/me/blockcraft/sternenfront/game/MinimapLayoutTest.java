@@ -52,7 +52,8 @@ public class MinimapLayoutTest {
     public void namesUseTheTileCapitalsAndFitUnderTheMap() {
         assertEquals("ITS_AQUITANO", MinimapLayout.label("Its_Aquitano"));
         assertEquals("CT-12", MinimapLayout.label("CT-12"));
-        assertEquals("?UKASZ-LANGER…", MinimapLayout.label("Łukasz-Langername"));
+        assertEquals("?UKASZ-LANGE…", MinimapLayout.label("Łukasz-Langername"));
+        assertEquals("WOMAN_IN_W…", MinimapLayout.label("Woman_in_Winter"));
     }
 
     @Test
@@ -104,8 +105,7 @@ public class MinimapLayoutTest {
         assertEquals(0, PackFonts.width(MinimapLayout.render(glyphs), fonts));
         for (Glyph glyph : glyphs) {
             assertTrue(glyph.toString(), glyph.y() >= 0 && glyph.y() <= 255);
-            glyph.text().codePoints().forEach(codepoint -> assertEquals(glyph.toString(),
-                    (int) fonts.get(MinimapLayout.FONT).get(codepoint), glyph.advance() / glyph.text().codePointCount(0, glyph.text().length())));
+            assertEquals(glyph.toString(), glyph.advance(), glyph.text().codePoints().map(fonts.get(MinimapLayout.FONT)::get).sum());
         }
         for (var provider : PackFonts.providers("minimap")) {
             var json = provider.getAsJsonObject();

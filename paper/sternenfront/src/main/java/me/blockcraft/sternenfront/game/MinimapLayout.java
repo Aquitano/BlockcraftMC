@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.game;
 
-import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
@@ -38,7 +37,7 @@ final class MinimapLayout {
     private static final int ROW = 8;
     static final int ROWS = 6;
     private static final int NAME_X = CLASS_ADVANCE;
-    private static final int NAME_LETTERS = (MAP - NAME_X) / UiFont.LABEL_ADVANCE;
+    private static final int NAME_WIDTH = MAP - NAME_X;
 
     static final char DISC = '\uE000';
     static final char BADGE = '\uE010';
@@ -135,13 +134,20 @@ final class MinimapLayout {
         var label = label(name);
         var tint = ready ? Tint.WHITE : Tint.DIMMED;
         return List.of(new Glyph(String.valueOf((char) (CLASS_MARK + role.ordinal())), 0, y, ready ? mark : Tint.DIMMED, true, CLASS_ADVANCE),
-                new Glyph(label, NAME_X, y, tint, true, label.length() * UiFont.LABEL_ADVANCE));
+                HudPanel.label(label, NAME_X, y, tint));
     }
 
     /** The name in the menu tiles' capitals, cut to the panel's width, with a question mark for any letter they lack. */
     static String label(String name) {
         var letters = HudPanel.capitals(name);
-        return letters.length() <= NAME_LETTERS ? letters : letters.substring(0, NAME_LETTERS - 1) + "…";
+        if (HudPanel.width(letters) <= NAME_WIDTH) {
+            return letters;
+        }
+        int end = letters.length() - 1;
+        while (end > 0 && HudPanel.width(letters.substring(0, end) + "…") > NAME_WIDTH) {
+            end--;
+        }
+        return letters.substring(0, end) + "…";
     }
 
     /** A boss bar line that starts in the screen's middle whatever it shows, which the shader moves into the corner. */
@@ -153,7 +159,7 @@ final class MinimapLayout {
     static List<Glyph> list(String heading, List<Member> members) {
         var label = label(heading);
         var glyphs = new ArrayList<Glyph>();
-        glyphs.add(new Glyph(label, 0, LIST_TOP, Tint.DIMMED, true, label.length() * UiFont.LABEL_ADVANCE));
+        glyphs.add(HudPanel.label(label, 0, LIST_TOP, Tint.DIMMED));
         for (int row = 0; row < Math.min(ROWS, members.size()); row++) {
             var member = members.get(row);
             glyphs.addAll(member(row + 1, member.role(), member.mark(), member.name(), member.ready()));
