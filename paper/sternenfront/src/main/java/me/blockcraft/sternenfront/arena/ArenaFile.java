@@ -32,6 +32,8 @@ import java.util.OptionalLong;
 public final class ArenaFile {
 
     public static final String FILE = "arena.yml";
+    /** Posts A to E, the letters the pack draws a badge for on the HUD, the minimap and the deploy screen. */
+    public static final int MAX_POSTS = 5;
 
     private ArenaFile() { }
 
@@ -46,7 +48,12 @@ public final class ArenaFile {
             headquarters.put(Faction.valueOf(key.toUpperCase(Locale.ROOT)),
                     new Headquarters(spots(world, section.getStringList("spawns")), box(section.getDoubleList("zone"))));
         }
-        var posts = yaml.getMapList("posts").stream().map(post -> post(world, post)).toList();
+        var listed = yaml.getMapList("posts");
+        if (listed.size() > MAX_POSTS) {
+            throw new IllegalArgumentException(file + " lists " + listed.size() + " posts; a map has at most " + MAX_POSTS
+                    + ", A to E, since the HUD draws a badge for those letters only");
+        }
+        var posts = listed.stream().map(post -> post(world, post)).toList();
         var controls = yaml.getMapList("controls").stream().map(control -> control(world, control)).toList();
         var playArea = box(yaml.getDoubleList("play-area"));
         double minimumBorder = Math.max(playArea.getWidthX(), playArea.getWidthZ()) + 2;

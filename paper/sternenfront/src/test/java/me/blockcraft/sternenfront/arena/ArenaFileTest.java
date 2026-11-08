@@ -108,6 +108,16 @@ public class ArenaFileTest {
     }
 
     @Test
+    public void aMapWithMorePostsThanTheHudHasLettersIsRejected() throws Exception {
+        var yaml = secretMap();
+        var file = temporary.newFile();
+        yaml.set("posts", java.util.Collections.nCopies(ArenaFile.MAX_POSTS + 1, Map.of()));
+        yaml.save(file);
+        var refused = assertThrows(IllegalArgumentException.class, () -> ArenaFile.load(null, file.toPath()));
+        assertTrue(refused.getMessage(), refused.getMessage().contains("at most " + ArenaFile.MAX_POSTS));
+    }
+
+    @Test
     public void yardPropsRejectUnknownModelsAndInvalidScales() throws Exception {
         var yaml = secretMap();
         var file = temporary.newFile();

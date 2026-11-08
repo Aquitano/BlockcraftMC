@@ -6,6 +6,7 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.MenuState;
+import me.blockcraft.sternenfront.arena.ArenaFile;
 import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.BattlePlan;
 import me.blockcraft.sternenfront.game.Blaster;
@@ -58,8 +59,6 @@ public final class DeployMenu extends Menu {
     private static final int DEPLOY = BUTTONS.get(1);
     /** The map's top-left cell, the first slot the menu borrows from the player. */
     private static final int MAP = ROWS * 9;
-    /** Posts A to E, the ones the pack draws marker badges for. */
-    private static final int LETTERED_POSTS = 5;
     private static final long TICKS_PER_SECOND = 20;
     private static final int MAX_COUNTDOWN = 99;
     private static final double TO_HEARTS = 2;
@@ -381,7 +380,7 @@ public final class DeployMenu extends Menu {
                 .addString(available && selected ? confirmed ? "chosen" : "pending" : "")
                 .addString(!available ? "locked" : recommended ? "recommended" : "");
         switch (spawn) {
-            case Spawn.Post post when post.index() < LETTERED_POSTS -> {
+            case Spawn.Post post when post.index() < ArenaFile.MAX_POSTS -> {
                 boolean filled = embattled ? game.tick() / TICKS_PER_SECOND % 2 == 0 : available;
                 Items.of(marker).model(Key.key("blockcraft", "sternenfront/post_" + (char) ('a' + post.index())
                         + (filled ? "_filled" : "_hollow")));
