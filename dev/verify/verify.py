@@ -225,9 +225,14 @@ def to_enemy(client):
 
 def as_trooper(client):
     """Back to a class weapon if the last scenario left the player a hero or the champion."""
-    if not client("status")["hotbar"][0]["item"].endswith("_hoe"):
+    if not blaster(client("status")["hotbar"][0]["item"]):
         rcon(f"kill {PLAYER}")
-        client.until("the next deployment", lambda: on_field(client("status")) and client("status")["hotbar"][0]["item"].endswith("_hoe"), 60, 1)
+        client.until("the next deployment", lambda: on_field(client("status")) and blaster(client("status")["hotbar"][0]["item"]), 60, 1)
+
+
+def blaster(item):
+    """A class's blaster: a hoe, or a spyglass for the long rifles, which the client scopes with."""
+    return item.endswith("_hoe") or item == "spyglass"
 
 
 def enemies(client, radius=64):

@@ -65,7 +65,7 @@ recording there and reports how many animated bodies it drew.
 | `look`, `look_at`, `aim` | `yaw pitch`; `x y z`; `name` | turns the camera, `aim` to the nearest match |
 | `command`, `chat` | `text` | sends either as the player |
 | `gui_scale`, `window` | `value`; `width height` | changes the UI scale or the window |
-| `option` | `fov render_distance particles perspective hide_hud` | client options |
+| `option` | `fov fov_effects render_distance particles perspective hide_hud` | client options; `fov_effects` is the 0 to 1 FOV effects slider |
 | `screenshot`, `capture` | `name`; `frames every` | one image, or one every few ticks |
 | `entities` | `radius totals_only` | what the client sees around the player |
 | `events` | `since` | every change to the HUD, screen, health and chat and every sound played, by client tick, recorded each tick so nothing short-lived is missed |
