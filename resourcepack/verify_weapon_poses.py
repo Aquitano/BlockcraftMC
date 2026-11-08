@@ -10,6 +10,12 @@ REGISTRY = (Path(__file__).parent.parent / "paper/api/src/main/java/me/blockcraf
 GENERATOR = (Path(__file__).parent / "SternenfrontArt.java").read_text()
 HANDS = ("firstperson_righthand", "firstperson_lefthand")
 HOLDS = ("_firing", "_lowered")
+# FirstPersonHandsAndItemsRenderer in the 26.3 client: the arm's offset, then the turn it gives a blocking non-shield.
+VANILLA_ARM_SHIFT = (0.56, -0.52, -0.72)
+VANILLA_SWORD_BLOCK_SHIFT = (-0.14142136, 0.08, 0.14142136)
+VANILLA_SWORD_BLOCK_DEGREES = (-102.25, 13.365, 78.05)
+# The hand draws with a fixed 70 degree vertical field of view, and no window is narrower than it is tall.
+HAND_VIEW_SLOPE = math.tan(math.radians(35))
 
 
 def read_model(path):
@@ -25,6 +31,24 @@ def barrel_elevation(pose, left=False):
     y = -math.sin(pitch) * math.cos(yaw)
     z = math.cos(pitch) * math.cos(yaw)
     return math.degrees(math.atan2(y, math.hypot(x, z)))
+
+
+def turned(vector, degrees):
+    """Rotates as the client's rotationXYZ does: about Z first, then Y, then X."""
+    x, y, z = vector
+    rx, ry, rz = map(math.radians, degrees)
+    x, y = x * math.cos(rz) - y * math.sin(rz), x * math.sin(rz) + y * math.cos(rz)
+    x, z = x * math.cos(ry) + z * math.sin(ry), -x * math.sin(ry) + z * math.cos(ry)
+    y, z = y * math.cos(rx) - z * math.sin(rx), y * math.sin(rx) + z * math.cos(rx)
+    return [x, y, z]
+
+
+def blocking_view(pose, pixel):
+    """Where the client draws a model pixel in the right hand while the item blocks, the camera looking along -Z."""
+    point = [pose["scale"][axis] * (pixel[axis] / 16 - 0.5) for axis in range(3)]
+    point = [a + b / 16 for a, b in zip(turned(point, pose["rotation"]), pose["translation"])]
+    point = [a + b for a, b in zip(turned(point, VANILLA_SWORD_BLOCK_DEGREES), VANILLA_SWORD_BLOCK_SHIFT)]
+    return [a + b for a, b in zip(point, VANILLA_ARM_SHIFT)]
 
 
 class WeaponPoses(unittest.TestCase):
@@ -59,6 +83,33 @@ class WeaponPoses(unittest.TestCase):
         generated = re.findall(r'"(sternenfront/\w+)"', re.search(r"GUARDED = List\.of\(([^)]*)\)", GENERATOR).group(1))
         self.assertTrue(registered)
         self.assertEqual(sorted(registered), sorted(generated))
+
+    def test_guarded_blades_draw_lit_and_in_view(self):
+        for material, path in re.findall(r'Material\.(\w+), "(sternenfront/\w+)", (?:true|false), true\)', REGISTRY):
+            with self.subTest(blade=path):
+                rest, guard = read_model(path), read_model(path + "_guard")
+                self.assertEqual(guard["parent"], f"blockcraft:item/{path}")
+                self.assertEqual(guard["display"][HANDS[0]], guard["display"][HANDS[1]])
+                textures = rest["textures"] | guard.get("textures", {})
+                faces = [face for element in guard.get("elements", rest["elements"]) for face in element["faces"].values()]
+                for face in faces:
+                    namespace, texture_path = textures[face["texture"].lstrip("#")].split(":")
+                    self.assertTrue((PACK / namespace / "textures" / f"{texture_path}.png").is_file())
+                route = json.loads((PACK / f"minecraft/items/{material.lower()}.json").read_text())
+                case = next(case["model"] for case in route["model"]["cases"] if case["when"] == f"blockcraft:{path}")
+                self.assertEqual(case["property"], "minecraft:using_item")
+                self.assertEqual(case["on_true"]["model"], f"blockcraft:item/{path}_guard")
+                self.assertEqual(case["on_true"].get("tints"), case["on_false"].get("tints"))
+                if any("tintindex" in face for face in faces):
+                    self.assertTrue(case["on_true"].get("tints"))
+                elements = rest["elements"]
+                low = min(element["from"][1] for element in elements)
+                high = max(element["to"][1] for element in elements)
+                for y in ((low + high) / 2, high):
+                    x, y, z = blocking_view(guard["display"][HANDS[0]], [8, y, 8])
+                    self.assertLess(z, 0)
+                    self.assertLess(abs(x / z), HAND_VIEW_SLOPE)
+                    self.assertLess(abs(y / z), HAND_VIEW_SLOPE)
 
     def test_family_framing_recoil_and_lowering(self):
         def pose(name, firing=False):

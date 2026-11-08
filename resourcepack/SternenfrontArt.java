@@ -1243,8 +1243,78 @@ public final class SternenfrontArt {
         return "\"firstperson_righthand\":" + hand + ",\"firstperson_lefthand\":" + hand;
     }
 
+    /**
+     * In first person vanilla turns every blocking item but a shield like an old sword, between the arm and the
+     * model's display ({@code FirstPersonHandsAndItemsRenderer}, case BLOCK). That turn alone swings a blade back past
+     * the camera, so a guard display starts by undoing it.
+     */
+    private static final double[] SWORD_BLOCK_SHIFT = {-0.14142136, 0.08, 0.14142136};
+    private static final double[] SWORD_BLOCK_DEGREES = {-102.25, 13.365, 78.05};
+
+    /** {@link #saberHands} as the client draws them on top of its sword-block turn. */
+    private static String guardHands(double tilt, double roll, double x, double y) {
+        var undo = transpose(rotationXyz(SWORD_BLOCK_DEGREES));
+        var turn = eulerXyz(multiply(undo, rotationXyz(new double[] {-tilt, 0, roll})));
+        var shift = times(undo, new double[] {x / 16 - SWORD_BLOCK_SHIFT[0], y / 16 - SWORD_BLOCK_SHIFT[1], -SWORD_BLOCK_SHIFT[2]});
+        String hand = String.format(Locale.ROOT, "{\"rotation\":[%.3f,%.3f,%.3f],\"translation\":[%.3f,%.3f,%.3f],\"scale\":[0.7,0.7,0.7]}",
+                turn[0], turn[1], turn[2], shift[0] * 16, shift[1] * 16, shift[2] * 16);
+        return "\"firstperson_righthand\":" + hand + ",\"firstperson_lefthand\":" + hand;
+    }
+
+    /** As JOML's rotationXYZ, which the client's item transforms use: about X, then the turned Y, then the turned Z. */
+    private static double[][] rotationXyz(double[] degrees) {
+        double[][] rotation = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+        for (int axis = 0; axis < 3; axis++) {
+            double c = Math.cos(Math.toRadians(degrees[axis]));
+            double s = Math.sin(Math.toRadians(degrees[axis]));
+            rotation = multiply(rotation, switch (axis) {
+                case 0 -> new double[][] {{1, 0, 0}, {0, c, -s}, {0, s, c}};
+                case 1 -> new double[][] {{c, 0, s}, {0, 1, 0}, {-s, 0, c}};
+                default -> new double[][] {{c, -s, 0}, {s, c, 0}, {0, 0, 1}};
+            });
+        }
+        return rotation;
+    }
+
+    private static double[] eulerXyz(double[][] rotation) {
+        return new double[] {Math.toDegrees(Math.atan2(-rotation[1][2], rotation[2][2])), Math.toDegrees(Math.asin(rotation[0][2])),
+                Math.toDegrees(Math.atan2(-rotation[0][1], rotation[0][0]))};
+    }
+
+    private static double[][] multiply(double[][] a, double[][] b) {
+        var product = new double[3][3];
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 3; column++) {
+                for (int k = 0; k < 3; k++) {
+                    product[row][column] += a[row][k] * b[k][column];
+                }
+            }
+        }
+        return product;
+    }
+
+    private static double[][] transpose(double[][] matrix) {
+        var transposed = new double[3][3];
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 3; column++) {
+                transposed[column][row] = matrix[row][column];
+            }
+        }
+        return transposed;
+    }
+
+    private static double[] times(double[][] matrix, double[] vector) {
+        var product = new double[3];
+        for (int row = 0; row < 3; row++) {
+            for (int k = 0; k < 3; k++) {
+                product[row] += matrix[row][k] * vector[k];
+            }
+        }
+        return product;
+    }
+
     /** The guard crosses the blade over the view; the rest of the saber's display comes from its parent model. */
-    private static final String SABER_GUARD_HANDS = saberHands(12, 40, -2, 1);
+    private static final String SABER_GUARD_HANDS = guardHands(12, 40, -2, 1);
     private static final List<String> GUARDED = List.of("sternenfront/lightsaber_jedi", "sternenfront/lightsaber_sith",
             "sternenfront/relic_blade");
     private static final String SABER_DISPLAY = ",\"display\":{\n  " + saberHands(22, 15, 0, 0) + """
