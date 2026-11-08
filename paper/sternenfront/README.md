@@ -142,7 +142,8 @@ The dropship remains an explicit choice and is never recommended automatically.
 The deploy menu is one screen. The pack draws a window wider and taller than the chest around it, from
 `resourcepack/DeployArt.java`, sized for the smallest automatic GUI, 426 by 240 pixels, which Minecraft's default window and
 720p at scale 3 get. Left of the slots it shows the chosen class, reinforcement or hero: portrait, health, pace, damage
-and range, a dash where a hero's blade has none, weapon, both abilities with their keys, the cost and the player's
+and range, each beside its own symbol (a heart, a boot, a blaster and a crosshair, which the cards' tooltips share),
+a dash where a hero's blade has none, weapon, both abilities with their keys, the cost and the player's
 battle points as `Deine Kampfpunkte`. Right of them it lists the spawns with the marks their markers wear and explains
 the markers. In the chest are the two labelled buttons, the four class cards, then the reinforcement and both heroes
 with their costs, in red and with a padlock while the player cannot pay or no slot is free. The chest's title draws that

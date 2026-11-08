@@ -16,6 +16,7 @@ import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Fighter;
 import me.blockcraft.sternenfront.game.Posts;
 import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.game.StatIcon;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
@@ -240,7 +241,7 @@ public final class DeployMenu extends Menu {
     private DeployScreen.Role classRole(Faction faction, CombatClass combatClass, int points) {
         var body = game.config().stats(faction, combatClass);
         var blaster = combatClass.blaster(faction);
-        var stats = new ArrayList<>(List.of(hearts("health", body.health()), percent("speed", body.speed())));
+        var stats = new ArrayList<>(List.of(hearts(StatIcon.HEALTH, body.health()), percent(body.speed())));
         stats.addAll(blasterStats(blaster));
         return new DeployScreen.Role(plain("deploy.screen.kind.class"), plain(combatClass.messageKey(faction) + ".name"),
                 DeployScreen.Portrait.of(faction, combatClass), stats, plain("blaster." + blaster.key() + ".name"),
@@ -250,7 +251,7 @@ public final class DeployMenu extends Menu {
 
     private DeployScreen.Role unitRole(Faction faction, Reinforcement unit, int points) {
         var body = game.reinforcementUnits().stats(unit);
-        var stats = new ArrayList<>(List.of(hearts("health", body.health()), percent("speed", body.speed())));
+        var stats = new ArrayList<>(List.of(hearts(StatIcon.HEALTH, body.health()), percent(body.speed())));
         stats.addAll(blasterStats(unit.blaster()));
         return new DeployScreen.Role(plain("deploy.screen.kind.reinforcement"), plain("reinforcement." + unit.key() + ".name"),
                 DeployScreen.Portrait.of(unit), stats, plain("blaster." + unit.blaster().key() + ".name"),
@@ -260,18 +261,18 @@ public final class DeployMenu extends Menu {
 
     /** A hero moves at the natural pace; a blade reaches no farther than a swing, so its range is a dash. */
     private DeployScreen.Role heroRole(Faction faction, Hero hero, int points) {
-        var stats = new ArrayList<>(List.of(hearts("health", game.heroes().config().health(hero)), percent("speed", 1)));
+        var stats = new ArrayList<>(List.of(hearts(StatIcon.HEALTH, game.heroes().config().health(hero)), percent(1)));
         String weapon = switch (hero.weapon()) {
             case Hero.Weapon.Gun gun -> {
                 stats.addAll(blasterStats(gun.blaster()));
                 yield plain("blaster." + gun.blaster().key() + ".name");
             }
             case Hero.Weapon.Saber ignored -> {
-                stats.addAll(List.of(hearts("damage", game.heroes().config().saber().damage()), none("range")));
+                stats.addAll(List.of(hearts(StatIcon.DAMAGE, game.heroes().config().saber().damage()), none(StatIcon.RANGE)));
                 yield plain("hero." + hero.key() + ".weapon");
             }
             case Hero.Weapon.RelicBlade ignored -> {
-                stats.addAll(List.of(none("damage"), none("range")));
+                stats.addAll(List.of(none(StatIcon.DAMAGE), none(StatIcon.RANGE)));
                 yield plain("relic.name");
             }
         };
@@ -295,29 +296,32 @@ public final class DeployMenu extends Menu {
 
     private List<DeployScreen.Stat> blasterStats(Blaster blaster) {
         var stats = game.config().stats(blaster);
-        return List.of(hearts("damage", stats.damage() * stats.bolts()),
-                new DeployScreen.Stat(plain("deploy.screen.stat.range"), plain("deploy.screen.value.metres",
-                        Formatter.number("value", Math.round(stats.range()))), false));
+        return List.of(hearts(StatIcon.DAMAGE, stats.damage() * stats.bolts()), stat(StatIcon.RANGE, plain("deploy.screen.value.metres",
+                Formatter.number("value", Math.round(stats.range())))));
     }
 
-    private DeployScreen.Stat hearts(String stat, double health) {
-        return new DeployScreen.Stat(plain("deploy.screen.stat." + stat), plain("deploy.screen.value.hearts",
-                Formatter.number("value", health / TO_HEARTS)), true);
+    /** Health or damage in hearts, as the game counts both. */
+    private DeployScreen.Stat hearts(StatIcon icon, double points) {
+        return stat(icon, plain("deploy.screen.value.hearts", Formatter.number("value", points / TO_HEARTS)));
     }
 
-    private DeployScreen.Stat none(String stat) {
-        return new DeployScreen.Stat(plain("deploy.screen.stat." + stat), plain("deploy.screen.value.none"), false);
+    private DeployScreen.Stat none(StatIcon icon) {
+        return stat(icon, plain("deploy.screen.value.none"));
     }
 
-    private DeployScreen.Stat percent(String stat, double share) {
-        return new DeployScreen.Stat(plain("deploy.screen.stat." + stat), plain("deploy.screen.value.percent",
-                Formatter.number("value", Math.round(share * 100))), false);
+    private DeployScreen.Stat percent(double speed) {
+        return stat(StatIcon.SPEED, plain("deploy.screen.value.percent", Formatter.number("value", Math.round(speed * 100))));
+    }
+
+    private DeployScreen.Stat stat(StatIcon icon, String value) {
+        return new DeployScreen.Stat(plain("deploy.screen.stat." + icon.name().toLowerCase(Locale.ROOT)), value, Optional.of(icon));
     }
 
     private List<DeployScreen.Stat> price(Optional<Integer> cost, int points) {
         return List.of(new DeployScreen.Stat(plain("deploy.screen.cost"), cost.map(value -> plain("deploy.screen.points-value",
-                        Formatter.number("points", value))).orElseGet(() -> plain("deploy.screen.free")), false),
-                new DeployScreen.Stat(plain("deploy.screen.balance"), plain("deploy.screen.points-value", Formatter.number("points", points)), false));
+                        Formatter.number("points", value))).orElseGet(() -> plain("deploy.screen.free")), Optional.empty()),
+                new DeployScreen.Stat(plain("deploy.screen.balance"), plain("deploy.screen.points-value", Formatter.number("points", points)),
+                        Optional.empty()));
     }
 
     private String plain(String key, TagResolver... resolvers) {

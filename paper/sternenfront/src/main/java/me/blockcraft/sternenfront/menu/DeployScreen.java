@@ -6,6 +6,7 @@ import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.game.StatIcon;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.key.Key;
@@ -16,6 +17,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * The deploy screen as its chest title draws it: a window wider and taller than the chest from
@@ -122,8 +124,8 @@ final class DeployScreen {
         }
     }
 
-    /** A line of the loadout read-out: what it is and how much, in hearts if {@code hearts}. */
-    record Stat(String label, String value, boolean hearts) { }
+    /** A line of the loadout read-out: what it is and how much, with the stat's symbol if it has one. */
+    record Stat(String label, String value, Optional<StatIcon> icon) { }
 
     /** An ability with the key it sits on. */
     record Ability(String name, String key, AbilityIcon icon) { }
@@ -228,9 +230,9 @@ final class DeployScreen {
             var stat = role.body().get(index);
             label(-48, 32 + index * 16, stat.label(), MUTED, 42);
             text(-48, 39 + index * 16, stat.value(), WHITE);
-            if (stat.hearts()) {
-                icon(-46 + textWidth(stat.value()), 38 + index * 16, Icon.HEART, RED);
-            }
+            int top = 38 + index * 16;
+            int x = -46 + textWidth(stat.value());
+            stat.icon().ifPresent(icon -> glyph(x, top, icon.glyph(), ICON_ADVANCE, icon.colour()));
         }
         text(-117, 99, role.name(), WHITE);
         label(-117, 114, plain("deploy.screen.weapon"), MUTED, 112);
@@ -335,7 +337,7 @@ final class DeployScreen {
 
     /** The pictures of the pack's icon sheet, in the order {@code DeployArt} names them. */
     enum Icon {
-        HEART, RECOMMENDED, PENDING, CONFIRMED, LOCKED, CONTESTED, HEADQUARTERS, DROPSHIP
+        HEART, RECOMMENDED, PENDING, CONFIRMED, LOCKED, CONTESTED, HEADQUARTERS, DROPSHIP, DAMAGE, SPEED, RANGE
     }
 
     private void icon(int x, int top, Icon icon, int colour) {

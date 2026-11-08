@@ -111,7 +111,10 @@ public final class DeployArt {
             new Icon("locked", "...###...", "..#...#..", "..#...#..", ".#######.", ".#######.", ".###.###.", ".###.###.", ".#######.", "........."),
             new Icon("contested", "#.#.#.#.#", ".........", "#.......#", ".........", "#.......#", ".........", "#.......#", ".........", "#.#.#.#.#"),
             new Icon("headquarters", "#####....", "#####....", "#####....", "#........", "#........", "#........", "#........", "#........", "###......"),
-            new Icon("dropship", "....#....", "...###...", "...###...", "..#####..", "..#####..", "..##.##..", ".##...##.", ".#.###.#.", "...#.#..."));
+            new Icon("dropship", "....#....", "...###...", "...###...", "..#####..", "..#####..", "..##.##..", ".##...##.", ".#.###.#.", "...#.#..."),
+            new Icon("damage", ".........", ".........", "..###....", "#######..", "#########", ".##.#....", ".##......", ".##......", "........."),
+            new Icon("speed", "..####...", "..####...", "..####...", "..####...", "..#####..", "..######.", ".########", ".########", "........."),
+            new Icon("range", "....#....", "..#####..", ".#..#..#.", ".#.....#.", "###.#.###", ".#.....#.", ".#..#..#.", "..#####..", "....#...."));
 
     private DeployArt() {
     }
@@ -179,6 +182,8 @@ public final class DeployArt {
             }
             Files.writeString(fonts.resolve("line_" + top + ".json"), font(providers));
         }
+        // Tooltips set the stat icons in a line of their own text, standing on its baseline like a letter.
+        Files.writeString(fonts.resolve("stats.json"), font(List.of(bitmap("deploy/icons.png", 5, ICON_SIZE, run(ICON_GLYPHS, ICONS.size())))));
     }
 
     /** The whole window, faction-coloured, before it is cut into its three glyphs. */

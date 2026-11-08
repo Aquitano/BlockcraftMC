@@ -6,6 +6,7 @@ import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.game.StatIcon;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -99,6 +101,14 @@ public class DeployScreenTest {
         assertEquals(Arrays.stream(DeployScreen.Icon.values()).map(icon -> icon.name().toLowerCase(Locale.ROOT)).toList(), icons);
     }
 
+    /** A tooltip sets a stat's symbol by its glyph, which must be that stat's picture on the sheet. */
+    @Test
+    public void everyStatIconIsItsPictureOnTheSheet() {
+        var pictures = Map.of(StatIcon.HEALTH, DeployScreen.Icon.HEART, StatIcon.DAMAGE, DeployScreen.Icon.DAMAGE,
+                StatIcon.SPEED, DeployScreen.Icon.SPEED, StatIcon.RANGE, DeployScreen.Icon.RANGE);
+        pictures.forEach((stat, picture) -> assertEquals(stat.name(), 0xE100 + picture.ordinal(), stat.glyph()));
+    }
+
     @Test
     public void everyAbilityIconHasAGlyphOnEveryLine() throws Exception {
         var line = JsonParser.parseString(Files.readString(PACK.resolve("src/assets/" + DeployScreen.line(144).asString()
@@ -146,11 +156,14 @@ public class DeployScreenTest {
 
     private DeployScreen.View view(int posts, boolean dropship) {
         var role = new DeployScreen.Role("Klasse", "Klonsoldat", DeployScreen.Portrait.KOLONIEN_SOLDIER,
-                List.of(new DeployScreen.Stat("Gesundheit", "10", true), new DeployScreen.Stat("Tempo", "100 %", false),
-                        new DeployScreen.Stat("Schaden", "2,5", true), new DeployScreen.Stat("Reichweite", "60 m", false)),
+                List.of(new DeployScreen.Stat("Gesundheit", "10", Optional.of(StatIcon.HEALTH)),
+                        new DeployScreen.Stat("Tempo", "100 %", Optional.of(StatIcon.SPEED)),
+                        new DeployScreen.Stat("Schaden", "2,5", Optional.of(StatIcon.DAMAGE)),
+                        new DeployScreen.Stat("Reichweite", "60 m", Optional.of(StatIcon.RANGE))),
                 "Großer DC-15A-Blaster", List.of(new DeployScreen.Ability("Thermaldetonator", "Taste F", AbilityIcon.GRENADE),
                         new DeployScreen.Ability("Adrenalin", "Taste Q", AbilityIcon.ADRENALINE)),
-                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Deine Kampfpunkte", "1340 KP", false)));
+                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", Optional.empty()),
+                        new DeployScreen.Stat("Deine Kampfpunkte", "1340 KP", Optional.empty())));
         var card = new DeployScreen.ClassCard("Soldat", DeployScreen.Portrait.KOLONIEN_SOLDIER, List.of(AbilityIcon.GRENADE, AbilityIcon.RALLY), true);
         var special = new DeployScreen.Special("ARC", DeployScreen.Portrait.ARC_TROOPER, 1250, true, true);
         var spawns = new java.util.ArrayList<>(List.of(new DeployScreen.Place(new Spawn.Headquarters(), "Hauptquartier", 0xFF3434,
