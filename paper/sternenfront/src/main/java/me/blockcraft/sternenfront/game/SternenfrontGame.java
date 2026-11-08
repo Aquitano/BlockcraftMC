@@ -168,7 +168,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private boolean dealing;
     private boolean dealingHeadshot;
     private UUID selfExplosion;
-    /** Who started the round for which faction; a win counts for those of them still on the server. */
+    /** Who started the round for which faction; a win counts for those of them still in it, also while away. */
     private final Map<UUID, Faction> roster = new HashMap<>();
     private final Map<UUID, Blaster> lastBolt = new HashMap<>();
     private final Set<UUID> strikesReady = new HashSet<>();
@@ -1522,8 +1522,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         cleanUp();
         music.finish(won);
         won.ifPresent(faction -> {
-            roster.entrySet().stream().filter(entry -> entry.getValue() == faction)
-                    .map(entry -> Bukkit.getPlayer(entry.getKey())).filter(Objects::nonNull).forEach(summary::awardWin);
+            roster.entrySet().stream().filter(entry -> entry.getValue() == faction).map(Map.Entry::getKey)
+                    .forEach(id -> Optional.ofNullable(Bukkit.getPlayer(id)).ifPresentOrElse(summary::awardWin, () -> summary.awardWin(id)));
             if (summary.winnerNames().isEmpty()) {
                 summary.defeatedBy(PlainTextComponentSerializer.plainText().serialize(factionDisplay(faction)));
             }
