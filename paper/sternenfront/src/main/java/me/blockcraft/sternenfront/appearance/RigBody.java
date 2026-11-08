@@ -4,31 +4,49 @@ import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemorySection;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
-/** A rigged fighter's model family and how its parts hang together. Offsets are in unscaled model space; the rig scales them. */
+/**
+ * A rigged fighter's model family and how its parts hang together, as rig-bodies.yml gives it. Offsets are in unscaled
+ * model space; the rig scales them.
+ */
 enum RigBody {
 
-    HEGEMONIE_SOLDIER(Faction.HEGEMONIE, new Joints(.25f, 1.47f, 0, .085f, .96f, .98f, 0, 1.64f, 0, -.22f, 1.3f, .53f), 1, -1.1f, .45f, true, "arm"),
-    HEGEMONIE_HEAVY(Faction.HEGEMONIE, new Joints(.47f, 1.46f, .14f, .22f, .78f, .8f, .26f, 1.32f, .3f, 0, 0, 0), 1.25f, -1.45f, 0, false, "arm_left"),
-    HEGEMONIE_SCOUT(Faction.HEGEMONIE, new Joints(.25f, 1.47f, 0, .085f, .96f, .98f, 0, 1.64f, 0, -.22f, 1.3f, .53f), 1, -1.1f, .45f, true, "arm"),
-    HEGEMONIE_MEDIC(Faction.HEGEMONIE, new Joints(.2f, 1.44f, 0, .09f, .96f, .98f, 0, 1.58f, 0, -.17f, 1.3f, .55f), 1, -1.15f, 0, true, "arm"),
-    KOLONIEN_SOLDIER(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), 1, -1.1f, .55f, true, "arm"),
-    KOLONIEN_HEAVY(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), 1, -1.1f, .55f, true, "arm"),
-    KOLONIEN_SCOUT(Faction.KOLONIEN, new Joints(.24f, 1.38f, 0, .085f, .95f, .97f, 0, 1.51f, 0, -.2f, 1.25f, .55f), 1, -1.15f, .5f, true, "arm"),
-    KOLONIEN_MEDIC(Faction.KOLONIEN, new Joints(.28f, 1.4f, 0, .1f, .95f, .97f, 0, 1.5f, 0, -.24f, 1.27f, .53f), 1, -1.15f, 0, true, "arm"),
-    REINFORCEMENT_ARC_TROOPER(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), 1, -1.1f, .55f, true, "arm"),
-    REINFORCEMENT_COMMANDO_DROID(Faction.HEGEMONIE, new Joints(.25f, 1.44f, 0, .09f, .96f, .98f, 0, 1.55f, 0, -.22f, 1.3f, .53f), 1, -1.1f, .45f, true, "arm"),
-    HERO_JEDI(Faction.KOLONIEN, new Joints(.28f, 1.4f, 0, .1f, .95f, .97f, 0, 1.5f, 0, -.25f, 1.12f, .35f), -.5f),
-    HERO_COMMANDER(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), -1.1f),
-    HERO_SITH(Faction.HEGEMONIE, new Joints(.28f, 1.4f, 0, .1f, .95f, .97f, 0, 1.5f, 0, -.25f, 1.12f, .35f), -.5f),
-    HERO_BOUNTY_HUNTER(Faction.HEGEMONIE, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), -1.1f);
+    HEGEMONIE_SOLDIER(Faction.HEGEMONIE),
+    HEGEMONIE_HEAVY(Faction.HEGEMONIE, false, "arm_left"),
+    HEGEMONIE_SCOUT(Faction.HEGEMONIE),
+    HEGEMONIE_MEDIC(Faction.HEGEMONIE),
+    KOLONIEN_SOLDIER(Faction.KOLONIEN),
+    KOLONIEN_HEAVY(Faction.KOLONIEN),
+    KOLONIEN_SCOUT(Faction.KOLONIEN),
+    KOLONIEN_MEDIC(Faction.KOLONIEN),
+    REINFORCEMENT_ARC_TROOPER(Faction.KOLONIEN),
+    REINFORCEMENT_COMMANDO_DROID(Faction.HEGEMONIE),
+    HERO_JEDI(Faction.KOLONIEN),
+    HERO_COMMANDER(Faction.KOLONIEN),
+    HERO_SITH(Faction.HEGEMONIE),
+    HERO_BOUNTY_HUNTER(Faction.HEGEMONIE);
 
-    /** Where the parts attach above the feet; a positive {@code torsoLean} hunches the torso forward from the waist. */
+    static final float WEAPON_SCALE = number(Layout.FILE, "weapon-scale");
+
     record Joints(float shoulderX, float shoulderY, float shoulderZ, float hipX, float hipY, float torsoY, float torsoLean,
-                  float headY, float headZ, float weaponX, float weaponY, float weaponZ) { }
+                  float headY, float headZ, float weaponX, float weaponY, float weaponZ) {
+
+        private static Joints from(ConfigurationSection joints) {
+            return new Joints(number(joints, "shoulder.x"), number(joints, "shoulder.y"), number(joints, "shoulder.z"),
+                    number(joints, "hip.x"), number(joints, "hip.y"), number(joints, "torso.y"), number(joints, "torso.lean"),
+                    number(joints, "head.y"), number(joints, "head.z"),
+                    number(joints, "weapon.x"), number(joints, "weapon.y"), number(joints, "weapon.z"));
+        }
+    }
 
     private final Faction faction;
     private final Joints joints;
@@ -38,18 +56,37 @@ enum RigBody {
     private final boolean showsWeapon;
     private final String leftArm;
 
-    RigBody(Faction faction, Joints joints, float scale, float armLift, float gripTurn, boolean showsWeapon, String leftArm) {
+    RigBody(Faction faction) {
+        this(faction, true, "arm");
+    }
+
+    RigBody(Faction faction, boolean showsWeapon, String leftArm) {
+        var layout = section(Layout.FILE, "bodies." + family());
         this.faction = faction;
-        this.joints = joints;
-        this.scale = scale;
-        this.armLift = armLift;
-        this.gripTurn = gripTurn;
+        this.joints = Joints.from(section(Layout.FILE, "joints." + layout.getString("joints")));
+        this.scale = layout.contains("scale") ? number(layout, "scale") : 1;
+        this.armLift = number(layout, "arm-lift");
+        this.gripTurn = number(layout, "grip-turn");
         this.showsWeapon = showsWeapon;
         this.leftArm = leftArm;
     }
 
-    RigBody(Faction faction, Joints joints, float armLift) {
-        this(faction, joints, 1, armLift, 0, true, "arm");
+    /** Holds the file apart because an enum builds its constants before its own static fields. */
+    private static final class Layout {
+        static final YamlConfiguration FILE = YamlConfiguration.loadConfiguration(new InputStreamReader(
+                Objects.requireNonNull(RigBody.class.getResourceAsStream("/rig-bodies.yml"), "rig-bodies.yml is missing"),
+                StandardCharsets.UTF_8));
+    }
+
+    private static ConfigurationSection section(ConfigurationSection parent, String path) {
+        return Objects.requireNonNull(parent.getConfigurationSection(path), () -> "rig-bodies.yml has no " + path);
+    }
+
+    private static float number(ConfigurationSection section, String path) {
+        if (!(section.get(path) instanceof Number number)) {
+            throw new IllegalStateException("rig-bodies.yml has no number at " + MemorySection.createPath(section, path));
+        }
+        return number.floatValue();
     }
 
     static RigBody of(Faction faction, CombatClass role) {
@@ -84,12 +121,10 @@ enum RigBody {
         return scale;
     }
 
-    /** How far the aiming arms rise from hanging straight down, in radians. */
     float armLift() {
         return armLift;
     }
 
-    /** How far the left arm turns inward to reach the weapon's fore-end, in radians. */
     float gripTurn() {
         return gripTurn;
     }

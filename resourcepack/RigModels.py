@@ -1,7 +1,7 @@
 """Turns the generated body and blaster models into animated BetterModel files in bettermodel/.
 
 Geometry and textures still come from SternenfrontArt.java, so a body changes in one place: run that first, then this.
-The joints match RigBody. Animations are written here as keyframes: BetterModel plays idle, walk, death and damage by itself,
+The joints come from rig-bodies.yml, which RigBody reads for the plain displays too. Animations are written here as keyframes: BetterModel plays idle, walk, death and damage by itself,
 and the plugin asks for shoot. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
 takes a model's north, -z, as the entity's front, so every position and rotation is written turned half round. BetterModel
 turns bones tagged h_ with where the entity looks, and hi_ with their children too, which is how the head, the arms, the
@@ -20,8 +20,9 @@ HERE = Path(__file__).parent
 ASSETS = HERE / "src/assets/blockcraft"
 OUT = HERE / "bettermodel"
 NAMESPACE = uuid.UUID("9b1f6f4e-0d3a-4c55-9a55-6f6f7a1c2b10")
-WEAPON_SCALE = 0.65
-MOTION = yaml.safe_load((HERE.parent / "paper/sternenfront/src/main/resources/config.yml").read_text())["appearance"]["motion"]
+PLUGIN = HERE.parent / "paper/sternenfront/src/main/resources"
+MOTION = yaml.safe_load((PLUGIN / "config.yml").read_text())["appearance"]["motion"]
+RIG = yaml.safe_load((PLUGIN / "rig-bodies.yml").read_text())
 MOTION_BOUNDS = {
     "stride-blocks": (0.5, 4), "cycle-ticks": (8, 40), "leg-degrees": (0, 50),
     "bob-height": (0, 0.1), "lean-degrees": (0, 20), "sway-degrees": (0, 12),
@@ -34,16 +35,10 @@ def motion(family):
     return {key: min(hi, max(lo, float(profile[key]))) if math.isfinite(float(profile[key])) else lo
             for key, (lo, hi) in MOTION_BOUNDS.items()}
 
-# Copied from RigBody: arm lift in radians, and scale and torso lean where a body has them.
-BODIES = {
-    "hegemonie_soldier": ("e5", dict(shoulderX=.25, shoulderY=1.47, hipX=.085, hipY=.96, torsoY=.98, headY=1.64, weaponX=-.22, weaponY=1.3, weaponZ=.53, lift=-1.1)),
-    "hegemonie_heavy": (None, dict(shoulderX=.47, shoulderY=1.46, shoulderZ=.14, hipX=.22, hipY=.78, torsoY=.8, lean=.26, headY=1.32, headZ=.3, weaponX=0, weaponY=0, weaponZ=0, lift=-1.45, scale=1.25)),
-    "hegemonie_scout": ("e5s", dict(shoulderX=.25, shoulderY=1.47, hipX=.085, hipY=.96, torsoY=.98, headY=1.64, weaponX=-.22, weaponY=1.3, weaponZ=.53, lift=-1.1)),
-    "hegemonie_medic": ("se14", dict(shoulderX=.2, shoulderY=1.44, hipX=.09, hipY=.96, torsoY=.98, headY=1.58, weaponX=-.17, weaponY=1.3, weaponZ=.55, lift=-1.15)),
-    "kolonien_soldier": ("carbine", dict(shoulderX=.3, shoulderY=1.4, hipX=.105, hipY=.95, torsoY=.97, headY=1.5, weaponX=-.26, weaponY=1.27, weaponZ=.53, lift=-1.1)),
-    "kolonien_heavy": ("repeater", dict(shoulderX=.3, shoulderY=1.4, hipX=.105, hipY=.95, torsoY=.97, headY=1.5, weaponX=-.26, weaponY=1.27, weaponZ=.53, lift=-1.1)),
-    "kolonien_scout": ("long_rifle", dict(shoulderX=.24, shoulderY=1.38, hipX=.085, hipY=.95, torsoY=.97, headY=1.51, weaponX=-.2, weaponY=1.25, weaponZ=.55, lift=-1.15)),
-    "kolonien_medic": ("pistol", dict(shoulderX=.28, shoulderY=1.4, hipX=.1, hipY=.95, torsoY=.97, headY=1.5, weaponX=-.24, weaponY=1.27, weaponZ=.53, lift=-1.15)),
+# The blaster each animated body holds; the B2's guns are part of its arms.
+GUNS = {
+    "hegemonie_soldier": "e5", "hegemonie_heavy": None, "hegemonie_scout": "e5s", "hegemonie_medic": "se14",
+    "kolonien_soldier": "carbine", "kolonien_heavy": "repeater", "kolonien_scout": "long_rifle", "kolonien_medic": "pistol",
 }
 OUTLINED = "_outlined"
 MARKS = "_marks"
@@ -191,17 +186,19 @@ def animations(family, grip_degrees):
     ]
 
 
-def build(family, blaster, joints):
-    scale = joints.get("scale", 1)
-    grip_degrees = round(math.degrees(joints["lift"]))
-    shoulder = (joints["shoulderX"] * scale, joints["shoulderY"] * scale, joints.get("shoulderZ", 0) * scale)
-    hip = (joints["hipX"] * scale, joints["hipY"] * scale, 0)
-    torso_at = (0, joints["torsoY"] * scale, 0)
-    head_at = (0, joints["headY"] * scale, joints.get("headZ", 0) * scale)
+def build(family, gun):
+    body = RIG["bodies"][family]
+    joints = RIG["joints"][body["joints"]]
+    scale = body.get("scale", 1)
+    grip_degrees = round(math.degrees(body["arm-lift"]))
+    shoulder = tuple(joints["shoulder"][axis] * scale for axis in "xyz")
+    hip = (joints["hip"]["x"] * scale, joints["hip"]["y"] * scale, 0)
+    torso_at = (0, joints["torso"]["y"] * scale, 0)
+    head_at = (0, joints["head"]["y"] * scale, joints["head"]["z"] * scale)
     model = Model(family)
     model.bone("root", None, (0, 0, 0))
     model.bone("torso", "root", torso_at)
-    model.bones["torso"]["rotation"] = [math.degrees(joints.get("lean", 0)), 0, 0]
+    model.bones["torso"]["rotation"] = [math.degrees(joints["torso"]["lean"]), 0, 0]
     model.bone("hi_head", "root", head_at)
     model.bone("hi_left_arm", "root", shoulder)
     model.bone("hi_right_arm", "root", (-shoulder[0], shoulder[1], shoulder[2]))
@@ -221,16 +218,16 @@ def build(family, blaster, joints):
         if part in ("arm", LEFT_ARM) and (ASSETS / "models/item" / f"{parts}/{PAULDRON}.json").exists():
             model.bone(f"{side}_{PAULDRON}", bone, at)
             model.add(f"{side}_{PAULDRON}", f"{parts}/{PAULDRON}", at, scale)
-    if blaster:
+    if gun:
         # The gun hangs off the arm, which the animations hold out, so its bone turns back by the same angle to lie
         # level with the joints' weapon position when that grip is held.
         turn = math.radians(-grip_degrees)
-        forward, up = joints["weaponZ"] * scale - shoulder[2], joints["weaponY"] * scale - shoulder[1]
-        grip = (joints["weaponX"] * scale, shoulder[1] + up * math.cos(turn) - forward * math.sin(turn),
+        forward, up = joints["weapon"]["z"] * scale - shoulder[2], joints["weapon"]["y"] * scale - shoulder[1]
+        grip = (joints["weapon"]["x"] * scale, shoulder[1] + up * math.cos(turn) - forward * math.sin(turn),
                 shoulder[2] + up * math.sin(turn) + forward * math.cos(turn))
         model.bone("weapon", "hi_right_arm", grip)
         model.bones["weapon"]["rotation"] = [-grip_degrees, 0, 0]
-        model.add("weapon", f"sternenfront/{blaster}", grip, WEAPON_SCALE)
+        model.add("weapon", f"sternenfront/{gun}", grip, RIG["weapon-scale"])
     textures = []
     for reference, texture in model.textures.items():
         source = base64.b64encode(texture["path"].read_bytes()).decode()
@@ -249,11 +246,11 @@ def build(family, blaster, joints):
 
 def main():
     OUT.mkdir(exist_ok=True)
-    for family, (blaster, joints) in BODIES.items():
-        model = json.dumps(build(family, blaster, joints), separators=(",", ":"))
+    for family, gun in GUNS.items():
+        model = json.dumps(build(family, gun), separators=(",", ":"))
         for name in (family, family + OUTLINED):
             (OUT / f"{name}.bbmodel").write_text(model)
-    print(f"Wrote {len(BODIES)} bodies, each plain and outlined")
+    print(f"Wrote {len(GUNS)} bodies, each plain and outlined")
 
 
 if __name__ == "__main__":

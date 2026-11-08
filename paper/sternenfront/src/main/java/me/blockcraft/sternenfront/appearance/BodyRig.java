@@ -267,9 +267,9 @@ final class BodyRig implements AutoCloseable {
                 pitch + wanted.rightLift() + recoilPitch, 0, scale, ease);
         pose(weapon, at, yaw, facing + wanted.bladeTurn(), joints.weaponX() * scale + wanted.bladeX(),
                 joints.weaponY() * scale - drop + wanted.bladeY(), 0, joints.weaponZ() * scale - recoilDistance,
-                pitch + recoilPitch + wanted.bladeTilt(), wanted.bladeRoll(), 0.65f, ease);
+                pitch + recoilPitch + wanted.bladeTilt(), wanted.bladeRoll(), RigBody.WEAPON_SCALE, ease);
         offhand.ifPresent(display -> pose(display, at, yaw, facing, -joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
-                joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, 0.65f));
+                joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, RigBody.WEAPON_SCALE));
         var equipment = actor.getEquipment();
         var current = equipment == null || !body.showsWeapon() ? ItemStack.empty() : equipment.getItemInMainHand();
         if (!current.equals(held)) {

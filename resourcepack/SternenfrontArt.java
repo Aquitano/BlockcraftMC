@@ -1830,6 +1830,11 @@ public final class SternenfrontArt {
         };
     }
 
+    /**
+     * Hangs the parts at three stock poses, not at each body's joints in rig-bodies.yml: the B2's own, the B1's with the
+     * clone's torso height for every other droid, and the clone soldier's for every clone. The real joints would redraw
+     * every droid card and the clone scout's and medic's.
+     */
     private static BufferedImage portrait(Family family, int width, int height) {
         boolean heavy = family.name.equals("hegemonie_heavy");
         boolean droid = family.name.startsWith("hegemonie");

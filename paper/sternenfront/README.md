@@ -271,7 +271,8 @@ completed orders to the shared results and rewards.
 
 The BetterModel plugin draws and animates bot bodies listed in `appearance.animated-bodies`; players keep `BodyRig`, and a
 server without the plugin uses `BodyRig` for everyone. `resourcepack/RigModels.py` turns the generated body and weapon models
-into `resourcepack/bettermodel/*.bbmodel` with idle, walk, shoot, damage and death keyframes. Its joints must match `RigBody`.
+into `resourcepack/bettermodel/*.bbmodel` with idle, walk, shoot, damage and death keyframes. Both read their joints from
+`rig-bodies.yml`.
 
 `appearance.motion` defines soldier, heavy, scout and medic walk and recoil profiles. `RigModels.py` reads the
 bundled profiles for BetterModel clips; `BodyRig` reads them for fallback displays. Heavy units use shorter, slower steps,
@@ -298,7 +299,7 @@ afterwards, so a new colour waits until the flash is over. Wherever nothing sets
 
 Edit `resourcepack/SternenfrontArt.java` for bodies, hero bodies, helmets, blasters, sabers, vehicles, and effect
 models. It writes the model JSON, item definitions, texture atlases, and class portraits. Editing its generated JSON
-or PNG files directly loses the change on regeneration. Body dimensions and pivots must agree with `RigBody`.
+or PNG files directly loses the change on regeneration. Body parts must fit the joints in `rig-bodies.yml`.
 
 `PackArt.java` turns the portraits into menu cards. `BattleArt.py` writes faction emblems, shield grids, and firing
 poses. The Gradle dependencies run the body and equipment generator before both consumers:
