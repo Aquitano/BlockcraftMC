@@ -37,6 +37,7 @@ public final class Bolts {
     private static final double VISUAL_LEAD = 1.6;
     private static final double PARRY_CLEARANCE = 0.8;
     private static final double TRAIL_CLEAR_OF_EYES = 1.4;
+    private static final double CLEAR_OF_EYES = 2.5;
     /** How far the client draws a particle that is not forced. */
     private static final double UNFORCED_RANGE = 32;
     private static final float MODEL_LENGTH = 1.22f;
@@ -250,7 +251,8 @@ public final class Bolts {
 
     /**
      * Dots along what the bolt covered this tick, for everyone but the shooter: from behind the bolt its dots line up
-     * on the crosshair, and the nearest draw large enough to hide what it aims at. Only every few dots goes past
+     * on the crosshair, and the nearest draw large enough to hide what it aims at. Nor does anyone get a dot within
+     * {@link #CLEAR_OF_EYES} blocks of their eyes, such as a bolt passing them. Only every few dots goes past
      * {@link #UNFORCED_RANGE}, so a far player gets a sparse line and a near one a dense line.
      */
     private void trail(Bolt bolt, double length) {
@@ -262,19 +264,23 @@ public final class Bolts {
         }
         double step = hitscan ? look.trailStep() * 2 : look.trailStep();
         var dust = new Particle.DustOptions(bolt.shot.faction().bolt(), look.trailSize());
-        var viewers = bolt.position.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(bolt.shooter)).toList();
+        var viewers = bolt.position.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(bolt.shooter))
+                .map(viewer -> new Viewer(viewer, viewer.getEyeLocation())).toList();
         double along = bolt.nextDot;
         for (; along < length; along += step) {
             var point = bolt.position.clone().add(bolt.direction.clone().multiply(along));
             boolean far = bolt.dots++ % look.farEvery() == 0;
             for (var viewer : viewers) {
-                if (far || viewer.getLocation().distanceSquared(point) < UNFORCED_RANGE * UNFORCED_RANGE) {
-                    viewer.spawnParticle(Particle.DUST, point, 1, 0, 0, 0, 0, dust, far);
+                double distance = viewer.eye().distanceSquared(point);
+                if (distance > CLEAR_OF_EYES * CLEAR_OF_EYES && (far || distance < UNFORCED_RANGE * UNFORCED_RANGE)) {
+                    viewer.player().spawnParticle(Particle.DUST, point, 1, 0, 0, 0, 0, dust, far);
                 }
             }
         }
         bolt.nextDot = along - length;
     }
+
+    private record Viewer(Player player, Location eye) { }
 
     private static boolean isTarget(Entity entity) {
         return entity instanceof Interaction target && target.getPersistentDataContainer().has(TargetShotEvent.MARK);
