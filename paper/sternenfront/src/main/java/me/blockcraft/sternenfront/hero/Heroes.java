@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 /**
  * The round's heroes: the battle points that buy them, the slots each faction has for them, what a hero carries,
@@ -184,6 +185,15 @@ public final class Heroes {
                 viewer.showBossBar(bar);
             }
         });
+    }
+
+    /** Shows the hero bars the viewer sees again, below every bar shown before them. */
+    public void restack(Player viewer) {
+        bars.values().stream().filter(bar -> StreamSupport.stream(bar.viewers().spliterator(), false).anyMatch(viewer::equals))
+                .forEach(bar -> {
+                    viewer.hideBossBar(bar);
+                    viewer.showBossBar(bar);
+                });
     }
 
     /** A stack of bars covers the view, so each player sees only who is hunting them and the relic's carrier. */

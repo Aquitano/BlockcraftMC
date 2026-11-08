@@ -96,15 +96,7 @@ public final class UiFont {
         boolean wide = tile.shape() == MenuTile.Shape.WIDE;
         int labelX = x + (wide ? 26 : 3);
         int maxLetters = wide ? 11 : 12;
-        var normalized = new StringBuilder();
-        PlainTextComponentSerializer.plainText().serialize(label).toUpperCase(Locale.ROOT).codePoints().forEach(codepoint -> {
-            if (Character.isWhitespace(codepoint) || Character.isSpaceChar(codepoint)) {
-                normalized.append(' ');
-            } else {
-                normalized.appendCodePoint(LABEL_LETTERS.indexOf(codepoint) >= 0 ? codepoint : '?');
-            }
-        });
-        String text = normalized.toString();
+        String text = capitals(PlainTextComponentSerializer.plainText().serialize(label), LABEL_LETTERS);
         if (text.length() > maxLetters) {
             text = text.substring(0, maxLetters - 1) + "…";
         }
@@ -113,6 +105,19 @@ public final class UiFont {
                 .append(at(labelX, Component.text(text).font(Key.key("blockcraft",
                         "label_" + tile.shape().name().toLowerCase(Locale.ROOT) + "_" + tile.slot() / 9)), text.length() * LABEL_ADVANCE))
                 .build();
+    }
+
+    /** {@code text} in capitals from {@code letters}: any space as a space, and a question mark for a letter they lack. */
+    public static String capitals(String text, String letters) {
+        var capitals = new StringBuilder();
+        text.toUpperCase(Locale.ROOT).codePoints().forEach(codepoint -> {
+            if (Character.isWhitespace(codepoint) || Character.isSpaceChar(codepoint)) {
+                capitals.append(' ');
+            } else {
+                capitals.appendCodePoint(letters.indexOf(codepoint) >= 0 ? codepoint : '?');
+            }
+        });
+        return capitals.toString();
     }
 
     private static Component at(int x, Component image, int width) {

@@ -247,15 +247,18 @@ public final class HudArt {
 
     /**
      * The minimap's font: the disc in strips, the HUD's post badges, map marks, class marks and the menu tiles'
-     * letters, every glyph with its top at the line's top. The text shader moves the line into the corner and finds the
-     * boss bar line it came from by where a glyph lies inside it, so no glyph may reach more than 16 pixels down.
+     * letters, every glyph with its top at the line's top, with the abilities' wide M, N and W, which a three-pixel cell
+     * draws alike. The text shader moves the line into the corner and finds the boss bar line it came from by where a
+     * glyph lies inside it, so no glyph may reach more than 16 pixels down.
      */
     private static void minimap(Path root, String letters) throws Exception {
         ImageIO.write(minimapDisc(), "PNG", root.resolve("minimap_disc.png").toFile());
         ImageIO.write(minimapMarks(), "PNG", root.resolve("minimap_marks.png").toFile());
         ImageIO.write(minimapTarget(), "PNG", root.resolve("minimap_target.png").toFile());
         ImageIO.write(feedMarks(), "PNG", root.resolve("minimap_feed.png").toFile());
-        ImageIO.write(mapLetters(ImageIO.read(root.resolve("labels.png").toFile()), letters), "PNG", root.resolve("minimap_letters.png").toFile());
+        var labels = ImageIO.read(root.resolve("labels.png").toFile());
+        ImageIO.write(mapLetters(labels, letters), "PNG", root.resolve("minimap_letters.png").toFile());
+        ImageIO.write(nameLetters(labels, WIDE), "PNG", root.resolve("minimap_wide.png").toFile());
         ImageIO.write(classMarks(), "PNG", root.resolve("minimap_classes.png").toFile());
         var underscore = new BufferedImage(3, 7, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < 3; x++) {
@@ -274,6 +277,7 @@ public final class HudArt {
                 topAligned("minimap_target.png", TARGET, run(0xE034, 1)),
                 topAligned("minimap_feed.png", FEED_MARK, run(0xE050, 3)),
                 topAligned("minimap_classes.png", 7, run(0xE040, CLASS_MARKS.length)),
+                topAligned("minimap_wide.png", 7, WIDE),
                 topAligned("minimap_letters.png", 7, letters),
                 topAligned("minimap_underscore.png", 7, "_")) + "\n  ]\n}\n");
     }
@@ -990,6 +994,8 @@ public final class HudArt {
         return image;
     }
 
+    /** The capitals drawn five pixels wide, which HudPanel counts six pixels each with their spacing. */
+    private static final String WIDE = "MNW";
     private static final Map<Character, String[]> WIDE_LETTERS = Map.of(
             'M', new String[] {"##......##", "###....###", "####..####", "##.####.##", "##..##..##", "##......##", "##......##",
                     "##......##", "##......##", "##......##"},

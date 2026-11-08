@@ -87,6 +87,9 @@ final class DeployScreen {
     private static final int ROOMY_PITCH = 20;
     private static final int TIGHT_PITCH = 15;
     private static final int LEGEND_PITCH = 10;
+    /** The legend's marks end here, the countdown's sample number with them, and its lines start a gap further right. */
+    private static final int LEGEND_MARKS_RIGHT = 192;
+    private static final int LEGEND_TEXT = LEGEND_MARKS_RIGHT + 4;
     /** The widest a line under the map may be: the space between the side panels. */
     private static final int HINT_WIDTH = 176;
 
@@ -139,12 +142,29 @@ final class DeployScreen {
 
     /**
      * A spawn as the list right of the slots names it, with the marks its marker on the map wears: the badge in its
-     * owner's colour, outlined while locked, the star for the recommended spawn and the frame of the player's choice.
+     * owner's colour, outlined while locked, the star for the recommended spawn and the frame of the player's choice,
+     * which a locked spawn hides.
      */
-    record Place(Spawn spawn, String name, int colour, boolean open, boolean recommended, Selection selection) { }
+    record Place(Spawn spawn, String name, int colour, boolean open, boolean recommended, Selection selection) {
+
+        private Place unmarked() {
+            return new Place(spawn, name, colour, true, false, selection);
+        }
+    }
+
+    /** What the line under the map tells the player: how to choose, what a click on a spawn costs, or why one was refused. */
+    record Hint(String text, Tone tone) {
+        enum Tone { HELP, COST, REFUSED }
+    }
 
     record View(Faction faction, Component title, List<String> buttons, Role role, List<ClassCard> classes,
-                List<Special> specials, List<Place> places) { }
+                List<Special> specials, List<Place> places, Hint hint) {
+
+        /** This view without what the battle flips on its own: which spawns are locked and which one is recommended. */
+        View withoutSpawnMarks() {
+            return new View(faction, title, buttons, role, classes, specials, places.stream().map(Place::unmarked).toList(), hint);
+        }
+    }
 
     private final Messages messages;
     private final TextComponent.Builder title = Component.text();
@@ -190,8 +210,13 @@ final class DeployScreen {
             label(left + TOOLBAR_ADVANCE + 1, y(BUTTONS.get(button)) + 6, name, BUTTON_TEXT.get(button), width - TOOLBAR_ADVANCE - 3);
         }
         label(127, 130, plain("deploy.screen.map"), WHITE, 40);
-        String hint = plain("deploy.screen.hint");
-        label(CHEST_WIDTH / 2 - Math.min(labelWidth(hint), HINT_WIDTH) / 2, 202, hint, MUTED, HINT_WIDTH);
+        var hint = view.hint();
+        int tone = switch (hint.tone()) {
+            case HELP -> MUTED;
+            case COST -> GOLD;
+            case REFUSED -> RED;
+        };
+        label(CHEST_WIDTH / 2 - Math.min(labelWidth(hint.text()), HINT_WIDTH) / 2, 202, hint.text(), tone, HINT_WIDTH);
     }
 
     private void loadout(View view) {
@@ -282,12 +307,12 @@ final class DeployScreen {
         var lines = List.of("recommended", "confirmed", "pending", "locked", "contested");
         for (int index = 0; index < keys.size(); index++) {
             icon(182, 153 + index * LEGEND_PITCH, keys.get(index), colours.get(index));
-            label(194, 155 + index * LEGEND_PITCH, plain("deploy.screen.key." + lines.get(index)), WHITE, 100);
+            label(LEGEND_TEXT, 155 + index * LEGEND_PITCH, plain("deploy.screen.key." + lines.get(index)), WHITE, 100);
         }
         int countdown = 153 + keys.size() * LEGEND_PITCH;
         String sample = plain("deploy.screen.key.countdown-sample");
-        text(192 - textWidth(sample), countdown + 1, sample, WHITE);
-        label(194, countdown + 2, plain("deploy.screen.key.countdown"), WHITE, 100);
+        text(LEGEND_MARKS_RIGHT - textWidth(sample), countdown + 1, sample, WHITE);
+        label(LEGEND_TEXT, countdown + 2, plain("deploy.screen.key.countdown"), WHITE, 100);
         label(182, 214, plain("deploy.screen.orientation"), DIM, 110);
     }
 

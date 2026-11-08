@@ -169,6 +169,56 @@ public class NotificationsTest {
         }
     }
 
+    /** The combat HUD offers its line every few ticks; an unchanged one goes out again only before the client drops it. */
+    @Test
+    public void anUnchangedStatusIsSentAgainOnlyToKeepItShowing() throws Exception {
+        var tick = new AtomicInteger();
+        var frame = new AtomicReference<Runnable>();
+        var bars = new ArrayList<Component>();
+        var id = UUID.randomUUID();
+        var player = fake(Player.class, (proxy, method, args) -> switch (method.getName()) {
+            case "getUniqueId" -> id;
+            case "isOnline" -> true;
+            case "sendActionBar" -> { bars.add((Component) args[0]); yield null; }
+            default -> throw new AssertionError(method.getName());
+        });
+        var task = fake(BukkitTask.class, (proxy, method, args) -> null);
+        var scheduler = fake(BukkitScheduler.class, (proxy, method, args) -> {
+            frame.set((Runnable) args[1]);
+            return task;
+        });
+        var manager = fake(PluginManager.class, (proxy, method, args) -> null);
+        var server = fake(Server.class, (proxy, method, args) -> switch (method.getName()) {
+            case "getCurrentTick" -> tick.get();
+            case "getPlayer" -> player;
+            case "getScheduler" -> scheduler;
+            case "getPluginManager" -> manager;
+            default -> throw new AssertionError(method.getName());
+        });
+        var plugin = fake(Plugin.class, (proxy, method, args) -> server);
+        var serverField = Bukkit.class.getDeclaredField("server");
+        serverField.setAccessible(true);
+        var previous = serverField.get(null);
+        try {
+            serverField.set(null, server);
+            var notices = new Notifications(plugin, null, new ResourcePacks(null), Notifications.Timing.from(Map.of()));
+            for (int at = 0; at < 24; at += 4) {
+                tick.set(at);
+                notices.status(player, Component.text("Heat 40%"));
+                frame.get().run();
+            }
+            assertEquals(List.of(Component.text("Heat 40%"), Component.text("Heat 40%")), bars);
+            tick.set(24);
+            notices.status(player, Component.text("Heat 50%"));
+            frame.get().run();
+            assertEquals(Component.text("Heat 50%"), bars.getLast());
+            assertEquals(3, bars.size());
+            notices.close();
+        } finally {
+            serverField.set(null, previous);
+        }
+    }
+
     private static <T> T fake(Class<T> type, InvocationHandler handler) {
         return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler));
     }

@@ -146,9 +146,19 @@ and range, a dash where a hero's blade has none, weapon, both abilities with the
 battle points as `Deine Kampfpunkte`. Right of them it lists the spawns with the marks their markers wear and explains
 the markers. In the chest are the two labelled buttons, the four class cards, then the reinforcement and both heroes
 with their costs, in red and with a padlock while the player cannot pay or no slot is free. The chest's title draws that
-window, so it cannot change while the chest is open; a choice, a change in battle points or in what the player can pay
-for, a spawn locking, opening or becoming the recommendation, or the dropship coming or going opens the menu again with
-a new one, at most once a second. The countdowns and the posts' blinking are items and change in place.
+window, so it cannot change while the chest is open. A click on a class, a reinforcement, a hero or a spawn, a change in
+battle points or in what the player can pay for, or the dropship coming or going opens the menu again with a new one at
+once. A spawn locking, opening or becoming the recommendation must first hold for `respawn.screen-settle-ticks`, by
+default two and a half seconds, because an enemy walking along a post's clearance would otherwise reopen the window
+again and again, and a click while it reopens is lost. Its marker shows the change at once. The countdowns and the
+posts' blinking are items and change in place.
+
+The line under the map says how to choose. While a paid reinforcement or hero is selected and affordable, it names the
+pick and its cost, and every open spawn's marker says what a click there costs. A click on a locked spawn plays the deny
+sound and puts the reason in that line in red until the next click: an enemy or neutral post, enemies too close to an
+own post, or the dropship outside the trailing side's assault. The window covers the action bar and the chat, so the
+reason goes on the screen itself. From the fade to the deployment on, the menu takes no more choices, so the player
+lands where and as whom they were when it began. A card plays only the sound of its outcome, and a locked spawn only the deny sound.
 
 The spawns stand on a map in the player's own inventory, which the menu borrows while it is open: north up, east right,
 the current map's posts and headquarters at one scale, overlapping markers moved apart. The dropship has the bottom-right
@@ -186,10 +196,12 @@ a cross for a medic and a crown for a hero. `minimap.bot` in `messages.yml` name
 A player's squad is the fireteam that last took their order (see Bots). It stays theirs while no other team takes it,
 and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
 
-The map is a boss bar line of its own that the pack's text shader moves into the corner, and it hides with the combat
-HUD for dialogues, screen effects and scenes. Its slot comes after the objective line, so a post's capture bar or a
-hero's bar stands one slot lower than without it. It redraws every `minimap.update-ticks` and sends nothing while
-nothing on it moved.
+The map is a boss bar line of its own that the pack's text shader moves into the corner, and it empties with the combat
+HUD for dialogues, screen effects and scenes and while the player is dead. The line itself stays for as long as a player
+with the pack is in the round, so the bars keep one order and never jump a slot: the objective line, the map's, then a
+post's capture bar and the heroes' bars. A bar that arrives late, such as the objective line for a player who rejoins,
+puts the ones after it back below it. The map redraws every `minimap.update-ticks` and sends nothing while nothing on it
+moved.
 
 ## Combat feedback
 
@@ -227,15 +239,20 @@ Nearby gains combine into one segment.
 A player with the pack sees their abilities as a column of tiles in the screen's bottom-right corner: F against the
 corner, Q above it, then a bladed hero's leap under a badge with the space bar twice, and a kill streak's strike framed in gold under
 Shift+F until it is thrown. A key with nothing bound shows no tile. Each tile carries its key on a badge and the
-ability's full name beside it. A ready tile is bright and framed in the side's colour; a recharging one turns grey
+ability's full name beside it. The names stand level with the hotbar and the food bar, so on a GUI narrower than 380
+pixels, such as a 4:3 or 5:4 window at its automatic scale, the pack's shader leaves them out and the tiles stay. A ready tile is bright and framed in the side's colour; a recharging one turns grey
 behind the seconds left and a fill that rises as it recharges. An ability that holds several uses counts those left in
 its tile's bottom-right corner, as the hotbar counts a stack, and shows no count once it is empty. The tiles ride
 on the action bar: `CombatHud` puts them in the line's middle, which needs the line's width as the client measures it,
 and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
 cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
-explains each binding in chat with its key, full name and what it does.
-`ObjectiveHud` shows the player's own reinforcements after `Wir`, a badge per post, the enemy's reinforcements and the
-time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
+explains each binding in chat with its key, full name and what it does. Chat, the round's opening line and the class
+cards name the key the player bound to swapping hands and dropping, which the client fills in. The badges and the deploy
+screen always show F and Q: their text's width is counted, and a binding's name, such as `Maustaste 4`, has a width
+only the client knows and does not fit a badge.
+`ObjectiveHud` shows a player in the round their own reinforcements after `Wir`, a badge per post, the enemy's
+reinforcements and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing.
+A spectator has no side to call `Wir` and sees no such line. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
 stay steadier walking and the repeater wants a crouch. A sprint shows the lowered pose of the held blaster, which cannot

@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.combat;
 
-import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.HudPanel;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
@@ -77,10 +76,9 @@ final class AbilityPanel {
     private static final int MAX_COUNT = 99;
     /** The name's capitals level with the tile's middle. */
     private static final int NAME_TOP = 8;
-    /** The pack draws these capitals two pixels wider, so their diagonals show. */
-    private static final String WIDE_LETTERS = "MNW";
-    private static final int WIDE_LETTER_ADVANCE = 6;
     private static final int NAME_GAP = 4;
+    /** The widest name, cut short beyond it; the shader leaves the names out where the GUI has no room for this. */
+    static final int NAME_WIDTH = 68;
     static final char BACKING = '\uE000';
     static final char FRAME = '\uE001';
     static final char FIRST_ICON = '\uE010';
@@ -163,9 +161,8 @@ final class AbilityPanel {
      * vanish against a bright floor.
      */
     private static List<Glyph> label(Slot slot, int top) {
-        var name = HudPanel.capitals(slot.name());
-        int width = name.chars().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_LETTER_ADVANCE : UiFont.LABEL_ADVANCE).sum();
-        return name.isEmpty() ? List.of() : List.of(new Glyph(name, -TILE - NAME_GAP - width, top + NAME_TOP, Tint.WHITE, true, width));
+        var name = HudPanel.fitted(HudPanel.capitals(slot.name()), NAME_WIDTH);
+        return name.isEmpty() ? List.of() : List.of(HudPanel.label(name, -TILE - NAME_GAP - HudPanel.width(name), top + NAME_TOP, Tint.LABEL));
     }
 
     private static Glyph glyph(char glyph, int x, int y, Tint tint, int advance) {

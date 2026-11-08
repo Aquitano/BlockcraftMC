@@ -247,6 +247,14 @@ public final class Posts {
         }
     }
 
+    /** Shows the viewer's capture bar again, below every bar shown before it. */
+    void restack(Player viewer) {
+        posts.stream().filter(post -> post.viewers.contains(viewer.getUniqueId())).forEach(post -> {
+            viewer.hideBossBar(post.bar);
+            viewer.showBossBar(post.bar);
+        });
+    }
+
     public void clear() {
         priority = OptionalInt.empty();
         for (var post : posts) {

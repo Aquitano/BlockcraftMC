@@ -139,6 +139,10 @@ final class BattlePresentation implements AutoCloseable {
         return Scenes.isViewing(player) || api.dialogues().active(player) || api.visuals().active(player);
     }
 
+    boolean deploying(Player player) {
+        return deployments.containsKey(player.getUniqueId());
+    }
+
     void cancel(Player player) {
         var scope = deployments.remove(player.getUniqueId());
         if (scope != null) scope.close();

@@ -42,6 +42,9 @@ public final class Notifications implements Listener {
         }
     }
 
+    /** How long an action bar stays sent before it is sent again, well inside the time the client keeps showing it. */
+    private static final long BAR_REFRESH_TICKS = 20;
+
     private record TitleNotice(Title title, Sounds sound) {}
     private record Marker(Component text, long until) {}
 
@@ -104,10 +107,15 @@ public final class Notifications implements Listener {
     public void feedbackNow(Player player, Component message, long ticks) {
         if (player.isOnline() && !suspended.test(player)) {
             var state = state(player);
+            long now = now();
+            boolean unchanged = message.equals(state.instantBar) && now < state.instantUntil && now - state.barSent < BAR_REFRESH_TICKS;
             state.instantBar = message;
-            state.instantUntil = now() + Math.max(1, ticks);
+            state.instantUntil = now + Math.max(1, ticks);
             state.shownBar = null;
-            player.sendActionBar(message);
+            if (!unchanged) {
+                player.sendActionBar(message);
+                state.barSent = now;
+            }
         }
     }
 
@@ -250,7 +258,7 @@ public final class Notifications implements Listener {
             if (state.shownBar != null) {
                 player.sendActionBar(Component.empty());
             }
-        } else if (selected != state.shownBar || now - state.barSent >= 20) {
+        } else if (state.shownBar == null || !selected.value.equals(state.shownBar.value) || now - state.barSent >= BAR_REFRESH_TICKS) {
             player.sendActionBar(selected.value);
             state.barSent = now;
         }

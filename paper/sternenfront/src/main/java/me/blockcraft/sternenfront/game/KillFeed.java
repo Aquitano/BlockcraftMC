@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.game;
 
-import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import org.bukkit.configuration.ConfigurationSection;
@@ -109,7 +108,6 @@ final class KillFeed {
     }
 
     private static Glyph name(Named named, int y) {
-        var label = MinimapLayout.label(named.name());
-        return new Glyph(label, 0, y, named.tint(), true, label.length() * UiFont.LABEL_ADVANCE);
+        return HudPanel.label(MinimapLayout.label(named.name()), 0, y, named.tint());
     }
 }

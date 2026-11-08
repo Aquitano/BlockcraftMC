@@ -8,13 +8,15 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 /**
- * The round at the top of the screen: each player's own reinforcements on the left, a badge per command post in its
+ * The round at the top of the screen for the players in it: their own side's reinforcements on the left, a badge per command post in its
  * holder's colour, the assault's priority framed in the minimap's yellow corners, the enemy's reinforcements on the right
  * and the time left. It takes a boss bar's text line because that is the one place text stays on top at every GUI scale;
  * the pack draws this colour and overlay of bar as nothing.
@@ -49,20 +51,23 @@ final class ObjectiveHud {
                 Placeholder.component("posts", badges.build()),
                 Placeholder.component("enemy", Component.text(reinforcements.left(faction.enemy()), faction.enemy().text())),
                 Placeholder.unparsed("time", TimerBar.clock(secondsLeft)))));
-        for (var viewer : Bukkit.getOnlinePlayers()) {
-            var side = game.factionOf(viewer).orElse(Faction.KOLONIEN);
-            bars.forEach((faction, bar) -> {
-                if (faction == side) {
-                    boolean added = StreamSupport.stream(bar.viewers().spliterator(), false).noneMatch(viewer::equals);
-                    viewer.showBossBar(bar);
-                    if (added) {
-                        game.minimap().restack(viewer);
-                    }
-                } else {
-                    viewer.hideBossBar(bar);
-                }
-            });
-        }
+        Bukkit.getOnlinePlayers().forEach(this::show);
+    }
+
+    /**
+     * The viewer's side's line, first of the round's boss bars, so every bar shown after it keeps its slot. A spectator has
+     * no side whose reinforcements are "ours", so they see none.
+     */
+    void show(Player viewer) {
+        var side = game.isPlaying(viewer) ? game.factionOf(viewer) : Optional.<Faction>empty();
+        bars.forEach((faction, bar) -> {
+            if (side.filter(faction::equals).isEmpty()) {
+                viewer.hideBossBar(bar);
+            } else if (StreamSupport.stream(bar.viewers().spliterator(), false).noneMatch(viewer::equals)) {
+                viewer.showBossBar(bar);
+                game.minimap().restack(viewer);
+            }
+        });
     }
 
     /** The post's badge in its holder's colour, framed in yellow corners that take no room while it is the priority. */

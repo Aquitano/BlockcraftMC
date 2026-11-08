@@ -553,6 +553,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         } else {
             entrance.admit(player);
         }
+        if (phase() == GamePhase.INGAME) {
+            objective.show(player);
+        }
         heroes.showBars(player);
         heroes.sabers().refresh(player);
         fighters.forEach((id, fighter) -> {
