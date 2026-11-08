@@ -443,13 +443,6 @@ streaks:
   orbital-strike: 5
   bots-per-kill: 3
 
-# One goal at a time for each fighter, in a shuffled order, as deed:count. Deeds are kill, headshot, assist, defence and
-# capture. Each pays points and coins.
-orders:
-  points: 150
-  coins: 3
-  list: ["kill:5", "headshot:2", "capture:1", "assist:3", "defence:2", "kill:10"]
-
 # The battle points ever earned that each rank needs, lowest first; career.rank.<index> in messages.yml names them.
 career:
   ranks: [0, 1500, 4000, 8000, 15000, 25000, 40000, 60000, 90000, 130000]

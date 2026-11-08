@@ -558,13 +558,12 @@ hero:
   fallen: "<prefix><hero> <white><player> <muted>hat das Feld verlassen."
 
 recap:
-  battle: "<muted>Kampfpunkte <white><points> <dark>· <muted>Posten <white><captures> <dark>· <muted>Aufträge <white><orders>"
+  battle: "<muted>Kampfpunkte <white><points> <dark>· <muted>Posten <white><captures>"
 
 feedback:
   kill: "<error>Abschuss <success>+<points> KP"
   multikill: "<error><kills>x <success>+<points> KP"
   headshot: "<error>Kopfschuss <success>+<points> KP"
-  order: "<accent>Auftrag <success>+<points> KP"
   assist: "<aqua>Hilfe <success>+<points> KP"
   defence: "<aqua>Verteidigt <success>+<points> KP"
   healing: "<success>Geheilt +<points> KP"
@@ -574,16 +573,6 @@ feedback:
   elite-ready: "<success>Elite bereit"
   progress: "<muted><kills> K <dark>· <muted><points>/<cost> KP"
 
-orders:
-  hud: "<muted><what> <dark><done>/<count>"
-  completed: "<success>Auftrag erfüllt <dark>· <accent>+<points> KP <dark>· <accent>+<coins> Münzen"
-  deed:
-    kill: "Abschüsse"
-    headshot: "Kopfschüsse"
-    assist: "Kampfhilfen"
-    defence: "Posten verteidigen"
-    capture: "Posten erobern"
-
 awards:
   title: "<prefix><accent>Auszeichnungen dieser Schlacht"
   mvp: "  <accent>Beste Leistung <dark>· <white><player> <muted>mit <value> KP"
@@ -592,7 +581,7 @@ awards:
   comrade: "  <accent>Kamerad <dark>· <white><player> <muted>mit <value> Kampfhilfen"
 
 career:
-  battle: "<prefix><muted>Deine Schlacht: <white><points> KP <dark>· <muted>Abschüsse <white><kills> <dark>· <muted>Kopfschüsse <white><headshots> <dark>· <muted>Posten <white><captures> <dark>· <muted>Aufträge <white><orders>"
+  battle: "<prefix><muted>Deine Schlacht: <white><points> KP <dark>· <muted>Abschüsse <white><kills> <dark>· <muted>Kopfschüsse <white><headshots> <dark>· <muted>Posten <white><captures>"
   record: "<prefix><accent>Neuer Rekord! <muted>Dein bisher bester Wert war <white><best> KP<muted>."
   promoted: "<prefix><accent>Befördert! <muted>Du bist jetzt <white><rank><muted>."
   standing: "<prefix><muted>Dein Rang: <accent><rank> <dark>· <white><points>/<next> KP"

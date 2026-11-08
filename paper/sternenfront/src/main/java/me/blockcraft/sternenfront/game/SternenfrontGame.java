@@ -91,7 +91,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -162,7 +161,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final FeelConfig feel;
     private final KillStreaks streaks;
     private final RoundTally tally = new RoundTally();
-    private final Orders orders;
     private final Career career;
     private final Map<UUID, Fighter> fighters = new HashMap<>();
     /** While the round deals damage itself, which marks its own hits. */
@@ -238,7 +236,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak(), feel.botsPerStreakKill());
-        this.orders = Orders.from(plugin, ThreadLocalRandom.current());
         this.career = new Career(plugin, messages, BlockcraftApi.get().database(), plugin.getConfig().getLongList("career.ranks"));
         Tasks.async(plugin, career::createTable);
         this.reinforcements = new Reinforcements(config.tickets());
@@ -338,7 +335,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return feedback;
     }
 
-    /** A deed counts for orders and awards even when config.yml pays nothing for it. */
+    /** A deed counts for the awards even when config.yml pays nothing for it. */
     public void awardPoints(Player player, int points, CombatFeedback.Reward reward) {
         if (points > 0) {
             heroes.earn(player, points);
@@ -357,17 +354,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void did(Player player, RoundTally.Deed deed) {
-        var id = player.getUniqueId();
-        tally.did(id, deed);
-        orders.did(id, deed).ifPresent(completed -> {
-            tally.did(id, RoundTally.Deed.ORDER);
-            int coins = summary.awardCoins(player, orders.coins());
-            player.sendMessage(messages.get("orders.completed", Formatter.number("points", orders.points()),
-                    Formatter.number("coins", coins)));
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.2f);
-            awardPoints(player, orders.points(), CombatFeedback.Reward.ORDER);
-        });
-        objective.order(player);
+        tally.did(player.getUniqueId(), deed);
     }
 
     private void killBonuses(Player killer, int killPoints, boolean headshot) {
@@ -380,16 +367,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             int extra = points.multikill() * Math.min(chain - 1, MOST_CHAINED_BONUSES);
             awardPoints(killer, RoundTally.bonus(extra, killPoints, points.kill()), CombatFeedback.Reward.CHAIN);
         }
-    }
-
-    Optional<Component> orderLine(Player player) {
-        if (!isPlaying(player)) {
-            return Optional.empty();
-        }
-        return orders.of(player.getUniqueId()).map(current -> messages.get("orders.hud",
-                Placeholder.component("what", messages.get("orders.deed." + current.order().deed().name().toLowerCase(Locale.ROOT))),
-                Formatter.number("done", current.done()), Formatter.number("count", current.order().count()),
-                Formatter.number("points", orders.points())));
     }
 
     public int humans(Faction faction) {
@@ -1560,8 +1537,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 .ifPresent(player -> summary.awardCoins(player, config.rewards().award())));
         tally.lines().forEach((id, line) -> Optional.ofNullable(Bukkit.getPlayer(id)).ifPresent(player ->
                 summary.note(player, messages.get("recap.battle", Formatter.number("points", line.points()),
-                        Formatter.number("captures", line.count(RoundTally.Deed.CAPTURE)),
-                        Formatter.number("orders", line.count(RoundTally.Deed.ORDER))))));
+                        Formatter.number("captures", line.count(RoundTally.Deed.CAPTURE))))));
         round.end();
         announce(awards);
         career.close(tally.lines());

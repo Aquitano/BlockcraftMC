@@ -88,7 +88,7 @@ final class Career {
     private void report(Player player, RoundTally.Line line, Standing before) {
         player.sendMessage(messages.get("career.battle", Formatter.number("points", line.points()),
                 Formatter.number("kills", line.count(Deed.KILL)), Formatter.number("headshots", line.count(Deed.HEADSHOT)),
-                Formatter.number("captures", line.count(Deed.CAPTURE)), Formatter.number("orders", line.count(Deed.ORDER))));
+                Formatter.number("captures", line.count(Deed.CAPTURE))));
         if (before.bestRound() > 0 && line.points() > before.bestRound()) {
             player.sendMessage(messages.get("career.record", Formatter.number("best", before.bestRound())));
         }

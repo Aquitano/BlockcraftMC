@@ -152,8 +152,7 @@ After spawning, the order bar shows the assault's priority post, or the nearest 
 letter, horizontal distance and direction relative to the player's view. When all posts are safe, it points to the post
 nearest the enemy HQ for defence. The bearing updates every `respawn.navigation-update-ticks`, by default five ticks.
 Inside the target's capture area, it says that the post is here instead of showing a direction. It does not route around walls.
-Ability hints temporarily replace the bearing; the current order remains
-visible alongside both.
+Ability hints temporarily replace the bearing.
 
 ## Minimap
 
@@ -261,11 +260,10 @@ higher chime, and a killing headshot adds `heroes.points.headshot`. Both scale w
 players. A bot kill counts towards stats, pays `rewards.bot-kill` and fills the orbital strike's streak at `streaks.bots-per-kill`.
 A kill by something still flying after its owner fell pays as usual but does not count towards the next life's streak.
 
-`orders` gives each fighter one goal at a time, shown under the objective line, which pays points and coins when completed. Its muted HUD line shows the goal and progress; completion announces the reward. Battle
-points also feed the round's awards, which need two fighters and pay `rewards.award`, and a rank that lasts across rounds:
+Battle points also feed the round's awards, which need two fighters and pay `rewards.award`, and a rank that lasts across rounds:
 `bc_sternenfront_career` keeps every player's total and best round, `career.ranks` sets the thresholds and `career.rank.<index>`
-in `messages.yml` names them. The details button of the round recap in chat adds battle points, captured posts and
-completed orders to the shared results and rewards.
+in `messages.yml` names them. The details button of the round recap in chat adds battle points and captured posts to the
+shared results and rewards.
 
 ## Animated bodies
 

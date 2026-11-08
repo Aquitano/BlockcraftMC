@@ -65,12 +65,9 @@ final class ObjectiveHud {
         }
     }
 
-    /** A second line under the first, added after it, with the fighter's current order. */
+    /** A second line under the first, added after it, with where the fighter should go. */
     void order(Player viewer) {
-        var order = game.orderLine(viewer);
-        game.deployment().guidance(viewer).map(navigation -> order
-                .map(task -> navigation.append(messages.get("hud.separator")).append(task)).orElse(navigation))
-                .or(() -> order).ifPresentOrElse(line -> {
+        game.deployment().guidance(viewer).ifPresentOrElse(line -> {
             boolean added = !orderBars.containsKey(viewer.getUniqueId());
             var bar = orderBars.computeIfAbsent(viewer.getUniqueId(),
                     ignored -> BossBar.bossBar(Component.empty(), 0, BossBar.Color.PINK, BossBar.Overlay.NOTCHED_20));

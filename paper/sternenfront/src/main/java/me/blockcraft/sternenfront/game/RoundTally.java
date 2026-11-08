@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.ToIntFunction;
 
-/** What each fighter did this round: the source of their orders, the awards and their recap. */
+/** What each fighter did this round: the source of the awards and their recap. */
 final class RoundTally {
 
     private static final int FIGHTERS_FOR_AWARDS = 2;
@@ -18,7 +18,7 @@ final class RoundTally {
     private static final int CAPTURES_FOR_AWARD = 2;
     private static final int ASSISTS_FOR_AWARD = 3;
 
-    enum Deed { KILL, HEADSHOT, ASSIST, DEFENCE, CAPTURE, ORDER }
+    enum Deed { KILL, HEADSHOT, ASSIST, DEFENCE, CAPTURE }
 
     record Award(String key, UUID winner, int value) { }
 
