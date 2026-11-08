@@ -99,7 +99,7 @@ public class DeployScreenTest {
         return width;
     }
 
-    /** Each glyph's advance as the client measures it: its last column with any ink, plus one. */
+    /** Each glyph's advance as the client measures it: its last column with any ink, scaled to the glyph's height, plus one. */
     private static Map<Integer, Integer> advances(String font, Map<String, Map<Integer, Integer>> fonts) throws Exception {
         if (fonts.containsKey(font)) {
             return fonts.get(font);
@@ -122,6 +122,7 @@ public class DeployScreenTest {
             int columns = rows.get(0).getAsString().codePointCount(0, rows.get(0).getAsString().length());
             int cellWidth = image.getWidth() / columns;
             int cellHeight = image.getHeight() / rows.size();
+            double scale = (provider.has("height") ? provider.get("height").getAsInt() : 8) / (double) cellHeight;
             for (int row = 0; row < rows.size(); row++) {
                 int[] characters = rows.get(row).getAsString().codePoints().toArray();
                 for (int column = 0; column < characters.length; column++) {
@@ -131,7 +132,7 @@ public class DeployScreenTest {
                             if (image.getRGB(column * cellWidth + x, row * cellHeight + y) >>> 24 != 0) ink = x + 1;
                         }
                     }
-                    advances.putIfAbsent(characters[column], ink + 1);
+                    advances.putIfAbsent(characters[column], (int) (0.5 + ink * scale) + 1);
                 }
             }
         }
