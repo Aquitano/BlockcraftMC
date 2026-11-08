@@ -282,9 +282,21 @@ fallback displays; changes to BetterModel profiles require regenerating the clip
 (requires PyYAML). Animation-only changes leave the geometry intact and need no BetterModel resource-pack export.
 
 BetterModel builds the pack from those files on the game server, and that output is committed in
-`resourcepack/src/assets/bettermodel`. After changing a body, run `SternenfrontArt.java`, then `dev/verify/verify.py models`,
-which needs the verify network running. A tracker has one glow for all viewers, so each body is two trackers on a plain and
-an outlined copy of its model, each shown to the right viewers by the same rules as `TargetOutlines`.
+`resourcepack/src/assets/bettermodel`. A tracker has one glow for all viewers, so each body is two trackers on a plain and
+an outlined copy of its model, each shown to the right viewers by the same rules as `TargetOutlines`. BetterModel loads its
+models only once the server has loaded, so an animated body without one is logged then and stays a `BodyRig`.
+
+## Changing a body
+
+1. Edit what changes. Part shapes are in `resourcepack/SternenfrontArt.java`; joints, scale, arm lift and grip turn are in
+   `src/main/resources/rig-bodies.yml`; walk and recoil are in `appearance.motion`. An animated body bakes its gun into
+   its model, so `GUNS` in `resourcepack/RigModels.py` names it, and it must stay the class's blaster.
+2. Run `./gradlew :resourcepack:generateRigModels`. It runs `SternenfrontArt.java`, then `RigModels.py` (requires PyYAML),
+   which writes `resourcepack/bettermodel`.
+3. With the verify network running, run `dev/verify/verify.py models`. It lets BetterModel build the pack on the game
+   server, copies it into `resourcepack/src/assets/bettermodel` and serves it. An animation-only change leaves that pack
+   as it is, but the server still needs the new `.bbmodel` files.
+4. `./gradlew build` checks that every bundled animated body still has its plain and outlined model.
 
 ## Unit colours
 
