@@ -190,7 +190,7 @@ public abstract class Menu implements InventoryHolder {
         var rendered = renderSlot(slot);
         if (slot >= size()) {
             if (loan != null && borrower.getOpenInventory().getTopInventory() == inventory) {
-                loan.lend(slot - size(), PlayerSlots.mark(rendered));
+                loan.lend(slot - size(), rendered);
             }
         } else if (!Objects.equals(inventory.getItem(slot), rendered)) {
             inventory.setItem(slot, rendered);
@@ -310,7 +310,7 @@ public abstract class Menu implements InventoryHolder {
         }
         if (borrowing && loan == null && player.getOpenInventory().getTopInventory() == inventory) {
             borrower = player;
-            loan = new Loan<>(new PlayerSlots(player.getInventory()), PlayerSlots::lent);
+            loan = new Loan<>(new PlayerSlots(player.getInventory()));
             for (int slot = size(); slot < items.length; slot++) {
                 show(slot);
             }
@@ -325,7 +325,7 @@ public abstract class Menu implements InventoryHolder {
         }
     }
 
-    /** What the player had in the slots this menu borrowed, before it gives them back. */
+    /** What giving the borrowed slots back would return to the player. */
     List<ItemStack> lentFrom() {
         return loan == null ? List.of() : loan.own().stream().map(ItemStack::clone).toList();
     }

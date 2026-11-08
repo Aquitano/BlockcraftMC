@@ -150,7 +150,8 @@ The spawns stand on a map in the player's own inventory, which the menu borrows 
 the current map's posts and headquarters at one scale, overlapping markers moved apart. The landing has the bottom-right
 cell. While a dead player chooses, that inventory holds only the deploy item. The menu gives each slot back whatever
 closes it, when it closes, the player dies, quits, is kicked or the server stops, unless something else changed the slot
-meanwhile, as deploying does. The vanilla `Inventory` label falls on a band in its own grey, so it does not show.
+meanwhile, as deploying does. Each item the menu lays there carries the one it replaced, so when a crash saved the
+menu's items instead, the player's next join puts their own back. The vanilla `Inventory` label falls on a band in its own grey, so it does not show.
 
 Posts A–E use the same letter badges as the combat HUD. Filled badges allow deployment, outlines mark locked posts,
 and blinking badges mark contested or attacked posts. Colours show ownership. The pack frames the chosen spawn on its
