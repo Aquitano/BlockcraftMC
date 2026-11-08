@@ -10,7 +10,9 @@ screen effects, and the Sternenfront intro.
 - **Plain fallback.** Shared code draws a vanilla version for a client without the pack, because a client can be in the
   world before it loads. `UiFont.overlaid` has no fallback, and Sternenfront's class and deploy menus use it.
 - **Slot highlight.** The pack blanks `container/slot_highlight_back` and `_front`, because the highlight would mark one
-  square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory.
+  square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory. A menu
+  item that needs a frame draws it in its own model, as Sternenfront's spawn markers do with `oversized_in_gui` so the
+  frame can cover the slot's border.
 - **Items other players can see.** A held or worn item or a display keeps its vanilla item and asks for the pack's model
   through custom_model_data. The pack overrides the vanilla item in `assets/minecraft/items/<item>.json` with a `select`
   on that string, whose fallback is the item's own vanilla definition. So a client without the pack draws the vanilla

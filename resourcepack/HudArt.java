@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -209,7 +210,7 @@ public final class HudArt {
         g.dispose();
         ImageIO.write(onTheCrosshair(arcs, false), "PNG", root.resolve("damage_arcs.png").toFile());
         ImageIO.write(objectivePips(), "PNG", root.resolve("objective_pips.png").toFile());
-        postMarkers(root.getParent().getParent());
+        spawnMarkers(root.getParent().getParent());
         ImageIO.write(onTheCrosshair(crosshairMarks(), true), "PNG", root.resolve("crosshair_marks.png").toFile());
         ImageIO.write(onTheCrosshair(spreadTicks(), true), "PNG", root.resolve("spread_ticks.png").toFile());
         minimap(root);
@@ -424,7 +425,12 @@ public final class HudArt {
         image.setRGB(column, top + height - 1, 0x01000000);
     }
 
-    private static void postMarkers(Path assets) throws Exception {
+    /**
+     * The deploy menu's spawn markers: each post's letter on a filled tile and a hollow one, the headquarters' banner of
+     * each faction and the landing's rocket. A select on the item's first two custom_model_data strings lays the
+     * choice's frame and a badge over each, on the slot's border, which is why they may draw beyond their slot.
+     */
+    private static void spawnMarkers(Path assets) throws Exception {
         var models = assets.resolve("models/item/sternenfront");
         var items = assets.resolve("items/sternenfront");
         var textures = assets.resolve("textures/item/sternenfront");
@@ -432,6 +438,17 @@ public final class HudArt {
         Files.createDirectories(items);
         Files.createDirectories(textures);
         ImageIO.write(objectivePips(), "PNG", textures.resolve("objective_pips.png").toFile());
+        for (var overlay : spawnOverlays().entrySet()) {
+            ImageIO.write(overlay.getValue(), "PNG", textures.resolve(overlay.getKey() + ".png").toFile());
+            Files.writeString(models.resolve(overlay.getKey() + ".json"), """
+                    {
+                      "gui_light": "front",
+                      "textures": {"overlay": "blockcraft:item/sternenfront/%s"},
+                      "elements": [{"from": [-1, -1, 16], "to": [17, 17, 16], "shade": false,
+                        "faces": {"south": {"uv": [0, 0, 9, 9], "texture": "#overlay"}}}]
+                    }
+                    """.formatted(overlay.getKey()));
+        }
         for (int post = 0; post < 5; post++) {
             for (int variant = 0; variant < 2; variant++) {
                 String name = "post_" + (char) ('a' + post) + (variant == 0 ? "_filled" : "_hollow");
@@ -444,14 +461,111 @@ public final class HudArt {
                             "faces": {"south": {"uv": [%.1f, 0, %.1f, 16], "texture": "#marker", "tintindex": 0}}}]
                         }
                         """, left, left + 1.6));
-                Files.writeString(items.resolve(name + ".json"), """
-                        {
-                          "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/%s",
-                            "tints": [{"type": "minecraft:custom_model_data", "index": 0, "default": 16777215}]}
-                        }
-                        """.formatted(name));
+                spawnMarker(items.resolve(name + ".json"), """
+                        {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/%s",
+                              "tints": [{"type": "minecraft:custom_model_data", "index": 0, "default": 16777215}]}""".formatted(name));
             }
         }
+        for (var colour : HEADQUARTERS_BANNERS) {
+            spawnMarker(items.resolve("spawn_headquarters_" + colour + ".json"), """
+                    {"type": "minecraft:special", "base": "minecraft:item/template_banner",
+                          "model": {"type": "minecraft:banner", "color": "%s"},
+                          "transformation": {"left_rotation": [0, 0, 0, 1], "right_rotation": [0, 0, 0, 1],
+                            "scale": [0.6666667, -0.6666667, -0.6666667], "translation": [0.5, 0, 0.5]}}""".formatted(colour));
+        }
+        spawnMarker(items.resolve("spawn_dropship.json"), """
+                {"type": "minecraft:model", "model": "minecraft:item/firework_rocket"}""");
+    }
+
+    /** {@code base} with the choice's frame from the first custom_model_data string and a badge from the second. */
+    private static void spawnMarker(Path file, String base) throws Exception {
+        Files.writeString(file, """
+                {
+                  "oversized_in_gui": true,
+                  "model": {"type": "minecraft:composite", "models": [
+                    %s,
+                    %s,
+                    %s]}
+                }
+                """.formatted(base, overlaySelect(0, "pending", "chosen"), overlaySelect(1, "recommended", "locked")));
+    }
+
+    private static String overlaySelect(int index, String... cases) {
+        var when = new ArrayList<String>();
+        for (var name : cases) {
+            when.add("""
+                    {"when": "%s", "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/spawn_%s"}}"""
+                    .formatted(name, name));
+        }
+        return """
+                {"type": "minecraft:select", "property": "minecraft:custom_model_data", "index": %d,
+                      "cases": [%s],
+                      "fallback": {"type": "minecraft:empty"}}""".formatted(index, String.join(", ", when));
+    }
+
+    /** The banner colours of both factions' headquarters, as Sternenfront's {@code Faction.blocks()} names them. */
+    private static final List<String> HEADQUARTERS_BANNERS = List.of("light_blue", "red");
+    private static final int SLOT = 18;
+
+    /**
+     * Over the 18-pixel slot, in the top-left of a 32-pixel texture: gold corners for a spawn chosen but not confirmed, a
+     * green frame for a confirmed one, a star for the recommended spawn and a padlock for a locked one.
+     */
+    private static Map<String, BufferedImage> spawnOverlays() {
+        return Map.of(
+                "spawn_pending", slotFrame(0xFFFFB830, 6),
+                "spawn_chosen", slotFrame(0xFF5BEA6B, SLOT),
+                "spawn_recommended", slotBadge(10, 1, 0xFFFFD447, new String[] {
+                        "...#...",
+                        "...#...",
+                        "#######",
+                        ".#####.",
+                        "..###..",
+                        ".##.##.",
+                        "##...##"}),
+                "spawn_locked", slotBadge(10, 9, 0xFFFF5B4B, new String[] {
+                        "..lll..",
+                        ".l...l.",
+                        ".l...l.",
+                        "#######",
+                        "###k###",
+                        "###k###",
+                        "#######"}));
+    }
+
+    /** A two-pixel border round the slot, whole or as corners {@code reach} pixels long. */
+    private static BufferedImage slotFrame(int colour, int reach) {
+        var image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < SLOT; y++) {
+            for (int x = 0; x < SLOT; x++) {
+                boolean border = x < 2 || y < 2 || x >= SLOT - 2 || y >= SLOT - 2;
+                boolean nearCorner = (x < reach || x >= SLOT - reach) && (y < reach || y >= SLOT - reach);
+                if (border && nearCorner) {
+                    image.setRGB(x, y, colour);
+                }
+            }
+        }
+        return image;
+    }
+
+    /** {@code art} in {@code colour} with a dark outline, its top-left at ({@code left}, {@code top}) inside the slot. */
+    private static BufferedImage slotBadge(int left, int top, int colour, String[] art) {
+        var image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        for (int y = -1; y <= art.length; y++) {
+            for (int x = -1; x <= art[0].length(); x++) {
+                char ink = y >= 0 && y < art.length && x >= 0 && x < art[0].length() ? art[y].charAt(x) : '.';
+                if (ink != '.') {
+                    image.setRGB(left + x, top + y, ink == '#' ? colour : INK.get(ink));
+                } else if (badgeInk(art, x - 1, y) || badgeInk(art, x + 1, y) || badgeInk(art, x, y - 1) || badgeInk(art, x, y + 1)) {
+                    image.setRGB(left + x, top + y, OUTLINE);
+                }
+            }
+        }
+        return image;
+    }
+
+    private static boolean badgeInk(String[] art, int x, int y) {
+        return y >= 0 && y < art.length && x >= 0 && x < art[0].length() && art[y].charAt(x) != '.';
     }
 
     /**
