@@ -20,6 +20,7 @@ import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -31,11 +32,11 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static me.blockcraft.sternenfront.menu.DeployScreen.BUTTONS;
@@ -46,7 +47,9 @@ import static me.blockcraft.sternenfront.menu.DeployScreen.SPECIALS;
  * Where a dead player chooses whom to deploy as and where, on one screen: the class cards, the reinforcement and the
  * heroes in the chest, the spawns on a map in the player's own inventory, which the menu borrows while it is open. The
  * pack draws {@link DeployScreen} around it. That picture is fixed while the chest is open, so a choice or a change
- * it shows, such as the player's battle points, opens the menu again with a new one.
+ * it shows, such as the player's battle points, opens the menu again with a new one. A spawn locking, opening or
+ * becoming the recommendation must hold for a while first, since an enemy at a post's edge flips it back and forth and
+ * every reopening swallows a click; its marker shows the change at once.
  */
 public final class DeployMenu extends Menu {
 
@@ -55,7 +58,6 @@ public final class DeployMenu extends Menu {
     private static final int DEPLOY = BUTTONS.get(1);
     /** The map's top-left cell, the first slot the menu borrows from the player. */
     private static final int MAP = ROWS * 9;
-    private static final int DROPSHIP_SLOT = MAP + TacticalLayout.DROPSHIP_CELL;
     /** Posts A to E, the ones the pack draws marker badges for. */
     private static final int LETTERED_POSTS = 5;
     private static final long TICKS_PER_SECOND = 20;
@@ -66,13 +68,19 @@ public final class DeployMenu extends Menu {
     private final SternenfrontGame game;
     private final Player viewer;
     private final Optional<DeployScreen.View> shown;
-    private Map<Spawn, Integer> mapSlots = Map.of();
+    private final Map<Spawn, Integer> mapSlots;
+    private final long settleTicks;
+    /** A change of spawn marks the title does not show yet, and since when it holds. */
+    private Optional<DeployScreen.View> unsettled = Optional.empty();
+    private long unsettledSince;
 
     public DeployMenu(SternenfrontGame game, Player viewer) {
         super(ROWS, game.messages().get("deploy.title"), true);
         this.game = game;
         this.viewer = viewer;
         this.shown = view();
+        this.mapSlots = shown.map(view -> mapSlots(view.faction())).orElse(Map.of());
+        this.settleTicks = Math.clamp(game.plugin().getConfig().getInt("respawn.screen-settle-ticks"), 0, 200);
         area(CLOSE, DeployScreen.buttonColumns(0), 1);
         area(DEPLOY, DeployScreen.buttonColumns(1), 1);
         CLASS_CARDS.forEach(slot -> area(slot, DeployScreen.CLASS_CARD_COLUMNS, DeployScreen.CLASS_CARD_ROWS));
@@ -97,30 +105,26 @@ public final class DeployMenu extends Menu {
         if (current.isEmpty()) {
             return;
         }
-        if (!current.equals(shown)) {
+        var view = current.get();
+        if (reopens(view)) {
             game.deployment().openDeploy(viewer);
             return;
         }
-        var view = current.get();
         var faction = view.faction();
         var messages = game.messages();
         var deployment = game.deployment();
-        var choosing = game.fighter(viewer).choosing();
-        boolean confirmed = choosing.filter(Fighter.Choosing::confirmed).isPresent();
+        boolean confirmed = game.fighter(viewer).choosing().filter(Fighter.Choosing::confirmed).isPresent();
         var suggested = deployment.suggested(viewer);
-        var picked = choosing.flatMap(Fighter.Choosing::hero);
-        var pickedUnit = choosing.flatMap(Fighter.Choosing::reinforcement);
         var pick = view.specials().stream().filter(DeployScreen.Special::selected).findFirst();
-        boolean affordablePick = pick.filter(DeployScreen.Special::open).isPresent();
-        boolean unavailable = pick.isPresent() && !affordablePick;
-        var role = picked.map(game.heroes()::name).or(() -> pickedUnit.map(game.reinforcementUnits()::name))
-                .orElseGet(() -> messages.get(game.fighter(viewer).combatClass().messageKey(faction) + ".name"));
+        var paid = pick.filter(DeployScreen.Special::open);
+        boolean unavailable = pick.isPresent() && paid.isEmpty();
+        var role = Component.text(view.role().name(), NamedTextColor.WHITE);
         var summary = new ArrayList<>(List.of(deployment.status(viewer), role));
-        pick.filter(ignored -> affordablePick).ifPresent(special -> summary.add(messages.get("deploy.cost", Formatter.number("cost", special.cost()))));
+        paid.ifPresent(special -> summary.add(messages.get("deploy.cost", Formatter.number("cost", special.cost()))));
         if (unavailable) summary.add(messages.get("deploy.paid-unavailable"));
-        if (confirmed || !unavailable) summary.add(messages.get(confirmed ? "deploy.queued" : affordablePick ? "deploy.confirm-paid" : "deploy.quick-lore"));
+        if (confirmed || !unavailable) summary.add(messages.get(confirmed ? "deploy.queued" : paid.isPresent() ? "deploy.confirm-paid" : "deploy.quick-lore"));
         if (!confirmed) summary.add(messages.get("deploy.auto-free"));
-        if (unavailable || confirmed && affordablePick) summary.add(messages.get("deploy.paid-fallback"));
+        if (unavailable || confirmed && paid.isPresent()) summary.add(messages.get("deploy.paid-fallback"));
         set(CLOSE, MenuIcon.TOOL_CLOSE.item().name(messages.get("deploy.close")).lore(messages.getLines("deploy.close-lore")).build());
         set(DEPLOY, MenuIcon.DEPLOY.item().name(messages.get("deploy.deploy", Placeholder.component("target", targetName(suggested))))
                 .lore(summary).build());
@@ -137,7 +141,28 @@ public final class DeployMenu extends Menu {
             set(SPECIALS.get(index + 1), game.heroes().card(viewer, faction, heroes.get(index),
                     view.specials().get(index + 1).selected(), confirmed));
         }
-        drawMap(view, suggested);
+        var places = view.places().stream().collect(Collectors.toMap(DeployScreen.Place::spawn, place -> place));
+        mapSlots.forEach((spawn, slot) -> set(slot, Optional.ofNullable(places.get(spawn))
+                .map(place -> marker(faction, place, suggested)).orElse(null)));
+    }
+
+    /**
+     * Whether the title no longer shows {@code current}: at once for the player's own choices, and for a change of spawn
+     * marks once it held for the settle time.
+     */
+    private boolean reopens(DeployScreen.View current) {
+        if (shown.filter(current::equals).isPresent()) {
+            unsettled = Optional.empty();
+            return false;
+        }
+        if (shown.map(DeployScreen.View::withoutSpawnMarks).filter(current.withoutSpawnMarks()::equals).isEmpty()) {
+            return true;
+        }
+        if (unsettled.filter(current::equals).isEmpty()) {
+            unsettled = Optional.of(current);
+            unsettledSince = game.tick();
+        }
+        return game.tick() - unsettledSince >= settleTicks;
     }
 
     /**
@@ -171,26 +196,26 @@ public final class DeployMenu extends Menu {
             specials.add(new DeployScreen.Special(plain("hero." + hero.key() + ".short"), DeployScreen.Portrait.of(hero),
                     game.heroes().cost(side), game.heroes().affordable(viewer, side, hero), picked.filter(hero::equals).isPresent()));
         }
-        var deployment = game.deployment();
-        var chosen = fighter.choosing().flatMap(Fighter.Choosing::chosen);
-        boolean confirmed = fighter.choosing().filter(Fighter.Choosing::confirmed).isPresent();
-        var recommended = deployment.recommended(viewer);
+        var recommended = game.deployment().recommended(viewer);
         var places = new ArrayList<DeployScreen.Place>();
-        BiConsumer<Spawn, String> place = (spawn, name) -> {
-            boolean open = deployment.available(side, spawn);
-            var selection = !open || chosen.filter(spawn::equals).isEmpty() ? DeployScreen.Selection.NONE
-                    : confirmed ? DeployScreen.Selection.CONFIRMED : DeployScreen.Selection.PENDING;
-            places.add(new DeployScreen.Place(spawn, name, colour(side, spawn), open, open && spawn.equals(recommended), selection));
-        };
-        place.accept(new Spawn.Headquarters(), plain("deploy.headquarters"));
+        places.add(place(side, new Spawn.Headquarters(), plain("deploy.headquarters"), recommended));
         for (int index : game.posts().indices()) {
-            place.accept(new Spawn.Post(index), plain("deploy.screen.post", game.posts().name(index)));
+            places.add(place(side, new Spawn.Post(index), plain("deploy.screen.post", game.posts().name(index)), recommended));
         }
-        game.front().ifPresent(front -> place.accept(new Spawn.Dropship(), plain("deploy.screen.dropship",
-                Placeholder.unparsed("letter", Posts.letter(front.post())))));
+        game.front().ifPresent(front -> places.add(place(side, new Spawn.Dropship(), plain("deploy.screen.dropship",
+                Placeholder.unparsed("letter", Posts.letter(front.post()))), recommended)));
         var buttons = List.of(plain("deploy.screen.close"), plain("deploy.screen.deploy"));
         return Optional.of(new DeployScreen.View(side, game.messages().get("deploy.title"), buttons, role, cards, specials, places));
     }
+
+    private DeployScreen.Place place(Faction side, Spawn spawn, String name, Spawn recommended) {
+        var choosing = game.fighter(viewer).choosing();
+        boolean open = game.deployment().available(side, spawn);
+        var selection = choosing.flatMap(Fighter.Choosing::chosen).filter(spawn::equals).isEmpty() ? DeployScreen.Selection.NONE
+                : choosing.filter(Fighter.Choosing::confirmed).isPresent() ? DeployScreen.Selection.CONFIRMED : DeployScreen.Selection.PENDING;
+        return new DeployScreen.Place(spawn, name, colour(side, spawn), open, open && spawn.equals(recommended), selection);
+    }
+
 
     /** The colour of a spawn's badge: its owner's, white for a neutral post or the dropship. */
     private int colour(Faction faction, Spawn spawn) {
@@ -289,21 +314,17 @@ public final class DeployMenu extends Menu {
     }
 
     /** Posts and headquarters where the map puts them, north up and east right, and the dropship in its own cell. */
-    private void drawMap(DeployScreen.View view, Spawn suggested) {
-        var faction = view.faction();
-        if (mapSlots.isEmpty()) {
-            var markers = new ArrayList<TacticalLayout.Marker>();
-            var headquarters = game.map().headquarters().get(faction).zone().getCenter();
-            markers.add(new TacticalLayout.Marker(new Spawn.Headquarters(), new BattlePlan.Point(headquarters.getX(), headquarters.getZ())));
-            for (int index : game.posts().indices()) {
-                var center = game.map().posts().get(index).center();
-                markers.add(new TacticalLayout.Marker(new Spawn.Post(index), new BattlePlan.Point(center.getX(), center.getZ())));
-            }
-            mapSlots = TacticalLayout.project(markers, MAP);
+    private Map<Spawn, Integer> mapSlots(Faction faction) {
+        var markers = new ArrayList<TacticalLayout.Marker>();
+        var headquarters = game.map().headquarters().get(faction).zone().getCenter();
+        markers.add(new TacticalLayout.Marker(new Spawn.Headquarters(), new BattlePlan.Point(headquarters.getX(), headquarters.getZ())));
+        for (int index : game.posts().indices()) {
+            var center = game.map().posts().get(index).center();
+            markers.add(new TacticalLayout.Marker(new Spawn.Post(index), new BattlePlan.Point(center.getX(), center.getZ())));
         }
-        var places = view.places().stream().collect(Collectors.toMap(DeployScreen.Place::spawn, place -> place));
-        mapSlots.forEach((spawn, slot) -> set(slot, marker(faction, places.get(spawn), suggested)));
-        set(DROPSHIP_SLOT, Optional.ofNullable(places.get(new Spawn.Dropship())).map(place -> marker(faction, place, suggested)).orElse(null));
+        var slots = new HashMap<>(TacticalLayout.project(markers, MAP));
+        slots.put(new Spawn.Dropship(), MAP + TacticalLayout.DROPSHIP_CELL);
+        return Map.copyOf(slots);
     }
 
     /**
@@ -397,10 +418,25 @@ public final class DeployMenu extends Menu {
         };
     }
 
+    /** A card plays the sound of its own outcome, and a locked spawn its refusal. */
+    @Override
+    protected boolean automaticClickSound(int slot, InventoryClickEvent event) {
+        var faction = game.factionOf(viewer);
+        return !CLASS_CARDS.contains(slot) && !SPECIALS.contains(slot) && spawnAt(slot)
+                .filter(spawn -> faction.filter(side -> !game.deployment().available(side, spawn)).isPresent()).isEmpty();
+    }
+
+    private Optional<Spawn> spawnAt(int slot) {
+        return mapSlots.entrySet().stream().filter(entry -> entry.getValue() == slot).map(Map.Entry::getKey).findFirst();
+    }
+
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         if (slot == CLOSE) {
             Menu.close(player);
+            return;
+        }
+        if (!game.deployment().deciding(player)) {
             return;
         }
         if (slot == DEPLOY) {
@@ -422,10 +458,6 @@ public final class DeployMenu extends Menu {
             game.chooseHero(player, heroes.get(heroIndex));
             return;
         }
-        mapSlots.entrySet().stream().filter(entry -> entry.getValue() == slot).findFirst()
-                .ifPresent(entry -> game.deployment().choose(player, entry.getKey()));
-        if (slot == DROPSHIP_SLOT) {
-            game.deployment().choose(player, new Spawn.Dropship());
-        }
+        spawnAt(slot).ifPresent(spawn -> game.deployment().choose(player, spawn));
     }
 }

@@ -139,12 +139,24 @@ final class DeployScreen {
 
     /**
      * A spawn as the list right of the slots names it, with the marks its marker on the map wears: the badge in its
-     * owner's colour, outlined while locked, the star for the recommended spawn and the frame of the player's choice.
+     * owner's colour, outlined while locked, the star for the recommended spawn and the frame of the player's choice,
+     * which a locked spawn hides.
      */
-    record Place(Spawn spawn, String name, int colour, boolean open, boolean recommended, Selection selection) { }
+    record Place(Spawn spawn, String name, int colour, boolean open, boolean recommended, Selection selection) {
+
+        private Place unmarked() {
+            return new Place(spawn, name, colour, true, false, selection);
+        }
+    }
 
     record View(Faction faction, Component title, List<String> buttons, Role role, List<ClassCard> classes,
-                List<Special> specials, List<Place> places) { }
+                List<Special> specials, List<Place> places) {
+
+        /** This view without what the battle flips on its own: which spawns are locked and which one is recommended. */
+        View withoutSpawnMarks() {
+            return new View(faction, title, buttons, role, classes, specials, places.stream().map(Place::unmarked).toList());
+        }
+    }
 
     private final Messages messages;
     private final TextComponent.Builder title = Component.text();

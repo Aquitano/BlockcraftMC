@@ -146,9 +146,15 @@ and range, a dash where a hero's blade has none, weapon, both abilities with the
 battle points as `Deine Kampfpunkte`. Right of them it lists the spawns with the marks their markers wear and explains
 the markers. In the chest are the two labelled buttons, the four class cards, then the reinforcement and both heroes
 with their costs, in red and with a padlock while the player cannot pay or no slot is free. The chest's title draws that
-window, so it cannot change while the chest is open; a choice, a change in battle points or in what the player can pay
-for, a spawn locking, opening or becoming the recommendation, or the dropship coming or going opens the menu again with
-a new one, at most once a second. The countdowns and the posts' blinking are items and change in place.
+window, so it cannot change while the chest is open. A click on a class, a reinforcement, a hero or a spawn, a change in
+battle points or in what the player can pay for, or the dropship coming or going opens the menu again with a new one at
+once. A spawn locking, opening or becoming the recommendation must first hold for `respawn.screen-settle-ticks`, by
+default two and a half seconds, because an enemy walking along a post's clearance would otherwise reopen the window
+again and again, and a click while it reopens is lost. Its marker shows the change at once. The countdowns and the
+posts' blinking are items and change in place.
+
+From the fade to the deployment on, the menu takes no more choices, so the player lands where and as whom they were
+when it began. A card plays only the sound of its outcome, and a locked spawn only the deny sound.
 
 The spawns stand on a map in the player's own inventory, which the menu borrows while it is open: north up, east right,
 the current map's posts and headquarters at one scale, overlapping markers moved apart. The dropship has the bottom-right

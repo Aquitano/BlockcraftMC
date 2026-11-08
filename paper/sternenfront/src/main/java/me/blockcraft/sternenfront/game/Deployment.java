@@ -128,7 +128,7 @@ public final class Deployment {
     }
 
     public void openDeploy(Player player) {
-        if (!game.choosing(player)) {
+        if (!deciding(player)) {
             return;
         }
         var menu = new DeployMenu(game, player);
@@ -144,7 +144,7 @@ public final class Deployment {
     private void choose(Player player, Spawn spawn, boolean remember) {
         var fighter = game.fighterIfAny(player);
         var faction = game.factionOf(player);
-        if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || faction.isEmpty()) {
+        if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || faction.isEmpty() || !deciding(player)) {
             return;
         }
         if (!available(faction.get(), spawn)) {
@@ -158,8 +158,15 @@ public final class Deployment {
             deploy(player, spawn);
         } else {
             showChoosing(player);
-            refreshMenu(player);
         }
+    }
+
+    /**
+     * Whether the player may still change whom they deploy as and where: not once the fade to their deployment began,
+     * which lands them where and as whom they were when it began.
+     */
+    public boolean deciding(Player player) {
+        return game.choosing(player) && !presentation.deploying(player);
     }
 
     public boolean available(Faction faction, Spawn spawn) {

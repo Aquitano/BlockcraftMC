@@ -27,6 +27,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DeployScreenTest {
@@ -114,6 +115,23 @@ public class DeployScreenTest {
         var matcher = Pattern.compile("\\b" + name + " = (?:List\\.of\\()?([^);]*)\\)?;", Pattern.DOTALL).matcher(source());
         assertTrue(name, matcher.find());
         return Arrays.stream(matcher.group(1).split(",")).map(String::strip).toList();
+    }
+
+    /** The battle locks and recommends spawns on its own, so only those marks wait to settle; the player's choice does not. */
+    @Test
+    public void onlyTheBattlesSpawnMarksAreLeftOutOfTheSettledView() {
+        var view = view(3, true);
+        var places = new java.util.ArrayList<>(view.places());
+        var post = places.get(1);
+        places.set(1, new DeployScreen.Place(post.spawn(), post.name(), post.colour(), !post.open(), !post.recommended(), post.selection()));
+        var flipped = new DeployScreen.View(view.faction(), view.title(), view.buttons(), view.role(), view.classes(), view.specials(),
+                List.copyOf(places));
+        places.set(1, new DeployScreen.Place(post.spawn(), post.name(), post.colour(), post.open(), post.recommended(), DeployScreen.Selection.PENDING));
+        var chosen = new DeployScreen.View(view.faction(), view.title(), view.buttons(), view.role(), view.classes(), view.specials(),
+                places);
+
+        assertEquals(view.withoutSpawnMarks(), flipped.withoutSpawnMarks());
+        assertNotEquals(view.withoutSpawnMarks(), chosen.withoutSpawnMarks());
     }
 
     /** The headquarters with up to five posts, with and without the dropship, so every line of the list is drawn on. */
