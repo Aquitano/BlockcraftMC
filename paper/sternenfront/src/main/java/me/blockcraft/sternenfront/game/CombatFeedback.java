@@ -38,6 +38,14 @@ public final class CombatFeedback {
 
     public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE, HEADSHOT, CHAIN, ORDER }
 
+    /**
+     * The combat HUD: {@code meter}, {@code width} pixels wide, centred on the action bar, and {@code corner}, a panel
+     * that takes no room and that the pack's shader moves into a corner from the line's middle.
+     */
+    public record Hud(Component meter, int width, Component corner) {
+        static final Hud NONE = new Hud(Component.empty(), 0, Component.empty());
+    }
+
     static final class State {
         Marker marker;
         long markerUntil;
@@ -63,7 +71,7 @@ public final class CombatFeedback {
         long drawnHurtUntil;
         Optional<Integer> drawnSpread = Optional.empty();
         long spreadRefreshAt;
-        Component hud = Component.empty();
+        Hud hud = Hud.NONE;
 
         boolean eliteAvailable(boolean available, long tick, int duration) {
             boolean announce = available && !eliteReady;
@@ -144,11 +152,14 @@ public final class CombatFeedback {
             return messages.get(key, Formatter.number("points", points), Formatter.number("kills", inARow));
         }
 
-        Component compose(Component nextHud, Component feedback, Optional<Component> course) {
-            if (!nextHud.equals(Component.empty())) {
-                hud = nextHud;
+        /** The corner panel goes in the line's middle, which needs the line's width as the client measures it. */
+        Component compose(Component feedback, Optional<Component> course) {
+            var line = UiFont.after(feedback, REWARD_WIDTH).append(Component.space());
+            if (course.isPresent()) {
+                return line.append(course.get());
             }
-            return UiFont.after(feedback, REWARD_WIDTH).append(Component.space()).append(course.orElse(hud));
+            int width = Math.max(REWARD_WIDTH, UiFont.width(feedback)) + UiFont.width(Component.space()) + hud.width();
+            return UiFont.centredOn(line.append(hud.meter()), width, hud.corner());
         }
     }
 
@@ -220,7 +231,7 @@ public final class CombatFeedback {
                 case KILL -> killVolume;
             });
         }
-        show(player, Component.empty());
+        refresh(player);
     }
 
     /** Counts a kill towards a chain of them, with a chime that climbs as it goes on. */
@@ -236,7 +247,7 @@ public final class CombatFeedback {
     public void earned(Player player, int points, Reward reward) {
         if (points > 0) {
             state(player).earned(reward, points, game.tick(), rewardTicks);
-            show(player, Component.empty());
+            refresh(player);
         }
     }
 
@@ -251,7 +262,13 @@ public final class CombatFeedback {
         return !game.onField(player) || api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
     }
 
-    public void show(Player player, Component hud) {
+    public void show(Player player, Hud hud) {
+        state(player).hud = hud;
+        refresh(player);
+    }
+
+    /** Draws the action bar again with the combat HUD it last showed. */
+    public void refresh(Player player) {
         if (hidden(player)) {
             return;
         }
@@ -285,7 +302,7 @@ public final class CombatFeedback {
                 : eliteReady && tick < state.eliteReadyUntil ? game.messages().get("feedback.elite-ready")
                 : Component.empty();
         ScreenEffects.hurt(player, hurtIntensity(player, game.combat().hurtTicks(player)));
-        var combined = state.compose(hud, line, courseStatus.apply(player));
+        var combined = state.compose(line, courseStatus.apply(player));
         if (tick < state.rewardUntil) {
             api.notifications().feedbackNow(player, combined, 5);
         } else {

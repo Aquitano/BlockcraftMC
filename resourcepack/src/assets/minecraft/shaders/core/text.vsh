@@ -41,7 +41,7 @@ void main() {
 #ifdef IS_GUI
     int panelTint = blockcraft_panel_tint(marker);
     if (panelTint >= 0) {
-        position.xy = blockcraft_panel_position(Position.xy, marker.g, ProjMat);
+        position.xy = blockcraft_panel_position(Position.xy, marker, ProjMat);
         textColor = vec4(BLOCKCRAFT_PANEL_TINTS[panelTint], Color.a);
     }
 #endif

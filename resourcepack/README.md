@@ -10,7 +10,9 @@ screen effects, and the Sternenfront intro.
 - **Plain fallback.** Shared code draws a vanilla version for a client without the pack, because a client can be in the
   world before it loads. `UiFont.overlaid` has no fallback, and Sternenfront's class and deploy menus use it.
 - **Slot highlight.** The pack blanks `container/slot_highlight_back` and `_front`, because the highlight would mark one
-  square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory.
+  square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory. A menu
+  item that needs a frame draws it in its own model, as Sternenfront's spawn markers do with `oversized_in_gui` so the
+  frame can cover the slot's border.
 - **Items other players can see.** A held or worn item or a display keeps its vanilla item and asks for the pack's model
   through custom_model_data. The pack overrides the vanilla item in `assets/minecraft/items/<item>.json` with a `select`
   on that string, whose fallback is the item's own vanilla definition. So a client without the pack draws the vanilla
@@ -142,9 +144,12 @@ Marked text shadows are suppressed. Ordinary text must avoid these reserved colo
 
 GUI text in RGB `(231, row, 176 + tint)` is the HUD panel in the screen's top-left corner, which Sternenfront's minimap
 draws on a boss bar line. `hud_panel.glsl` hangs each glyph `row` pixels below the panel's top and colours it from its
-tint table; shadows carry the same row. The line must take no width, because the shader expects it to start in the
-screen's middle. The shader finds a glyph's boss bar line from where the glyph lies in it, so every glyph of `HudArt`'s
+tint table; shadows carry the same row. The panel must take no width and start in the screen's middle, where the shader
+expects it. The shader finds a glyph's boss bar line from where the glyph lies in it, so every glyph of `HudArt`'s
 `blockcraft:minimap` font hangs from the line's top and is at most 16 pixels tall. `MinimapLayoutTest` checks both.
+Red 232 instead moves a panel on the action bar to the bottom-right corner, with every glyph left of the panel's start;
+Sternenfront's ability tiles use it with `HudArt`'s `blockcraft:abilities` font. The action bar holds other text, so the
+server places the panel at that line's middle; `AbilityPanelTest` and `CombatFeedbackTest` check the widths involved.
 
 Sternenfront target outlines reserve scoreboard colors `DARK_AQUA` and `DARK_RED`. Its server sends those colors only
 to combat viewers with the pack applied. The outline shader stores logarithmic reversed-Z depth in the RGB bytes and

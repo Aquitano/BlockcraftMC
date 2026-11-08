@@ -108,19 +108,20 @@ public final class UiFont {
     /** An icon in the colour of the text around it. */
     /** {@code text} then empty space up to {@code width}, so what follows stays put however long {@code text} is. */
     public static Component before(Component text, int width) {
-        return Component.empty().append(text).append(gap(width - textWidth(text)));
+        return Component.empty().append(text).append(gap(width - width(text)));
     }
 
     /** Empty space up to {@code width}, then {@code text}, so what is before it stays put however long {@code text} is. */
     public static Component after(Component text, int width) {
-        return Component.empty().append(gap(width - textWidth(text))).append(text);
+        return Component.empty().append(gap(width - width(text))).append(text);
     }
 
     private static Component gap(int pixels) {
         return Component.text(shift(Math.max(0, pixels))).font(KEY);
     }
 
-    private static int textWidth(Component text) {
+    /** How wide the client draws {@code text}, which must be in the default font. */
+    public static int width(Component text) {
         return PlainTextComponentSerializer.plainText().serialize(text).codePoints().map(UiFont::advance).sum();
     }
 
@@ -136,7 +137,12 @@ public final class UiFont {
 
     /** {@code marker}, which takes no room, moved to the middle of {@code line} and followed by it, as a centred line is drawn. */
     public static Component centredOn(Component line, Component marker) {
-        int half = textWidth(line) / 2;
+        return centredOn(line, width(line), marker);
+    }
+
+    /** As {@link #centredOn(Component, Component)} for a {@code line} with glyphs of the pack, whose width the caller knows. */
+    public static Component centredOn(Component line, int width, Component marker) {
+        int half = width / 2;
         return Component.empty().append(gap(half)).append(marker).append(Component.text(shift(-half)).font(KEY)).append(line);
     }
 

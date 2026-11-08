@@ -1,10 +1,12 @@
 package me.blockcraft.sternenfront.menu;
 
 import com.google.gson.JsonParser;
+import me.blockcraft.sternenfront.game.Faction;
 import org.junit.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import static org.junit.Assert.*;
 
@@ -19,7 +21,7 @@ public class TacticalMarkerAssetsTest {
             for (int variant = 0; variant < 2; variant++) {
                 String name = "post_" + (char) ('a' + post) + (variant == 0 ? "_filled" : "_hollow");
                 var route = JsonParser.parseString(Files.readString(root.resolve("items/sternenfront/" + name + ".json")))
-                        .getAsJsonObject().getAsJsonObject("model");
+                        .getAsJsonObject().getAsJsonObject("model").getAsJsonArray("models").get(0).getAsJsonObject();
                 assertEquals("blockcraft:item/sternenfront/" + name, route.get("model").getAsString());
                 assertEquals("minecraft:custom_model_data", route.getAsJsonArray("tints").get(0).getAsJsonObject().get("type").getAsString());
                 var model = JsonParser.parseString(Files.readString(root.resolve("models/item/sternenfront/" + name + ".json"))).getAsJsonObject();
@@ -30,6 +32,16 @@ public class TacticalMarkerAssetsTest {
                 assertEquals((post * 2 + variant) * 1.6, uv.get(0).getAsDouble(), 0.001);
                 assertEquals((post * 2 + variant + 1) * 1.6, uv.get(2).getAsDouble(), 0.001);
             }
+        }
+    }
+
+    /** The deploy menu asks the pack for a faction's headquarters marker by the colour of its banner. */
+    @Test
+    public void everyFactionsHeadquartersHasAMarkerInThePack() {
+        for (var faction : Faction.values()) {
+            var marker = Path.of("../../resourcepack/src/assets/blockcraft/items/sternenfront/spawn_headquarters_"
+                    + faction.blocks().name().toLowerCase(Locale.ROOT) + ".json");
+            assertTrue(marker.toString(), Files.isRegularFile(marker));
         }
     }
 }

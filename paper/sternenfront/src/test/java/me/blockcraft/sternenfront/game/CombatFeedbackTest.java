@@ -1,16 +1,24 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.combat.DamageDirection;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
-import java.nio.file.Path;
-import java.util.Optional;
-
+import org.bukkit.map.MinecraftFont;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 
@@ -40,31 +48,39 @@ public class CombatFeedbackTest {
         assertEquals("2x +50 KP", plain(state.reward(messages)));
     }
 
+    /** The client starts a line half its width left of the middle, where the shader expects the corner panel. */
     @Test
-    public void feedbackKeepsTheLatestHudAndLeavesItInPlace() {
+    public void theCornerPanelStartsInTheMiddleOfTheLineHoweverLongTheFeedback() throws IOException {
+        var meter = Component.text("Deckung");
+        var corner = Component.text("\ue000").font(Key.key("blockcraft", "abilities"));
+        var fonts = new HashMap<Key, Map<Integer, Integer>>();
+        fonts.put(UiFont.KEY, PackFonts.advances("ui"));
+        var vanilla = new HashMap<Integer, Integer>();
+        "+25 KP Deckung Kopfschuss Abschuss Verteidigt".codePoints().forEach(codepoint ->
+                vanilla.put(codepoint, MinecraftFont.Font.getWidth(Character.toString(codepoint)) + 1));
+        fonts.put(null, vanilla);
         var state = new CombatFeedback.State();
-        var hud = Component.text("Deckung | F 8s | Q 2s");
-        var updated = Component.text("Deckung | F 7s | Q 1s");
-        var feedback = Component.text("+25 KP");
-
-        assertTrue(plain(state.compose(hud, feedback, Optional.empty())).endsWith("+25 KP Deckung | F 8s | Q 2s"));
-        assertTrue(plain(state.compose(Component.empty(), feedback, Optional.empty())).endsWith("+25 KP Deckung | F 8s | Q 2s"));
-        state.compose(updated, feedback, Optional.empty());
-        assertTrue(plain(state.compose(Component.empty(), Component.empty(), Optional.empty())).endsWith(" Deckung | F 7s | Q 1s"));
+        state.hud = new CombatFeedback.Hud(meter, PackFonts.width(meter, fonts), corner);
+        for (var feedback : List.of(Component.empty(), Component.text("+25 KP"),
+                Component.text("Kopfschuss Abschuss Verteidigt Abschuss +25 KP"))) {
+            var parts = state.compose(feedback, Optional.empty()).children();
+            assertEquals(corner, parts.get(1));
+            int rest = PackFonts.width(Component.empty().append(parts.get(2)).append(parts.get(3)), fonts) + PackFonts.width(parts.get(0), fonts);
+            assertEquals(feedback.toString(), rest / 2, PackFonts.width(parts.get(0), fonts));
+            assertTrue(plain(parts.get(3)).endsWith(plain(feedback) + " Deckung"));
+        }
     }
 
     @Test
-    public void activeCourseKeepsItsTimerThroughCombatUpdatesAndReturnsToTheLatestHud() {
+    public void activeCourseReplacesTheHudWithItsTimer() {
         var state = new CombatFeedback.State();
         var timer = Optional.<Component>of(Component.text("Kraninspektion 2,00 s · Tor 2/4"));
-        var hud = Component.text("Deckung | F 8s | Q 2s");
-        var updated = Component.text("Deckung | F 7s | Q 1s");
-        var reward = Component.text("+25 KP");
+        state.hud = new CombatFeedback.Hud(Component.text("Deckung"), 28, Component.text("Tiles"));
 
-        assertTrue(plain(state.compose(hud, Component.empty(), timer)).endsWith(" Kraninspektion 2,00 s · Tor 2/4"));
-        assertTrue(plain(state.compose(Component.empty(), reward, timer)).endsWith("+25 KP Kraninspektion 2,00 s · Tor 2/4"));
-        assertTrue(plain(state.compose(updated, Component.empty(), timer)).endsWith(" Kraninspektion 2,00 s · Tor 2/4"));
-        assertTrue(plain(state.compose(Component.empty(), Component.empty(), Optional.empty())).endsWith(" Deckung | F 7s | Q 1s"));
+        assertTrue(plain(state.compose(Component.empty(), timer)).endsWith(" Kraninspektion 2,00 s · Tor 2/4"));
+        assertTrue(plain(state.compose(Component.text("+25 KP"), timer)).endsWith("+25 KP Kraninspektion 2,00 s · Tor 2/4"));
+        assertFalse(plain(state.compose(Component.empty(), timer)).contains("Tiles"));
+        assertTrue(plain(state.compose(Component.empty(), Optional.empty())).endsWith(" Deckung"));
     }
 
     @Test

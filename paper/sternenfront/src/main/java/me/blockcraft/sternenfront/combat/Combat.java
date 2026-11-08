@@ -7,7 +7,6 @@ import me.blockcraft.sternenfront.game.SternenfrontItem;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.hero.Sabers;
-import net.kyori.adventure.text.Component;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -74,7 +73,7 @@ public final class Combat {
             var state = state(player);
             state.hurtFrom = source.clone();
             state.hurtUntil = game.tick() + config.damageIndicatorTicks();
-            game.feedback().show(player, Component.empty());
+            game.feedback().refresh(player);
         }
     }
 

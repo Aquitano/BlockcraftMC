@@ -140,9 +140,12 @@ The dropship remains an explicit choice and is never recommended automatically.
 The right toolbar button opens a tactical schematic with north up and east right. It projects the current map's post and
 HQ positions into inventory slots, preserving scale and separating overlapping markers. Colours show ownership.
 Posts A–E use the same letter badges as the combat HUD in both deployment views. Filled badges allow deployment, outlines mark locked posts,
-and blinking badges mark contested or attacked posts. A confirmed available spawn glows.
-The confirmation button names its target and shows the wait or automatic deployment countdown. Hovering shows the post
-name, recommendation, selection and why deployment is locked. The landing button names its target
+and blinking badges mark contested or attacked posts. In both views the pack frames the chosen spawn on its slot's border:
+gold corners while it waits for a confirmation, a green frame and a glow once confirmed. A star marks the recommended
+spawn and a padlock a locked one. The spawn the player will land at shows the seconds left as its count: the wait once
+confirmed, otherwise the automatic deployment. The confirmation button names its target and shows the wait or automatic
+deployment countdown. Hovering shows the post name, recommendation, selection, and for a locked spawn `Gesperrt` with
+the reason. The landing button names its target
 post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
 After spawning, the order bar shows the assault's priority post, or the nearest objective outside the assault, with its
@@ -191,16 +194,22 @@ four ticks around the crosshair show it. They open one step each time the spread
 a multiple of that blaster's base in `combat-feedback.spread-steps`, so every blaster closes standing still, crouched or
 cool and opens fully hot on the move. A scoped or spreadless long rifle shows none, and the vanilla crosshair stays inside
 the ticks. All three share the title's subtitle, centred with `UiFont`.
-Kill and assist popups appear briefly beside the heat, guard and ability-cooldown HUD.
+Kill and assist popups appear briefly beside the heat or guard meter.
 A grenade holds `abilities.grenade.charges` throws, full on each deployment, and they come back one at a time, each
 `cooldown-seconds` after the one before. The HUD shows the throws left as `1/2` and the seconds to the next only when none is
 left, which is also the only time the vanilla cooldown runs on its material. Bots keep a plain cooldown.
 Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` and `combat-feedback.elite-ready-ticks`;
 idle kill counts and point progress stay hidden.
 Nearby gains combine into one segment.
-F and Q show distinct three-letter ability labels. The meter states use the space left after those labels so the HUD keeps
-its previous width budget for GUI scale 3 on a 1366x768 screen. `Kühlt` means cooling. A loadout change explains each binding
-on the existing order bar for `respawn.ability-hint-seconds`, and the deploy chat line gives the full names.
+A player with the pack sees each ability as a tile in the screen's bottom-right corner: Q against the corner, F left of
+it, each with its own icon under a keycap. A tile is bright when ready, shows the uses left as `2/2` while it holds more
+than one, and dims with the seconds left while it recharges; a key with nothing bound shows an empty dimmed tile. A bladed
+hero's leap gets a tile under a double-jump keycap while it recharges, and a kill streak's strike a gold-ringed tile under
+Shift+F until it is thrown. The tiles ride on the action bar: `CombatHud` puts them in the line's middle, which needs the
+line's width as the client measures it, and the pack's text shader moves them into the corner. Feedback that replaces
+the action bar, such as an ability's cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
+explains each binding on the existing order bar for `respawn.ability-hint-seconds`, and the deploy chat line gives the
+full names.
 Death or disconnect restarts an unfinished hint sequence on the next deployment. Completed hints stay hidden until the abilities change.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.

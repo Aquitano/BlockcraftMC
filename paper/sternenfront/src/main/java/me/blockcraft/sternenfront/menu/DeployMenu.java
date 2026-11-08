@@ -28,6 +28,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +39,7 @@ public final class DeployMenu extends Menu {
     private static final int REINFORCEMENT_SLOT = 38;
     private static final int DROPSHIP_SLOT = 53;
     private static final long TICKS_PER_SECOND = 20;
+    private static final int MAX_COUNTDOWN = 99;
 
     private final SternenfrontGame game;
     private final Player viewer;
@@ -127,57 +129,88 @@ public final class DeployMenu extends Menu {
             set(HERO_SLOTS.get(index), game.heroes().card(viewer, faction.get(), hero, picked.filter(hero::equals).isPresent(), confirmed));
         }
         set(firstPostSlot() - 1, spawn(faction.get(), new Spawn.Headquarters(), chosen,
-                Material.valueOf(faction.get().blocks().name() + "_BANNER"), messages.get("deploy.headquarters"), List.of()));
+                Material.valueOf(faction.get().blocks().name() + "_BANNER"), messages.get("deploy.headquarters")));
         var posts = game.posts();
         for (int index = 0; index < posts.size(); index++) {
-            var owner = posts.owner(index);
-            var banner = Material.valueOf(owner.map(Faction::blocks).orElse(Faction.NEUTRAL).name() + "_BANNER");
-            var why = owner.isEmpty() ? "deploy.post-neutral"
-                    : owner.get() != faction.get() ? "deploy.post-enemy" : "deploy.post-contested";
-            set(firstPostSlot() + index, spawn(faction.get(), new Spawn.Post(index), chosen, banner,
-                    messages.get("deploy.post", posts.name(index)), List.of(messages.get(why))));
+            var banner = Material.valueOf(posts.owner(index).map(Faction::blocks).orElse(Faction.NEUTRAL).name() + "_BANNER");
+            set(firstPostSlot() + index, spawn(faction.get(), new Spawn.Post(index), chosen, banner, messages.get("deploy.post", posts.name(index))));
         }
         set(DROPSHIP_SLOT, game.front().map(front -> spawn(faction.get(), new Spawn.Dropship(), chosen, Material.FIREWORK_ROCKET,
-                messages.get("deploy.dropship", posts.name(front.post())), List.of(messages.get("deploy.dropship-locked")))).orElse(null));
+                messages.get("deploy.dropship", posts.name(front.post())))).orElse(null));
     }
 
-    private ItemStack spawn(Faction faction, Spawn spawn, Optional<Spawn> chosen, Material icon, Component name,
-                            List<Component> unavailable) {
+    /**
+     * A spawn's marker, the same in both views. The pack frames the chosen spawn, gold while it waits for a confirmation
+     * and green once confirmed, marks the recommended spawn with a star and a locked one with a padlock. The spawn the
+     * player will land at counts down the seconds to it.
+     */
+    private ItemStack spawn(Faction faction, Spawn spawn, Optional<Spawn> chosen, Material icon, Component name) {
         var messages = game.messages();
-        boolean available = game.deployment().available(faction, spawn);
+        var deployment = game.deployment();
+        boolean available = deployment.available(faction, spawn);
         boolean selected = chosen.filter(spawn::equals).isPresent();
         boolean confirmed = selected && game.fighter(viewer).choosing().filter(Fighter.Choosing::confirmed).isPresent();
+        boolean recommended = spawn.equals(deployment.recommended(viewer));
         var lore = new ArrayList<Component>();
-        if (spawn instanceof Spawn.Post post) {
-            lore.add(messages.get(game.posts().owner(post.index()).isEmpty() ? "deploy.post-neutral"
-                    : game.posts().owner(post.index()).filter(faction::equals).isPresent() ? "deploy.post-own" : "deploy.post-enemy"));
-            if (game.posts().contested(post.index())) lore.add(messages.get("deploy.post-contested"));
-        }
-        boolean recommended = spawn.equals(game.deployment().recommended(viewer));
-        if (recommended) lore.add(messages.get("deploy.recommended"));
         if (!available) {
-            unavailable.stream().filter(line -> !lore.contains(line)).forEach(lore::add);
-        } else if (selected) {
-            lore.add(messages.get(confirmed ? "deploy.chosen" : "deploy.pending"));
-        } else {
-            lore.add(messages.get("deploy.choose"));
+            lore.add(messages.get("deploy.locked"));
+            lore.addAll(lockReasons(faction, spawn));
         }
+        if (spawn instanceof Spawn.Post post) {
+            var owner = game.posts().owner(post.index());
+            var lines = new ArrayList<>(List.of(messages.get(owner.isEmpty() ? "deploy.post-neutral"
+                    : owner.filter(faction::equals).isPresent() ? "deploy.post-own" : "deploy.post-enemy")));
+            if (game.posts().contested(post.index())) lines.add(messages.get("deploy.post-contested"));
+            lines.stream().filter(line -> !lore.contains(line)).forEach(lore::add);
+        }
+        if (recommended) lore.add(messages.get("deploy.recommended"));
+        if (available) lore.add(messages.get(!selected ? "deploy.choose" : confirmed ? "deploy.chosen" : "deploy.pending"));
         var item = Items.of(icon).name(name).lore(lore).hideAttributes()
                 .state(!available ? MenuState.LOCKED : confirmed ? MenuState.ACTIVE : selected ? MenuState.PENDING : MenuState.AVAILABLE);
         if (confirmed && available) {
             item.glow();
         }
         var marker = item.build();
-        if (spawn instanceof Spawn.Post post && post.index() < 5) {
-            var owner = game.posts().owner(post.index());
-            boolean contested = game.posts().contested(post.index()) || owner.filter(faction::equals).isPresent() && !available;
-            boolean filled = contested ? game.tick() / TICKS_PER_SECOND % 2 == 0 : available;
-            Items.of(marker).model(Key.key("blockcraft", "sternenfront/post_" + (char) ('a' + post.index())
-                    + (filled ? "_filled" : "_hollow")));
-            marker.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData()
-                    .addColor(owner.map(side -> Color.fromRGB(side.text().value())).orElse(Color.WHITE)).build());
+        long landing = confirmed ? deployment.waitTicks(viewer) : deployment.autoTicks(viewer);
+        if (available && spawn.equals(deployment.suggested(viewer)) && landing > 0) {
+            marker.setData(DataComponentTypes.MAX_STACK_SIZE, MAX_COUNTDOWN);
+            marker.setAmount((int) Math.min(MAX_COUNTDOWN, (landing + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND));
         }
+        var look = CustomModelData.customModelData()
+                .addString(available && selected ? confirmed ? "chosen" : "pending" : "")
+                .addString(!available ? "locked" : recommended ? "recommended" : "");
+        switch (spawn) {
+            case Spawn.Post post when post.index() < 5 -> {
+                var owner = game.posts().owner(post.index());
+                boolean contested = game.posts().contested(post.index()) || owner.filter(faction::equals).isPresent() && !available;
+                boolean filled = contested ? game.tick() / TICKS_PER_SECOND % 2 == 0 : available;
+                Items.of(marker).model(Key.key("blockcraft", "sternenfront/post_" + (char) ('a' + post.index())
+                        + (filled ? "_filled" : "_hollow")));
+                look.addColor(owner.map(side -> Color.fromRGB(side.text().value())).orElse(Color.WHITE));
+            }
+            case Spawn.Post ignored -> {
+                return marker;
+            }
+            case Spawn.Headquarters ignored -> Items.of(marker).model(Key.key("blockcraft",
+                    "sternenfront/spawn_headquarters_" + faction.blocks().name().toLowerCase(Locale.ROOT)));
+            case Spawn.Dropship ignored -> Items.of(marker).model(Key.key("blockcraft", "sternenfront/spawn_dropship"));
+        }
+        marker.setData(DataComponentTypes.CUSTOM_MODEL_DATA, look.build());
         return marker;
+    }
+
+    /** Why the faction cannot deploy at {@code spawn} now; its headquarters is always open. */
+    private List<Component> lockReasons(Faction faction, Spawn spawn) {
+        var messages = game.messages();
+        return switch (spawn) {
+            case Spawn.Headquarters ignored -> List.of();
+            case Spawn.Post post -> {
+                var owner = game.posts().owner(post.index());
+                yield List.of(messages.get(owner.isEmpty() ? "deploy.post-neutral"
+                        : owner.get() != faction ? "deploy.post-enemy" : "deploy.post-contested"));
+            }
+            case Spawn.Dropship ignored -> List.of(messages.get("deploy.dropship-locked"));
+        };
     }
 
     private Component targetName(Spawn spawn) {
@@ -216,14 +249,12 @@ public final class DeployMenu extends Menu {
                     || owner.filter(faction::equals).isPresent() && !available);
             var shape = contested ? "_CONCRETE" : available ? "_BANNER" : "_STAINED_GLASS_PANE";
             var banner = Material.valueOf(owner.map(Faction::blocks).orElse(Faction.NEUTRAL).name() + shape);
-            var marker = spawn(faction, spawn, chosen, banner, spawnName(spawn), List.of(game.messages().get("deploy.map-locked")));
-            set(slot, marker);
+            set(slot, spawn(faction, spawn, chosen, banner, spawnName(spawn)));
         });
         info(49, Items.of(Material.COMPASS).name(game.messages().get("deploy.map-orientation"))
                 .lore(game.messages().getLines("deploy.map-lore")).build());
         set(DROPSHIP_SLOT, game.front().map(front -> spawn(faction, new Spawn.Dropship(), chosen, Material.FIREWORK_ROCKET,
-                game.messages().get("deploy.dropship", game.posts().name(front.post())),
-                List.of(game.messages().get("deploy.dropship-locked")))).orElse(null));
+                game.messages().get("deploy.dropship", game.posts().name(front.post())))).orElse(null));
     }
 
     @Override

@@ -1,4 +1,12 @@
 {
-  "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/post_b_hollow",
-    "tints": [{"type": "minecraft:custom_model_data", "index": 0, "default": 16777215}]}
+  "oversized_in_gui": true,
+  "model": {"type": "minecraft:composite", "models": [
+    {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/post_b_hollow",
+      "tints": [{"type": "minecraft:custom_model_data", "index": 0, "default": 16777215}]},
+    {"type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 0,
+      "cases": [{"when": "pending", "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/spawn_pending"}}, {"when": "chosen", "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/spawn_chosen"}}],
+      "fallback": {"type": "minecraft:empty"}},
+    {"type": "minecraft:select", "property": "minecraft:custom_model_data", "index": 1,
+      "cases": [{"when": "recommended", "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/spawn_recommended"}}, {"when": "locked", "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/spawn_locked"}}],
+      "fallback": {"type": "minecraft:empty"}}]}
 }

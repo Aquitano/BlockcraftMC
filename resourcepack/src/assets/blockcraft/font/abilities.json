@@ -1,0 +1,9 @@
+{
+  "providers": [
+    {"type":"bitmap","file":"blockcraft:font/ability_tile.png","ascent":7,"height":20,"chars":["\ue000"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_icons.png","ascent":7,"height":16,"chars":["\ue010\ue011\ue012\ue013\ue014\ue015\ue016\ue017\ue018\ue019\ue01a\ue01b\ue01c\ue01d\ue01e\ue01f\ue020"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_keys.png","ascent":7,"height":9,"chars":["\ue030\ue031"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_symbols.png","ascent":7,"height":7,"chars":["\ue040\ue041\ue042\ue043\ue044\ue045\ue046\ue047\ue048\ue049\ue04a\ue04b\ue04c\ue04d"]},
+    {"type":"bitmap","file":"blockcraft:font/ability_counts.png","ascent":7,"height":7,"chars":["\ue050\ue051\ue052\ue053\ue054\ue055\ue056\ue057\ue058\ue059\ue05a"]}
+  ]
+}
