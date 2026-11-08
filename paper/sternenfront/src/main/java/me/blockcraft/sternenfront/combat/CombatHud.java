@@ -20,13 +20,17 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 /** The heat or guard meter on the action bar, and the ability tiles the pack moves into the bottom-right corner. */
 public final class CombatHud {
 
     private final SternenfrontGame game;
+    /** Each ability's name as the tiles spell it, parsed once instead of on every redraw. */
+    private final Map<String, String> names = new HashMap<>();
 
     public CombatHud(SternenfrontGame game) {
         this.game = game;
@@ -97,7 +101,7 @@ public final class CombatHud {
     }
 
     private String name(String key) {
-        return PlainTextComponentSerializer.plainText().serialize(game.messages().get(key));
+        return names.computeIfAbsent(key, ignored -> PlainTextComponentSerializer.plainText().serialize(game.messages().get(key)));
     }
 
     private static State cooling(int ticks, int total) {

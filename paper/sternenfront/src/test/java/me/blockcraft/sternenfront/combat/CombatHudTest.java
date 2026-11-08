@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.CombatClass;
@@ -7,8 +8,8 @@ import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.HudPanel;
 import me.blockcraft.sternenfront.hero.HeroAbility;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
+import net.kyori.adventure.text.Component;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.map.MinecraftFont;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class CombatHudTest {
                 .forEach(key -> assertNotNull(key, messages.getString("combat.hints." + key)));
         for (var key : List.of("guard", "guarding", "broken", "heat", "hot", "venting")) {
             var state = messages.getString("combat." + key).replace("<seconds>", "99").replaceAll("<[^>]+>", "");
-            assertTrue(state, MinecraftFont.Font.getWidth(state) + 1 <= CombatHud.STATE_WIDTH);
+            assertTrue(state, UiFont.width(Component.text(state)) <= CombatHud.STATE_WIDTH);
         }
     }
 

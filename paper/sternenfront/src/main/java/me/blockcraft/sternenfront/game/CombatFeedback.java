@@ -47,6 +47,24 @@ public final class CombatFeedback {
         static final ActionBar NONE = new ActionBar(Component.empty(), 0, Component.empty());
     }
 
+    /** A line that something became available, shown for a while from the moment it does, and not again until it lapses. */
+    static final class Announcement {
+        boolean available;
+        long until;
+
+        /** Whether it became available just now. */
+        boolean update(boolean available, long tick, int duration) {
+            boolean announce = available && !this.available;
+            if (announce) until = tick + duration;
+            this.available = available;
+            return announce;
+        }
+
+        boolean showing(long tick) {
+            return available && tick < until;
+        }
+    }
+
     static final class PlayerFeedback {
         HitMarker marker;
         long markerUntil;
@@ -62,10 +80,8 @@ public final class CombatFeedback {
         long chainUntil;
         int shownChain;
         long rewardUntil;
-        boolean ready;
-        long readyUntil;
-        boolean eliteReady;
-        long eliteReadyUntil;
+        final Announcement heroReady = new Announcement();
+        final Announcement eliteReady = new Announcement();
         boolean venting;
         boolean drawnMarked;
         Optional<DamageDirection> drawnHurt = Optional.empty();
@@ -73,13 +89,6 @@ public final class CombatFeedback {
         Optional<Integer> drawnSpread = Optional.empty();
         long spreadRefreshAt;
         ActionBar actionBar = ActionBar.NONE;
-
-        boolean eliteAvailable(boolean available, long tick, int duration) {
-            boolean announce = available && !eliteReady;
-            if (announce) eliteReadyUntil = tick + duration;
-            eliteReady = available;
-            return announce;
-        }
 
         boolean hit(HitMarker next, long tick, int ticks) {
             if (tick >= markerUntil || next.ordinal() >= marker.ordinal()) {
@@ -294,18 +303,15 @@ public final class CombatFeedback {
         boolean eliteReady = game.heroOf(player).isEmpty() && game.reinforcementOf(player).isEmpty()
                 && game.factionOf(player).filter(faction -> game.reinforcementUnits().roster()
                 .affordable(player.getUniqueId(), faction, Reinforcement.of(faction))).isPresent();
-        boolean eliteAnnounced = state.eliteAvailable(eliteReady, tick, eliteReadyTicks);
-        if (ready && !state.ready) {
-            state.readyUntil = tick + heroReadyTicks;
-        }
-        if (ready && !state.ready || eliteAnnounced) {
+        boolean heroAnnounced = state.heroReady.update(ready, tick, heroReadyTicks);
+        boolean eliteAnnounced = state.eliteReady.update(eliteReady, tick, eliteReadyTicks);
+        if (heroAnnounced || eliteAnnounced) {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 0.7f, 1.4f);
         }
-        state.ready = ready;
         drawCrosshair(player, state, tick);
         var line = tick < state.rewardUntil ? state.reward(game.messages())
-                : ready && tick < state.readyUntil ? game.messages().get("feedback.hero-ready")
-                : eliteReady && tick < state.eliteReadyUntil ? game.messages().get("feedback.elite-ready")
+                : state.heroReady.showing(tick) ? game.messages().get("feedback.hero-ready")
+                : state.eliteReady.showing(tick) ? game.messages().get("feedback.elite-ready")
                 : Component.empty();
         ScreenEffects.hurt(player, hurtIntensity(player, game.combat().hurtTicks(player)));
         var combined = state.compose(line, courseStatus.apply(player));

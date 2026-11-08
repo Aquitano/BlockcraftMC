@@ -24,14 +24,15 @@ public class CombatFeedbackTest {
 
     @Test
     public void eliteAvailabilityPingsOnceAndExpiresWithoutExtendingOnEachHudUpdate() {
-        var state = new CombatFeedback.PlayerFeedback();
-        assertFalse(state.eliteAvailable(false, 0, 60));
-        assertTrue(state.eliteAvailable(true, 10, 60));
-        assertFalse(state.eliteAvailable(true, 20, 60));
-        assertEquals(70, state.eliteReadyUntil);
-        assertFalse(state.eliteAvailable(false, 100, 60));
-        assertTrue(state.eliteAvailable(true, 200, 60));
-        assertEquals(260, state.eliteReadyUntil);
+        var elite = new CombatFeedback.Announcement();
+        assertFalse(elite.update(false, 0, 60));
+        assertTrue(elite.update(true, 10, 60));
+        assertFalse(elite.update(true, 20, 60));
+        assertTrue(elite.showing(69));
+        assertFalse(elite.showing(70));
+        assertFalse(elite.update(false, 100, 60));
+        assertTrue(elite.update(true, 200, 60));
+        assertTrue(elite.showing(259));
     }
 
     @Test
