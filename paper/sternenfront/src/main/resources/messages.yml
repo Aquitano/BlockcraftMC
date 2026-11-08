@@ -61,8 +61,8 @@ class:
   speed: "<bullet><muted>Tempo <accent><percent> %"
   size: "<bullet><muted>Größe <accent><percent> %"
   stats: "<white>Werte"
-  first-key: "<muted>Fähigkeit auf Taste <accent>F"
-  second-key: "<muted>Fähigkeit auf Taste <accent>Q"
+  first-key: "<muted>Fähigkeit auf Taste <accent><key:key.swapOffhand>"
+  second-key: "<muted>Fähigkeit auf Taste <accent><key:key.drop>"
   faction: "<faction>"
   faction-chosen:
     - "<muted>Deine Fraktion. So kämpfen ihre Einheiten."
@@ -452,7 +452,7 @@ round:
   music-credit: "<muted>Musik: <click:open_url:'https://www.scottbuckley.com.au/library/'><primary>Scott Buckley</click> <muted>· Legionnaire und Juggernaut · CC BY 4.0"
   faction: "<arrow><faction><dark>: <accent><players>"
   start:
-    - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent>F <muted>und <accent>Q <muted>für Fähigkeiten."
+    - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent><key:key.swapOffhand> <muted>und <accent><key:key.drop> <muted>für Fähigkeiten."
   winner: "<prefix><primary>Sieg für <faction> <primary>mit <accent><tickets> <primary>Verstärkung!"
   draw: "<prefix><muted>Die Zeit ist um. Beide Fraktionen haben gleich viel Verstärkung."
 

@@ -246,7 +246,10 @@ its tile's bottom-right corner, as the hotbar counts a stack, and shows no count
 on the action bar: `CombatHud` puts them in the line's middle, which needs the line's width as the client measures it,
 and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
 cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
-explains each binding in chat with its key, full name and what it does.
+explains each binding in chat with its key, full name and what it does. Chat, the round's opening line and the class
+cards name the key the player bound to swapping hands and dropping, which the client fills in. The badges and the deploy
+screen always show F and Q: their text's width is counted, and a binding's name, such as `Maustaste 4`, has a width
+only the client knows and does not fit a badge.
 `ObjectiveHud` shows a player in the round their own reinforcements after `Wir`, a badge per post, the enemy's
 reinforcements and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing.
 A spectator has no side to call `Wir` and sees no such line. The screen's

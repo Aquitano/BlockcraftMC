@@ -35,8 +35,13 @@ public final class Deployment {
     private static final long TICKS_PER_SECOND = 20;
     private static final int DEPLOY_SLOT = 4;
     private static final long KILLER_FOCUS_TICKS = 2;
-    /** The keys a role's first and second ability sit on. */
+    /**
+     * The keys a role's first and second ability sit on, as the HUD and the deploy screen draw them. Their widths are
+     * counted, so they cannot name the player's own binding the way chat does with {@link #CONTROL_BINDINGS}.
+     */
     public static final List<String> CONTROL_KEYS = List.of("F", "Q");
+    /** The client's bindings for those keys, which it names in the player's own language and layout. */
+    private static final List<String> CONTROL_BINDINGS = List.of("key.swapOffhand", "key.drop");
 
     private final SternenfrontGame game;
     private final SpawnSpots spawnSpots;
@@ -428,7 +433,7 @@ public final class Deployment {
         var messages = game.messages();
         for (int index = 0; index < Math.min(keys.size(), CONTROL_KEYS.size()); index++) {
             var key = keys.get(index);
-            player.sendMessage(messages.get("deploy.controls", Placeholder.unparsed("key", CONTROL_KEYS.get(index)),
+            player.sendMessage(messages.get("deploy.controls", Placeholder.component("key", Component.keybind(CONTROL_BINDINGS.get(index))),
                     Placeholder.component("name", messages.get(key + ".name")),
                     Placeholder.component("ability", messages.get("combat.hints." + key.substring(key.lastIndexOf('.') + 1)))));
         }
