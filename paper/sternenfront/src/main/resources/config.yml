@@ -404,10 +404,10 @@ heroes:
     bounty-hunter: 50
     sith: 60
     commander: 50
-  # A saber hits for damage with the sword's cooldown. Its blade grows a quarter per tick and is whole ignite-ticks
-  # after it is drawn. A saber hero whose guard is up (hand raised by holding right click) takes blocked-share of a
-  # blade's hit. Colours are RGB hex; white is for whoever found every kyber crystal, relic is the marks of the relic
-  # blade.
+  # A saber hits for damage with the sword's cooldown. Its blade grows by one of its ignition lengths per tick and is
+  # whole ignite-ticks after it is drawn. A saber hero whose guard is up (hand raised by holding right click) takes
+  # blocked-share of a blade's hit. Colours are RGB hex; white is for whoever found every kyber crystal, relic is the
+  # marks of the relic blade.
   saber:
     damage: 8
     blocked-share: 0.3

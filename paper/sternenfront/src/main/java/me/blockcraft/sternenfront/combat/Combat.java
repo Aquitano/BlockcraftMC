@@ -137,6 +137,7 @@ public final class Combat {
         }
         state.guarding = holding;
         boolean jumping = player.getCurrentInput().isJump();
+        // Player deprecates isOnGround as client-reported; through Entity it is the same call without the warning.
         Entity body = player;
         if (body.isOnGround()) {
             state.jumped = false;

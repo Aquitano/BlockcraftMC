@@ -246,7 +246,6 @@ public final class BattleEffects {
         }
     }
 
-    /** A ripple on a shield wall where a bolt struck it. */
     public void shieldRipple(Location at, Vector normal, Color color) {
         if (enabled && flares.hasRoom()) {
             flares.ring(RING, at.clone().add(normal.clone().multiply(0.06)), normal, STILL, SHIELD_RIPPLE_DIAMETER,

@@ -29,11 +29,11 @@ public record WeaponHandling(Map<Blaster, Factors> blasters, double falloffFrom,
         }
     }
 
-    /** What a shooter is doing as they fire. */
     public record Posture(boolean moving, boolean crouched, boolean airborne) {
 
         public static Posture of(Player shooter) {
             var input = shooter.getCurrentInput();
+            // Player deprecates isOnGround as client-reported; through Entity it is the same call without the warning.
             Entity body = shooter;
             return new Posture(input.isForward() || input.isBackward() || input.isLeft() || input.isRight(), shooter.isSneaking(),
                     !body.isOnGround() && !shooter.isInsideVehicle());
