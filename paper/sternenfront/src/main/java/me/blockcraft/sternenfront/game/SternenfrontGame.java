@@ -164,6 +164,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final RoundTally tally = new RoundTally();
     private final Career career;
     private final Map<UUID, Fighter> fighters = new HashMap<>();
+    private List<LivingEntity> combatants = List.of();
+    private int combatantsAt = -1;
     /** While the round deals damage itself, which marks its own hits. */
     private boolean dealing;
     private boolean dealingHeadshot;
@@ -390,11 +392,20 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return (int) round.players().stream().filter(player -> factionOf(player).filter(faction::equals).isPresent()).count();
     }
 
+    /**
+     * Everyone on the field, players and bots, gathered once a server tick because a dozen systems ask every tick. A
+     * fighter who falls or deploys during the tick joins or leaves the list on the next.
+     */
     public List<LivingEntity> combatants() {
-        var field = new ArrayList<LivingEntity>();
-        round.players().stream().filter(this::onField).forEach(field::add);
-        field.addAll(bots.entities());
-        return field;
+        int now = Bukkit.getCurrentTick();
+        if (now != combatantsAt) {
+            var field = new ArrayList<LivingEntity>();
+            round.players().stream().filter(this::onField).forEach(field::add);
+            field.addAll(bots.entities());
+            combatants = List.copyOf(field);
+            combatantsAt = now;
+        }
+        return combatants;
     }
 
     public List<LivingEntity> targets() {
