@@ -73,6 +73,7 @@ final class Rematch {
     private final BiPredicate<Player, Player> valid;
     private final BiConsumer<Player, Player> agreed;
     private final Map<UUID, UUID> opponents = new HashMap<>();
+    private boolean starting;
 
     Rematch(Plugin plugin, Messages messages, Duration window, BiPredicate<Player, Player> valid,
             BiConsumer<Player, Player> agreed) {
@@ -94,7 +95,7 @@ final class Rematch {
     }
 
     boolean awaiting() {
-        return requests.awaiting(Instant.now());
+        return starting || requests.awaiting(Instant.now());
     }
 
     void request(Player player, String itemIdentity) {
@@ -127,11 +128,15 @@ final class Rematch {
                 Sounds.NOTIFY.play(opponent);
             }
             case WAITING -> player.sendMessage(messages.get("rematch.waiting", opponentName));
-            case AGREED -> Tasks.sync(plugin, () -> {
-                if (valid.test(player, opponent)) {
-                    agreed.accept(player, opponent);
-                }
-            });
+            case AGREED -> {
+                starting = true;
+                Tasks.sync(plugin, () -> {
+                    starting = false;
+                    if (valid.test(player, opponent)) {
+                        agreed.accept(player, opponent);
+                    }
+                });
+            }
             case SETTLED -> {
             }
         }

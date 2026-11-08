@@ -39,7 +39,6 @@ public final class ProtectionListener implements Listener {
             if (event.getCause() == EntityDamageEvent.DamageCause.VOID && event.getEntity() instanceof Player player) {
                 game.returnToPhaseSpawn(player);
             }
-            return;
         }
     }
 

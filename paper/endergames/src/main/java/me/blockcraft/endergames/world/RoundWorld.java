@@ -205,7 +205,7 @@ public final class RoundWorld {
     }
 
     /** The block above the ground at x/z if a player can stand there: solid, harmless ground and two free blocks. */
-    public Optional<Location> surface(int x, int z) {
+    private Optional<Location> surface(int x, int z) {
         if (!world.isChunkLoaded(x >> 4, z >> 4)) {
             return Optional.empty();
         }

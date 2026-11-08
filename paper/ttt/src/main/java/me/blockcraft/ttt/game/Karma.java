@@ -14,8 +14,8 @@ public record Karma(int start, int max, int teamKill, int enemyKill, int cleanRo
         return killer == Role.TRAITOR ? karma : clamp(karma + enemyKill);
     }
 
-    public int afterRound(int karma, boolean teamKilled) {
-        return teamKilled ? karma : clamp(karma + cleanRound);
+    public int afterRound(int karma, boolean forfeitsBonus) {
+        return forfeitsBonus ? karma : clamp(karma + cleanRound);
     }
 
     public double damageFactor(int karma) {

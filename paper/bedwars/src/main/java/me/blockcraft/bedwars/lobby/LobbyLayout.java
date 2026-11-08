@@ -29,10 +29,6 @@ public final class LobbyLayout {
         this.shared = shared;
     }
 
-    public static LobbyLayout load(Path file) {
-        return load(file, Optional.empty());
-    }
-
     public static LobbyLayout load(Path file, Optional<WaitingLobby> shared) {
         return new LobbyLayout(Locations.load(file), shared);
     }

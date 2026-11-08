@@ -65,7 +65,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 final class FfaGame implements Listener, AutoCloseable {
 
-
     private final Plugin plugin;
     private final FfaConfig config;
     private final Messages messages;
@@ -126,11 +125,11 @@ final class FfaGame implements Listener, AutoCloseable {
         if (BlockcraftApi.get().isVanished(player)) {
             return;
         }
-        if (!playing.contains(player.getUniqueId()) && playing.size() >= config.capacity()) {
-            watch(player);
+        if (playing.contains(player.getUniqueId())) {
             return;
         }
-        if (playing.contains(player.getUniqueId())) {
+        if (playing.size() >= config.capacity()) {
+            watch(player);
             return;
         }
         spectators.release(player);

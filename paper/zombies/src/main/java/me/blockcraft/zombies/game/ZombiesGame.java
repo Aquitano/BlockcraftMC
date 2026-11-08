@@ -189,7 +189,9 @@ public final class ZombiesGame implements RoundConnections.Seating {
     @Override
     public void refreshAll() {
         refreshSidebar();
-        round.players().stream().filter(player -> survivor(player) != null).forEach(weapons::render);
+        if (running()) {
+            round.players().stream().filter(player -> survivor(player) != null).forEach(weapons::render);
+        }
     }
 
     @Override
@@ -303,10 +305,10 @@ public final class ZombiesGame implements RoundConnections.Seating {
             return;
         }
         round.players().forEach(player -> weapons.tick(player, tick));
-        weapons.burn(tick);
         mysteryBox.tick(tick);
         racks.tick(tick);
         if (inWave()) {
+            weapons.burn(tick);
             enemies.tick(tick);
             events.tick(tick);
             if (inWave() && enemies.remaining() == 0) {
@@ -733,18 +735,11 @@ public final class ZombiesGame implements RoundConnections.Seating {
             return;
         }
         phase = Phase.ENDING;
-        events.end();
-        presentation.clear();
+        clearArena();
         if (!won) {
             summary.defeatedBy(net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
                     .serialize(messages.get("game.enemy-name")));
         }
-        enemies.clear();
-        mysteryBox.clear();
-        racks.clear();
-        hideWaveBar();
-        drops.values().forEach(drop -> drop.item().remove());
-        drops.clear();
         for (var player : round.players()) {
             if (!won && survivor(player).life() == Survivor.Life.DOWNED) {
                 summary.death(player);
@@ -764,6 +759,17 @@ public final class ZombiesGame implements RoundConnections.Seating {
         refreshSidebar();
     }
 
+    private void clearArena() {
+        events.end();
+        presentation.clear();
+        enemies.clear();
+        mysteryBox.clear();
+        racks.clear();
+        hideWaveBar();
+        drops.values().forEach(drop -> drop.item().remove());
+        drops.clear();
+    }
+
     private void hideWaveBar() {
         if (waveBar != null) {
             Bukkit.getServer().hideBossBar(waveBar);
@@ -776,13 +782,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         phase = Phase.ENDING;
         lobbyCountdown.cancel();
         round.stop();
-        events.end();
-        presentation.clear();
-        enemies.clear();
-        mysteryBox.clear();
-        racks.clear();
-        hideWaveBar();
-        drops.values().forEach(drop -> drop.item().remove());
+        clearArena();
         List.copyOf(corpses.keySet()).forEach(this::removeCorpse);
         arena.restore();
     }

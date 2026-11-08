@@ -91,18 +91,12 @@ final class SumoDuelGame extends MapDuelGame {
             return;
         }
         context.events().changed();
-        Runnable ready = () -> {
-            if (!closed) {
-                match.ready();
-            }
-        };
-        if (context.config().sumo().resetSeconds() == 0) {
-            RoundStart.go(players());
-            ready.run();
-        } else {
-            reset = RoundStart.freeze(context.plugin(), context.config().sumo().resetSeconds(), this::players,
-                    context.messages().get(ammo.isPresent() ? "throw.next-point" : "sumo.next-point"), ready);
-        }
+        reset = RoundStart.freeze(context.plugin(), context.config().sumo().resetSeconds(), this::players,
+                context.messages().get(ammo.isPresent() ? "throw.next-point" : "sumo.next-point"), () -> {
+                    if (!closed) {
+                        match.ready();
+                    }
+                });
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -246,7 +246,6 @@ scoreboard:
   tour-score: "<accent><wins> <dark>: <accent><opponent-wins>"
   mode-voting: "<muted>Abstimmung läuft"
   mode-leading: "<mode> <muted>führt"
-  rating: "<muted>Wertung <dark>· <accent><rating>"
   map-random: "<muted>Wird ausgewählt"
   opponent: "<muted><icon:opponent> GEGNER"
   opponent-none: "<muted>Warte auf einen Gegner"

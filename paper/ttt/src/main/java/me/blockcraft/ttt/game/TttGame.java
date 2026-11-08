@@ -416,7 +416,6 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     }
 
     public void respawn(PlayerRespawnEvent event) {
-        var player = event.getPlayer();
         event.setRespawnLocation(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get());
     }
 
@@ -549,6 +548,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             patient.teleport(remains.location());
             patient.setHealth(settings.health());
             giveShop(patient, remains.role());
+            deserters.remove(patient.getUniqueId());
+            if (remains.role() == Role.DETECTIVE) {
+                BlockcraftApi.get().tabTeams().color(patient, NamedTextColor.BLUE);
+            }
             tasks.ifPresent(running -> running.giveTasks(patient));
             patient.getWorld().playSound(remains.location(), Sound.ITEM_TOTEM_USE, 0.8f, 1.2f);
             var revived = messages.get("shop.defibrillator.revived", Placeholder.unparsed("player", patient.getName()),
@@ -739,7 +742,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
                 summary.awardWin(player);
             }
         }));
-        roles.keySet().forEach(id -> karma.put(id, config.karma().afterRound(karma(id), teamKillers.contains(id))));
+        roles.keySet().forEach(id -> karma.put(id, config.karma().afterRound(karma(id), teamKillers.contains(id) || deserters.contains(id))));
         var settled = new HashMap<UUID, Integer>();
         roles.keySet().stream().filter(karmaLoaded::contains).forEach(id -> settled.put(id, karma(id)));
         Tasks.async(plugin, () -> karmaRepository.save(settled));
@@ -807,8 +810,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         }
     }
 
-    /** The other traitors, dead or alive, which only a traitor sees. */
-    /** All partners on one line, so that a big round's sidebar still fits the client's fifteen rows. */
+    /**
+     * The other traitors, dead or alive, which only a traitor sees. All on one line, so that a big round's sidebar
+     * still fits the client's fifteen rows.
+     */
     private Component partners(Player viewer) {
         var lines = new ArrayList<Component>();
         roles.forEach((id, role) -> {

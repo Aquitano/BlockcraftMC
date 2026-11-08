@@ -284,7 +284,7 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         event.setRespawnLocation(isLobby() ? lobbySpawn : arena.map(SkyArena::spectatorSpawn).orElse(lobbySpawn));
     }
 
-    /** After the round everyone stays above the islands, where the void still kills while the recap shows. */
+    /** After the round everyone stays above the islands: whoever falls while the recap shows is put back at the spectators' spawn. */
     public VoidLine voidLine() {
         return new VoidLine(round, config.arena()::voidHeight, () -> arena.map(SkyArena::spectatorSpawn));
     }

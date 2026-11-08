@@ -29,7 +29,6 @@ import me.blockcraft.bedwars.lobby.JumpAndRun;
 import me.blockcraft.bedwars.lobby.LobbyLayout;
 import me.blockcraft.bedwars.lobby.TeamSelector;
 import me.blockcraft.bedwars.map.ArenaMap;
-import me.blockcraft.bedwars.map.Border;
 import me.blockcraft.bedwars.map.MapPool;
 import me.blockcraft.bedwars.perk.Perks;
 import me.blockcraft.bedwars.perk.PerksMenu;
@@ -258,10 +257,6 @@ public final class Game implements RoundConnections.Seating {
         return match != null && match.map().key().equals(key);
     }
 
-    public Optional<Border> border() {
-        return Optional.ofNullable(match).map(Match::border);
-    }
-
     public boolean canBuild(Block block) {
         return match != null && match.world().equals(block.getWorld())
                 && match.border().contains(block.getX(), block.getZ()) && !blocksSpawn(block);
@@ -328,10 +323,7 @@ public final class Game implements RoundConnections.Seating {
 
     private void forfeited(UUID player) {
         roster.remove(player);
-        teams.leave(player).ifPresent(this::announceOut);
-        if (!checkWinner()) {
-            announceRemaining();
-        }
+        outOfRound(teams.leave(player));
         scoreboard.refreshAll();
     }
 
@@ -344,10 +336,7 @@ public final class Game implements RoundConnections.Seating {
             team.ifPresent(selector::show);
         } else if (phase() == GamePhase.INGAME && wasPlaying) {
             roster.remove(player.getUniqueId());
-            emptied.ifPresent(this::announceOut);
-            if (!checkWinner()) {
-                announceRemaining();
-            }
+            outOfRound(emptied);
         }
         scoreboard.refreshAll();
     }
@@ -541,7 +530,14 @@ public final class Game implements RoundConnections.Seating {
 
     private void knockOut(Player player) {
         round.eliminate(player);
-        teams.leave(player).ifPresent(this::announceOut);
+        outOfRound(teams.leave(player));
+    }
+
+    private void outOfRound(Optional<Team> emptied) {
+        emptied.ifPresent(team -> {
+            team.bed().filter(TeamBed::isStanding).ifPresent(TeamBed::destroy);
+            announceOut(team);
+        });
         if (!checkWinner()) {
             announceRemaining();
         }

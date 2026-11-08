@@ -104,13 +104,17 @@ public final class Duel {
 
     public void cancelChallenge(UUID ticket) {
         if (challenge != null && challenge.ticket().equals(ticket) && isLobby()) {
-            challenge = null;
-            challengeRules = null;
-            challenger = null;
-            challengeAccepted = false;
+            clearChallenge();
             round.players().forEach(Player::closeInventory);
             updateLobby();
         }
+    }
+
+    private void clearChallenge() {
+        challenge = null;
+        challengeRules = null;
+        challenger = null;
+        challengeAccepted = false;
     }
 
     public void setupChallenge(Player player, ProxyMessage.DuelSetup setup) {
@@ -410,10 +414,7 @@ public final class Duel {
         }
         ratings.forget(player);
         if (challenge != null && (player.getUniqueId().equals(challenger) || player.getUniqueId().equals(challenge.opponent()))) {
-            challenge = null;
-            challengeRules = null;
-            challenger = null;
-            challengeAccepted = false;
+            clearChallenge();
         }
         refreshScoreboards();
     }
@@ -594,7 +595,7 @@ public final class Duel {
         recognizeOpponents();
         if (requested == DuelSeries.Format.TOUR && schedule.size() == 1) {
             Bukkit.broadcast(messages.get("tour.fallback"));
-        } else if (isTour()) {
+        } else if (isTour() && challengeRules == null) {
             var modes = Component.join(net.kyori.adventure.text.JoinConfiguration.separator(Component.text(", ")),
                     schedule.stream().map(game -> modeName(game.mode())).toList());
             Bukkit.broadcast(messages.get("tour.schedule", Placeholder.component("modes", modes)));
@@ -709,6 +710,9 @@ public final class Duel {
         }
         if (series.finished()) {
             series.winner().map(Bukkit::getPlayer).ifPresent(this::rewardWinner);
+            if (series.winner().isEmpty() && !isTour()) {
+                Bukkit.broadcast(messages.pick("round.draw"));
+            }
             if (isTour()) {
                 round.players().forEach(player -> summary.note(player, messages.get("tour.result-note",
                         Formatter.number("score", series.wins(player.getUniqueId())), Formatter.number("games", series.schedule().size()))));
@@ -784,10 +788,7 @@ public final class Duel {
         closeGame();
         if (!samePair) {
             duellists.forEach(votes::withdraw);
-            challenge = null;
-            challengeRules = null;
-            challenger = null;
-            challengeAccepted = false;
+            clearChallenge();
         }
         votes.clearForced();
         votes.clearRatings();

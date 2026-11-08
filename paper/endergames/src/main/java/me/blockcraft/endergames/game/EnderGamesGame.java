@@ -26,6 +26,7 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.endergames.config.EnderGamesConfig;
 import me.blockcraft.endergames.kit.Kit;
@@ -150,10 +151,6 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
 
     public RoundWorld world() {
         return world;
-    }
-
-    public Location lobbySpawn() {
-        return lobbySpawn;
     }
 
     /** Nobody is hurt while the players stand frozen, during the protection time and once the round is over. */
@@ -397,15 +394,19 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         summary.death(victim);
         round.eliminate(victim);
         abilities.forget(victim);
+        Tasks.later(plugin, 1L, () -> checkWinner(false));
         round.respawn(victim, 1L);
         refreshAll();
-        checkWinner(false);
     }
 
     public void respawn(PlayerRespawnEvent event) {
         event.setRespawnLocation(isLobby() ? lobbySpawn : world.spectatorSpawn());
     }
 
+    /**
+     * A death asks a tick later, so that everyone dying in the same tick is out first, and before the respawn, so that
+     * the dead respawn into the ended round; when nobody is left, the round is a draw.
+     */
     private void checkWinner(boolean opponentLeft) {
         if (!isIngame() || round.playerCount() > 1) {
             return;
@@ -415,7 +416,7 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         winners.stream().findFirst().ifPresentOrElse(
                 winner -> Bukkit.broadcast(messages.get(opponentLeft ? "round.winner-left" : "round.winner",
                         Placeholder.component("player", winner.displayName()))),
-                () -> Bukkit.broadcast(messages.get("round.draw")));
+                () -> Bukkit.broadcast(messages.get("round.no-survivor")));
         endRound();
     }
 

@@ -214,12 +214,14 @@ public final class Game implements RoundConnections.Seating {
     @Override
     public void quit(Player player) {
         var id = player.getUniqueId();
-        round.leave(player);
+        boolean wasPlaying = round.leave(player);
         emeralds.remove(id);
         lives.remove(id);
         loadouts.remove(id);
         awaitingLoadout.remove(id);
-        checkWinner(true);
+        if (wasPlaying) {
+            checkWinner(true);
+        }
         scoreboard.refreshAll();
     }
 

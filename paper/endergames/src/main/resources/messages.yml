@@ -22,6 +22,7 @@ round:
   winner: "<prefix><primary><player> <primary>hat EnderGames gewonnen!"
   winner-left: "<prefix><primary><player> <primary>ist als Letzter übrig und gewinnt!"
   draw: "<prefix><error>Die Zeit ist um. Unentschieden!"
+  no-survivor: "<prefix><error>Niemand hat überlebt. Unentschieden!"
 
 protection:
   ends-in: "<prefix><muted>Die Schutzzeit endet in <accent><seconds><muted> Sekunden!"

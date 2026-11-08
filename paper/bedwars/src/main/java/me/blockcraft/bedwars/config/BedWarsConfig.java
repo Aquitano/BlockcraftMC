@@ -8,7 +8,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /** BedWars' own keys; the ones every game shares are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record BedWarsConfig(
@@ -68,6 +67,6 @@ public record BedWarsConfig(
     }
 
     public int spawnTicks(Resource resource) {
-        return Optional.ofNullable(spawnTicks.get(resource)).orElse(20);
+        return spawnTicks.get(resource);
     }
 }

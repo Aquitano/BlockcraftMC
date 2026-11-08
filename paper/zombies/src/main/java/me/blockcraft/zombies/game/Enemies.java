@@ -297,7 +297,7 @@ public final class Enemies {
         } else if (enemy.kind == EnemyKind.INFERNO && enemy.mob.hasLineOfSight(player)) {
             enemy.specialAt = tick + 80;
             enemy.mob.getWorld().spawnParticle(Particle.FLAME, enemy.mob.getEyeLocation(), 20, 0.3, 0.3, 0.3, 0.05);
-            player.damage(stats(enemy).damage() * plan.damageMultiplier(), enemy.mob);
+            player.damage(damage(enemy), enemy.mob);
         }
     }
 
@@ -314,7 +314,7 @@ public final class Enemies {
                 continue;
             }
             double closeness = 1 - distance / settings.radius();
-            fighter.damage(stats(enemy).damage() * plan.damageMultiplier() * (0.4 + 0.6 * closeness), mob);
+            fighter.damage(damage(enemy) * (0.4 + 0.6 * closeness), mob);
             var push = fighter.getLocation().toVector().subtract(center.toVector()).setY(0);
             if (push.lengthSquared() > 0) {
                 push.normalize();

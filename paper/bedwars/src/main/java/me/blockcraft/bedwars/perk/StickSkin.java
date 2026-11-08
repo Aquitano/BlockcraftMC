@@ -43,10 +43,6 @@ public enum StickSkin implements Perk {
         return WeaponStyles.tag(stick);
     }
 
-    public static boolean isStick(ItemStack item) {
-        return WeaponStyles.isStick(item);
-    }
-
     public static Optional<StickSkin> byKey(String key) {
         return Arrays.stream(values()).filter(skin -> skin.key().equals(key)).findFirst();
     }

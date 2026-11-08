@@ -45,6 +45,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.OptionalInt;
 
@@ -143,7 +144,7 @@ public final class Game implements RoundConnections.Seating {
         }
     }
 
-    public java.util.Optional<Location> lobbySpawn() {
+    public Optional<Location> lobbySpawn() {
         return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn)
                 .or(() -> locations.get(LocationKey.LOBBY));
     }
@@ -164,10 +165,12 @@ public final class Game implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
-        round.leave(player);
+        boolean wasPlaying = round.leave(player);
         kits.forget(player);
         refreshAll();
-        checkWinner(true);
+        if (wasPlaying) {
+            checkWinner(true);
+        }
     }
 
     public void handleDeath(PlayerDeathEvent event) {

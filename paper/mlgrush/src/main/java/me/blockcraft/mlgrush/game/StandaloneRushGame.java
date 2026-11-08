@@ -308,11 +308,12 @@ public final class StandaloneRushGame {
             });
             return;
         }
+        cancelReset();
         Tasks.sync(plugin, () -> {
-            if (identity == completed && round.phase() == GamePhase.ENDING && round.playerCount() == MAX_PARTICIPANTS
-                    && round.players().stream().noneMatch(BlockcraftApi.get()::isVanished)) {
-                reopen(true);
+            if (identity != completed || round.phase() != GamePhase.ENDING) {
+                return;
             }
+            reopen(round.playerCount() == MAX_PARTICIPANTS && round.players().stream().noneMatch(BlockcraftApi.get()::isVanished));
         });
     }
 

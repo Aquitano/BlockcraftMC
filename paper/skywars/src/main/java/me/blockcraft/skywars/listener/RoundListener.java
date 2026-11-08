@@ -1,5 +1,6 @@
 package me.blockcraft.skywars.listener;
 
+import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.skywars.game.SkyWarsGame;
 import org.bukkit.block.Block;
@@ -30,7 +31,8 @@ public final class RoundListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player && game.frozen() && game.inArena(event.getEntity().getWorld())) {
+        if (event.getEntity() instanceof Player && (game.frozen() || game.phase() == GamePhase.ENDING)
+                && game.inArena(event.getEntity().getWorld())) {
             event.setCancelled(true);
         }
     }

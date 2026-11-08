@@ -1,7 +1,6 @@
 package me.blockcraft.cores.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GameConfig;
@@ -90,7 +89,7 @@ public final class CoresGame implements RoundConnections.Seating {
     private final LobbyHotbar hotbar;
     private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
-    /** Who started the round for which team; a win counts for those of them still on the server. */
+    /** Who started the round for which team; a win counts for those of them still in it, also while away. */
     private final Map<UUID, Side> roster = new HashMap<>();
     private final SpawnProtection spawnProtection = new SpawnProtection();
     private BukkitTask watch;
@@ -117,7 +116,7 @@ public final class CoresGame implements RoundConnections.Seating {
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(map.lobbySpawn()),
                 () -> Optional.of(phase() == GamePhase.INGAME ? map.spectatorSpawn() : map.lobbySpawn()),
-                OptionalInt.of(config.fullSeconds()), player -> player.sendMessage(messages.get("join.introduction")));
+                OptionalInt.of(config.fullSeconds()), player -> { });
     }
 
     public GamePhase phase() {
@@ -187,7 +186,6 @@ public final class CoresGame implements RoundConnections.Seating {
         player.teleport(map.spawn(side.get()));
         player.setGameMode(GameMode.SURVIVAL);
         config.combat().apply(player);
-        dress(player, side.get());
         spawnProtection.protect(player, Duration.ofSeconds(config.protectionSeconds()));
     }
 
@@ -361,7 +359,7 @@ public final class CoresGame implements RoundConnections.Seating {
         var block = core.block();
         block.getWorld().playEffect(block.getLocation(), Effect.DESTROY_BLOCK, Material.BEACON.createBlockData());
         core.destroy();
-        Coins.award(plugin, breaker, config.coreCoins());
+        summary.awardCoins(breaker, config.coreCoins());
         Bukkit.broadcast(messages.get("core.destroyed", coreName(core), Placeholder.component("player", breaker.displayName())));
         Sounds.CORE_DESTROYED.playToAll();
         var title = Title.title(messages.get("core.title"), messages.get("core.subtitle", coreName(core)), CORE_TITLE);
@@ -404,6 +402,9 @@ public final class CoresGame implements RoundConnections.Seating {
         if (round.isPlaying(player) && side.isPresent()) {
             event.setRespawnLocation(map.spawn(side.get()));
             Tasks.sync(plugin, () -> {
+                if (phase() != GamePhase.INGAME) {
+                    return;
+                }
                 config.combat().apply(player);
                 kit.give(player, side.get());
                 player.setSaturation(RESPAWN_SATURATION);
@@ -422,8 +423,8 @@ public final class CoresGame implements RoundConnections.Seating {
         if (watch != null) {
             watch.cancel();
         }
-        won.ifPresent(side -> roster.entrySet().stream().filter(entry -> entry.getValue() == side)
-                .map(entry -> Bukkit.getPlayer(entry.getKey())).filter(Objects::nonNull).forEach(summary::awardWin));
+        won.ifPresent(side -> roster.entrySet().stream().filter(entry -> entry.getValue() == side).map(Map.Entry::getKey)
+                .forEach(id -> Optional.ofNullable(Bukkit.getPlayer(id)).ifPresentOrElse(summary::awardWin, () -> summary.awardWin(id))));
         Bukkit.broadcast(Component.empty());
         Bukkit.broadcast(won.map(side -> messages.get("round.winner", teamName(side))).orElseGet(() -> messages.get("round.draw")));
         Bukkit.broadcast(Component.empty());

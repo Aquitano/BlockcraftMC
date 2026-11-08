@@ -137,10 +137,6 @@ public final class Sabotage {
         return locked.contains(block);
     }
 
-    public boolean testerDown() {
-        return active.filter(kind -> kind == Kind.TESTER).isPresent();
-    }
-
     /** Where the running sabotage is mended, if it can be. */
     Optional<Block> repairSpot() {
         return active.flatMap(kind -> switch (kind) {

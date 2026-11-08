@@ -1,6 +1,7 @@
 package me.blockcraft.endergames.kit;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.endergames.config.EnderGamesConfig.Abilities;
@@ -319,8 +320,9 @@ public final class KitAbilities implements Listener {
             return;
         }
         var tool = event.getPlayer().getInventory().getItemInMainHand();
-        Reach.from(block, KitAbilities::touching, each -> Tag.LOGS.isTagged(each.getType()), numbers.lumberjackMaxLogs())
-                .forEach(log -> log.breakNaturally(tool));
+        var logs = Reach.from(block, KitAbilities::touching, each -> Tag.LOGS.isTagged(each.getType()), numbers.lumberjackMaxLogs());
+        logs.forEach(log -> log.breakNaturally(tool));
+        BlockChanges.announce(logs);
     }
 
     private static List<Block> touching(Block block) {

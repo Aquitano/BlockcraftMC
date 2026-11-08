@@ -59,7 +59,7 @@ public final class Notes {
     }
 
     private void forget(Player player, ArenaMap.Note note) {
-        read.getOrDefault(player.getUniqueId(), Set.of()).remove(note.id());
+        read.getOrDefault(player.getUniqueId(), new HashSet<>()).remove(note.id());
     }
 
     private void celebrate(Player player, ArenaMap.Note note, long found) {

@@ -31,6 +31,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.block.data.type.Door;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -194,10 +195,6 @@ public final class TaskRound {
         return true;
     }
 
-    public boolean testerDown() {
-        return sabotage.testerDown();
-    }
-
     public boolean complete() {
         return board.complete();
     }
@@ -233,7 +230,7 @@ public final class TaskRound {
         player.getInventory().setItem(RoundItem.TASKS_SLOT, RoundItem.TASKS.build(Items.of(Material.WRITABLE_BOOK)
                 .name(messages.get("item.tasks")).lore(messages.get("tasks.menu.hint"))));
         if (looted != null && !looted.isEmpty()) {
-            player.getInventory().addItem(looted).values().forEach(left -> player.getWorld().dropItem(player.getLocation(), left));
+            give(player, looted);
         }
     }
 
@@ -322,7 +319,7 @@ public final class TaskRound {
         var cargo = TaskItem.CARGO.forChore(Items.of(fetch.cargo())
                 .name(messages.get("tasks.chores." + fetch.key() + ".cargo")).lore(messages.get("tasks.chores." + fetch.key() + ".name"))
                 .build(), fetch.key());
-        player.getInventory().addItem(cargo).values().forEach(left -> player.getWorld().dropItem(player.getLocation(), left));
+        give(player, cargo);
         tell(player, messages.get("tasks.cargo-taken", names(fetch)));
         Sounds.EQUIP.play(player);
         selected.put(player.getUniqueId(), fetch);
@@ -339,9 +336,7 @@ public final class TaskRound {
         }
         selected.remove(player.getUniqueId(), chore);
         Sounds.ACHIEVEMENT.play(player);
-        var loot = ChestLoot.pick(config.loot(), ThreadLocalRandom.current()).map(ChestLoot::item);
-        loot.ifPresent(item -> player.getInventory().addItem(item).values()
-                .forEach(left -> player.getWorld().dropItem(player.getLocation(), left)));
+        ChestLoot.pick(config.loot(), ThreadLocalRandom.current()).map(ChestLoot::item).ifPresent(item -> give(player, item));
         BlockcraftApi.get().notifications().reward(player, messages.get("tasks.done", names(chore)));
         if (chore.visible()) {
             show(chore.station());
@@ -468,6 +463,10 @@ public final class TaskRound {
                 player.getInventory().clear(slot);
             }
         });
+    }
+
+    private static void give(Player player, ItemStack item) {
+        player.getInventory().addItem(item).values().forEach(left -> player.getWorld().dropItem(player.getLocation(), left));
     }
 
     private static void tell(Player player, Component message) {
