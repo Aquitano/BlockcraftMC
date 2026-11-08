@@ -100,7 +100,7 @@ public final class Gadgets {
             facing.normalize().multiply(forward);
         }
         player.setVelocity(facing.setY(up));
-        fighter.fallSafeUntil(tick + FALL_SAFE_TICKS);
+        fighter.makeFallSafeUntil(tick + FALL_SAFE_TICKS);
         trails.add(new Trail(player, tick + TRAIL_TICKS));
         sound.play(player.getLocation(), 1f);
         return true;

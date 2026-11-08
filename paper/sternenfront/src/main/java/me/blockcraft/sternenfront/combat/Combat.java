@@ -93,7 +93,7 @@ public final class Combat {
         return (int) Math.max(0, state(player).leapUntil - game.tick());
     }
 
-    public void leapCooldown(Player player, int ticks) {
+    public void startLeapCooldown(Player player, int ticks) {
         state(player).leapUntil = game.tick() + ticks;
     }
 

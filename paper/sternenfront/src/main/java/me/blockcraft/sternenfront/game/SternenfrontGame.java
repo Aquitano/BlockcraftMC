@@ -521,7 +521,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (fighter == null || !fighter.fallSafe(tick)) {
             return false;
         }
-        fighter.fallSafeUntil(0);
+        fighter.makeFallSafeUntil(0);
         return true;
     }
 
@@ -1266,7 +1266,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         gadgets.leap(player, fighter, champion ? config.relic().leapForward() : saber.leapForward(),
                 champion ? config.relic().leapUp() : saber.leapUp(), tick, SoundCue.FORCE_PUSH);
         int seconds = champion ? config.relic().leapCooldownSeconds() : saber.leapCooldownSeconds();
-        combat.leapCooldown(player, seconds * (int) TICKS_PER_SECOND);
+        combat.startLeapCooldown(player, seconds * (int) TICKS_PER_SECOND);
     }
 
     public void boltHit(LivingEntity shooter, Blaster blaster, LivingEntity victim, double damage, boolean headshot) {
@@ -1398,7 +1398,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         reinforcementUnits.roster().discharge(player.getUniqueId());
         fighterIfAny(player).filter(fighter -> fighter.reinforcement().isPresent()).ifPresent(fighter -> {
             fighter.reinforcement(Optional.empty());
-            fighter.fallSafeUntil(0);
+            fighter.makeFallSafeUntil(0);
             player.removePotionEffect(PotionEffectType.SPEED);
             player.removePotionEffect(PotionEffectType.REGENERATION);
             gadgets.release(player);

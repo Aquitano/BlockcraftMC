@@ -249,7 +249,7 @@ public final class Powers {
     private boolean jetpack(Player player, long tick) {
         long until = tick + config.jetpack().seconds() * 20L;
         jetpacks.put(player.getUniqueId(), until);
-        game.fighter(player).fallSafeUntil(until + FALL_SAFE_TICKS);
+        game.fighter(player).makeFallSafeUntil(until + FALL_SAFE_TICKS);
         SoundCue.JETPACK.play(player.getLocation(), 1f);
         return true;
     }
@@ -268,7 +268,7 @@ public final class Powers {
         var pull = anchor.clone().subtract(player.getLocation().toVector()).normalize()
                 .multiply(Math.min(grapple.speed(), 0.4 + distance * 0.12));
         player.setVelocity(pull.setY(Math.max(pull.getY(), 0) + GRAPPLE_LIFT));
-        game.fighter(player).fallSafeUntil(tick + FALL_SAFE_TICKS);
+        game.fighter(player).makeFallSafeUntil(tick + FALL_SAFE_TICKS);
         SoundCue.GRAPPLE.play(eye, 1f);
         return true;
     }

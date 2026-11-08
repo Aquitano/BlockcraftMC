@@ -149,7 +149,7 @@ public final class Fighter {
         return tick < fallSafeUntil;
     }
 
-    public void fallSafeUntil(long tick) {
+    public void makeFallSafeUntil(long tick) {
         fallSafeUntil = tick;
     }
 

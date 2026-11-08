@@ -408,7 +408,7 @@ public final class Speeders implements Listener {
     @EventHandler
     public void onDismount(EntityDismountEvent event) {
         if (event.getEntity() instanceof Player player && faction(event.getDismounted()).isPresent()) {
-            game.fighter(player).fallSafeUntil(game.tick() + 60);
+            game.fighter(player).makeFallSafeUntil(game.tick() + 60);
         }
     }
 
