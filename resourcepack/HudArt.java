@@ -237,6 +237,7 @@ public final class HudArt {
         ImageIO.write(minimapMarks(), "PNG", root.resolve("minimap_marks.png").toFile());
         ImageIO.write(minimapTarget(), "PNG", root.resolve("minimap_target.png").toFile());
         ImageIO.write(feedMarks(), "PNG", root.resolve("minimap_feed.png").toFile());
+        ImageIO.write(mapLetters(ImageIO.read(root.resolve("labels.png").toFile())), "PNG", root.resolve("minimap_letters.png").toFile());
         ImageIO.write(classMarks(), "PNG", root.resolve("minimap_classes.png").toFile());
         var underscore = new BufferedImage(3, 7, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < 3; x++) {
@@ -255,7 +256,7 @@ public final class HudArt {
                 topAligned("minimap_target.png", TARGET, run(0xE034, 1)),
                 topAligned("minimap_feed.png", FEED_MARK, run(0xE050, 3)),
                 topAligned("minimap_classes.png", 7, run(0xE040, CLASS_MARKS.length)),
-                topAligned("labels.png", 7, LABEL_LETTERS),
+                topAligned("minimap_letters.png", 7, LABEL_LETTERS),
                 topAligned("minimap_underscore.png", 7, "_")) + "\n  ]\n}\n");
     }
 
@@ -406,6 +407,25 @@ public final class HudArt {
         }
         return image;
     }
+
+    /**
+     * The menu tiles' capitals for the minimap's names and call signs, with a 1 that has its stem in the middle: the
+     * menus' 1 reads as a J, which turns B1-11 into BJ-JJ.
+     */
+    private static BufferedImage mapLetters(BufferedImage labels) {
+        var image = new BufferedImage(labels.getWidth(), labels.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        image.createGraphics().drawImage(labels, 0, 0, null);
+        int left = 3 * LABEL_LETTERS.indexOf('1');
+        for (int y = 0; y < labels.getHeight(); y++) {
+            for (int x = 0; x < 3; x++) {
+                int row = y - (labels.getHeight() - ONE.length);
+                image.setRGB(left + x, y, row >= 0 && ONE[row].charAt(x) == '#' ? 0xFFFFFFFF : 0);
+            }
+        }
+        return image;
+    }
+
+    private static final String[] ONE = {".#.", "##.", ".#.", ".#.", "###"};
 
     /**
      * The kill feed's marks in cells as tall as a label letter, drawn at twice the resolution: a skull for a kill or a
