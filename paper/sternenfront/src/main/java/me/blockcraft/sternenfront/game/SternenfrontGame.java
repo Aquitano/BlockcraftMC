@@ -1191,7 +1191,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         if (!heroes.powers().use(player, faction.get(), hero.get(), ability, tick)) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("hero.no-target"));
+            feedback.notice(player, messages.get("hero.no-target"));
             Sounds.MENU_DENY.play(player);
             return;
         }
@@ -1213,8 +1213,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void cooling(Player player, Component ability, int ticks) {
-        BlockcraftApi.get().notifications().feedback(player, messages.get("ability.cooldown",
+        feedback.notice(player, messages.get("ability.cooldown",
                 Placeholder.component("ability", ability), Formatter.number("seconds", (ticks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND)));
+        Sounds.MENU_DENY.play(player);
     }
 
     public boolean strikeReady(Player player) {
@@ -1234,7 +1235,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         if (!gadgets.use(player, fighter, faction.get(), ability, tick)) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("ability.no-room"));
+            feedback.notice(player, messages.get("ability.no-room"));
             Sounds.MENU_DENY.play(player);
             return;
         }

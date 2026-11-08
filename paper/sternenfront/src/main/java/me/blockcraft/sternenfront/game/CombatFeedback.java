@@ -62,6 +62,8 @@ public final class CombatFeedback {
         long chainUntil;
         int shownChain;
         long rewardUntil;
+        Component notice = Component.empty();
+        long noticeUntil;
         boolean ready;
         long readyUntil;
         boolean eliteReady;
@@ -134,6 +136,7 @@ public final class CombatFeedback {
                 reward = next;
             }
             rewardUntil = tick + ticks;
+            noticeUntil = 0;
         }
 
         /** How many kills in a row this one makes, each within {@code window} ticks of the one before. */
@@ -186,6 +189,7 @@ public final class CombatFeedback {
     private final int rewardTicks;
     private final int heroReadyTicks;
     private final int eliteReadyTicks;
+    private final int noticeTicks;
     private final double hotAt;
     private final float hitVolume;
     private final float headshotVolume;
@@ -202,6 +206,7 @@ public final class CombatFeedback {
         rewardTicks = Math.clamp(config.getInt("combat-feedback.reward-ticks", 30), 1, 100);
         heroReadyTicks = Math.clamp(config.getInt("combat-feedback.hero-ready-ticks", 60), 1, 200);
         eliteReadyTicks = Math.clamp(config.getInt("combat-feedback.elite-ready-ticks"), 1, 200);
+        noticeTicks = Math.clamp(config.getInt("combat-feedback.notice-ticks"), 1, 100);
         hotAt = Math.clamp(config.getDouble("heat.warning-level", 0.8), 0.1, 0.99);
         hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
@@ -250,6 +255,17 @@ public final class CombatFeedback {
             state(player).earned(reward, points, game.tick(), rewardTicks);
             refresh(player);
         }
+    }
+
+    /**
+     * A line where a reward pops up, for a key that did nothing, such as an ability still recharging. It joins the combat
+     * HUD, whereas a notice of its own would take the action bar and with it the meter and the ability tiles.
+     */
+    public void notice(Player player, Component message) {
+        var state = state(player);
+        state.notice = message;
+        state.noticeUntil = game.tick() + noticeTicks;
+        refresh(player);
     }
 
     public void aim(Player player) {
@@ -303,7 +319,8 @@ public final class CombatFeedback {
         }
         state.ready = ready;
         drawCrosshair(player, state, tick);
-        var line = tick < state.rewardUntil ? state.reward(game.messages())
+        var line = tick < state.noticeUntil ? state.notice
+                : tick < state.rewardUntil ? state.reward(game.messages())
                 : ready && tick < state.readyUntil ? game.messages().get("feedback.hero-ready")
                 : eliteReady && tick < state.eliteReadyUntil ? game.messages().get("feedback.elite-ready")
                 : Component.empty();

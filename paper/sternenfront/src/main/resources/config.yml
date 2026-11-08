@@ -466,6 +466,8 @@ combat-feedback:
   reward-ticks: 30
   hero-ready-ticks: 60
   elite-ready-ticks: 60
+  # How long the line beside the heat meter says why a key did nothing, such as an ability still recharging.
+  notice-ticks: 30
   multikill-seconds: 4
   sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
   # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples

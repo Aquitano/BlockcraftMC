@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.combat;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
@@ -190,7 +189,7 @@ public final class Combat {
         if (result == Guard.Result.BROKEN) {
             player.clearActiveItem();
             player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BREAK, 0.8f, 1);
-            BlockcraftApi.get().notifications().feedback(player, game.messages().get("combat.guard-broken"));
+            game.feedback().notice(player, game.messages().get("combat.guard-broken"));
         } else if (result != Guard.Result.NONE) {
             game.deflected(player, player.getEyeLocation(), contact);
         }
