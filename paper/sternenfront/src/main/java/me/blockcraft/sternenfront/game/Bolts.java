@@ -12,6 +12,7 @@ import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
@@ -39,6 +40,11 @@ public final class Bolts {
     private static final float MODEL_LENGTH = 1.22f;
     private static final double HEAD_BELOW_EYES = 0.25;
     private static final float IMPACT_VOLUME = 0.6f;
+
+    /** What a bolt met this tick: a map's marked target, a fighter nearer than it, or neither. */
+    private record Struck(RayTraceResult mark, Optional<LagCompensation.Hit> fighter) {
+        static final Struck NOTHING = new Struck(null, Optional.empty());
+    }
 
     /** {@code rewind} is how many ticks behind the server the shooter saw the other fighters. */
     private record Shot(Faction faction, Blaster blaster, double damage, double headshot, double speed, double rewind) { }
@@ -153,9 +159,9 @@ public final class Bolts {
         var start = bolt.position.toVector();
         var wall = world.rayTraceBlocks(bolt.position, bolt.direction, step, FluidCollisionMode.NEVER, true);
         double reach = wall == null ? step : wall.getHitPosition().distance(start);
-        var mark = reach <= 0 ? null : world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE, Bolts::isTarget);
-        var fighter = reach <= 0 ? Optional.<LagCompensation.Hit>empty() : fighterHit(bolt, start, reach)
-                .filter(hit -> mark == null || hit.at().distanceSquared(start) < mark.getHitPosition().distanceSquared(start));
+        var struck = reach <= 0 ? Struck.NOTHING : struck(bolt, start, reach);
+        var mark = struck.mark();
+        var fighter = struck.fighter();
         double travelled = fighter.map(hit -> hit.at().distance(start))
                 .orElse(mark == null ? reach : mark.getHitPosition().distance(start));
         trail(bolt, travelled);
@@ -194,17 +200,26 @@ public final class Bolts {
         return true;
     }
 
-    /** Players' shots meet the fighters where the shooter saw them; terrain and map targets stand still and stay live. */
-    private Optional<LagCompensation.Hit> fighterHit(Bolt bolt, Vector start, double reach) {
+    /**
+     * Players' shots meet the fighters where the shooter saw them; terrain and map targets stand still and stay live. A
+     * shot without rewind finds the nearer of a target and a fighter in one trace.
+     */
+    private Struck struck(Bolt bolt, Vector start, double reach) {
         Predicate<LivingEntity> hittable = target -> game.hittable(bolt.shot.faction(), target);
+        var world = bolt.position.getWorld();
         if (bolt.shot.rewind() > 0) {
-            return lag.trace(start, bolt.direction, reach, HIT_SIZE, bolt.seen, hittable);
+            var mark = world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE, Bolts::isTarget);
+            return new Struck(mark, lag.trace(start, bolt.direction, reach, HIT_SIZE, bolt.seen, hittable)
+                    .filter(hit -> mark == null || hit.at().distanceSquared(start) < mark.getHitPosition().distanceSquared(start)));
         }
-        var hit = bolt.position.getWorld().rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE,
-                entity -> entity instanceof LivingEntity target && hittable.test(target));
-        return hit != null && hit.getHitEntity() instanceof LivingEntity victim
-                ? Optional.of(new LagCompensation.Hit(victim, hit.getHitPosition(), victim.getEyeLocation().getY()))
-                : Optional.empty();
+        var hit = world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE,
+                entity -> isTarget(entity) || entity instanceof LivingEntity target && hittable.test(target));
+        if (hit == null) {
+            return Struck.NOTHING;
+        }
+        return hit.getHitEntity() instanceof LivingEntity victim
+                ? new Struck(null, Optional.of(new LagCompensation.Hit(victim, hit.getHitPosition(), victim.getEyeLocation().getY())))
+                : new Struck(hit, Optional.empty());
     }
 
     private void strike(Bolt bolt, LagCompensation.Hit hit, Location at, double travelled) {
