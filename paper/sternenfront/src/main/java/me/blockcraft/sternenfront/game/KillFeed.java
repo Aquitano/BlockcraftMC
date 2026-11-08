@@ -32,10 +32,10 @@ final class KillFeed {
     private static final int FADE_TICKS = 20;
     private static final int GAP = 3;
     private static final int LETTER_ADVANCE = 4;
-    private static final char SKULL = '\uE050';
-    private static final char HOLLOW_SKULL = '\uE051';
+    static final char SKULL = '\uE050';
+    private static final char HOLLOW_SKULL = SKULL + 1;
     /** The skull with the crosshair's headshot diamond at its corner. */
-    private static final char HEADSHOT_SKULL = '\uE052';
+    private static final char HEADSHOT_SKULL = SKULL + 2;
     private static final int SKULL_ADVANCE = 8;
     private static final int HEADSHOT_ADVANCE = 11;
 

@@ -33,28 +33,28 @@ final class MinimapLayout {
     private static final int BADGE_ADVANCE = 11;
     private static final int CLASS_ADVANCE = 7;
     private static final int LETTER_ADVANCE = 4;
-    private static final int HEADINGS = 16;
+    static final int HEADINGS = 16;
     private static final int LIST_TOP = MAP + 3;
     private static final int ROW = 8;
     static final int ROWS = 6;
     private static final int NAME_X = CLASS_ADVANCE;
     private static final int NAME_LETTERS = (MAP - NAME_X) / LETTER_ADVANCE;
 
-    private static final char DISC = '\uE000';
-    private static final char BADGE = '\uE010';
-    private static final char ARROW = '\uE020';
-    private static final char TARGET = '\uE034';
+    static final char DISC = '\uE000';
+    static final char BADGE = '\uE010';
+    /** The arrow's sixteen headings, then each {@link Mark}. */
+    static final char ARROW = '\uE020';
+    static final char TARGET = '\uE034';
     private static final int TARGET_HALF = 6;
     private static final int TARGET_ADVANCE = 14;
-    private static final char CLASS_MARK = '\uE040';
+    static final char CLASS_MARK = '\uE040';
 
+    /** What a dot on the map stands for, in the order the pack draws them after the arrow. */
     enum Mark {
-        SQUADMATE('\uE030'), ALLY('\uE031'), ENEMY('\uE032'), HEADQUARTERS('\uE033');
+        SQUADMATE, ALLY, ENEMY, HEADQUARTERS;
 
-        private final char glyph;
-
-        Mark(char glyph) {
-            this.glyph = glyph;
+        char glyph() {
+            return (char) (ARROW + HEADINGS + ordinal());
         }
     }
 
@@ -113,7 +113,7 @@ final class MinimapLayout {
     }
 
     static Glyph mark(Mark mark, Pixel at, Tint tint) {
-        return centred(mark.glyph, at, tint);
+        return centred(mark.glyph(), at, tint);
     }
 
     /** The player's arrow in the middle, turned to the nearest of sixteen headings clockwise from north. */

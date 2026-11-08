@@ -73,7 +73,19 @@ public class AbilityPanelTest {
     @Test
     public void theShaderMakesRoomForAFullColumn() throws IOException {
         var shader = Files.readString(PackFonts.FONTS.resolveSibling("shaders/include/hud_panel.glsl"));
-        assertTrue(shader.contains("BLOCKCRAFT_ACTION_PANEL_CORNER = vec2(-3.0, -" + (AbilityPanel.HEIGHT + 3) + ".0);"));
+        assertTrue(shader.contains("const float BLOCKCRAFT_ABILITY_COLUMN = " + AbilityPanel.HEIGHT + ".0;"));
+    }
+
+    @Test
+    public void eachRunOfGlyphsStartsWhereTheFontDoes() throws IOException {
+        assertEquals(PackFonts.first("abilities", "ability_tile.png"), AbilityPanel.BACKING);
+        assertEquals(PackFonts.first("abilities", "ability_frame.png"), AbilityPanel.FRAME);
+        assertEquals(PackFonts.first("abilities", "ability_icons.png"), AbilityPanel.FIRST_ICON);
+        assertEquals(PackFonts.first("abilities", "ability_icons_cooling.png"), AbilityPanel.FIRST_COOLING_ICON);
+        assertEquals(PackFonts.first("abilities", "ability_keys.png"), AbilityPanel.FIRST_BADGE);
+        assertEquals(PackFonts.first("abilities", "ability_fill.png"), AbilityPanel.FIRST_FILL);
+        assertEquals(PackFonts.first("abilities", "ability_digits.png"), AbilityPanel.FIRST_DIGIT);
+        assertEquals(PackFonts.first("abilities", "ability_pips.png"), AbilityPanel.PIP_HELD);
     }
 
     @Test

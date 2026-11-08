@@ -32,9 +32,13 @@ layout(location = 5) out float textHorizontal;
 
 void main() {
     ivec3 marker = ivec3(round(Color.rgb * 255.0));
-    textEffect = marker.r == 231 && marker.b == 197 && marker.g >= 1 && marker.g <= 5 ? marker.g : 0;
-    // Shadow tint loses the marker's low green bits; omit that shadow rather than animate the wrong effect.
-    bool markerShadow = marker.r >= 57 && marker.r <= 58 && marker.b == 49 && marker.g <= 1;
+    textEffect = marker.r == BLOCKCRAFT_TEXT_EFFECT_RED && marker.b == BLOCKCRAFT_TEXT_EFFECT_BLUE && marker.g >= 1
+            && marker.g <= BLOCKCRAFT_TEXT_EFFECTS ? marker.g : 0;
+    // The client draws a shadow at a quarter of the text's colour, rounded either way, which loses the effect's low green
+    // bits; omit that shadow rather than animate the wrong effect.
+    ivec3 effectShadow = ivec3(BLOCKCRAFT_TEXT_EFFECT_RED, BLOCKCRAFT_TEXT_EFFECTS, BLOCKCRAFT_TEXT_EFFECT_BLUE) / 4;
+    bool markerShadow = marker.r >= effectShadow.r && marker.r <= effectShadow.r + 1 && marker.b == effectShadow.b
+            && marker.g <= effectShadow.g;
     vec4 textColor = textEffect != 0 ? vec4(1.0, 1.0, 1.0, Color.a) : Color;
     if (markerShadow) textColor.a = 0.0;
     vec3 position = Position + vec3(blockcraft_text_offset(textEffect, GameTime * 1200.0), 0.0);

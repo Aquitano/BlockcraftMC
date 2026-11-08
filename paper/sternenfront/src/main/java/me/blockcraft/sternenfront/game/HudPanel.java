@@ -11,7 +11,7 @@ import java.util.Locale;
 
 /**
  * Glyphs the pack's text shader moves into a corner of the screen. Each glyph's colour names the corner, its row below
- * the panel's top and its tint, so the glyphs' own heights never move them.
+ * the panel's top and its tint, so the glyphs' own heights never move them; {@code hud_panel.glsl} lists those colours.
  */
 public final class HudPanel {
 
@@ -24,14 +24,14 @@ public final class HudPanel {
         /** On a boss bar line like the top-left, from the corner leftwards. */
         TOP_RIGHT(233);
 
-        private final int red;
+        final int red;
 
         Corner(int red) {
             this.red = red;
         }
     }
 
-    /** The shader's colours for a glyph, in the order of its table; the factions' are those of {@link Faction#text()}. */
+    /** The shader's colours for a glyph, in the order of its tint table; the factions' are those of {@link Faction#text()}. */
     public enum Tint {
         WHITE, DIMMED, REPUBLIC, SEPARATISTS, SQUAD, SHADOW, ACCENT;
 
@@ -43,7 +43,7 @@ public final class HudPanel {
     /** {@code text} drawn from {@code x} pixels after the panel's origin and {@code y} below its top. */
     public record Glyph(String text, int x, int y, Tint tint, boolean shadow, int advance) { }
 
-    private static final int FIRST_TINT = 176;
+    static final int FIRST_TINT = 176;
     /** The menu tiles' capitals, which the panels' fonts share, with an underscore and a space of the panels' own. */
     private static final String CAPITALS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&_ ";
 

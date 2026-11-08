@@ -70,15 +70,15 @@ final class AbilityPanel {
     private static final String WIDE_LETTERS = "MNW";
     private static final int WIDE_LETTER_ADVANCE = 6;
     private static final int NAME_GAP = 4;
-    private static final char BACKING = '\uE000';
-    private static final char FRAME = '\uE001';
-    private static final char FIRST_ICON = '\uE010';
-    private static final char FIRST_COOLING_ICON = '\uE030';
-    private static final char FIRST_BADGE = '\uE050';
-    private static final char FIRST_FILL = '\uE060';
-    private static final char FIRST_DIGIT = '\uE080';
-    private static final char PIP_HELD = '\uE090';
-    private static final char PIP_SPENT = '\uE091';
+    static final char BACKING = '\uE000';
+    static final char FRAME = '\uE001';
+    static final char FIRST_ICON = '\uE010';
+    static final char FIRST_COOLING_ICON = '\uE030';
+    static final char FIRST_BADGE = '\uE050';
+    static final char FIRST_FILL = '\uE060';
+    static final char FIRST_DIGIT = '\uE080';
+    static final char PIP_HELD = '\uE090';
+    private static final char PIP_SPENT = PIP_HELD + 1;
 
     private AbilityPanel() {
     }
