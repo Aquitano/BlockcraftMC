@@ -1175,6 +1175,88 @@ public final class SternenfrontArt {
         return new Family("dropship_hegemonie", 72, false, List.of(new Model("sternenfront/dropship/hegemonie", hull)));
     }
 
+    /*
+     * The landers a deploying fighter rides down in. Both share one troop bay, which DropshipLanding seats its riders in:
+     * x within +-.42, floor at y .14, roof at .92, z within +-.5, open at both sides where the doors close it. The bay is
+     * a gap between boxes, not the inside of one, so its walls face the rider and the client draws them.
+     */
+    private static Family republicLander() {
+        var hull = new Shape()
+                .add(box(0, .09, 0, .88, .1, 2.0, CERAMIC))
+                .add(box(0, .97, -.05, .88, .1, 2.1, CERAMIC))
+                .add(box(0, .43, .8, .86, .6, .6, CERAMIC))
+                .add(box(0, .82, .76, .7, .2, .52, LENS))
+                .add(box(0, .4, 1.2, .62, .46, .24, CERAMIC))
+                .add(box(0, .66, 1.12, .5, .16, .2, LENS).spinX(-22.5))
+                .add(box(0, .66, .98, .87, .05, .3, MAROON))
+                .add(box(0, .24, 1.26, .3, .14, .2, STEEL))
+                .add(box(0, .22, 1.42, .04, .04, .12, FRAME))
+                .add(box(0, .52, -.85, .86, .8, .7, CERAMIC))
+                .add(box(0, .74, -.85, .87, .05, .5, MAROON))
+                .add(box(0, 1.22, -1.02, .05, .4, .44, CERAMIC))
+                .add(box(0, 1.3, -1.02, .06, .08, .3, MAROON))
+                .both(box(.28, .7, -1.29, .22, .22, .18, STEEL))
+                .add(drumZ(.28, .7, -1.39, .16, .02, CYAN))
+                .add(drumZ(-.28, .7, -1.39, .16, .02, CYAN))
+                .both(box(.86, .95, -.2, .9, .06, .72, CERAMIC).spinZ(-22.5))
+                .both(box(.9, .985, -.2, .5, .02, .4, MAROON).spinZ(-22.5))
+                .add(drumZ(1.3, .78, -.15, .16, .9, CERAMIC))
+                .add(drumZ(-1.3, .78, -.15, .16, .9, CERAMIC))
+                .both(box(1.3, .78, .33, .06, .06, .1, CYAN))
+                .both(box(.32, .02, 0, .06, .04, 1.6, FRAME))
+                .both(box(.32, .08, .6, .04, .08, .04, STEEL))
+                .both(box(.32, .08, -.6, .04, .08, .04, STEEL))
+                .both(box(.425, .53, .52, .03, .8, .04, FRAME))
+                .both(box(.425, .53, -.52, .03, .8, .04, FRAME))
+                .add(box(0, .2, .47, .7, .06, .06, STEEL))
+                .add(box(0, .912, 0, .5, .016, .05, CYAN))
+                .both(box(.3, .89, 0, .02, .02, .9, FRAME))
+                .serviced();
+        var door = new Shape()
+                .add(box(0, 0, 0, .03, .78, 1.0, CERAMIC))
+                .add(box(.012, .18, 0, .012, .07, 1.0, MAROON))
+                .add(box(.012, -.2, .3, .012, .16, .24, FRAME))
+                .serviced();
+        return new Family("lander_kolonien", 48, false, List.of(new Model("sternenfront/lander/kolonien", hull),
+                new Model("sternenfront/lander/kolonien_door", door)));
+    }
+
+    private static Family separatistLander() {
+        var hull = new Shape()
+                .add(box(0, .09, 0, .88, .1, 1.1, DROID))
+                .add(box(0, 1.0, -.1, .92, .16, 1.5, DROID))
+                .add(box(0, .52, .78, .9, .76, .56, DROID))
+                .add(box(0, .5, 1.13, .7, .6, .2, DROID))
+                .add(box(0, .55, 1.245, .5, .3, .03, FRAME))
+                .both(box(.12, .58, 1.265, .1, .08, .01, RED))
+                .both(box(.25, .2, 1.2, .08, .14, .3, FRAME))
+                .add(box(0, .5, -.82, .9, .76, .64, DROID))
+                .add(box(0, .55, -1.24, .6, .5, .2, FRAME))
+                .both(box(.15, .55, -1.345, .18, .3, .01, RED))
+                .both(box(.9, .98, 0, .3, .26, 2.3, DROID))
+                .both(box(.9, .98, 1.155, .16, .1, .01, RED))
+                .both(box(.9, 1.115, 0, .2, .01, 1.8, FRAME))
+                .both(box(.6, 1.0, .6, .32, .08, .2, FRAME))
+                .both(box(.6, 1.0, -.6, .32, .08, .2, FRAME))
+                .both(box(.9, .42, .8, .06, .86, .06, STEEL).spinX(22.5))
+                .both(box(.9, .42, -.8, .06, .86, .06, STEEL).spinX(-22.5))
+                .both(box(.9, .02, .95, .16, .04, .2, FRAME))
+                .both(box(.9, .02, -.95, .16, .04, .2, FRAME))
+                .both(box(.425, .53, .52, .03, .8, .04, FRAME))
+                .both(box(.425, .53, -.52, .03, .8, .04, FRAME))
+                .both(box(.36, .5, .46, .06, .7, .04, FRAME))
+                .add(box(0, .912, 0, .5, .016, .05, RED))
+                .serviced();
+        var hatch = new Shape()
+                .add(box(0, .39, 0, .03, .78, 1.0, DROID))
+                .add(box(.018, .39, -.3, .006, .7, .06, FRAME))
+                .add(box(.018, .39, .3, .006, .7, .06, FRAME))
+                .add(box(.018, .7, 0, .006, .05, .5, RED))
+                .serviced();
+        return new Family("lander_hegemonie", 48, false, List.of(new Model("sternenfront/lander/hegemonie", hull),
+                new Model("sternenfront/lander/hegemonie_door", hatch)));
+    }
+
     private static final String GUN_DISPLAY = """
             ,"gui_light":"front","display":{
               %s,
@@ -1934,7 +2016,7 @@ public final class SternenfrontArt {
                 cloneTrooper("reinforcement_arc_trooper", CloneRole.ARC), commandoDroid(),
                 cloneTrooper("hero_commander", CloneRole.REX), forceHero(false), forceHero(true), jangoFett(),
                 speeders("kolonien", barcSpeeder(false), barcSpeeder(true)),
-                speeders("hegemonie", stap(false), stap(true)), republicGunship(), separatistTransport(), wristRocket(), effects(), saberSweep());
+                speeders("hegemonie", stap(false), stap(true)), republicGunship(), separatistTransport(), republicLander(), separatistLander(), wristRocket(), effects(), saberSweep());
     }
 
     private record Point(double x, double y, double z) {
