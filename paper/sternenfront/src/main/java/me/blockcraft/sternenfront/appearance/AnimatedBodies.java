@@ -8,16 +8,19 @@ import kr.toxicity.model.api.platform.PlatformPlayer;
 import kr.toxicity.model.api.tracker.EntityTracker;
 import kr.toxicity.model.api.tracker.TrackerModifier;
 import kr.toxicity.model.api.tracker.TrackerUpdateAction;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 /**
  * Bots whose bodies BetterModel draws and animates, from the models resourcepack/RigModels.py writes, instead of a
@@ -29,58 +32,79 @@ import java.util.function.Predicate;
 final class AnimatedBodies implements AutoCloseable {
 
     private static final String OUTLINED = "_outlined";
-    private static final int ENEMY_OUTLINE = 0xAA0000;
+    /** The dark red that TargetOutlines gives enemies and the outline shader reserves for them. */
+    private static final int ENEMY_OUTLINE = NamedTextColor.DARK_RED.value();
+    /** BetterModel counts its flash on its own tracker clock, from that clock's next frame, so it can end after ours. */
+    private static final int FLASH_SLACK_TICKS = 2;
     private static final String MARKS = "_marks";
     private static final String PAULDRON = "_pauldron";
 
-    private final Set<String> families;
+    private final Set<RigBody> bodies = EnumSet.noneOf(RigBody.class);
     private final BiPredicate<Player, LivingEntity> outlined;
     private final int hurtTint;
-    private final Map<UUID, Trackers> bodies = new HashMap<>();
+    private final Map<UUID, Trackers> drawn = new HashMap<>();
 
     private static final class Trackers {
         private final LivingEntity actor;
-        private final Shown plain;
-        private final Shown outlined;
-        private Markings markings;
+        private final EntityTracker plain;
+        private final EntityTracker outlined;
+        private Insignia insignia;
         private int calmFrom;
 
-        Trackers(LivingEntity actor, Shown plain, Shown outlined, Markings markings) {
+        Trackers(LivingEntity actor, EntityTracker plain, EntityTracker outlined, Insignia insignia) {
             this.actor = actor;
             this.plain = plain;
             this.outlined = outlined;
-            update(TrackerUpdateAction.tint(markings.colour()), AnimatedBodies::marking);
-            update(TrackerUpdateAction.togglePart(markings.leader()), AnimatedBodies::pauldron);
-            this.markings = markings;
+            update(TrackerUpdateAction.tint(insignia.colour()), AnimatedBodies::tintable);
+            update(TrackerUpdateAction.togglePart(insignia.leader()), AnimatedBodies::pauldron);
+            this.insignia = insignia;
         }
 
         /**
          * The hurt flash tints every bone and then restores the tint each had before, so a colour set during the flash
          * would come back as the red it replaced; a new colour waits for the flash to pass.
          */
-        void keep(Markings wanted, int tick) {
-            if (wanted.leader() != markings.leader()) {
+        void wear(Insignia wanted, int tick) {
+            if (wanted.leader() != insignia.leader()) {
                 update(TrackerUpdateAction.togglePart(wanted.leader()), AnimatedBodies::pauldron);
-                markings = new Markings(markings.colour(), wanted.leader());
+                insignia = new Insignia(insignia.colour(), wanted.leader());
             }
-            if (wanted.colour() != markings.colour() && tick >= calmFrom) {
-                update(TrackerUpdateAction.tint(wanted.colour()), AnimatedBodies::marking);
-                markings = wanted;
+            if (wanted.colour() != insignia.colour() && tick >= calmFrom) {
+                update(TrackerUpdateAction.tint(wanted.colour()), AnimatedBodies::tintable);
+                insignia = wanted;
             }
+        }
+
+        void showTo(PlatformPlayer viewer, boolean outlinedView) {
+            toggle(outlined, viewer, outlinedView);
+            toggle(plain, viewer, !outlinedView);
+        }
+
+        private static void toggle(EntityTracker tracker, PlatformPlayer viewer, boolean visible) {
+            if (visible) {
+                tracker.show(viewer);
+            } else {
+                tracker.hide(viewer);
+            }
+        }
+
+        void shoot() {
+            plain.animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
+            outlined.animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
         }
 
         private void update(TrackerUpdateAction action, Predicate<RenderedBone> bones) {
-            plain.tracker().update(action, bones);
-            outlined.tracker().update(action, bones);
+            plain.update(action, bones);
+            outlined.update(action, bones);
         }
 
         void close() {
-            plain.tracker().close();
-            outlined.tracker().close();
+            plain.close();
+            outlined.close();
         }
     }
 
-    private static boolean marking(RenderedBone bone) {
+    private static boolean tintable(RenderedBone bone) {
         return bone.name().name().endsWith(MARKS) || pauldron(bone);
     }
 
@@ -88,50 +112,51 @@ final class AnimatedBodies implements AutoCloseable {
         return bone.name().name().endsWith(PAULDRON);
     }
 
-    private record Shown(EntityTracker tracker) {
-
-        void ifVisible(boolean visible, PlatformPlayer viewer) {
-            if (visible) {
-                tracker.show(viewer);
-            } else {
-                tracker.hide(viewer);
-            }
+    AnimatedBodies(Collection<String> families, BiPredicate<Player, LivingEntity> outlined, int hurtTint, Logger logger) {
+        for (var family : families) {
+            RigBody.ofFamily(family).ifPresentOrElse(bodies::add,
+                    () -> logger.severe("appearance.animated-bodies lists " + family + ", which is no body; it is ignored"));
         }
-    }
-
-    AnimatedBodies(Collection<String> families, BiPredicate<Player, LivingEntity> outlined, int hurtTint) {
-        this.families = Set.copyOf(families);
         this.outlined = outlined;
         this.hurtTint = hurtTint;
     }
 
-    boolean draws(RigBody body) {
-        return families.contains(body.family());
+    /** BetterModel registers its models once the server has loaded, after every plugin has enabled. */
+    void dropBodiesWithoutModels(Logger logger) {
+        bodies.removeIf(body -> {
+            boolean modelled = BetterModel.model(body.family()).isPresent() && BetterModel.model(body.family() + OUTLINED).isPresent();
+            if (!modelled) {
+                logger.severe("BetterModel has no " + body.family() + " or " + body.family() + OUTLINED + " model, so that body"
+                        + " in appearance.animated-bodies stays a plain rig. Generate it with resourcepack/RigModels.py and"
+                        + " dev/verify/verify.py models.");
+            }
+            return !modelled;
+        });
     }
 
-    void keep(LivingEntity actor, RigBody body, Markings markings, double recoil, Collection<? extends Player> viewers) {
-        var trackers = bodies.computeIfAbsent(actor.getUniqueId(), id -> spawn(actor, body, markings));
-        trackers.keep(markings, actor.getServer().getCurrentTick());
+    boolean draws(RigBody body) {
+        return bodies.contains(body);
+    }
+
+    void draw(LivingEntity actor, RigBody body, Insignia insignia, double recoil, Collection<? extends Player> viewers) {
+        var trackers = drawn.computeIfAbsent(actor.getUniqueId(), id -> spawn(actor, body, insignia));
+        trackers.wear(insignia, actor.getServer().getCurrentTick());
         for (var viewer : viewers) {
-            var platform = BukkitAdapter.adapt(viewer);
-            boolean showOutlined = outlined.test(viewer, actor);
-            trackers.outlined.ifVisible(showOutlined, platform);
-            trackers.plain.ifVisible(!showOutlined, platform);
+            trackers.showTo(BukkitAdapter.adapt(viewer), outlined.test(viewer, actor));
         }
         if (recoil >= 1) {
-            trackers.plain.tracker().animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
-            trackers.outlined.tracker().animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
+            trackers.shoot();
         }
     }
 
     void hurt(LivingEntity actor) {
-        var trackers = bodies.get(actor.getUniqueId());
+        var trackers = drawn.get(actor.getUniqueId());
         if (trackers != null) {
-            trackers.calmFrom = actor.getServer().getCurrentTick() + BodyRig.HURT_TICKS + 2;
+            trackers.calmFrom = actor.getServer().getCurrentTick() + BodyRig.HURT_TICKS + FLASH_SLACK_TICKS;
         }
     }
 
-    private Trackers spawn(LivingEntity actor, RigBody body, Markings markings) {
+    private Trackers spawn(LivingEntity actor, RigBody body, Insignia insignia) {
         var entity = BukkitAdapter.adapt(actor);
         var plain = BetterModel.model(body.family()).orElseThrow().getOrCreate(entity);
         var glowing = BetterModel.model(body.family() + OUTLINED).orElseThrow().create(entity, TrackerModifier.DEFAULT, tracker -> {
@@ -140,12 +165,12 @@ final class AnimatedBodies implements AutoCloseable {
         });
         plain.damageTintValue(hurtTint);
         glowing.damageTintValue(hurtTint);
-        return new Trackers(actor, new Shown(plain), new Shown(glowing), markings);
+        return new Trackers(actor, plain, glowing, insignia);
     }
 
     /** A dead body keeps its trackers until BetterModel has played the death animation and closed them; nothing closes those of a bot removed alive. */
     void forgetAbsent(Set<UUID> present) {
-        bodies.entrySet().removeIf(entry -> {
+        drawn.entrySet().removeIf(entry -> {
             if (present.contains(entry.getKey())) {
                 return false;
             }
@@ -158,7 +183,7 @@ final class AnimatedBodies implements AutoCloseable {
 
     @Override
     public void close() {
-        bodies.values().forEach(Trackers::close);
-        bodies.clear();
+        drawn.values().forEach(Trackers::close);
+        drawn.clear();
     }
 }

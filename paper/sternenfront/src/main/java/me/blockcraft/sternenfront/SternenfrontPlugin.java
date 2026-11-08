@@ -17,6 +17,7 @@ import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.appearance.TargetOutlines;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
+import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.debug.BotDebug;
 import me.blockcraft.sternenfront.hero.HeroConfig;
@@ -30,6 +31,7 @@ import org.bukkit.Difficulty;
 import org.bukkit.GameRules;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.EnumSet;
 import java.util.Optional;
 
 public final class SternenfrontPlugin extends JavaPlugin {
@@ -66,8 +68,15 @@ public final class SternenfrontPlugin extends JavaPlugin {
         game = new SternenfrontGame(this, gameConfig, config, HeroConfig.from(getConfig()), FeelConfig.from(getConfig()),
                 messages, map, lobby, services.stats(), services.menus());
         api.presence().maxPlayers(config.capacity());
-        if (getConfig().getBoolean("appearance.droids", true) || getConfig().getBoolean("appearance.infantry", true)) {
-            bodyRigs = BodyRigs.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
+        var riggedSides = EnumSet.noneOf(Faction.class);
+        if (getConfig().getBoolean("appearance.droids", true)) {
+            riggedSides.add(Faction.HEGEMONIE);
+        }
+        if (getConfig().getBoolean("appearance.infantry", true)) {
+            riggedSides.add(Faction.KOLONIEN);
+        }
+        if (!riggedSides.isEmpty()) {
+            bodyRigs = BodyRigs.start(this, game, riggedSides);
             game.rigs(bodyRigs);
         }
         secrets = Secrets.start(this, game, messages);

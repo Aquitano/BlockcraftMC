@@ -28,6 +28,12 @@ val generateSternenfrontArt = tasks.register<Exec>("generateSternenfrontArt") {
     commandLine("java", "SternenfrontArt.java", "src")
 }
 
+val generateRigModels = tasks.register<Exec>("generateRigModels") {
+    dependsOn(generateSternenfrontArt)
+    workingDir(layout.projectDirectory)
+    commandLine("python3", "RigModels.py")
+}
+
 val generateYardArt = tasks.register<Exec>("generateYardArt") {
     workingDir(layout.projectDirectory)
     commandLine("java", "YardArt.java", "src", "build/yard/contact-sheet.png")
@@ -66,8 +72,8 @@ val generatePresentation = tasks.register<Exec>("generatePresentation") {
 
 tasks.register("regenerate") {
     group = "build"
-    description = "Regenerates textures, sounds, furniture, and vanilla item overrides in resourcepack/src."
-    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateSternenfrontArt, generateYardArt, generateHud, generateBattle, generateDialogue, generatePresentation, ":paper:api:packOverrides")
+    description = "Regenerates textures, sounds, furniture, and vanilla item overrides in resourcepack/src, and the BetterModel bodies."
+    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateSternenfrontArt, generateRigModels, generateYardArt, generateHud, generateBattle, generateDialogue, generatePresentation, ":paper:api:packOverrides")
 }
 
 // Players get credits for what the pack contains; the map provenance and open questions stay in the repository.

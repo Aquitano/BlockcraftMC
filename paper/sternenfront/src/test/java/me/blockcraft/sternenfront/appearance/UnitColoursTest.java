@@ -17,10 +17,10 @@ public class UnitColoursTest {
     public void eachSidesFireteamsWearTheirOwnColourAndAThirdStartsOver() throws Exception {
         try (var reader = new InputStreamReader(getClass().getResourceAsStream("/config.yml"), StandardCharsets.UTF_8)) {
             var units = UnitColours.from(YamlConfiguration.loadConfiguration(reader).getConfigurationSection("appearance"));
-            assertEquals(0x30487A, units.of(Faction.KOLONIEN, 0));
-            assertEquals(0xC07818, units.of(Faction.KOLONIEN, 1));
-            assertEquals(units.of(Faction.KOLONIEN, 0), units.of(Faction.KOLONIEN, 2));
-            assertNotEquals(units.of(Faction.HEGEMONIE, 0), units.of(Faction.HEGEMONIE, 1));
+            assertEquals(0x30487A, units.colourOf(Faction.KOLONIEN, 0));
+            assertEquals(0xC07818, units.colourOf(Faction.KOLONIEN, 1));
+            assertEquals(units.colourOf(Faction.KOLONIEN, 0), units.colourOf(Faction.KOLONIEN, 2));
+            assertNotEquals(units.colourOf(Faction.HEGEMONIE, 0), units.colourOf(Faction.HEGEMONIE, 1));
         }
     }
 
@@ -29,7 +29,7 @@ public class UnitColoursTest {
         var config = new YamlConfiguration();
         config.set("unit-colours.kolonien", List.of("not a colour"));
         var units = UnitColours.from(config);
-        assertEquals(0xFFFFFF, units.of(Faction.KOLONIEN, 0));
-        assertEquals(0xFFFFFF, units.of(Faction.HEGEMONIE, 3));
+        assertEquals(0xFFFFFF, units.colourOf(Faction.KOLONIEN, 0));
+        assertEquals(0xFFFFFF, units.colourOf(Faction.HEGEMONIE, 3));
     }
 }

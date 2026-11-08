@@ -62,9 +62,9 @@ hand transforms are identical. Third-person, GUI, ground and fixed transforms re
 Run `:resourcepack:generateBattle` to regenerate the equipment, firing and lowered models. Java writes those transforms to
 `build/sternenfront/gun-poses.json`; `BattleArt.py` consumes that manifest and inherits each gun's geometry and other
 transforms. Running `BattleArt.py` directly requires a fresh Java generation first.
-`:resourcepack:verifyWeaponPoses`, also part of `check`, checks all eleven registered guns, vanilla item routes,
-texture paths, both hands, firing and lowered inheritance, family framing, recoil differences, the lowered muzzle and
-wrist bounds.
+`:resourcepack:verifyWeaponPoses`, also part of `check`, checks that the guns and guarded blades `PackModel` registers
+are the ones the generator writes, and their vanilla item routes, texture paths, both hands, firing and lowered
+inheritance, family framing, recoil differences, the lowered muzzle and wrist bounds.
 
 Each long gun has one feature that names it in profile. The carbine is short and boxy with a power cell standing out on
 its left. The DC-15A is long, with a scope and a grip under the barrel. The E-5 is long and thin, with a ribbed barrel and

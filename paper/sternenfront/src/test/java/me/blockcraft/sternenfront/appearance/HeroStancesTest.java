@@ -23,8 +23,8 @@ public class HeroStancesTest {
         var windUp = HeroStances.of(Optional.of(new Stance.Swing(false, 0, 4)), -.5f);
         var through = HeroStances.of(Optional.of(new Stance.Swing(false, 2, 4)), -.5f);
         assertTrue(windUp.bladeTurn() < 0 && through.bladeTurn() > 0);
-        assertEquals(1, windUp.ease());
-        assertEquals(3, through.ease());
+        assertEquals(1, windUp.blendTicks());
+        assertEquals(3, through.blendTicks());
         assertTrue(HeroStances.of(Optional.of(new Stance.Swing(true, 0, 4)), -.5f).bladeTurn() > 0);
     }
 

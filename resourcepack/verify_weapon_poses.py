@@ -1,4 +1,4 @@
-"""Checks generated gun poses and their vanilla item routes after generateBattle."""
+"""Checks generated gun poses, guarded blades and their vanilla item routes after generateBattle."""
 import json
 import math
 import re
@@ -6,7 +6,8 @@ import unittest
 from pathlib import Path
 
 PACK = Path(__file__).parent / "src/assets"
-REGISTRY = Path(__file__).parent.parent / "paper/api/src/main/java/me/blockcraft/api/pack/PackModel.java"
+REGISTRY = (Path(__file__).parent.parent / "paper/api/src/main/java/me/blockcraft/api/pack/PackModel.java").read_text()
+GENERATOR = (Path(__file__).parent / "SternenfrontArt.java").read_text()
 HANDS = ("firstperson_righthand", "firstperson_lefthand")
 HOLDS = ("_firing", "_lowered")
 
@@ -28,9 +29,10 @@ def barrel_elevation(pose, left=False):
 
 class WeaponPoses(unittest.TestCase):
     def test_registered_pose_models_and_item_routes(self):
-        weapons = re.findall(r'Material\.(\w+), "(sternenfront/\w+)_firing"', REGISTRY.read_text())
-        self.assertEqual(len(weapons), 11)
-        self.assertEqual(sorted(re.findall(r'Material\.(\w+), "(sternenfront/\w+)_lowered"', REGISTRY.read_text())), sorted(weapons))
+        weapons = re.findall(r'Material\.(\w+), "(sternenfront/\w+)_firing"', REGISTRY)
+        generated = re.findall(r'gun\("(\w+)", .+, GunPose\.\w+\)', GENERATOR)
+        self.assertEqual(sorted(path for _, path in weapons), sorted(f"sternenfront/{name}" for name in generated))
+        self.assertEqual(sorted(re.findall(r'Material\.(\w+), "(sternenfront/\w+)_lowered"', REGISTRY)), sorted(weapons))
         for material, path in weapons:
             with self.subTest(weapon=path):
                 rest = read_model(path)
@@ -51,6 +53,12 @@ class WeaponPoses(unittest.TestCase):
                 serialized = json.dumps(route)
                 for suffix in ("",) + HOLDS:
                     self.assertIn(f'"blockcraft:item/{path}{suffix}"', serialized)
+
+    def test_registered_and_generated_guards_agree(self):
+        registered = re.findall(r'"(sternenfront/\w+)", (?:true|false), true\)', REGISTRY)
+        generated = re.findall(r'"(sternenfront/\w+)"', re.search(r"GUARDED = List\.of\(([^)]*)\)", GENERATOR).group(1))
+        self.assertTrue(registered)
+        self.assertEqual(sorted(registered), sorted(generated))
 
     def test_family_framing_recoil_and_lowering(self):
         def pose(name, firing=False):

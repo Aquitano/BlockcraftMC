@@ -4,7 +4,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.api.replay.RecordedModel;
-import me.blockcraft.sternenfront.appearance.BodyRigs;
+import me.blockcraft.sternenfront.appearance.RigBody;
 import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.PackModel;
@@ -382,7 +382,7 @@ public final class Bots implements Listener {
             skeleton.setCanPickupItems(false);
             skeleton.setShouldBurnInDay(false);
             skeleton.setSilent(true);
-            RecordedModel.mark(skeleton, BodyRigs.family(soldier.faction, soldier.role));
+            RecordedModel.mark(skeleton, RigBody.of(soldier.faction, soldier.role).family());
             skeleton.customName(game.messages().get("bot.name",
                     Placeholder.styling("tint", soldier.faction.text()),
                     Placeholder.component("faction", game.messages().get("faction." + soldier.faction.key() + ".name")),

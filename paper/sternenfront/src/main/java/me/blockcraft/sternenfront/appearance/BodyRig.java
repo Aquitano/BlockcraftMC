@@ -39,6 +39,20 @@ final class BodyRig implements AutoCloseable {
 
     private static final float SEATED_LEG = -1.35f;
     private static final float SEATED_DROP = 0.2f;
+    private static final float CROUCH_DROP = 0.28f;
+    private static final float CROUCH_LEAN = 0.15f;
+    private static final float AIRBORNE_STEP = 0.2f;
+    private static final float LEFT_ARM_DROP = 0.05f;
+    private static final float MAX_PITCH_DEGREES = 65;
+    /** A hero has no appearance.motion profile: its walk cycle advances with distance and its legs swing with speed. */
+    private static final double HERO_STRIDE_CAP_BLOCKS = 0.5;
+    private static final double HERO_STRIDE_PER_BLOCK = 7;
+    private static final double HERO_STEP_PER_BLOCK = 3;
+    private static final double HERO_MAX_STEP = 0.65;
+    private static final double HERO_RECOIL_BLOCKS = 0.06;
+    private static final float NAME_SCALE = 0.6f;
+    private static final float NAME_VIEW_RANGE = 0.4f;
+    private static final double NAME_ABOVE_HEAD = 0.3;
     /** As long as vanilla's hurt flash and BetterModel's damage tint. */
     static final int HURT_TICKS = 10;
 
@@ -51,20 +65,17 @@ final class BodyRig implements AutoCloseable {
     private final ItemDisplay head;
     private final ItemDisplay leftArm;
     private final ItemDisplay rightArm;
-    private static final float NAME_SCALE = 0.6f;
-    private static final float NAME_VIEW_RANGE = 0.4f;
-
     private final ItemDisplay leftLeg;
     private final ItemDisplay rightLeg;
     private final ItemDisplay weapon;
     private final Optional<ItemDisplay> offhand;
-    private final Interaction target;
+    private final Interaction hitBox;
     private final TextDisplay name;
     private ItemStack held = ItemStack.empty();
     private ItemStack heldOffhand = ItemStack.empty();
     private Location previous;
     private double stride;
-    private final RigBody body;
+    private final RigBody kind;
     private final Predicate<Player> fighting;
     private final Supplier<Vector> aim;
     private final float turnDegrees;
@@ -72,38 +83,38 @@ final class BodyRig implements AutoCloseable {
     private final Optional<RigMotion> motion;
     private int recoilLeft;
     private int hurtLeft;
-    private Markings markings;
+    private Insignia insignia;
     private final Supplier<Optional<Stance>> stance;
     private HeroStances.Limbs limbs;
     private int sinceStance;
 
-    BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees,
-            Optional<RigMotion> motion, Markings markings,
+    BodyRig(Plugin plugin, LivingEntity actor, RigBody kind, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees,
+            Optional<RigMotion> motion, Insignia insignia,
             Supplier<Optional<Stance>> stance) {
         this.fighting = fighting;
         this.stance = stance;
         this.plugin = plugin;
         this.actor = actor;
-        this.body = body;
+        this.kind = kind;
         this.aim = aim;
         this.turnDegrees = turnDegrees;
         this.motion = motion;
-        this.markings = markings;
+        this.insignia = insignia;
         previous = actor.getLocation();
         bodyYaw = (float) Math.toRadians(-previous.clone().setDirection(aim.get()).getYaw());
-        torso = part("torso");
-        head = part("head");
-        leftArm = part(body.leftArm());
-        rightArm = part("arm");
-        leftLeg = part("leg");
-        rightLeg = part("leg_right");
-        paint(Color.WHITE, Color.fromRGB(markings.colour()));
+        torso = spawnPart("torso");
+        head = spawnPart("head");
+        leftArm = spawnPart(kind.leftArmPart());
+        rightArm = spawnPart("arm");
+        leftLeg = spawnPart("leg");
+        rightLeg = spawnPart("leg_right");
+        paint(Color.WHITE, Color.fromRGB(insignia.colour()));
         weapon = spawn(ItemDisplay.class);
         weapon.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-        offhand = body.dualWield() ? Optional.of(spawn(ItemDisplay.class)) : Optional.empty();
+        offhand = kind.dualWield() ? Optional.of(spawn(ItemDisplay.class)) : Optional.empty();
         offhand.ifPresent(display -> display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE));
-        target = spawn(Interaction.class);
-        target.setResponsive(false);
+        hitBox = spawn(Interaction.class);
+        hitBox.setResponsive(false);
         name = spawn(TextDisplay.class);
         name.setBillboard(Display.Billboard.CENTER);
         name.setShadowed(true);
@@ -112,19 +123,19 @@ final class BodyRig implements AutoCloseable {
         name.setViewRange(NAME_VIEW_RANGE);
         name.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(NAME_SCALE), new Quaternionf()));
         var label = actor instanceof Player player ? player.displayName() : actor.customName();
-        name.text((label == null ? Component.text(actor.getName()) : label).color(body.faction().text()));
+        name.text((label == null ? Component.text(actor.getName()) : label).color(kind.faction().text()));
     }
 
     LivingEntity actor() {
         return actor;
     }
 
-    RigBody body() {
-        return body;
+    RigBody kind() {
+        return kind;
     }
 
-    UUID targetId() {
-        return target.getUniqueId();
+    UUID hitBoxId() {
+        return hitBox.getUniqueId();
     }
 
     boolean owns(Entity entity) {
@@ -152,7 +163,7 @@ final class BodyRig implements AutoCloseable {
                     List.of(right.x, right.y, right.z, right.w), List.of(scale.x, scale.y, scale.z),
                     display.getTeleportDuration(), display.getInterpolationDuration(), display.getInterpolationDelay()));
         }
-        return new RigSnapshot(body.family(), Point.of(previous), stride, List.copyOf(viewers), List.copyOf(parts));
+        return new RigSnapshot(kind.family(), Point.of(previous), stride, List.copyOf(viewers), List.copyOf(parts));
     }
 
     ItemDisplay torso() {
@@ -174,18 +185,18 @@ final class BodyRig implements AutoCloseable {
         hurtLeft = HURT_TICKS;
     }
 
-    /** New markings wait for the hurt flash to end, which paints them anyway. */
-    void mark(Markings next) {
-        if (!next.equals(markings)) {
-            markings = next;
+    /** New insignia wait for the hurt flash to end, which paints them anyway. */
+    void wear(Insignia next) {
+        if (!next.equals(insignia)) {
+            insignia = next;
             if (hurtLeft == 0) {
-                paint(Color.WHITE, Color.fromRGB(markings.colour()));
+                paint(Color.WHITE, Color.fromRGB(insignia.colour()));
             }
         }
     }
 
     private void paint(Color plates, Color marks) {
-        var data = CustomModelData.customModelData().addColor(plates).addColor(marks).addFlag(markings.leader()).build();
+        var data = CustomModelData.customModelData().addColor(plates).addColor(marks).addFlag(insignia.leader()).build();
         for (var part : List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg)) {
             var look = part.getItemStack();
             look.setData(DataComponentTypes.CUSTOM_MODEL_DATA, data);
@@ -193,10 +204,10 @@ final class BodyRig implements AutoCloseable {
         }
     }
 
-    private ItemDisplay part(String part) {
+    private ItemDisplay spawnPart(String part) {
         var display = spawn(ItemDisplay.class);
         display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-        display.setItemStack(Displays.model("sternenfront/body/" + body.family() + "/" + part));
+        display.setItemStack(Displays.model("sternenfront/body/" + kind.family() + "/" + part));
         return display;
     }
 
@@ -215,63 +226,59 @@ final class BodyRig implements AutoCloseable {
         return entity;
     }
 
-    void tick() {
-        tick(0);
-    }
-
     void tick(double recoil) {
         var at = actor.getLocation();
         double moved = Math.hypot(at.getX() - previous.getX(), at.getZ() - previous.getZ());
-        stride += motion.map(profile -> profile.advance(moved)).orElseGet(() -> Math.min(moved, 0.5) * 7);
+        stride += motion.map(profile -> profile.advance(moved)).orElseGet(() -> Math.min(moved, HERO_STRIDE_CAP_BLOCKS) * HERO_STRIDE_PER_BLOCK);
         var movement = motion.map(profile -> profile.pose(stride,
                 actor.isOnGround() && !actor.isInsideVehicle() ? moved : 0))
-                .orElseGet(() -> new RigMotion.Pose((float) (Math.sin(stride) * Math.min(moved * 3, 0.65)), 0, 0, 0));
+                .orElseGet(() -> new RigMotion.Pose((float) (Math.sin(stride) * Math.min(moved * HERO_STEP_PER_BLOCK, HERO_MAX_STEP)), 0, 0, 0));
         if (recoil >= 1) recoilLeft = motion.map(RigMotion::recoilTicks).orElse(0);
         double kick = motion.map(profile -> (double) recoilLeft / profile.recoilTicks()).orElse(recoil);
         float recoilPitch = (float) -Math.toRadians(motion.map(RigMotion::recoilDegrees).orElse(0.0) * kick);
-        float recoilDistance = (float) (motion.map(RigMotion::recoilBlocks).orElse(0.06) * kick);
+        float recoilDistance = (float) (motion.map(RigMotion::recoilBlocks).orElse(HERO_RECOIL_BLOCKS) * kick);
         recoilLeft = Math.max(0, recoilLeft - 1);
         if (hurtLeft > 0 && --hurtLeft == 0) {
-            paint(Color.WHITE, Color.fromRGB(markings.colour()));
+            paint(Color.WHITE, Color.fromRGB(insignia.colour()));
         }
-        boolean seated = actor.isInsideVehicle() && body.faction() == Faction.KOLONIEN;
-        float step = actor.isInsideVehicle() ? 0 : actor.isOnGround() ? movement.step() : 0.2f;
+        boolean seated = actor.isInsideVehicle() && kind.faction() == Faction.KOLONIEN;
+        float step = actor.isInsideVehicle() ? 0 : actor.isOnGround() ? movement.step() : AIRBORNE_STEP;
         float leftStride = seated ? SEATED_LEG : step;
         float rightStride = seated ? SEATED_LEG : -step;
         boolean crouching = actor instanceof Player player && player.isSneaking();
-        float drop = seated ? SEATED_DROP : crouching ? 0.28f : 0;
+        float drop = seated ? SEATED_DROP : crouching ? CROUCH_DROP : 0;
         var looking = at.clone().setDirection(aim.get());
         float facing = (float) Math.toRadians(-looking.getYaw());
         bodyYaw = actor instanceof Player ? (float) Math.toRadians(-actor.getBodyYaw()) : RigPose.turn(bodyYaw, facing, turnDegrees);
         float yaw = bodyYaw;
-        float pitch = (float) Math.toRadians(Math.clamp(looking.getPitch(), -65, 65));
+        float pitch = (float) Math.toRadians(Math.clamp(looking.getPitch(), -MAX_PITCH_DEGREES, MAX_PITCH_DEGREES));
         at.setYaw(0);
         at.setPitch(0);
-        var joints = body.joints();
-        float scale = body.scale();
+        var joints = kind.joints();
+        float scale = kind.scale();
         pose(torso, at, yaw, yaw + movement.sway(), 0, joints.torsoY() * scale - drop + movement.bob(), 0, 0,
-                joints.torsoLean() + movement.lean() + recoilPitch / 3 + (crouching ? 0.15f : 0), scale);
+                joints.torsoLean() + movement.lean() + recoilPitch / 3 + (crouching ? CROUCH_LEAN : 0), scale);
         pose(head, at, yaw, facing, 0, joints.headY() * scale - drop, joints.headZ() * scale, 0, pitch, scale);
         pose(leftLeg, at, yaw, yaw, joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, leftStride, scale);
         pose(rightLeg, at, yaw, yaw, -joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, rightStride, scale);
         float shoulderX = joints.shoulderX() * scale;
         float shoulderY = joints.shoulderY() * scale - drop;
         float shoulderZ = joints.shoulderZ() * scale;
-        var wanted = HeroStances.of(stance.get(), body.armLift());
+        var wanted = HeroStances.of(stance.get(), kind.armLift());
         sinceStance = wanted.equals(limbs) ? sinceStance + 1 : 0;
         limbs = wanted;
-        int ease = Math.max(1, wanted.ease() - sinceStance);
-        pose(leftArm, at, yaw, facing - body.gripTurn() + wanted.leftTurn(), shoulderX, shoulderY, shoulderZ, 0,
-                pitch + wanted.leftLift() + 0.05f + recoilPitch, 0, scale, ease);
+        int blendTicks = Math.max(1, wanted.blendTicks() - sinceStance);
+        pose(leftArm, at, yaw, facing - kind.gripTurn() + wanted.leftTurn(), shoulderX, shoulderY, shoulderZ, 0,
+                pitch + wanted.leftLift() + LEFT_ARM_DROP + recoilPitch, 0, scale, blendTicks);
         pose(rightArm, at, yaw, facing + wanted.rightTurn(), -shoulderX, shoulderY, shoulderZ, 0,
-                pitch + wanted.rightLift() + recoilPitch, 0, scale, ease);
+                pitch + wanted.rightLift() + recoilPitch, 0, scale, blendTicks);
         pose(weapon, at, yaw, facing + wanted.bladeTurn(), joints.weaponX() * scale + wanted.bladeX(),
                 joints.weaponY() * scale - drop + wanted.bladeY(), 0, joints.weaponZ() * scale - recoilDistance,
-                pitch + recoilPitch + wanted.bladeTilt(), wanted.bladeRoll(), 0.65f, ease);
+                pitch + recoilPitch + wanted.bladeTilt(), wanted.bladeRoll(), RigBody.WEAPON_SCALE, blendTicks);
         offhand.ifPresent(display -> pose(display, at, yaw, facing, -joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
-                joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, 0.65f));
+                joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, RigBody.WEAPON_SCALE));
         var equipment = actor.getEquipment();
-        var current = equipment == null || !body.showsWeapon() ? ItemStack.empty() : equipment.getItemInMainHand();
+        var current = equipment == null || !kind.showsWeapon() ? ItemStack.empty() : equipment.getItemInMainHand();
         if (!current.equals(held)) {
             held = current.clone();
             weapon.setItemStack(held);
@@ -283,10 +290,10 @@ final class BodyRig implements AutoCloseable {
                 display.setItemStack(heldOffhand);
             }
         });
-        target.setInteractionWidth((float) actor.getWidth());
-        target.setInteractionHeight((float) actor.getHeight());
-        place(target, at);
-        place(name, at.clone().add(0, actor.getHeight() + 0.3, 0));
+        hitBox.setInteractionWidth((float) actor.getWidth());
+        hitBox.setInteractionHeight((float) actor.getHeight());
+        place(hitBox, at);
+        place(name, at.clone().add(0, actor.getHeight() + NAME_ABOVE_HEAD, 0));
         previous = at;
         plugin.getServer().getOnlinePlayers().forEach(this::refresh);
     }
