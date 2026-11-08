@@ -70,7 +70,6 @@ public final class BattleEffects {
     private static final double BLOCK_BEHIND = 0.01;
     private static final float SIZZLE_VOLUME = 0.35f;
     private static final int GROUND_PROBE = 4;
-    private static final int FLASH_TICKS = 2;
     private static final double PARTICLE_RANGE_SQUARED = 32 * 32;
     private static final double CLEAR_OF_EYES_SQUARED = 2.5 * 2.5;
     private static final int TRACER_TICKS = 3;
@@ -267,9 +266,9 @@ public final class BattleEffects {
             return;
         }
         spawnSparingOwner(player, at, Particle.ELECTRIC_SPARK, null);
-        spawnSparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), 1f));
+        spawnSparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), config.bolt().impactDust()));
         if (enabled) {
-            flashSparing(player, faction, at, config.bolt().impactFlash(), FLASH_TICKS);
+            flashSparing(player, faction, at, config.bolt().impactFlash(), config.bolt().impactTicks());
         }
     }
 
@@ -344,9 +343,9 @@ public final class BattleEffects {
     private void burst(Location at, Faction faction) {
         var world = at.getWorld();
         world.spawnParticle(Particle.ELECTRIC_SPARK, at, 4, 0.08, 0.08, 0.08, 0.1, null, true);
-        world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), 1f), true);
+        world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), config.bolt().impactDust()), true);
         if (enabled) {
-            flares.flash(flashModel(faction), at, config.bolt().impactFlash(), FLASH_TICKS);
+            flares.flash(flashModel(faction), at, config.bolt().impactFlash(), config.bolt().impactTicks());
         }
     }
 

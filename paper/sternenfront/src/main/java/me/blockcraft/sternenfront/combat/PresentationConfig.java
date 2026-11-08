@@ -13,7 +13,8 @@ public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch
 
     public record MuzzleFlash(int ticks, float scale, float heavyScale) { }
 
-    public record Bolt(float width, float length, float trailSize, double trailStep, int farEvery, float impactFlash) { }
+    public record Bolt(float width, float length, float trailSize, double trailStep, int farEvery, float impactFlash,
+                       int impactTicks, float impactDust) { }
 
     public record Explosion(int smokePuffs, int smokeTicks, int debris) { }
 
@@ -52,7 +53,9 @@ public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch
                         (float) config.getDouble("presentation.bolt.trail-size"),
                         Math.max(0.1, config.getDouble("presentation.bolt.trail-step")),
                         Math.max(1, config.getInt("presentation.bolt.far-every")),
-                        (float) config.getDouble("presentation.bolt.impact-flash")),
+                        (float) config.getDouble("presentation.bolt.impact-flash"),
+                        Math.max(1, config.getInt("presentation.bolt.impact-ticks")),
+                        (float) Math.max(0.1, config.getDouble("presentation.bolt.impact-dust"))),
                 new Explosion(Math.max(0, config.getInt("presentation.explosion.smoke-puffs")),
                         Math.max(1, config.getInt("presentation.explosion.smoke-ticks")),
                         Math.max(0, config.getInt("presentation.explosion.debris"))),
