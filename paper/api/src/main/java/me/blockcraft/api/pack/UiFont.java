@@ -105,7 +105,6 @@ public final class UiFont {
                 .append(Component.text(shift(TITLE_X - x - width)).font(KEY)).build();
     }
 
-    /** An icon in the colour of the text around it. */
     /** {@code text} then empty space up to {@code width}, so what follows stays put however long {@code text} is. */
     public static Component before(Component text, int width) {
         return Component.empty().append(text).append(gap(width - width(text)));
@@ -172,6 +171,11 @@ public final class UiFont {
         char base = pixels < 0 ? SHIFT_LEFT_BASE : SHIFT_RIGHT_BASE;
         int remaining = Math.abs(pixels);
         var glyphs = new StringBuilder();
+        int widest = 1 << (SHIFT_BITS - 1);
+        while (remaining >= 2 * widest) {
+            glyphs.append((char) (base + SHIFT_BITS - 1));
+            remaining -= widest;
+        }
         for (int bit = 0; bit < SHIFT_BITS; bit++) {
             if ((remaining & (1 << bit)) != 0) {
                 glyphs.append((char) (base + bit));

@@ -157,7 +157,7 @@ public class UiFontTest {
         for (var icon : Icon.values()) {
             assertTrue(icon.name(), bitmaps.contains(icon.glyph()));
         }
-        for (int pixels : new int[] {-8, -169, 1, 255, -255}) {
+        for (int pixels : new int[] {-8, -169, 1, 255, -255, 256, -600}) {
             assertEquals(pixels, width(UiFont.shift(pixels), advances));
         }
     }
