@@ -157,6 +157,11 @@ public final class SkyWarsGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        round.dieOnQuit(player);
+        leave(player);
+    }
+
+    private void leave(Player player) {
         boolean wasPlaying = round.leave(player);
         kits.forget(player);
         vote.withdraw(player);
@@ -169,7 +174,7 @@ public final class SkyWarsGame implements RoundConnections.Seating {
     @Override
     public void vanished(Player player) {
         if (isIngame() && round.isPlaying(player)) {
-            quit(player);
+            leave(player);
             round.watch(player);
         } else if (isLobby()) {
             vote.withdraw(player);

@@ -192,6 +192,7 @@ public final class CoresGame implements RoundConnections.Seating {
     /** A player who drops out of the running round keeps their place for a while. */
     @Override
     public void quit(Player player) {
+        round.dieOnQuit(player);
         if (round.stepOut(player, this::forfeited)) {
             refreshAll();
             return;

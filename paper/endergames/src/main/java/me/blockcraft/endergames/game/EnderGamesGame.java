@@ -192,6 +192,11 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
 
     @Override
     public void quit(Player player) {
+        round.dieOnQuit(player);
+        leave(player);
+    }
+
+    private void leave(Player player) {
         boolean wasPlaying = round.leave(player);
         kits.forget(player);
         abilities.forget(player);
@@ -204,7 +209,7 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
     @Override
     public void vanished(Player player) {
         if (isIngame() && round.isPlaying(player)) {
-            quit(player);
+            leave(player);
             round.watch(player);
         }
     }

@@ -145,8 +145,23 @@ public final class Round implements Listener {
         arena.welcome(player, players.size(), capacity);
     }
 
+    /**
+     * A player who quits a running round mid-fight dies first, so that the game's own death handling credits the last
+     * hit and drops what they carried.
+     */
+    public void dieOnQuit(Player player) {
+        if (phase == GamePhase.INGAME && players.contains(player.getUniqueId()) && !player.isDead()) {
+            player.setHealth(0.0);
+        }
+    }
+
     /** Returns whether the player was playing; leaving a running round counts as a loss, and as a death unless they left dead. */
     public boolean leave(Player player) {
+        return leave(player, !player.isDead());
+    }
+
+    /** As {@link #leave(Player)}, for a game whose dead are not {@link Player#isDead()}: the death counts only if {@code dies}. */
+    public boolean leave(Player player, boolean dies) {
         var id = player.getUniqueId();
         spectators.forget(id);
         bars.forEach(bar -> bar.hide(player));
@@ -156,7 +171,7 @@ public final class Round implements Listener {
         switch (phase) {
             case LOBBY -> summary.forget(player);
             case INGAME -> {
-                if (!player.isDead()) {
+                if (dies) {
                     summary.death(player);
                 }
                 summary.eliminate(player);

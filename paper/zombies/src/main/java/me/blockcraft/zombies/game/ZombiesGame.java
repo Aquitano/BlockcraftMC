@@ -197,13 +197,14 @@ public final class ZombiesGame implements RoundConnections.Seating {
     @Override
     public void quit(Player player) {
         presentation.forget(player);
-        boolean participated = survivors.remove(player.getUniqueId()) != null;
+        var survivor = survivors.remove(player.getUniqueId());
+        boolean participated = survivor != null;
         notes.forget(player);
         removeCorpse(player.getUniqueId());
         lastHurt.remove(player.getUniqueId());
         protectedUntil.remove(player.getUniqueId());
         repaired.remove(player.getUniqueId());
-        round.leave(player);
+        round.leave(player, !player.isDead() && (survivor == null || survivor.life() != Survivor.Life.OUT));
         if (running() && participated && fighters().isEmpty()) {
             finish(false);
         }

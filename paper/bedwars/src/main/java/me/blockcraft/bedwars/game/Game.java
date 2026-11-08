@@ -307,9 +307,7 @@ public final class Game implements RoundConnections.Seating {
     @Override
     public void quit(Player player) {
         boolean fighting = phase() == GamePhase.INGAME && round.isPlaying(player);
-        if (fighting && !player.isDead()) {
-            player.setHealth(0.0);
-        }
+        round.dieOnQuit(player);
         if (phase() == GamePhase.INGAME && teams.of(player).filter(Team::hasBed).isPresent()
                 && round.stepOut(player, this::forfeited)) {
             scoreboard.refreshAll();

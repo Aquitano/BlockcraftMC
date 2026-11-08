@@ -158,13 +158,18 @@ public final class Game implements RoundConnections.Seating {
     @Override
     public void vanished(Player player) {
         if (isIngame() && isAlive(player)) {
-            quit(player);
+            leave(player);
             round.watch(player);
         }
     }
 
     @Override
     public void quit(Player player) {
+        round.dieOnQuit(player);
+        leave(player);
+    }
+
+    private void leave(Player player) {
         boolean wasPlaying = round.leave(player);
         kits.forget(player);
         refreshAll();

@@ -206,13 +206,21 @@ public final class Game implements RoundConnections.Seating {
     @Override
     public void vanished(Player player) {
         if (phase != GamePhase.LOBBY && phase != GamePhase.ENDING && isAlive(player)) {
-            quit(player);
+            leave(player);
             round.watch(player);
         }
     }
 
     @Override
     public void quit(Player player) {
+        if (phase == GamePhase.DEATHMATCH && isAlive(player)) {
+            lives.put(player.getUniqueId(), 1);
+            round.dieOnQuit(player);
+        }
+        leave(player);
+    }
+
+    private void leave(Player player) {
         var id = player.getUniqueId();
         boolean wasPlaying = round.leave(player);
         emeralds.remove(id);
