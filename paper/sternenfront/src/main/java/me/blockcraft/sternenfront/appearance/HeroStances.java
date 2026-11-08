@@ -4,7 +4,10 @@ import me.blockcraft.sternenfront.combat.Stance;
 
 import java.util.Optional;
 
-/** How a bladed hero's arms and blade sit in each stance, in radians, and how many ticks the body takes to get there. */
+/**
+ * Where a rig holds its arms and its weapon, in radians, and over how many ticks it blends there. A bladed hero's stance
+ * moves them; every other fighter keeps its body's resting arm lift.
+ */
 final class HeroStances {
 
     private static final float READY_TILT = .35f;

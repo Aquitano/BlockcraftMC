@@ -614,7 +614,7 @@ public final class SternenfrontArt {
     /** {@code unit} is the marking colour a body part shows when nothing sets one. */
     private record Family(String name, int density, boolean translucent, List<Model> models, int unit) {
         Family(String name, int density, boolean translucent, List<Model> models) {
-            this(name, density, translucent, models, -1);
+            this(name, density, translucent, models, UNTINTED);
         }
 
         boolean has(String path) {
@@ -703,9 +703,13 @@ public final class SternenfrontArt {
     /** Greyscale, so that a unit colour multiplied into it keeps its shading; the item definition supplies the colour. */
     private static final Paint MARKING = paint("marking", 3, Grain.PLATE, 0, Wear.SCUFF,
             0x8C8C8C, 0xB4B4B4, 0xD6D6D6, 0xF0F0F0, 0xFFFFFF);
-    /** The first fireteam's colours in config.yml's appearance.unit-colours, for displays that set none. */
+    /**
+     * The first fireteam's colours in config.yml's appearance.unit-colours, which a body's markings show where nothing
+     * sets a colour. Heroes other than the commander wear no markings and pass UNTINTED, white.
+     */
     private static final int REPUBLIC_UNIT = 0x30487A;
     private static final int SEPARATIST_UNIT = 0xE0B818;
+    private static final int UNTINTED = -1;
     private static final Paint HAIR = paint("auburn", 2, Grain.SMOOTH, 0, Wear.NONE,
             0x3E2417, 0x61402B, 0x855B3A, 0xA4774C, 0xBE9263);
     private static final Paint GREY_HAIR = paint("grey_hair", 2, Grain.SMOOTH, 0, Wear.NONE,
@@ -1044,7 +1048,7 @@ public final class SternenfrontArt {
         } else {
             torso.both(box(.2, -.17, 0, .025, .32, .28, WRAP));
         }
-        return body(dooku ? "hero_sith" : "hero_jedi", -1, torso, humanHead(dooku), arm, leg);
+        return body(dooku ? "hero_sith" : "hero_jedi", UNTINTED, torso, humanHead(dooku), arm, leg);
     }
 
     private static Shape mandoHelmet() {
@@ -1081,7 +1085,7 @@ public final class SternenfrontArt {
                 .add(box(0, -.66, 0, .15, .26, .17, BLUE))
                 .add(box(0, -.66, .1, .13, .24, .035, TRIM))
                 .add(box(0, -.9, .03, .17, .13, .25, FRAME));
-        return body("hero_bounty_hunter", -1, torso, mandoHelmet(), arm, leg);
+        return body("hero_bounty_hunter", UNTINTED, torso, mandoHelmet(), arm, leg);
     }
 
     private static Shape barcSpeeder(boolean damaged) {
