@@ -18,6 +18,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
+PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
 STACK = ("mariadb", "velocity", "sternenfront", "client")
 PLAYER = "Verify"
 HQ_X = 55
@@ -30,7 +31,7 @@ ALL_SCALES = COMMON_SCALES + [(1366, 768, 2), (1920, 1080, 2), (1920, 1080, 3), 
 
 def compose(*args, capture=False, timeout=None):
     env = {key: value for key, value in os.environ.items() if key != "COMPOSE_FILE"}
-    command = ["docker", "compose", "-p", "bcverify", "--project-directory", str(ROOT), "-f", "dev/verify/compose.yml", *args]
+    command = ["docker", "compose", "-p", PROJECT, "--project-directory", str(ROOT), "-f", "dev/verify/compose.yml", *args]
     return subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=capture, timeout=timeout)
 
 
@@ -656,7 +657,7 @@ def build_map(name="sturmwerft"):
     built = ROOT / "build/mapgen" / name
     (ROOT / "worlds" / name).mkdir(parents=True, exist_ok=True)
     compose("--profile", "mapgen", "rm", "-sf", "mapbuilder")
-    subprocess.run(["docker", "volume", "rm", "-f", "bcverify_mapbuilder"], check=True, capture_output=True)
+    subprocess.run(["docker", "volume", "rm", "-f", f"{PROJECT}_mapbuilder"], check=True, capture_output=True)
     compose("--profile", "mapgen", "up", "-d", "--no-deps", "mapbuilder")
     deadline = time.monotonic() + 240
     while "Done (" not in compose("logs", "--no-log-prefix", "--tail", "40", "mapbuilder", capture=True).stdout:

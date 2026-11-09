@@ -1,11 +1,12 @@
 # Verify
 
 Plays the game with a real Minecraft 26.3 client, so a change can be seen and measured without a person at the keyboard.
-It starts its own network in the Docker project `bcverify`: MariaDB, Velocity and a Sternenfront server from
-`build/docker`, and the client on a virtual display with Mesa's software renderer. Nothing touches a production service
-and nothing is published beyond the loopback control port. Every container has a hard CPU and memory ceiling
-(`VERIFY_CLIENT_CPUS`, `VERIFY_SERVER_CPUS`). On a host that also runs the live servers those ceilings reduce contention
-but do not remove it, so stop the rig with `down` when it is not in use, and run it elsewhere for long sessions.
+It starts its own network in the Docker project `bcverify`, or `VERIFY_PROJECT` with its own `VERIFY_PORT` beside
+another rig: MariaDB, Velocity and a Sternenfront server from `build/docker`, and the client on a virtual display with
+Mesa's software renderer. Nothing touches a production service and nothing is published beyond the loopback control
+port. Every container has a hard CPU and memory ceiling (`VERIFY_CLIENT_CPUS`, `VERIFY_SERVER_CPUS`). On a host that
+also runs the live servers those ceilings reduce contention but do not remove it, so stop the rig with `down` when it is
+not in use, and run it elsewhere for long sessions.
 
 ```sh
 ./gradlew stagePlugins
@@ -59,12 +60,12 @@ recording there and reports how many animated bodies it drew.
 
 | Command | Fields | Does |
 |---|---|---|
-| `status` | | window, GUI scale, position, health, hotbar, FPS |
+| `status` | | window, GUI scale, position, health, hotbar, FPS, dimension and the world border the client holds |
 | `hud` | | action bar, title, subtitle, boss bars, sidebar and chat as text, each with its width |
 | `screen` | | the open screen's title, buttons and container slots |
 | `press`, `click`, `close` | `label`; `slot`, `button` | use a dialog button or a menu slot |
 | `mouse` | `x y` | moves the cursor in window pixels, for a menu screenshot without a tooltip |
-| `hold`, `release`, `tap` | `key`, `ticks` | `forward back left right jump sneak sprint attack use swap drop inventory` |
+| `hold`, `release`, `tap` | `key`, `ticks`; `times`, `every` | `forward back left right jump sneak sprint attack use swap drop inventory`; `tap` repeats `times` taps `every` ticks apart |
 | `hotbar` | `slot` | selects a slot |
 | `look`, `look_at`, `aim` | `yaw pitch`; `x y z`; `name` | turns the camera, `aim` to the nearest match |
 | `command`, `chat` | `text` | sends either as the player |
