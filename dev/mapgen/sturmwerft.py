@@ -428,11 +428,11 @@ def goliath(b, x):
         b.warning_light(x + 1, top + 6, z)
 
 
-def tower_roof(b, x, z, radius, base, height):
+def tower_roof(b, x, z, radius, base, height, rib_spacing=30):
     b.dome(x, z, radius, radius, base, height, HULL)
     layers = [max(1, round(radius * math.sqrt(max(0, 1 - (dy / (height + 0.4)) ** 2))))
               for dy in range(height + 1)]
-    for angle in range(0, 360, 30):
+    for angle in range(0, 360, rib_spacing):
         cosine, sine = math.cos(math.radians(angle)), math.sin(math.radians(angle))
         for distance in range(4, radius + 1):
             dx, dz = round(distance * cosine), round(distance * sine)
@@ -550,6 +550,81 @@ def skyline(b):
     dome_breacher(b, 142, 115, 15, 101, 8)
 
 
+def distant_tower(b, x, z, radius, floor, height):
+    body_height = floor - 4 - (SEA - 5)
+    for tier, scale in enumerate((0.48, 0.57, 0.68, 0.78)):
+        low = SEA - 5 + round(body_height * tier / 4)
+        high = SEA - 6 + round(body_height * (tier + 1) / 4)
+        body_radius = round(radius * scale)
+        b.ellipse(x, z, body_radius, body_radius, low, high, "smooth_quartz")
+    for dy, scale in ((-12, 0.69), (-6, 0.79)):
+        collar = round(radius * scale) + 1
+        b.ellipse(x, z, collar, collar, floor + dy, floor + dy, DARK)
+    for dy, extra, block in ((-4, -3, FRAME), (-3, 0, DARK), (-2, 2, HULL), (-1, 3, "smooth_quartz")):
+        b.ellipse(x, z, radius + extra, radius + extra, floor + dy, floor + dy, block)
+    b.ellipse(x, z, radius, radius, floor, floor + height, FRAME)
+    b.ellipse(x, z, radius, radius, floor + 2, floor + 4, "black_stained_glass")
+    b.ellipse(x, z, radius + 2, radius + 2, floor + height - 1, floor + height - 1, DARK)
+    b.ellipse(x, z, radius + 4, radius + 4, floor + height, floor + height, "smooth_quartz")
+    roof_base, roof_height = floor + height + 1, max(5, round(radius * 0.3))
+    tower_roof(b, x, z, radius + 4, roof_base, roof_height, rib_spacing=60)
+    crown = roof_base + roof_height + 1
+    b.ellipse(x, z, 2, 2, crown, crown + 2, FRAME)
+    b.ellipse(x, z, 1, 1, crown + 3, crown + 4, HULL)
+    b.box(x, crown + 5, z, x, crown + 10, z, "end_rod")
+    for angle in range(0, 360, 60):
+        dx, dz = round((radius - 1) * math.cos(math.radians(angle))), round((radius - 1) * math.sin(math.radians(angle)))
+        b.box(x + dx, floor + 3, z + dz, x + dx, floor + 3, z + dz, COLD_LIGHT)
+    if radius >= 28:
+        outward = 1 if x > 0 else -1
+        px, pz = x + outward * (radius + 10), z + round(radius * 0.3)
+        b.box(min(x, px), floor + height - 3, pz - 2, max(x, px), floor + height - 2, pz + 2, DARK)
+        b.ellipse(px, pz, 6, 8, floor + height - 1, floor + height + 3, FRAME)
+        b.ellipse(px, pz, 6, 8, floor + height, floor + height + 1, "black_stained_glass")
+        b.ellipse(px, pz, 7, 9, floor + height + 4, floor + height + 4, DARK)
+        b.dome(px, pz, 7, 9, floor + height + 5, 4, HULL)
+        b.box(px, floor + height + 10, pz, px, floor + height + 14, pz, "end_rod")
+
+
+def offshore_city(b):
+    towers = ((-191, -96, 18, 76, 8), (-177, 0, 14, 97, 7), (-184, 100, 20, 84, 9),
+              (181, -109, 20, 86, 9), (189, 46, 19, 83, 8), (190, 158, 17, 96, 8),
+              (-93, -182, 17, 78, 7), (13, -210, 24, 92, 10), (98, -179, 15, 74, 7),
+              (-155, 191, 18, 79, 8), (-31, 202, 26, 88, 10), (91, 193, 21, 72, 8),
+              (-261, -157, 25, 90, 10), (-254, -35, 29, 105, 10), (-292, 87, 18, 74, 8),
+              (-239, 184, 22, 91, 9), (-188, -262, 22, 101, 9), (69, -278, 20, 102, 9),
+              (222, -244, 26, 81, 10), (278, -116, 26, 97, 10), (269, 19, 30, 103, 11),
+              (294, 133, 18, 75, 8), (214, 256, 28, 91, 10), (-42, 313, 30, 94, 11))
+    for tower in towers:
+        distant_tower(b, *tower)
+    for x1, z1, x2, z2, floor in ((-177, 0, -254, -35, 101), (-184, 100, -239, 184, 88),
+                                  (181, -109, 278, -116, 90), (190, 158, 294, 133, 99),
+                                  (-31, 202, -42, 313, 94)):
+        distance = math.hypot(x2 - x1, z2 - z1)
+        steps = math.ceil(distance)
+        nx, nz = round(-(z2 - z1) / distance * 3), round((x2 - x1) / distance * 3)
+        for step in range(steps + 1):
+            x = round(x1 + (x2 - x1) * step / steps)
+            z = round(z1 + (z2 - z1) * step / steps)
+            b.box(x - 2, floor - 2, z - 2, x + 2, floor - 1, z + 2, DARK)
+            b.box(x - 2, floor, z - 2, x + 2, floor, z + 2, "smooth_quartz")
+            for sign in (-1, 1):
+                b.box(x + nx * sign, floor + 1, z + nz * sign,
+                      x + nx * sign, floor + 1, z + nz * sign, RAIL)
+                if step % 8 == 0:
+                    b.box(x + nx * sign, floor - 1, z + nz * sign,
+                          x + nx * sign, floor - 1, z + nz * sign, COLD_LIGHT)
+        for t in (1 / 3, 2 / 3):
+            x, z = round(x1 + (x2 - x1) * t), round(z1 + (z2 - z1) * t)
+            b.ellipse(x, z, 3, 3, SEA - 5, floor - 3, FRAME)
+    for x, z in ((-219, -220), (-316, -78), (-317, 215), (-134, 266),
+                 (130, 318), (318, 225), (324, -205), (12, -322)):
+        b.ellipse(x, z, 5, 5, SEA - 2, SEA + 1, DARK)
+        b.ellipse(x, z, 3, 3, SEA + 2, SEA + 2, "smooth_quartz")
+        b.box(x, SEA + 3, z, x, SEA + 8, z, FRAME)
+        b.warning_light(x, SEA + 9, z)
+
+
 def shuttle(b, x, z, sign):
     b.ellipse(x, z, 18, 22, 63, 65, "smooth_quartz")
     b.ellipse(x, z, 4, 4, SEA - 5, 62, FRAME)
@@ -575,6 +650,7 @@ def scenery(b):
     goliath(b, -31)
     goliath(b, 35)
     skyline(b)
+    offshore_city(b)
     shuttle(b, -118, -84, 1)
     shuttle(b, 118, 60, -1)
     for x, z in ((-165, -120), (165, -140), (-164, 130), (160, 155)):
@@ -1074,7 +1150,7 @@ def arena():
     spawns = [-5.5, -1.5, 2.5, 6.5]
     return {"name": "Sturmwerft", "weather": "rain", "time": 13000,
             "play-area": [-100.0, 50.0, -150.0, 100.0, 144.0, 145.0],
-            "world-border-size": 384.0, "death-y": 60.0,
+            "world-border-size": 768.0, "death-y": 60.0,
             "relic": f"0.5 {SKY + 5}.2 -65.5", "overview": "0.5 112 62.5 180 40", "lobby": "0.5 90 0.5", "spectator": "24.5 92 30.5 145 35",
             "headquarters": {
                 "kolonien": dict(spawns=[f"-81.5 65 {z} 270 0" for z in spawns], zone=[-97.0, 60.0, -30.0, -63.0, 104.0, 31.0]),
@@ -1089,6 +1165,9 @@ def arena():
                 "gates": [-21.0, -16.0, -11.0, -6.0, -1.0, 4.0, 9.0, 14.0, 19.0], "board": "-23.5 87 -126.5"}},
             "environment": {
                 "props": yard_props(),
+                "sea": [dict(at=spot(x, z, SEA + 1.05), radius=radius) for x, z, radius in (
+                    (-66, 103, 11.2), (0, 110, 15.2), (68, 109, 12.2), (-137, 42, 12.2), (139, -20, 11.2),
+                    (-42, -25, 3.8), (-58, 0, 3.8), (42, 25, 3.8), (58, 0, 3.8))],
                 "steam": [spot(x, z - 8, SKY + 2) for z in POSTS.values() for x in (-11, 11)],
                 "sparks": [spot(x, z - 6, SKY + 1.5) for z in POSTS.values() for x in (-9, 13)],
                 "crane": {"from": "-10.5 84 0.5", "to": "10.5 84 0.5"}}}
@@ -1389,6 +1468,10 @@ def validate_expansion(fills, plan, levels, cells, connected, stairs):
 
 
 def validate(fills, plan):
+    border = plan["world-border-size"] / 2
+    for x1, y1, z1, x2, y2, z2, _ in fills:
+        if not (-border <= x1 and x2 + 1 <= border and -border <= z1 and z2 + 1 <= border):
+            sys.exit(f"Generated geometry outside world border: {(x1, y1, z1, x2, y2, z2)}")
     levels = {y: layer(fills, y) for y in range(math.floor(plan["play-area"][1]) - 1, math.floor(plan["play-area"][4]) + 3)}
     cells = standing_positions(levels, plan["play-area"], plan["death-y"])
     stairs = {(x, y1 + 1, z) for x1, y1, z1, x2, _, z2, block in fills if "_stairs[" in block
@@ -1524,7 +1607,14 @@ def build():
     far = Builder()
     scenery(far)
     expansion(far)
-    runpy.run_path(str(Path(__file__).with_name("fleets.py")))["sturmwerft_fleet"](far)
+    fleet_start = len(far.fills)
+    ships = runpy.run_path(str(Path(__file__).with_name("fleets.py")))["sturmwerft_fleet"](far)
+    for ship in ships:
+        bounds = ship["bounds"]
+        for fill in far.fills[:fleet_start]:
+            if fill[-1] != "air" and all(fill[axis] <= bounds[axis + 3] and bounds[axis] <= fill[axis + 3]
+                                        for axis in range(3)):
+                sys.exit(f"Sky fleet intersects shipyard architecture: {ship['kind']} at {fill[:6]}")
     return b, far
 
 
@@ -1537,7 +1627,14 @@ def main():
     functions.mkdir(parents=True, exist_ok=True)
     (OUT / "datapack/pack.mcmeta").write_text(json.dumps({"pack": {"pack_format": 121, "min_format": 121, "max_format": 121, "description": "Sturmwerft"}}))
     (functions / "build.mcfunction").write_text("\n".join(deck_commands) + "\n")
-    (functions / "scenery.mcfunction").write_text("\n".join(far.commands) + "\n")
+    for stale in functions.glob("scenery_*.mcfunction"):
+        stale.unlink()
+    sequence = ["sturmwerft:build"]
+    for index, start in enumerate(range(0, len(far.commands), 30000)):
+        name = "scenery" if index == 0 else f"scenery_{index + 1}"
+        (functions / f"{name}.mcfunction").write_text("\n".join(far.commands[start:start + 30000]) + "\n")
+        sequence.append(f"sturmwerft:{name}")
+    (OUT / "functions.txt").write_text("\n".join(sequence) + "\n")
     (OUT / "arena.yml").write_text("# Generated by dev/mapgen/sturmwerft.py; change that and rebuild the map.\n" + "\n".join(to_yaml(plan)) + "\n")
     (OUT / "map.yml").write_text('name: Sturmwerft\nbuilders: [BlockcraftMC]\n')
     (OUT / "forceload.txt").write_text("\n".join(forceload_areas(b.fills + far.fills)) + "\n")

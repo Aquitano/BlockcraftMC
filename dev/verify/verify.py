@@ -676,10 +676,12 @@ def build_map(name="sturmwerft"):
         if area:
             say(f"forceload add {area}")
     time.sleep(30)
+    sequence = built / "functions.txt"
+    functions = sequence.read_text().splitlines() if sequence.exists() else [f"{name}:build", f"{name}:scenery"]
     # Twice, because a fill silently skips a chunk that was still loading the first time.
     for _ in range(2):
-        say(f"function {name}:build")
-        say(f"function {name}:scenery")
+        for function in functions:
+            say(f"function {function}")
         time.sleep(8)
     say("forceload remove all")
     say("save-all flush")

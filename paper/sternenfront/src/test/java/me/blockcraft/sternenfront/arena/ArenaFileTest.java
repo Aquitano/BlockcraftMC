@@ -68,6 +68,22 @@ public class ArenaFileTest {
     }
 
     @Test
+    public void seaIsOptInAndKeepsItsWaterlineAndSupportRadius() throws Exception {
+        var yaml = secretMap();
+        var file = temporary.newFile();
+        yaml.save(file);
+        assertTrue(ArenaFile.load(null, file.toPath()).environment().sea().isEmpty());
+        yaml.set("environment.sea", List.of(Map.of("at", "-65.5 57.05 103.5", "radius", 11.2)));
+        yaml.save(file);
+        var support = ArenaFile.load(null, file.toPath()).environment().sea().getFirst();
+        assertEquals(new Location(null, -65.5, 57.05, 103.5), support.at());
+        assertEquals(11.2, support.radius(), 0.001);
+        yaml.set("environment.sea", List.of(Map.of("at", "0 57 0", "radius", 0)));
+        yaml.save(file);
+        assertThrows(IllegalArgumentException.class, () -> ArenaFile.load(null, file.toPath()));
+    }
+
+    @Test
     public void yardPropsPreserveTheirModelGroundPositionYawAndScale() throws Exception {
         var yaml = secretMap();
         yaml.set("environment.props", List.of(

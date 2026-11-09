@@ -71,7 +71,20 @@ public final class ArenaFile {
         return new YardEnvironment(spots(world, environment.getStringList("steam")), spots(world, environment.getStringList("sparks")),
                 Optional.ofNullable(environment.getConfigurationSection("crane"))
                         .map(crane -> new YardEnvironment.Crane(spot(world, crane.getString("from")), spot(world, crane.getString("to")))),
-                environment.getMapList("props").stream().map(prop -> prop(world, prop)).toList());
+                environment.getMapList("props").stream().map(prop -> prop(world, prop)).toList(),
+                environment.getMapList("sea").stream().map(support -> seaSupport(world, support)).toList());
+    }
+
+    private static YardEnvironment.SeaSupport seaSupport(World world, Map<?, ?> support) {
+        if (!(support.get("at") instanceof String position) || !(support.get("radius") instanceof Number radius)
+                || !Double.isFinite(radius.doubleValue()) || radius.doubleValue() <= 0 || radius.doubleValue() > 32) {
+            throw new IllegalArgumentException("Sea support needs a position and a radius between 0 and 32 blocks");
+        }
+        var at = spot(world, position);
+        if (!Double.isFinite(at.getX()) || !Double.isFinite(at.getY()) || !Double.isFinite(at.getZ())) {
+            throw new IllegalArgumentException("Sea support coordinates must be finite");
+        }
+        return new YardEnvironment.SeaSupport(at, radius.doubleValue());
     }
 
     private static YardEnvironment.Prop prop(World world, Map<?, ?> prop) {

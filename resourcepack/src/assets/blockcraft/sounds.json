@@ -507,5 +507,13 @@
     "sounds": [
       "blockcraft:sternenfront/headshot_taken"
     ]
+  },
+  "sternenfront.sea.surf": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/sea_surf",
+        "attenuation_distance": 64
+      }
+    ]
   }
 }

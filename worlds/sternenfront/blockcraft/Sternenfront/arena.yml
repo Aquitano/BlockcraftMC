@@ -8,6 +8,7 @@ play-area:
 - 97.0
 - 128.0
 - 71.0
+world-border-size: 512.0
 relic: 0.5 70.2 -64.5
 overview: 0.5 121 60.5 180 50
 lobby: -29.5 119 -61.5 180 10

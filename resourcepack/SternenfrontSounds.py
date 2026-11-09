@@ -488,6 +488,7 @@ with tempfile.TemporaryDirectory() as directory:
 if not args.only:
     events.update(recorded_sabers(ROOT))
     events.update(recorded_battle(ROOT))
+    events.update(recorded_battle(ROOT, Path(__file__).parent / "audio/ocean"))
     events.update(intro_briefings(ROOT))
     events.update(bot_voices(ROOT))
     events.update(radio_calls(ROOT))

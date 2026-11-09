@@ -2,12 +2,13 @@
 
 `python3 -I dev/mapgen/sturmwerft.py` validates the geometry and writes functions and arena metadata to
 `build/mapgen/sturmwerft`. It does not start a server or update a saved world. `build()` returns the combat and scenery
-builders for checks in memory. The scenery function includes the occupied expansion and runs after the combat function.
+builders for checks in memory. The scenery functions include the occupied expansion and run after the combat function.
+`functions.txt` lists their execution order. Each scenery function contains at most 30,000 commands.
 
 ## Circulation
 
 The original headquarters, post order, capture cylinders, six landing grounds and moving crane remain in place.
-The play area is `[-100, 50, -150, 100, 144, 145]`, the world border is 384 blocks and `death-y` is 60.
+The play area is `[-100, 50, -150, 100, 144, 145]`, the world border is 768 blocks and `death-y` is 60.
 The sea is at 56. The replay area retains its bottom at 50.
 
 The northern road extensions join the promenade at deck level 64. Five-wide quartz stairs at x=-32 and x=32 rise
@@ -31,6 +32,12 @@ the pale walls from the roof rims. The offshore towers have elevated connecting 
 Two offshore domes carry dark breaching craft with raised central bodies and four curved drilling arms each.
 The arms grip the outer roof rims beyond the combat area.
 
+The offshore skyline has 32 main dome towers. Twenty-four stand in staggered clusters beyond the original eight,
+with four satellite pods, five service bridges, and eight low navigation platforms between the clusters.
+The added city spans x=-322..329 and z=-327..347, with floors at y=72..105 and roof tips through y=136.
+Its distant towers use four stacked body sections and six roof ribs. From the center, a 24-chunk client and server view
+distance includes the whole skyline.
+
 The engine room has covered copper service trenches at z=-121 and z=-99, ribbed machinery bays, and copper work shelves
 at the existing tall cabinets. The assembly room keeps its central component cradle and adds suspended support rails
 and local task lights. Both northern entrances have quartz frames, cyan lintels, and lit outer jambs.
@@ -45,12 +52,19 @@ Support collars and buttresses sit below the occupied floors.
 The southern stairs have lights in both side supports every four steps. The five stair columns remain clear.
 All three northern dome entrances have illuminated jambs outside their five-wide passages.
 Occupied domes use spaced perimeter lights rather than continuous lantern rings. Sea lanterns, shroomlights, and
-ochre froglights provide world light. The generator does not add fullbright displays or invisible light blocks.
+ochre froglights provide world light. The architecture uses no fullbright displays or invisible light blocks.
+Imported ships retain their source lighting, including invisible light blocks.
 
-`fleets.py` builds the ships above both maps. Sturmwerft has a Republic carrier, two Separatist frigates, and three escorts.
-Tessar has a carrier, a frigate, and three escorts, with sandstone hull panels and terracotta markings above the desert.
-The ships have blue engine exhaust, underside lights, and separate bridge structures. Their footprints leave all six
-landing cylinders open to the sky. They are saved blocks, so they add no display entities or recurring tasks.
+`fleets.py` builds the ships above both maps. Sturmwerft has a Venator carrier, two Munificent frigates, and three distant
+ships. Tessar has a carrier, a frigate, and three distant ships. Both maps retain the source hull palettes.
+The geometry comes from [SkyblockSquad's Venator world](https://www.planetminecraft.com/project/star-wars-venator-class-stardestroyer-1-19/)
+and [4LFR3D0zzi's Munificent schematic](https://www.planetminecraft.com/project/munificent-class-star-frigate-1-10/).
+Both creators permit use with credit. `CREDITS.md` records the attribution and ships inside the resource pack.
+The source geometry is uniformly resampled to 204-block carriers, 138-block frigates, and 60-block distant ships.
+Block states rotate with the hulls. Fine details follow the resulting block resolution.
+Sturmwerft uses a 768-block world border, and Tessar uses a 512-block border.
+Ship footprints leave all six landing cylinders open to the sky. The ships are saved blocks, so they add no display
+entities or recurring tasks.
 
 Sturmwerft includes its fleet when regenerated. `python3 -I dev/mapgen/fleets.py` also writes both formations as a datapack
 under `build/mapgen/fleets`, with `fleets:sturmwerft` and `fleets:tessar`, chunk-loading lists, and a bounds manifest.
@@ -59,6 +73,19 @@ Apply the Tessar function to a copy of its existing world to retain the hand-bui
 Floor wear follows paired wheel tracks with short connected repair patches. Drainage covers and transverse seams
 break up the southern skybridge, and the ship passage has long edge seams. Floor treatments retain their original height.
 Pilasters above the skybridge openings start at y=86, leaving the centerline clear at walking height.
+
+## Sea effects
+
+`environment.sea` lists nine tower supports with their center `at` the water surface and their waterline `radius`.
+Sturmwerft places the effect at y=57.05. A map without these entries has no sea effects.
+`presentation.sea` controls range, particle counts, wind direction, wave timing and sound volume.
+The defaults update every four ticks and use at most three loaded supports within 72 blocks of each viewer.
+Thin foam crests move toward the windward side of each support, followed by a short burst of spray.
+The effect adds particles without changing water blocks or loading chunks.
+
+The nearest support plays an eight-second rough-surf excerpt in the weather sound category.
+The recording is by ahill86 under CC0, with source and checksum in `resourcepack/audio/ocean/sources.json`.
+Surf and wind stop when a viewer leaves the effect range or the round ends. The water surface itself stays flat.
 
 ## Equipment props
 
@@ -151,6 +178,8 @@ access to rooms and fighter positions, stair width and headroom, and both contro
 At least 23,000 standing positions must be reachable by ordinary floors and stairs.
 It also checks interaction reach and support, board visibility, capture positions, cover and peek rays, fixed course landings, landing
 cylinders to the sky, headquarters vehicle approaches, environment emitters and the moving crane's swept volume.
+World-border checks cover the complete scenery. Ship bounds must clear the architecture. Scenery commands run in separate
+30,000-command functions so detailed imported hulls fit the command execution limit.
 
 Circulation checks conservatively treat partial solid blocks as full blocks. Buttons and levers are passable.
 The generator does not simulate player movement, jumping timing, bot navigation, rendered textures or round events.
