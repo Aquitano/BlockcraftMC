@@ -661,9 +661,8 @@ def motion(samples):
 
 
 def talk(client, run, name, *answers):
-    """Walks up to an NPC, opens its conversation and picks each answer in turn, photographing every dialog."""
-    if client("status")["screen"]:
-        client("close")
+    """Walks up to an NPC and talks through the dialogue panel, photographing each line. An answer is the number key
+    to press, or "down" to scroll the highlight one answer on and confirm it with sneak; sneak reveals and closes."""
     for _ in range(12):
         client("aim", name=name)
         near = min((each["distance"] for each in client("entities", radius=16)["entities"] if name in each.get("name", "")), default=99)
@@ -671,16 +670,26 @@ def talk(client, run, name, *answers):
             break
         client("hold", key="forward", ticks=max(2, int((near - 2.2) * 4)))
         settle(client, 12)
+    shown = lambda: client("hud")["actionbar"]["text"] != ""
     client("tap", key="use")
-    client.until("the conversation", lambda: client("status")["screen"], 20)
-    run.shot(client, f"talk-{run.frames:02d}")
-    for answer in answers:
-        client("press", label=answer)
-        settle(client, 25)
+    client.until("the dialogue panel", shown, 20)
+    run.report.setdefault("dialogue", [])
+    for answer in [*answers, None]:
+        settle(client, 6)
         run.shot(client, f"talk-{run.frames:02d}")
-    if client("status")["screen"]:
-        client("press", label="Ok")
+        client("tap", key="sneak")
+        settle(client, 4)
+        run.report["dialogue"].append(client("hud")["actionbar"]["text"])
+        run.shot(client, f"talk-{run.frames:02d}")
+        if answer == "down":
+            client("hotbar", slot=7)
+            settle(client, 4)
+            run.shot(client, f"talk-{run.frames:02d}")
+            client("tap", key="sneak")
+        elif answer is not None:
+            client("hotbar", slot=answer - 1)
         settle(client, 10)
+    client.until("the panel to close", lambda: not shown(), 30)
 
 
 def story(client, run, choice="fabrik", rejoin=False):
@@ -691,7 +700,7 @@ def story(client, run, choice="fabrik", rejoin=False):
     client.until("the intro", lambda: client("status")["gamemode"] == "spectator", 60)
     run.shot(client, "intro")
     client.until("the mission", lambda: client("status")["gamemode"] == "adventure", 60)
-    talk(client, run, "Vela", "1. Was genau sollen wir tun?", "2. Wir sind bereit.")
+    talk(client, run, "Vela", 1, "down")
     run.report["after_briefing"] = client("hud")["bossbars"]
     if rejoin:
         back_from = client("status")["tick"]
@@ -723,8 +732,7 @@ def story(client, run, choice="fabrik", rejoin=False):
     run.report["defended_in_seconds"] = round(150 - (held - time.monotonic()))
     rcon(f"tp {PLAYER} -79.5 65 0.5 270 0")
     settle(client, 40)
-    pick = {"fabrik": "1. Sprengt die Fabrik.", "gefangene": "2. Holt die Gefangenen raus."}[choice]
-    talk(client, run, "Vela", "3. Was spricht wofür?", pick)
+    talk(client, run, "Vela", 3, {"fabrik": 1, "gefangene": 2}[choice])
     client.until("the ending", lambda: client("status")["gamemode"] == "spectator", 30)
     client("capture", name=f"{run.name}/ending", frames=12, every=20)
     client.until("the end of the ending", lambda: client("status")["gamemode"] != "spectator", 60)

@@ -48,7 +48,10 @@ first and open a full frame only where it shows something.
 - `camera --command sfintro` starts a cinematic and records the camera's pose at every client tick to `trace.json`. The
   report says how long the client really looked through the camera and how evenly it moved within each shot.
 - `story --choice fabrik` (with `VERIFY_GAME=story`) plays the whole mission, with a teleport to the relay, and ends with
-  that decision; `--rejoin` drops out after the briefing and comes back.
+  that decision; `--rejoin` drops out after the briefing and comes back. It answers in the dialogue panel with a number
+  key once and with the scroll wheel and sneak once, and reports the panel's text after each line.
+- `camera --command "storyscene intro"` traces a story cutscene. Start a mission first, so the camera need not leave
+  the waiting lobby's world.
 
 `sternenfront-overrides.yml` makes heroes free and brings the relic early on this network only.
 
