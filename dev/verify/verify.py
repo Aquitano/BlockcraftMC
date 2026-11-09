@@ -439,6 +439,90 @@ def relic(client, run):
     run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
 
 
+WHIZZ = "blockcraft:sternenfront.bolt.whizz"
+RATTLE = "blockcraft:sternenfront.headshot.taken"
+
+
+def under_fire(client, run, seconds=60):
+    """Stands still in the enemy's sight without shooting back: frames right after a bolt whizzes past or a headshot lands, and how far each hit pushed the player."""
+    as_trooper(client)
+    stand_near_enemy(client, reach=12)
+    client("hotbar", slot=2)
+    start = last = client("status")["tick"]
+    before = client("status")
+    pushes, rattles, deadline = [], 0, time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        status = client("status")
+        if not on_field(status):
+            back_on_field(client)
+            before = client("status")
+            continue
+        seen = enemies(client)
+        if seen:
+            client("look_at", x=seen[0]["x"], y=seen[0]["y"] + 1.1, z=seen[0]["z"])
+        events = client("events", since=last)["events"]
+        last = status["tick"]
+        heard = {event["value"] for event in events if event["kind"] == "sound"}
+        if RATTLE in heard and rattles < 2:
+            rattles += 1
+            client("capture", name=f"{run.name}/rattle_{rattles}", frames=3, every=2)
+        elif WHIZZ in heard and run.frames < 6:
+            run.shot(client, f"whizz_{run.frames}")
+        if status["health"] < before["health"]:
+            pushes.append(round(math.hypot(status["x"] - before["x"], status["z"] - before["z"]), 3))
+        before = status
+        time.sleep(0.15)
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+    run.report["whizzes"] = run.report["sounds"].get(WHIZZ, 0)
+    run.report["rattles"] = run.report["sounds"].get(RATTLE, 0)
+    run.report["moved_on_hit"] = pushes
+
+
+def glint(client, run, tries=4, watch_seconds=30):
+    """Stands 20 to 32 blocks from an enemy scout, outside both headquarters, and shoots at it so that it aims back: then photographs its scope's glint."""
+    as_trooper(client)
+    client("hotbar", slot=0)
+    seen = 0
+    for attempt in range(tries):
+        if not on_field(client("status")):
+            back_on_field(client)
+        to_enemy(client)
+        scouts = [each for each in client("entities", radius=96)["entities"] if "_scout_outlined_torso" in each.get("model", "")]
+        if not scouts:
+            continue
+        scout = scouts[0]
+        spots = [(scout["x"] + dx, scout["z"] + dz) for distance in (24, 32, 20)
+                 for dx, dz in ((distance, 0), (-distance, 0), (0, distance), (0, -distance)) if abs(scout["x"] + dx) < HQ_X]
+        for x, z in spots:
+            rcon(f"tp {PLAYER} {x} {scout['y'] - MODEL_ABOVE_FEET} {z}")
+            settle(client, 4)
+            if client("status")["in_wall"]:
+                continue
+            client("look_at", x=scout["x"], y=scout["y"] - 0.5, z=scout["z"])
+            if any(each["in_sight"] for each in client("entities", radius=40)["entities"] if each.get("model") == scout["model"]):
+                break
+        deadline, next_burst = time.monotonic() + watch_seconds, 0
+        while time.monotonic() < deadline and on_field(client("status")):
+            if time.monotonic() >= next_burst:
+                client("tap", key="use")
+                next_burst = time.monotonic() + 6
+            nearby = client("entities", radius=64)["entities"]
+            glints = [each for each in nearby if each.get("model", "").endswith("fx/glint")]
+            if glints:
+                seen += 1
+                # Just above the glint, so it shows right under the crosshair rather than behind it.
+                client("look_at", x=glints[0]["x"], y=glints[0]["y"] + 0.4, z=glints[0]["z"])
+                run.shot(client, f"glint_{seen}")
+                run.report.setdefault("glints", []).append(glints[0])
+                if seen >= 3:
+                    run.report["glints_seen"] = seen
+                    return
+            followed = [each for each in nearby if each.get("model") == scout["model"]]
+            if followed:
+                client("look_at", x=followed[0]["x"], y=followed[0]["y"] - 0.5, z=followed[0]["z"])
+    run.report["glints_seen"] = seen
+
+
 # Each scenario with the state it needs: "field" means deployed in a running round.
 def replay(client, run, round_seconds=75):
     """Fights through a short round, watches its recording on a replay server and photographs the bots' bodies there."""
@@ -525,7 +609,8 @@ def database(query):
 
 
 SCENARIOS = {"replay": (replay, "joined"), "scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
-             "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field")}
+             "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field"),
+             "underfire": (under_fire, "field"), "glint": (glint, "field")}
 
 
 def run_scenario(name, faction=None, **options):

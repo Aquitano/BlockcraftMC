@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.combat;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
+import me.blockcraft.api.presentation.VisualEffects;
 import me.blockcraft.sternenfront.appearance.Displays;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -34,6 +35,7 @@ public final class Flares {
     private static final Vector3f FLAT_MODEL_LENGTH = new Vector3f(1, 0, 0);
     private static final float HEAD_ON = 1e-4f;
     private static final float LENGTH_LEFT_COOLED = 0.4f;
+    private static final float TWINKLE_START = 0.3f;
 
     private record Plan(ItemStack look, Quaternionf turn, Vector3f from, Vector3f to, Vector move, int ticks,
                         int fadeTicks, Display.Billboard billboard, boolean lit, Block anchor, Quaternionf finish) {
@@ -104,6 +106,16 @@ public final class Flares {
             show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, 0,
                     Display.Billboard.CENTER, true, null), setup);
         }
+    }
+
+    /**
+     * A glint at full light that flares up to {@code scale} over half of {@code ticks} and shrinks away over the rest. It
+     * tells a player where a sniper is, so at the cap it pushes the oldest effect out rather than be refused.
+     */
+    public void twinkle(String model, Location at, float scale, int ticks, Consumer<ItemDisplay> setup) {
+        int rise = Math.max(2, ticks / 2);
+        show(at, new Plan(tinted(model, VisualEffects.MaterialEffect.UNLIT.color()), UNTURNED, new Vector3f(scale * TWINKLE_START), new Vector3f(scale), new Vector(), rise,
+                Math.max(1, ticks - rise), Display.Billboard.CENTER, true, null), setup);
     }
 
     public void burst(String model, Location at, float from, float to, int ticks) {

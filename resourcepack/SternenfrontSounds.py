@@ -138,6 +138,27 @@ def bolt_impact(rng):
     return layer(0.6 * sizzle, splash, 0.7 * thump(300, 80, 0.08, 40))
 
 
+def bolt_whizz(rng, seconds, top, bottom):
+    """A bolt passing the ear: a buzzing charge that swells to its nearest point and drops in pitch as it goes."""
+    t = progress(seconds)
+    near = 0.42
+    pass_by = np.where(t < near, (t / near) ** 2.2, np.exp(-(t - near) * 9))
+    pitch = glide(top, bottom, seconds, 0.7)
+    buzz = unit(filtered(saw(pitch, 24) + 0.6 * square(pitch * 1.5, 9), "bandpass", [300, 6000]))
+    air = unit(swept(noise(rng, seconds), 1200 + 4200 * pass_by, 1.3))
+    sparks = unit(filtered(crackle(rng, seconds, 0.02), "highpass", 3000)) * pass_by ** 2
+    return (0.65 * buzz + 0.5 * air + 0.25 * sparks) * pass_by
+
+
+def headshot_taken(rng):
+    """A blow on the helmet, heard from inside it: a dull knock, a short metal ring and a thin whine that fades."""
+    knock = layer(thump(140, 55, 0.12, 30), unit(filtered(noise(rng, 0.05), "lowpass", 900)) * decay(0.05, 70, 0.001))
+    t = time(0.35)
+    ring = unit(sum(sine(held(f, 0.35)) * np.exp(-t * rate) for f, rate in ((910, 16), (2230, 22), (3410, 30))))
+    whine = sine(glide(4100, 3900, 0.9)) * decay(0.9, 3.2, 0.06)
+    return layer(knock, (0.005, 0.45 * ring), (0.02, 0.18 * whine))
+
+
 def force_push(rng):
     seconds = 0.8
     contour = np.sin(np.pi * np.minimum(progress(seconds) * 1.4, 1))
@@ -376,6 +397,8 @@ SOUNDS = {
     "intro.radio_close": (0.35, lambda rng: radio_click(rng, False)),
     "intro.transition": (0.45, intro_transition),
     "bolt.impact": (0.7, bolt_impact),
+    "bolt.whizz": (0.7, lambda rng: [bolt_whizz(rng, 0.26, 1500, 520), bolt_whizz(rng, 0.3, 1300, 430),
+                                     bolt_whizz(rng, 0.22, 1750, 640)]),
     "saber.whirl": (0.6, saber_whirl),
     "saber.guard": (0.55, saber_guard),
     "force.push": (0.85, force_push),
@@ -397,6 +420,7 @@ SOUNDS = {
     "orbital.impact": (0.85, orbital_impact),
     "hitmarker": (0.5, hitmarker),
     "headshot": (0.6, headshot),
+    "headshot.taken": (0.65, headshot_taken),
     "kill": (0.65, kill),
     "hurt.hegemonie": (0.6, lambda rng: [droid_hurt(rng, 1.0), droid_hurt(rng, 0.86)]),
     "hurt.kolonien": (0.6, lambda rng: [grunt(rng, 150, 105), grunt(rng, 128, 92)]),

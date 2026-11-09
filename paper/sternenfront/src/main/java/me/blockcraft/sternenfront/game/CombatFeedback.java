@@ -12,16 +12,19 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 public final class CombatFeedback {
@@ -96,6 +99,10 @@ public final class CombatFeedback {
         boolean lowered;
         long raisedUntil;
         ActionBar actionBar = ActionBar.NONE;
+        double suppression;
+        long rattledAt = Long.MIN_VALUE;
+        float rattleYaw;
+        boolean strained;
 
         boolean hit(HitMarker next, long tick, int ticks) {
             if (tick >= markerUntil || next.ordinal() >= marker.ordinal()) {
@@ -148,6 +155,17 @@ public final class CombatFeedback {
             return changed;
         }
 
+        /** A bolt passing {@code closeness} of the way from the edge of the near-miss radius to dead on. */
+        void passed(double closeness, NearMiss nearMiss) {
+            suppression = Math.min(nearMiss.ceiling(), suppression + nearMiss.share() * closeness);
+        }
+
+        /** Suppression after another tick of fading, which takes {@code fadeTicks} from full. */
+        double ebb(int fadeTicks) {
+            suppression = Math.max(0, suppression - 1.0 / fadeTicks);
+            return suppression;
+        }
+
         void earned(Reward next, int amount, long tick, int ticks) {
             if (tick >= rewardUntil) {
                 points = 0;
@@ -197,6 +215,20 @@ public final class CombatFeedback {
         }
     }
 
+    /**
+     * {@code combat-feedback.near-miss}: a bolt within {@code radius} blocks of the eyes whizzes past at up to
+     * {@code volume} and adds up to {@code share} of full suppression, to at most {@code ceiling}, which fades from full
+     * over {@code fadeTicks}.
+     */
+    record NearMiss(double radius, float volume, double share, double ceiling, int fadeTicks) { }
+
+    /** {@code combat-feedback.headshot-rattle}: how long a headshot shakes the victim's view, and how loud it rings. */
+    record Rattle(int ticks, float volume) { }
+
+    /** The second tilt of a rattled view, back from the first that the hit itself gives. */
+    private static final int COUNTER_TILT_TICKS = 2;
+    private static final double WHIZZ_PITCH_SPREAD = 0.04;
+
     private static final char FIRST_DAMAGE_ARC = '\uE228';
     private static final char FIRST_CROSSHAIR_MARK = '\uE23A';
     private static final char FIRST_SPREAD_TICKS = '\uE250';
@@ -229,6 +261,8 @@ public final class CombatFeedback {
     private final int multikillTicks;
     private final WeaponHandling handling;
     private final SpreadCrosshair spreadCrosshair;
+    private final NearMiss nearMiss;
+    private final Rattle rattle;
     private Function<Player, Optional<Component>> courseStatus = player -> Optional.empty();
 
     public CombatFeedback(SternenfrontGame game) {
@@ -247,6 +281,13 @@ public final class CombatFeedback {
         multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * SternenfrontGame.TICKS_PER_SECOND;
         handling = game.handling();
         spreadCrosshair = new SpreadCrosshair(config.getDoubleList("combat-feedback.spread-steps"));
+        nearMiss = new NearMiss(Math.clamp(config.getDouble("combat-feedback.near-miss.radius"), 0, 8),
+                (float) Math.clamp(config.getDouble("combat-feedback.near-miss.volume"), 0, 1),
+                Math.clamp(config.getDouble("combat-feedback.near-miss.suppression"), 0, 1),
+                Math.clamp(config.getDouble("combat-feedback.near-miss.max-suppression"), 0, 1),
+                Math.clamp(config.getInt("combat-feedback.near-miss.fade-ticks"), 1, 100));
+        rattle = new Rattle(Math.clamp(config.getInt("combat-feedback.headshot-rattle.ticks"), 0, 40),
+                (float) Math.clamp(config.getDouble("combat-feedback.headshot-rattle.volume"), 0, 1));
     }
 
     private PlayerFeedback state(Player player) {
@@ -271,6 +312,51 @@ public final class CombatFeedback {
             });
         }
         refresh(player);
+    }
+
+    public double nearMissRadius() {
+        return nearMiss.radius();
+    }
+
+    /**
+     * An enemy bolt passed {@code at}, {@code closeness} of the way from the edge of the near-miss radius to the eyes: it
+     * whizzes by louder and higher the nearer it came, and the edges of the screen darken with the suppression.
+     */
+    public void nearMiss(Player player, Location at, double closeness) {
+        double jitter = ThreadLocalRandom.current().nextDouble(-WHIZZ_PITCH_SPREAD, WHIZZ_PITCH_SPREAD);
+        SoundCue.BOLT_WHIZZ.playTo(player, at, (float) (nearMiss.volume() * (0.35 + 0.65 * closeness)),
+                (float) (0.85 + 0.3 * closeness + jitter));
+        state(player).passed(closeness, nearMiss);
+    }
+
+    /**
+     * A bolt along {@code direction} took the player in the head: their helmet rings, their view tilts back from the way
+     * the hit tilted it, and the picture shakes for {@link Rattle#ticks()}.
+     */
+    public void headshotTaken(Player player, Vector direction) {
+        var state = state(player);
+        state.rattledAt = game.tick();
+        float from = player.getLocation().setDirection(direction.clone().multiply(-1)).getYaw() - player.getYaw();
+        state.rattleYaw = from + 180;
+        SoundCue.HEADSHOT_TAKEN.playTo(player, rattle.volume());
+    }
+
+    /** The edges darken under fire and the picture shakes after a headshot, one step at a time as each fades. */
+    public void screen(Player player) {
+        var state = state(player);
+        long tick = game.tick();
+        if (tick - state.rattledAt == COUNTER_TILT_TICKS) {
+            player.sendHurtAnimation(state.rattleYaw);
+        }
+        double suppression = state.suppression > 0 ? state.ebb(nearMiss.fadeTicks()) : 0;
+        long rattling = state.rattledAt == Long.MIN_VALUE ? -1 : rattle.ticks() - (tick - state.rattledAt);
+        if (suppression == 0 && rattling < 0 && !state.strained) {
+            return;
+        }
+        state.strained = suppression > 0 || rattling > 0;
+        boolean shown = !covered(player);
+        ScreenEffects.suppressed(player, shown ? suppression : 0);
+        ScreenEffects.rattled(player, shown && rattling > 0 ? (double) rattling / rattle.ticks() : 0);
     }
 
     /** Counts a kill towards a chain of them, with a chime that climbs as it goes on. */
@@ -408,20 +494,26 @@ public final class CombatFeedback {
     }
 
     public void forget(Player player) {
-        ScreenEffects.hurt(player, 0);
+        calm(player);
         if (players.remove(player.getUniqueId()) != null) BlockcraftApi.get().notifications().clearMarker(player);
     }
 
     /** Off the field the HUD stops updating, so the redness would stay until the next deployment. */
     public void offField(Player player) {
+        calm(player);
+    }
+
+    private static void calm(Player player) {
         ScreenEffects.hurt(player, 0);
+        ScreenEffects.suppressed(player, 0);
+        ScreenEffects.rattled(player, 0);
     }
 
     public void clear() {
         for (var id : players.keySet()) {
             var player = Bukkit.getPlayer(id);
             if (player != null) {
-                ScreenEffects.hurt(player, 0);
+                calm(player);
                 BlockcraftApi.get().notifications().clearMarker(player);
             }
         }

@@ -495,5 +495,17 @@
     "sounds": [
       "blockcraft:sternenfront/force_push_charge"
     ]
+  },
+  "sternenfront.bolt.whizz": {
+    "sounds": [
+      "blockcraft:sternenfront/bolt_whizz_1",
+      "blockcraft:sternenfront/bolt_whizz_2",
+      "blockcraft:sternenfront/bolt_whizz_3"
+    ]
+  },
+  "sternenfront.headshot.taken": {
+    "sounds": [
+      "blockcraft:sternenfront/headshot_taken"
+    ]
   }
 }

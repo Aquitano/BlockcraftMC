@@ -36,6 +36,22 @@ public class CombatFeedbackTest {
     }
 
     @Test
+    public void nearMissesDarkenTheEdgesByClosenessUpToTheCeilingAndFadeFromFullOverTheFadeTicks() {
+        var nearMiss = new CombatFeedback.NearMiss(3, 0.8f, 0.35, 0.75, 20);
+        var state = new CombatFeedback.PlayerFeedback();
+        state.passed(0.5, nearMiss);
+        assertEquals(0.175, state.suppression, 1e-9);
+        state.passed(1, nearMiss);
+        state.passed(1, nearMiss);
+        assertEquals(0.75, state.suppression, 1e-9);
+        for (int tick = 0; tick < 14; tick++) {
+            state.ebb(20);
+        }
+        assertEquals(0.05, state.suppression, 1e-9);
+        assertEquals(0, state.ebb(20), 1e-9);
+    }
+
+    @Test
     public void lowerBarKeepsTheKillLabelAndCountAlongsideTheCombatHud() {
         var messages = Messages.load(Path.of("/nonexistent-combat-feedback-test"),
                 () -> getClass().getResourceAsStream("/messages.yml"),

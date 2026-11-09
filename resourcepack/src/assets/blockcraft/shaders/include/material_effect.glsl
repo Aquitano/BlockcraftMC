@@ -12,6 +12,9 @@ vec3 blockcraft_material(int effect, vec3 position, float seconds) {
         wave += cos(position.z * 12.0 - seconds * 3.0);
         return mix(vec3(0.35, 0.12, 0.9), vec3(1.0, 0.5, 0.95), wave * 0.25 + 0.5);
     }
+    if (effect == 4) {
+        return vec3(1.0);
+    }
     float pulse = 0.65 + 0.35 * sin(seconds * 3.0);
     return mix(vec3(0.7, 0.3, 0.04), vec3(1.0, 0.9, 0.4), pulse);
 }

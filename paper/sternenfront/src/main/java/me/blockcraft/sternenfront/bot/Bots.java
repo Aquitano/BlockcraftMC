@@ -215,6 +215,22 @@ public final class Bots implements Listener {
         return soldier == null ? Optional.empty() : Optional.of(soldier.life.aim.clone());
     }
 
+    /** Where a bot with a long rifle aims while an enemy is in its sights, as a player looks through the scope. */
+    public Optional<Vector> sighting(Entity entity, long tick) {
+        var soldier = bodies.get(entity.getUniqueId());
+        return soldier != null && soldier.role.blaster(soldier.faction).isLongRifle() && soldier.life.target != null
+                && tick < soldier.life.seenUntil ? Optional.of(soldier.life.aim.clone()) : Optional.empty();
+    }
+
+    /** A blow to the head throws a bot's aim off as a fresh target does, so its next shots settle again. */
+    public void shaken(Entity entity, long tick) {
+        var soldier = bodies.get(entity.getUniqueId());
+        if (soldier != null) {
+            soldier.life.acquiredAt = tick;
+            soldier.misaimAngle = ThreadLocalRandom.current().nextDouble(2 * Math.PI);
+        }
+    }
+
     public Optional<CombatClass> role(Entity entity) {
         return Optional.ofNullable(bodies.get(entity.getUniqueId())).map(soldier -> soldier.role);
     }

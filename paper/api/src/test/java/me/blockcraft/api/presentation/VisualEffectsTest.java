@@ -34,5 +34,6 @@ public class VisualEffectsTest {
         assertEquals(0xE901C5, VisualEffects.MaterialEffect.HOLOGRAM.color().asRGB());
         assertEquals(0xE902C5, VisualEffects.MaterialEffect.PLASMA.color().asRGB());
         assertEquals(0xE903C5, VisualEffects.MaterialEffect.PULSE.color().asRGB());
+        assertEquals(0xE904C5, VisualEffects.MaterialEffect.UNLIT.color().asRGB());
     }
 }

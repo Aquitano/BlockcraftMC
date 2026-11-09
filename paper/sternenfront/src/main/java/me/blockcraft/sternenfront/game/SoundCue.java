@@ -19,6 +19,7 @@ public enum SoundCue {
     BLASTER_HEAVY_RIFLE("blaster.heavy_rifle"),
     BLASTER_SPEEDER_CANNON("blaster.heavy_rifle"),
     BOLT_IMPACT("bolt.impact"),
+    BOLT_WHIZZ("bolt.whizz"),
     SABER_IGNITE("saber.ignite"),
     SABER_RETRACT("saber.retract"),
     SABER_HUM("saber.hum"),
@@ -48,6 +49,7 @@ public enum SoundCue {
     ORBITAL_IMPACT("orbital.impact"),
     HITMARKER("hitmarker"),
     HEADSHOT("headshot"),
+    HEADSHOT_TAKEN("headshot.taken"),
     COOLED("cooled"),
     KYBER_FOUND("kyber.found"),
     BRUMMI_BEEP("brummi.beep"),
@@ -104,6 +106,11 @@ public enum SoundCue {
     /** Only {@code listener} hears it, from where they stand, and it follows them as they move. */
     public void playTo(Player listener, float volume, float shift) {
         listener.playSound(listener, key, SoundCategory.PLAYERS, volume, shift);
+    }
+
+    /** Only {@code listener} hears it, from {@code at}. */
+    public void playTo(Player listener, Location at, float volume, float shift) {
+        listener.playSound(at, key, SoundCategory.PLAYERS, volume, shift);
     }
 
     private static Stream<Player> listenersInReach(Location at, float volume) {

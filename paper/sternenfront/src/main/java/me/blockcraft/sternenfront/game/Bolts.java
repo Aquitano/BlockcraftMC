@@ -172,6 +172,7 @@ public final class Bolts {
         double travelled = fighter.map(hit -> hit.at().distance(start))
                 .orElse(mark == null ? reach : mark.getHitPosition().distance(start));
         trail(bolt, travelled);
+        passBy(bolt, start, travelled, fighter.map(LagCompensation.Hit::victim));
         if (fighter.isPresent()) {
             var at = fighter.get().at().toLocation(world);
             game.effects().boltHit(at, bolt.shot.faction(), fighter.get().victim());
@@ -250,7 +251,7 @@ public final class Bolts {
         boolean head = game.speeders().faction(victim).isEmpty() && at.getY() >= hit.eyeY() - HEAD_BELOW_EYES;
         SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
         game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, damage * (head ? bolt.shot.headshot() : 1),
-                head && bolt.shot.headshot() > 1);
+                head && bolt.shot.headshot() > 1, bolt.direction);
     }
 
     /**
@@ -285,6 +286,31 @@ public final class Bolts {
     }
 
     private record Viewer(Player player, Location eye) { }
+
+    /**
+     * Enemy players whose eyes the bolt passed within the near-miss radius this tick, other than one it hit, hear it
+     * whizz by from its nearest point. Each tick covers the next stretch of its flight, so each pass counts once.
+     */
+    private void passBy(Bolt bolt, Vector start, double length, Optional<LivingEntity> struck) {
+        double radius = game.feedback().nearMissRadius();
+        var world = bolt.position.getWorld();
+        var enemy = bolt.shot.faction().enemy();
+        for (var fighter : game.combatants()) {
+            if (!(fighter instanceof Player player) || player.equals(bolt.shooter) || struck.filter(player::equals).isPresent()
+                    || game.factionOf(player).filter(enemy::equals).isEmpty() || !player.getWorld().equals(world)) {
+                continue;
+            }
+            var toEye = player.getEyeLocation().toVector().subtract(start);
+            double along = toEye.dot(bolt.direction);
+            if (along <= 0 || along > length) {
+                continue;
+            }
+            double gap = Math.sqrt(Math.max(0, toEye.lengthSquared() - along * along));
+            if (gap < radius) {
+                game.feedback().nearMiss(player, start.clone().add(bolt.direction.clone().multiply(along)).toLocation(world), 1 - gap / radius);
+            }
+        }
+    }
 
     private static boolean isTarget(Entity entity) {
         return entity instanceof Interaction target && target.getPersistentDataContainer().has(TargetShotEvent.MARK);

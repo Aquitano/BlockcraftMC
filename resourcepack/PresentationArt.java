@@ -49,8 +49,11 @@ public final class PresentationArt {
                 post(root, "accent/" + atmospheres[i] + "/" + step, 0, 0, i + 1, step / 8.0);
             }
         }
-        for (int step = 1; step <= 8; step++) {
-            post(root, "hurt/" + step, 0, 0, atmospheres.length + 1, step / 8.0);
+        String[] channels = {"hurt", "suppressed", "rattled"};
+        for (int i = 0; i < channels.length; i++) {
+            for (int step = 1; step <= 8; step++) {
+                post(root, channels[i] + "/" + step, 0, 0, atmospheres.length + 1 + i, step / 8.0);
+            }
         }
     }
 

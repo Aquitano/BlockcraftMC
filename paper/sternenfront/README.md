@@ -251,6 +251,22 @@ shooter hears their own shot at full volume, and it follows them as they move. A
 plays an impact sound. A hit body flashes `appearance.hurt-tint` for ten ticks, and an animated bot body also flinches.
 A hit bot clanks if it is a droid and grunts if it is a clone, at most once per `bots.hurt-sound.cooldown-ticks`.
 
+An enemy bolt, a bot's included, that passes within `combat-feedback.near-miss.radius` blocks of a player's eyes without
+hitting them whizzes past from its nearest point, louder and higher the nearer it came. Each pass also darkens the edges
+of the screen in coarse dithered grey pixels, further in the more bolts pass, and the darkness fades within a second. It
+keeps clear of the middle, so the crosshair and the target stay in sight, and it is grey where a hit's edges are red.
+A bolt that hits pushes its victim, bots included, a little along its flight, by `combat.hit-push` and in place of the
+vanilla knockback. Nobody in the air is pushed, nor anyone towards an edge with no ground beyond the push.
+A headshot rings the victim's helmet, tilts their view back once after the hit's own tilt and shakes the picture with
+split colours for `combat-feedback.headshot-rattle.ticks`. A forced turn of the view would ride on a teleport, which
+holds the player's movement until their client confirms it, so the rotation and with it the aim stay the player's own.
+A headshot bot's aim scatters again as on a fresh target.
+
+A long rifle's scope glints (`presentation.scope-glint`): while a player looks through one, and while a bot with one has
+an enemy in its sights, a small pixel star flares at the scope every `interval-ticks` for each enemy player within
+`range` who is in front of the scope, sees it within `view-degrees` of their look and has no wall in between. Each such
+viewer gets a display of their own, sized by distance so it stays a few pixels across.
+
 Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair; a headshot's has a diamond above it. A kill replaces a weaker
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. While a player with the pack holds a blaster that has spread,

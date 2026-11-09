@@ -37,6 +37,8 @@ import me.blockcraft.sternenfront.bot.Bots;
 import me.blockcraft.sternenfront.combat.Combat;
 import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.combat.CombatConfig;
+import me.blockcraft.sternenfront.combat.HitPush;
+import me.blockcraft.sternenfront.combat.ScopeGlint;
 import me.blockcraft.sternenfront.combat.Spectacle;
 import me.blockcraft.sternenfront.vehicle.Speeders;
 import me.blockcraft.sternenfront.vehicle.SpeederConfig;
@@ -147,6 +149,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Combat combat;
     private final CombatFeedback feedback;
     private final Speeders speeders;
+    private final HitPush hitPush;
+    private final ScopeGlint glint;
     private final SpawnSpots spawnSpots;
     private final Deployment deployment;
     private final BattleIntro intro;
@@ -232,6 +236,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.feedback = new CombatFeedback(this);
         this.combat = new Combat(this, CombatConfig.from(plugin.getConfig()));
         this.speeders = new Speeders(this, SpeederConfig.from(plugin.getConfig()));
+        this.hitPush = HitPush.from(plugin.getConfig());
+        this.glint = new ScopeGlint(this, ScopeGlint.Settings.from(plugin.getConfig()));
         this.spawnSpots = new SpawnSpots(this);
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
@@ -856,6 +862,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                         BlockcraftApi.get().resourcePack().applied(player)))).toList());
         bots.tick(tick);
         bolts.tick();
+        glint.tick(tick);
         gadgets.tick(tick);
         relic.tick(tick);
         heroes.tick(tick);
@@ -876,6 +883,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 aim(player);
                 combat.tick(player);
                 feedback.aim(player);
+                feedback.screen(player);
             } else {
                 deployment.deployWhenDue(player, fighter);
             }
@@ -1289,7 +1297,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         combat.startLeapCooldown(player, seconds * TICKS_PER_SECOND);
     }
 
-    public void boltHit(LivingEntity shooter, Blaster blaster, LivingEntity victim, double damage, boolean headshot) {
+    /**
+     * A bolt flying along {@code direction} hurts its victim without the vanilla knockback, which would throw them about,
+     * and pushes them a little along its flight instead. A headshot rattles a player's view and throws a bot's aim off.
+     */
+    public void boltHit(LivingEntity shooter, Blaster blaster, LivingEntity victim, double damage, boolean headshot, Vector direction) {
         if (isProtected(victim)) {
             victim.getWorld().spawnParticle(Particle.ENCHANTED_HIT, victim.getLocation().add(0, 1, 0), 8, 0.3, 0.5, 0.3, 0.1);
             return;
@@ -1299,7 +1311,19 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         var velocity = victim.getVelocity();
         hurt(shooter, victim, damage, DamageSource.builder(DamageType.ARROW), headshot);
-        victim.setVelocity(velocity);
+        if (victim.isDead() || speeders.faction(victim).isPresent()) {
+            victim.setVelocity(velocity);
+            return;
+        }
+        victim.setVelocity(velocity.add(hitPush.of(victim, direction, damage)));
+        if (!headshot) {
+            return;
+        }
+        if (victim instanceof Player player) {
+            feedback.headshotTaken(player, direction);
+        } else {
+            bots.shaken(victim, tick);
+        }
     }
 
     /** Hurts the victim in {@code by}'s name, so the kill is theirs, and shows them the hit. */
@@ -1617,6 +1641,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         bursts.clear();
         bolts.clear();
+        glint.clear();
         effects.clear();
         spectacle.clear();
         music.clear();
