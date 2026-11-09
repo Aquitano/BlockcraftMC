@@ -1,7 +1,10 @@
 package me.blockcraft.story.game;
 
-import kr.toxicity.model.api.BetterModel;
-import kr.toxicity.model.api.bukkit.platform.BukkitAdapter;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
@@ -21,6 +24,9 @@ import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.story.cutscene.Cutscene;
 import me.blockcraft.story.cutscene.Cutscenes;
+import me.blockcraft.story.dialogue.DialogueHud;
+import me.blockcraft.story.dialogue.StorySound;
+import me.blockcraft.story.dialogue.Voices;
 import me.blockcraft.story.quest.ConsoleObjective;
 import me.blockcraft.story.quest.Party;
 import me.blockcraft.story.quest.Quests;
@@ -28,6 +34,7 @@ import me.blockcraft.story.quest.StoryNpcs;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -43,6 +50,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.EnumMap;
@@ -84,9 +92,13 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private final ConsoleDefense defense;
     private final ChoiceRepository choices;
     private final BossBar bar;
+    private final Voices voices;
+    private final DialogueHud dialogue;
     private final Set<UUID> party = new LinkedHashSet<>();
     private final Map<UUID, Choice> votes = new HashMap<>();
     private final String velaModel;
+    private final NpcPresence vela;
+    private final BukkitTask presence;
     private Quests quests;
     private Stage stage = Stage.BRIEFING;
     private Choice choice;
@@ -109,7 +121,11 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         this.hotbar = new LobbyHotbar(plugin, List.of(), statsMenus, countdown);
         this.entrance = new LobbyEntrance(round, countdown, hotbar, this::lobbySpawn, () -> Optional.of(rally),
                 OptionalInt.empty(), this::greet);
-        this.scenes = new Cutscenes(plugin, messages, config.getInt("cutscenes.characters-per-tick"), config.getInt("cutscenes.fade-ticks"));
+        this.voices = Voices.load();
+        warnLongVoices();
+        this.dialogue = new DialogueHud(plugin, DialogueHud.Settings.from(config.getConfigurationSection("dialogue"),
+                new DialogueHud.Settings.Hints(plain("dialogue.hint.advance"), plain("dialogue.hint.choose"), plain("dialogue.hint.close"))));
+        this.scenes = new Cutscenes(plugin, messages, voices, config.getDouble("cutscenes.characters-per-tick"), config.getInt("cutscenes.fade-ticks"));
         this.npcs = new StoryNpcs(plugin);
         this.blasters = new Blasters(plugin, config.getDouble("blaster.damage"), config.getInt("blaster.cooldown-ticks"),
                 config.getDouble("blaster.range"));
@@ -117,9 +133,23 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
                 Spots.all(world, mission, "droid-spawns"), round::players, blasters, messages.get("defense.droid"));
         this.bar = BossBar.bossBar(messages.get("stage.briefing"), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
         this.velaModel = mission.getString("vela-model", "");
-        spawnVela(Spots.at(world, mission, "vela"));
+        var post = Spots.at(world, mission, "vela");
+        this.vela = new NpcPresence(spawnVela(post), post, round::players, dialogue);
+        this.presence = Bukkit.getScheduler().runTaskTimer(plugin, vela::tick, 1, 1);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         plugin.getServer().getPluginManager().registerEvents(blasters, plugin);
+    }
+
+    /** A recording longer than its subtitle's slot runs into the next line or past the shot; its timing needs moving. */
+    private void warnLongVoices() {
+        cutscenes.values().forEach(cutscene -> cutscene.lines().forEach(line -> voices.of(line.text())
+                .filter(voice -> voice.ticks() > line.ticks())
+                .ifPresent(voice -> plugin.getSLF4JLogger().warn("The voice of {} lasts {} ticks, longer than its {} in cutscene {}",
+                        line.text(), voice.ticks(), line.ticks(), cutscene.name()))));
+    }
+
+    private String plain(String key) {
+        return PlainTextComponentSerializer.plainText().serialize(messages.get(key));
     }
 
     private static Map<String, Cutscene> loadCutscenes(World world, ConfigurationSection section) {
@@ -127,7 +157,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
                 name -> Cutscene.load(name, world, section.getConfigurationSection(name))));
     }
 
-    private void spawnVela(Location at) {
+    private Mannequin spawnVela(Location at) {
         world.addPluginChunkTicket(at.getBlockX() >> 4, at.getBlockZ() >> 4, plugin);
         var vela = world.spawn(at, Mannequin.class, entity -> {
             entity.setPersistent(false);
@@ -139,16 +169,19 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
             entity.setDescription(messages.get("npc.vela.role"));
         });
         npcs.put("vela", vela);
-    }
-
-    /** BetterModel loads its models after the plugins have enabled, so Vela gets her body when the mission starts. */
-    private void dressVela() {
-        if (velaModel.isBlank() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel")) return;
-        npcs.get("vela").ifPresent(vela -> BetterModel.model(velaModel).ifPresent(body -> body.getOrCreate(BukkitAdapter.adapt(vela))));
+        return vela;
     }
 
     public StoryNpcs npcs() {
         return npcs;
+    }
+
+    public DialogueHud dialogue() {
+        return dialogue;
+    }
+
+    public Voices voices() {
+        return voices;
     }
 
     public void connect(Quests quests) {
@@ -222,7 +255,8 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
 
     private void start() {
         round.enter(GamePhase.INGAME);
-        dressVela();
+        // BetterModel loads its models after the plugins have enabled, so Vela gets her body when the mission starts.
+        vela.dress(velaModel);
         var members = round.players();
         for (int i = 0; i < members.size(); i++) {
             var member = members.get(i);
@@ -233,7 +267,10 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         }
         play("intro", () -> {
             briefed = true;
-            round.players().forEach(member -> quests.enter(member, stage));
+            round.players().forEach(member -> {
+                quests.enter(member, stage);
+                StorySound.STAGE.play(member);
+            });
             Bukkit.broadcast(messages.get("stage-start.briefing"));
         });
     }
@@ -243,6 +280,28 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         player.getInventory().setItem(0, blasters.item(messages.get("item.blaster")));
     }
 
+    /** {@code /storyscene <name>} plays a cutscene to the sender alone, to watch or trace it without a mission. */
+    public LiteralCommandNode<CommandSourceStack> sceneCommand() {
+        return Commands.literal("storyscene")
+                .requires(source -> source.getSender() instanceof Player && source.getSender().hasPermission("blockcraft.story.scene"))
+                .then(Commands.argument("name", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            cutscenes.keySet().forEach(builder::suggest);
+                            return builder.buildFuture();
+                        })
+                        .executes(context -> {
+                            var player = context.getSource().getPlayerOrThrow();
+                            var cutscene = cutscenes.get(StringArgumentType.getString(context, "name"));
+                            if (cutscene != null && !scenes.playing(player)) {
+                                dialogue.close(player);
+                                vela.hold(true);
+                                scenes.play(cutscene, List.of(player), npcs.get("vela").map(LivingEntity.class::cast), () -> vela.hold(false));
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        }))
+                .build();
+    }
+
     private void play(String name, Runnable then) {
         var cutscene = cutscenes.get(name);
         if (cutscene == null) {
@@ -250,7 +309,12 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
             return;
         }
         Optional<LivingEntity> actor = npcs.get("vela").map(LivingEntity.class::cast);
-        scenes.play(cutscene, round.players(), actor, then);
+        round.players().forEach(dialogue::close);
+        vela.hold(true);
+        scenes.play(cutscene, round.players(), actor, () -> {
+            vela.hold(false);
+            then.run();
+        });
     }
 
     @Override
@@ -276,13 +340,17 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         bar.progress(stage == Stage.DEFENSE ? 0 : 1);
         bar.color(stage == Stage.DEFENSE ? BossBar.Color.RED : BossBar.Color.BLUE);
         Bukkit.broadcast(messages.get("stage-start." + stage.key()));
-        round.players().forEach(member -> quests.enter(member, stage));
+        round.players().forEach(member -> {
+            quests.enter(member, stage);
+            (stage == Stage.REPORT ? StorySound.OBJECTIVE_COMPLETE : StorySound.STAGE).play(member);
+        });
     }
 
     @Override
     public void consoleReached(ConsoleObjective console) {
         if (stage != Stage.DEFENSE || defense.running()) return;
         Bukkit.broadcast(messages.get("defense.started"));
+        round.players().forEach(StorySound.OBJECTIVE_START::play);
         defense.start(console, progress -> bar.progress((float) progress), () -> Bukkit.broadcast(messages.get("defense.held")));
     }
 
@@ -293,6 +361,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         Bukkit.broadcast(messages.get("vote.cast", Placeholder.unparsed("player", voter.getName()),
                 Placeholder.component("choice", messages.get("choice." + wanted.key())),
                 Formatter.number("votes", votes.size()), Formatter.number("members", round.playerCount())));
+        round.players().forEach(StorySound.VOTE_CAST::play);
         tally();
     }
 
@@ -319,7 +388,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         Tasks.async(plugin, () -> members.forEach(member -> choices.record(member, MISSION, decided)));
         Bukkit.broadcast(messages.get("vote.decided", Placeholder.component("choice", messages.get("choice." + decided.key()))));
         bar.name(messages.get("stage.ending"));
-        round.players().forEach(Player::closeDialog);
+        round.players().forEach(StorySound.VOTE_DECIDED::play);
         Tasks.later(plugin, 30, () -> play("ending-" + decided.key(), this::finish));
     }
 
@@ -327,9 +396,11 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         stage = Stage.DONE;
         var title = Title.title(messages.get("ending." + choice.key() + ".title"), messages.get("ending." + choice.key() + ".subtitle"),
                 Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(4), Duration.ofMillis(800)));
+        var sting = choice == Choice.FABRIK ? StorySound.ENDING_FABRIK : StorySound.ENDING_GEFANGENE;
         for (var member : round.players()) {
             member.hideBossBar(bar);
             member.showTitle(title);
+            sting.play(member);
             summary.awardWin(member);
         }
         Bukkit.broadcast(messages.get("ending." + choice.key() + ".summary"));
@@ -358,7 +429,9 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     public void stop() {
         countdown.cancel();
         defense.close();
+        presence.cancel();
         scenes.close();
+        dialogue.close();
         npcs.get("vela").ifPresent(Mannequin::remove);
         round.stop();
     }

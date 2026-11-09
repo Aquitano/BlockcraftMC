@@ -30,6 +30,8 @@ screen effects, and the Sternenfront intro.
   the action bar beside the ability tiles, draws from `text.png`, the pack's copy of the vanilla sheet, in
   `blockcraft:text` or a deploy line font. `PackArt` writes the letters' advances to
   `paper/api/src/main/resources/text-glyphs.properties`, which `UiFont.width` counts with.
+- **Wide glyphs.** The client packs font glyphs into atlases 256 pixels across and draws a glyph wider than that as a
+  missing-glyph box. `StoryArt` therefore draws the story dialogue's 300-pixel panel as left and right halves.
 - **Crosshair marks.** The client centres a subtitle by the advances it measures from each glyph's last inked column, and
   draws a font pixel there two GUI pixels wide. `HudArt` therefore draws the marks, arcs, spread ticks and readiness
   marks at twice the resolution, centred between the middle texels, with a nearly clear texel in each cell's last

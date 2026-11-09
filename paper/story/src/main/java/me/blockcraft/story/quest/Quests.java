@@ -1,7 +1,10 @@
 package me.blockcraft.story.quest;
 
+import me.blockcraft.story.dialogue.DialogueHud;
+import me.blockcraft.story.dialogue.Voices;
 import me.blockcraft.story.game.Choice;
 import me.blockcraft.story.game.Stage;
+import org.betonquest.betonquest.BetonQuest;
 import org.betonquest.betonquest.api.BetonQuestApi;
 import org.betonquest.betonquest.api.BetonQuestApiService;
 import org.betonquest.betonquest.api.QuestException;
@@ -12,6 +15,7 @@ import org.betonquest.betonquest.api.quest.action.OnlineActionAdapter;
 import org.betonquest.betonquest.api.quest.action.PlayerActionFactory;
 import org.betonquest.betonquest.api.quest.condition.PlayerConditionFactory;
 import org.betonquest.betonquest.api.quest.objective.ObjectiveFactory;
+import org.betonquest.betonquest.kernel.registry.feature.ConversationIORegistry;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -24,7 +28,8 @@ import java.util.Optional;
  *     <li>{@code storystage <stage>}, {@code storychoice <choice>} and {@code storyvoted} as conditions,</li>
  *     <li>{@code storystage <stage>} and {@code storyvote <choice>} as actions,</li>
  *     <li>{@code holdconsole <location> <radius> <seconds>} as an objective,</li>
- *     <li>{@code blockcraft <key>} as an NPC.</li>
+ *     <li>{@code blockcraft <key>} as an NPC,</li>
+ *     <li>{@code blockhud} as the conversation IO, which shows conversations in the {@link DialogueHud}.</li>
  * </ul>
  * When the party enters a stage, every member runs the package's action {@code stage_<stage>}, which hands out that
  * stage's objectives; a member who rejoins runs it again.
@@ -41,7 +46,7 @@ public final class Quests {
         this.pack = pack;
     }
 
-    public static Quests register(Plugin plugin, String pack, Party party, StoryNpcs npcs) {
+    public static Quests register(Plugin plugin, String pack, Party party, StoryNpcs npcs, DialogueHud hud, Voices voices) {
         var api = BetonQuestApiService.get().orElseThrow(() -> new IllegalStateException("BetonQuest is not running")).api(plugin);
         var conditions = api.conditions().registry();
         conditions.register("storystage", (PlayerConditionFactory) instruction -> {
@@ -69,6 +74,8 @@ public final class Quests {
         registry.register(StoryNpcs.TYPE, instruction -> new StoryNpcs.Lookup(npcs, instruction.string().get()));
         registry.registerIdentifier(npcs.new Identifier());
         api.bukkit().registerEvents(npcs.new Clicks(api.profiles(), registry));
+        BetonQuest.getInstance().getComponentLoader().get(ConversationIORegistry.class).register(HudConversationIO.NAME,
+                (conversation, profile) -> new HudConversationIO(plugin, conversation, profile, hud, voices));
         return new Quests(plugin, api, pack);
     }
 

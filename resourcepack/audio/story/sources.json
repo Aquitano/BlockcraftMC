@@ -1,0 +1,128 @@
+{
+  "vela.greeting": {
+    "speaker": "vela",
+    "text_sha256": "b341fb6c40e2f9877dd961f100180798efe4c5abd7bf345e53ecf1bdbfb19921",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.plan": {
+    "speaker": "vela",
+    "text_sha256": "11071a79e598e6e5572eb5bae06b08519323db6ba7168e1b07be13597994bec3",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.wreck": {
+    "speaker": "vela",
+    "text_sha256": "555903d36ba18f8c808f93180a6da132f244b3ef1be121ac83ecd463b5c22468",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.go": {
+    "speaker": "vela",
+    "text_sha256": "ca754b00c4fea1c922bf66a7907712919176e2bc0ff027f1227014c0ef57bb94",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.underway": {
+    "speaker": "vela",
+    "text_sha256": "1b03de9d9a3d3b7a7ce7150aff0dc0b3680d94a21eac2efd91bfd2c8ef968af3",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.defending": {
+    "speaker": "vela",
+    "text_sha256": "f9f14dee05ae1e8c9aaa7a4698c5545f198fd2ed54157873c2481cc4761b2877",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.report": {
+    "speaker": "vela",
+    "text_sha256": "b8f60b5ee42feda2c9bdfc4f52925262fb331fe0132f93d6e63d7ab7df3db3c0",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.difference": {
+    "speaker": "vela",
+    "text_sha256": "8cd6c108e68e537cb1272a1a158d33e4a2a9fba4ae5a874461ef91c3703f8484",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.noted": {
+    "speaker": "vela",
+    "text_sha256": "7679401f4dc4bb9e18208aed915e135c14f662d7a68e08d033d963fd8fb492ea",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.waiting": {
+    "speaker": "vela",
+    "text_sha256": "e4c49c0e382e1ce7641897fbb96318b5be04c5110a2a062b52b61cb1ffd06dab",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.decidedFabrik": {
+    "speaker": "vela",
+    "text_sha256": "7e9707bdda690d3e08257fa014677edc6a5b8a2fba9982270354e2492afed70e",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "vela.decidedGefangene": {
+    "speaker": "vela",
+    "text_sha256": "c5cd41b2ffabc1da6df984f2a008eefcd4e19bbb1bf3c127b1ad77e27df37df4",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.intro.1": {
+    "speaker": "funk",
+    "text_sha256": "53675ee0768b7b293436ba3b2d1ae535992217a58f732b0a18deb1b65c1baf59",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.intro.2": {
+    "speaker": "vela",
+    "text_sha256": "fdc098ae2076baea71486f8552522822aee682d2bc667afb04f46a83af544ca5",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.intro.3": {
+    "speaker": "vela",
+    "text_sha256": "6aec2efd56dc6455b78c551666fcc53f1b13ce5737551dccf8037e0f2bde84c3",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.ending-fabrik.1": {
+    "speaker": "vela",
+    "text_sha256": "30cb06b459b51375f14efe3953242c934eee4b5a23721f061803a6a4a53e65bb",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.ending-fabrik.2": {
+    "speaker": "funk",
+    "text_sha256": "be6cb2f8988ab04b15ed70a56300de1917a0cfdde8d81cb7633857565a4c8770",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.ending-fabrik.3": {
+    "speaker": "vela",
+    "text_sha256": "e5b349840d7e0ecb520230294ab991e65dea3c59124198de526382e6f301f490",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.ending-gefangene.1": {
+    "speaker": "vela",
+    "text_sha256": "403c4ee8ec12d502ddb6ed242707bf771d1ad65addc7f1b917ff4516f456c507",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.ending-gefangene.2": {
+    "speaker": "funk",
+    "text_sha256": "97e0a716d66160e8cd998d2cc8c3a0f680ced3939bf3d748989a3c491c471e41",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  },
+  "cutscene.ending-gefangene.3": {
+    "speaker": "vela",
+    "text_sha256": "15932c689d54f8c61e5bfe795116417cd89e6e356b47d1bd5f9c5b23061e94ef",
+    "model": "de_DE-thorsten-high.onnx",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1"
+  }
+}

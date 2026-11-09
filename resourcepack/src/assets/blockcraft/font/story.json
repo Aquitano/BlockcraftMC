@@ -1,0 +1,22 @@
+{
+  "providers": [
+    {"type":"bitmap","file":"blockcraft:font/story/top_left.png","ascent":7,"height":8,"chars":["\uE000"]},
+    {"type":"bitmap","file":"blockcraft:font/story/top_right.png","ascent":7,"height":8,"chars":["\uE001"]},
+    {"type":"bitmap","file":"blockcraft:font/story/bottom_left.png","ascent":7,"height":8,"chars":["\uE002"]},
+    {"type":"bitmap","file":"blockcraft:font/story/bottom_right.png","ascent":7,"height":8,"chars":["\uE003"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_8_left.png","ascent":7,"height":8,"chars":["\uE004"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_8_right.png","ascent":7,"height":8,"chars":["\uE005"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_16_left.png","ascent":7,"height":16,"chars":["\uE006"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_16_right.png","ascent":7,"height":16,"chars":["\uE007"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_32_left.png","ascent":7,"height":32,"chars":["\uE008"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_32_right.png","ascent":7,"height":32,"chars":["\uE009"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_64_left.png","ascent":7,"height":64,"chars":["\uE00A"]},
+    {"type":"bitmap","file":"blockcraft:font/story/body_64_right.png","ascent":7,"height":64,"chars":["\uE00B"]},
+    {"type":"bitmap","file":"blockcraft:font/story/highlight_left.png","ascent":7,"height":10,"chars":["\uE00C"]},
+    {"type":"bitmap","file":"blockcraft:font/story/highlight_right.png","ascent":7,"height":10,"chars":["\uE00D"]},
+    {"type":"bitmap","file":"blockcraft:font/story/badge.png","ascent":7,"height":9,"chars":["\uE00E"]},
+    {"type":"bitmap","file":"blockcraft:font/story/badge_lit.png","ascent":7,"height":9,"chars":["\uE00F"]},
+    {"type":"bitmap","file":"blockcraft:font/story/speaker.png","ascent":7,"height":7,"chars":["\uE010"]},
+    {"type":"bitmap","file":"blockcraft:font/story/more.png","ascent":7,"height":7,"chars":["\uE011"]}
+  ]
+}

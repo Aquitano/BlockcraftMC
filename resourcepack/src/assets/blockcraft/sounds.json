@@ -507,5 +507,270 @@
     "sounds": [
       "blockcraft:sternenfront/headshot_taken"
     ]
+  },
+  "story.dialogue.open": {
+    "sounds": [
+      "blockcraft:story/dialogue_open"
+    ]
+  },
+  "story.dialogue.type": {
+    "sounds": [
+      "blockcraft:story/dialogue_type_1",
+      "blockcraft:story/dialogue_type_2",
+      "blockcraft:story/dialogue_type_3"
+    ]
+  },
+  "story.dialogue.select": {
+    "sounds": [
+      "blockcraft:story/dialogue_select"
+    ]
+  },
+  "story.dialogue.choose": {
+    "sounds": [
+      "blockcraft:story/dialogue_choose"
+    ]
+  },
+  "story.dialogue.advance": {
+    "sounds": [
+      "blockcraft:story/dialogue_advance"
+    ]
+  },
+  "story.dialogue.close": {
+    "sounds": [
+      "blockcraft:story/dialogue_close"
+    ]
+  },
+  "story.stage": {
+    "sounds": [
+      "blockcraft:story/stage"
+    ]
+  },
+  "story.objective.start": {
+    "sounds": [
+      "blockcraft:story/objective_start"
+    ]
+  },
+  "story.objective.complete": {
+    "sounds": [
+      "blockcraft:story/objective_complete"
+    ]
+  },
+  "story.vote.cast": {
+    "sounds": [
+      "blockcraft:story/vote_cast"
+    ]
+  },
+  "story.vote.decided": {
+    "sounds": [
+      "blockcraft:story/vote_decided"
+    ]
+  },
+  "story.ending.fabrik": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/ending_fabrik",
+        "stream": true
+      }
+    ]
+  },
+  "story.ending.gefangene": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/ending_gefangene",
+        "stream": true
+      }
+    ]
+  },
+  "story.ambience.wind": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/ambience_wind",
+        "stream": true
+      }
+    ]
+  },
+  "story.ambience.base": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/ambience_base",
+        "stream": true
+      }
+    ]
+  },
+  "story.craft.pass": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/craft_pass",
+        "attenuation_distance": 96
+      }
+    ]
+  },
+  "story.voice.vela.greeting": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.greeting",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.plan": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.plan",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.wreck": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.wreck",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.go": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.go",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.underway": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.underway",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.defending": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.defending",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.report": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.report",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.difference": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.difference",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.noted": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.noted",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.waiting": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.waiting",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.decidedfabrik": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.decidedfabrik",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.vela.decidedgefangene": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/vela.decidedgefangene",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.intro.1": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.intro.1",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.intro.2": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.intro.2",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.intro.3": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.intro.3",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.ending-fabrik.1": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.ending-fabrik.1",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.ending-fabrik.2": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.ending-fabrik.2",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.ending-fabrik.3": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.ending-fabrik.3",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.ending-gefangene.1": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.ending-gefangene.1",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.ending-gefangene.2": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.ending-gefangene.2",
+        "stream": true
+      }
+    ]
+  },
+  "story.voice.cutscene.ending-gefangene.3": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/voice/cutscene.ending-gefangene.3",
+        "stream": true
+      }
+    ]
   }
 }

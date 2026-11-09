@@ -13,10 +13,10 @@ VERIFY_GAME=story dev/verify/verify.py join
 VERIFY_GAME=story dev/verify/verify.py scenario story --choice fabrik   # or gefangene, and --rejoin
 ```
 
-`/start` in the waiting lobby starts the mission:
+`/start` in the waiting lobby starts the mission, and `/storyscene <name>` plays one cutscene to an operator alone:
 
-1. An intro cutscene: a flight over the basin, then Kommandantin Vela walks into the headquarters and speaks.
-2. Right-click Vela. The conversation opens in a native dialog screen and ends with "Wir sind bereit".
+1. An intro cutscene: a dropship over the basin, then Kommandantin Vela walks into the headquarters and speaks.
+2. Right-click Vela. The conversation opens in the panel above the hotbar and ends with "Wir sind bereit".
 3. Walk to the relay in the refinery (BetonQuest's `location` objective).
 4. Hold the console against waves of B1 droids (`holdconsole`, this plugin's objective). The upload only runs while
    a member stands at the console. The carbine fires with the use key.
@@ -46,8 +46,41 @@ objectives. A member who drops out keeps their place for `rejoin-seconds` and ru
 the same stage and the same decision as the others. The decision is also stored per member in `bc_story_choices`,
 for a later mission to read.
 
+## Conversations
+
+[`DialogueHud`](src/main/java/me/blockcraft/story/dialogue/DialogueHud.java) draws a conversation in a panel above the
+hotbar: the speaker, up to five lines of text typing out, then up to five numbered answers. Sneak shows the rest of a
+line, turns a page, confirms the highlighted answer or closes a line without answers, which also closes by itself
+`dialogue.linger-seconds` after it has been spoken. The number keys pick an answer at once and the scroll wheel moves
+the highlight. While the panel is open the hotbar rests on slot 7, so a scroll lands on slot 6 or 8 and never on an
+answer's number. Movement and the camera stay free; walking away ends the conversation as BetonQuest's `stop` setting says.
+
+The panel is one action bar line whose glyphs the pack's text shader moves into place (`hud_panel.glsl`, red 234), with
+letters from the pack's `blockcraft:text` so their widths hold under a player's own font pack. It knows nothing of
+BetonQuest: [`HudConversationIO`](src/main/java/me/blockcraft/story/quest/HudConversationIO.java) is BetonQuest's
+conversation IO `blockhud`, the default in the staged `config.yml`, and passes lines and answers through. A replacement
+for BetonQuest would call `DialogueHud.say` the same way. Cutscene subtitles use the same panel.
+
+## Voices
+
+Every spoken line has its own sound event, `story.voice.<key>`, played as its text appears:
+
+| Line | Key | Example |
+| --- | --- | --- |
+| NPC option in the quest package | `<conversation>.<option>` | `vela.greeting` |
+| Cutscene line in `messages.yml` | the message key | `cutscene.intro.2` |
+
+To use a recording, put it at `resourcepack/audio/story/recorded/<key>.wav` (`.ogg`, `.flac` and `.mp3` work too), as
+`vela.greeting.wav`, and run `uv run resourcepack/StoryVoices.py`. A recording wins over the Piper placeholder in
+`audio/story/placeholder/`. The script normalizes it, puts the radio filter on `funk` lines, writes it into the pack and
+writes its length to `voices.properties`. The subtitle types out at the pace of that length, and the server warns at
+start when a voice outlasts its cutscene line's `ticks`. Without arguments the script also lists every line that has
+no audio. `--model <path to de_DE-thorsten-high.onnx>` synthesizes placeholders for new or changed lines.
+
 ## Cutscenes
 
-`cutscenes.scenes` in `config.yml` holds each cutscene as camera shots, Vela's walk, subtitles and effects, timed in
-ticks. They play on the shared camera in `paper/api`'s scene package. Each member watches through their own camera and
+`cutscenes.scenes` in `config.yml` holds each cutscene, timed in ticks: camera shots that may follow an actor, the cast
+with their walks, gestures and idle animations, subtitles with their voices, craft flying past, particle emitters,
+sounds and effects. Gestures are animations of the BetterModel bodies that `resourcepack/RigModels.py` writes: talk,
+point, beckon, nod, rest and look. Between cutscenes Vela turns towards the nearest member and gestures while she speaks. They play on the shared camera in `paper/api`'s scene package. Each member watches through their own camera and
 may skip alone with sneak; the story goes on once every member's scene has ended.

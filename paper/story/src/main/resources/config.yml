@@ -13,6 +13,14 @@ rejoin-seconds: 300
 rewards:
   win: 25
 
+# The conversation panel above the hotbar. A line with a recording types out at its pace instead, never slower than
+# half this. A line without answers closes this long after it is read and spoken; 0 waits for sneak.
+dialogue:
+  characters-per-tick: 1.5
+  linger-seconds: 6
+  # The hotbar slot the panel rests on, whose neighbours are not among the numbered answers 1 to 5.
+  resting-slot: 6
+
 blaster:
   damage: 6
   cooldown-ticks: 6
@@ -44,62 +52,194 @@ mission:
     - -6.5 65 -34.5
     - 7.5 65 -34.5
 
-# Camera shots look from `at` towards `look`; `cut: true` starts a new shot at that tick. `actor` walks Vela through
-# her marks, `lines` are subtitles from messages.yml, `effects` are EXPLOSION or FLARE.
+# Each scene is timed in ticks. `shots` are camera keyframes that look from `at` towards `look`, or towards an actor's
+# head with `follow`; `cut: true` starts a new shot. `actors` walk through their `marks` with BetterModel's walk and
+# play the `gestures` of their model (talk, point, beckon, nod, rest, look), `idle` for the whole scene; `vela` is the
+# NPC herself and every other actor is spawned for the scene. `lines` are subtitles from messages.yml with the voice
+# of the same key. `craft` flies a ship's model past, `emitters` keep particles going, `sounds` play to each viewer,
+# at `at` when it is given, and `effects` are EXPLOSION or FLARE.
 cutscenes:
-  characters-per-tick: 2
+  characters-per-tick: 1.5
   fade-ticks: 12
   scenes:
     intro:
       shots:
-        - {tick: 0, at: "-20 104 48", look: "-78 66 0"}
-        - {tick: 45, at: "-38 98 40", look: "-78 66 0"}
-        - {tick: 90, at: "-56 90 28", look: "-78 66 0"}
-        - {tick: 91, at: "-79.5 66.6 -3.5", look: "-72.5 66.4 0.5", cut: true}
-        - {tick: 170, at: "-79 66.5 -1.5", look: "-75.5 66.5 0.5"}
-        - {tick: 240, at: "-78.4 66.4 -0.2", look: "-75.5 66.6 0.5"}
-      actor:
-        - {tick: 0, at: "-69.5 65 0.5 90 0"}
-        - {tick: 95, at: "-69.5 65 0.5 90 0"}
-        - {tick: 165, at: "-75.5 65 0.5 90 0"}
-        - {tick: 240, at: "-75.5 65 0.5 90 -5"}
+        - {tick: 0, at: "-6 122 64", look: "-78 66 0"}
+        - {tick: 60, at: "-30 114 46", look: "-78 66 0"}
+        - {tick: 120, at: "-52 104 30", look: "-80 67 0"}
+        - {tick: 121, at: "-80.5 66.2 -4.0", follow: vela, cut: true}
+        - {tick: 160, at: "-80.2 66.25 -3.6", follow: vela}
+        - {tick: 205, at: "-79.6 66.3 -3.0", follow: vela}
+        - {tick: 206, at: "-78.4 66.75 -1.6", follow: vela, cut: true}
+        - {tick: 270, at: "-78.2 66.7 -1.2", follow: vela}
+        - {tick: 271, at: "-77.6 66.2 2.4", follow: vela, cut: true}
+        - {tick: 365, at: "-77.9 66.3 1.9", follow: vela}
+      actors:
+        vela:
+          model: kolonien_soldier
+          marks:
+            - {tick: 0, at: "-66.5 65 0.5 90 0"}
+            - {tick: 125, at: "-66.5 65 0.5 90 0"}
+            - {tick: 195, at: "-75.5 65 0.5 90 0"}
+            - {tick: 215, at: "-75.5 65 0.5 110 -4"}
+            - {tick: 290, at: "-75.5 65 0.5 95 -2"}
+            - {tick: 330, at: "-75.5 65 0.5 70 -4"}
+          gestures:
+            - {tick: 214, play: talk}
+            - {tick: 270, stop: talk}
+            - {tick: 292, play: beckon}
+            - {tick: 306, play: talk}
+            - {tick: 350, stop: talk}
+        guard:
+          model: kolonien_heavy
+          idle: look
+          marks:
+            - {tick: 0, at: "-79.5 65 8.5 200 0"}
+        talker:
+          model: kolonien_scout
+          idle: talk
+          marks:
+            - {tick: 0, at: "-71.5 65 -6.5 135 0"}
+        listener:
+          model: kolonien_medic
+          idle: rest
+          marks:
+            - {tick: 0, at: "-73.5 65 -8.5 315 0"}
+          gestures:
+            - {tick: 150, play: nod}
+            - {tick: 240, play: nod}
+        patrol:
+          model: kolonien_soldier
+          marks:
+            - {tick: 0, at: "-89.5 65 -12.5 0 0"}
+            - {tick: 170, at: "-89.5 65 10.5 0 0"}
+            - {tick: 200, at: "-89.5 65 10.5 270 0"}
+            - {tick: 360, at: "-74.5 65 12.5 270 0"}
       lines:
-        - {tick: 20, ticks: 60, speaker: funk, text: cutscene.intro.1}
-        - {tick: 105, ticks: 65, speaker: vela, text: cutscene.intro.2}
-        - {tick: 172, ticks: 66, speaker: vela, text: cutscene.intro.3}
+        - {tick: 15, ticks: 95, speaker: funk, text: cutscene.intro.1}
+        - {tick: 212, ticks: 76, speaker: vela, text: cutscene.intro.2}
+        - {tick: 290, ticks: 70, speaker: vela, text: cutscene.intro.3}
+      craft:
+        - {tick: 0, ticks: 130, model: sternenfront/dropship/kolonien, scale: 7, from: "-4 112 70", to: "-104 84 -14"}
+      emitters:
+        - {type: DUST, at: "-60 70 10", every: 4}
+        - {type: SMOKE, at: "-70 66 14", every: 3}
+      sounds:
+        - {tick: 0, sound: "blockcraft:story.ambience.wind", volume: 0.7}
+        - {tick: 0, sound: "blockcraft:sternenfront.intro.radio_open", volume: 0.8}
+        - {tick: 121, sound: "blockcraft:story.ambience.base", volume: 0.6}
+        - {tick: 240, sound: "blockcraft:story.ambience.wind", volume: 0.4}
     ending-fabrik:
       shots:
-        - {tick: 0, at: "-78.6 66.5 -1.8", look: "-75.5 66.6 0.5"}
-        - {tick: 80, at: "-78.2 66.4 2.6", look: "-74.5 66.6 0.5"}
-        - {tick: 81, at: "8 96 34", look: "82 70 0", cut: true}
-        - {tick: 140, at: "22 92 30", look: "82 70 0"}
-        - {tick: 200, at: "34 88 24", look: "82 70 0"}
-      actor:
-        - {tick: 0, at: "-75.5 65 0.5 90 0"}
-        - {tick: 30, at: "-75.5 65 0.5 90 0"}
-        - {tick: 75, at: "-73.5 65 0.5 270 0"}
+        - {tick: 0, at: "-78.6 66.75 -1.9", follow: vela}
+        - {tick: 85, at: "-78.3 66.7 -1.2", follow: vela}
+        - {tick: 86, at: "14 96 36", look: "82 70 0", cut: true}
+        - {tick: 150, at: "26 92 30", look: "82 70 0"}
+        - {tick: 215, at: "36 88 24", look: "82 70 0"}
+        - {tick: 216, at: "-78.8 66.8 -2.2", follow: vela, cut: true}
+        - {tick: 310, at: "-78.2 66.7 -1.0", follow: vela}
+      actors:
+        vela:
+          model: kolonien_soldier
+          marks:
+            - {tick: 0, at: "-75.5 65 0.5 90 0"}
+            - {tick: 40, at: "-75.5 65 0.5 90 0"}
+            - {tick: 70, at: "-75.5 65 0.5 60 -30"}
+            - {tick: 216, at: "-75.5 65 0.5 90 0"}
+            - {tick: 310, at: "-75.5 65 0.5 100 -2"}
+          gestures:
+            - {tick: 6, play: talk}
+            - {tick: 48, stop: talk}
+            - {tick: 50, play: point}
+            - {tick: 228, play: nod}
+            - {tick: 236, play: talk}
+            - {tick: 290, stop: talk}
+        guard:
+          model: kolonien_heavy
+          idle: look
+          marks:
+            - {tick: 0, at: "-79.5 65 8.5 200 0"}
+        talker:
+          model: kolonien_scout
+          idle: rest
+          marks:
+            - {tick: 0, at: "-71.5 65 -6.5 90 -25"}
       lines:
-        - {tick: 5, ticks: 75, speaker: vela, text: cutscene.ending-fabrik.1}
-        - {tick: 120, ticks: 78, speaker: funk, text: cutscene.ending-fabrik.2}
+        - {tick: 5, ticks: 78, speaker: vela, text: cutscene.ending-fabrik.1}
+        - {tick: 130, ticks: 80, speaker: funk, text: cutscene.ending-fabrik.2}
+        - {tick: 228, ticks: 78, speaker: vela, text: cutscene.ending-fabrik.3}
+      craft:
+        - {tick: 86, ticks: 70, model: sternenfront/dropship/kolonien, scale: 7, from: "0 104 40", to: "96 92 -10"}
+        - {tick: 96, ticks: 70, model: sternenfront/dropship/kolonien, scale: 7, from: "-6 108 30", to: "92 96 -22"}
+      emitters:
+        - {type: SMOKE, at: "82 72 -4", every: 2}
+        - {type: SMOKE, at: "86 74 6", every: 2}
+        - {type: EMBERS, at: "80 71 0", every: 3}
       effects:
-        - {tick: 100, type: EXPLOSION, at: "80 72 -6"}
-        - {tick: 118, type: EXPLOSION, at: "86 76 4"}
-        - {tick: 135, type: EXPLOSION, at: "78 70 1"}
+        - {tick: 120, type: EXPLOSION, at: "80 72 -6"}
+        - {tick: 136, type: EXPLOSION, at: "86 76 4"}
+        - {tick: 150, type: EXPLOSION, at: "78 70 1"}
+        - {tick: 172, type: EXPLOSION, at: "88 73 -2"}
+      sounds:
+        - {tick: 0, sound: "blockcraft:story.ambience.base", volume: 0.5}
+        - {tick: 86, sound: "blockcraft:story.ambience.wind", volume: 0.6}
+        - {tick: 216, sound: "blockcraft:story.ambience.base", volume: 0.4}
     ending-gefangene:
       shots:
-        - {tick: 0, at: "-78.6 66.5 -1.8", look: "-75.5 66.6 0.5"}
-        - {tick: 80, at: "-78.2 66.4 2.6", look: "-74.5 66.6 0.5"}
-        - {tick: 81, at: "22 84 -18", look: "0.5 66 -43.5", cut: true}
-        - {tick: 140, at: "14 80 -24", look: "0.5 66 -43.5"}
-        - {tick: 200, at: "8 77 -28", look: "0.5 66 -43.5"}
-      actor:
-        - {tick: 0, at: "-75.5 65 0.5 90 0"}
-        - {tick: 30, at: "-75.5 65 0.5 90 0"}
-        - {tick: 75, at: "-73.5 65 0.5 270 0"}
+        - {tick: 0, at: "-78.6 66.75 -1.9", follow: vela}
+        - {tick: 85, at: "-78.3 66.7 -1.2", follow: vela}
+        - {tick: 86, at: "24 86 -16", look: "0.5 66 -43.5", cut: true}
+        - {tick: 150, at: "16 81 -22", look: "0.5 66 -43.5"}
+        - {tick: 215, at: "9 77 -27", look: "0.5 67 -43.5"}
+        - {tick: 216, at: "-78.8 66.8 -2.2", follow: vela, cut: true}
+        - {tick: 310, at: "-78.2 66.7 -1.0", follow: vela}
+      actors:
+        vela:
+          model: kolonien_soldier
+          marks:
+            - {tick: 0, at: "-75.5 65 0.5 90 0"}
+            - {tick: 216, at: "-75.5 65 0.5 90 0"}
+            - {tick: 310, at: "-75.5 65 0.5 100 -2"}
+          gestures:
+            - {tick: 6, play: talk}
+            - {tick: 80, stop: talk}
+            - {tick: 228, play: nod}
+            - {tick: 236, play: talk}
+            - {tick: 290, stop: talk}
+        prisoner-1:
+          model: kolonien_soldier
+          idle: rest
+          marks:
+            - {tick: 0, at: "-2.5 65 -36.5 180 0"}
+            - {tick: 140, at: "-2.5 65 -36.5 180 0"}
+            - {tick: 215, at: "0.5 65 -46.5 180 0"}
+        prisoner-2:
+          model: kolonien_scout
+          idle: rest
+          marks:
+            - {tick: 0, at: "1.5 65 -34.5 180 0"}
+            - {tick: 150, at: "1.5 65 -34.5 180 0"}
+            - {tick: 215, at: "2.5 65 -44.5 180 0"}
+        prisoner-3:
+          model: kolonien_heavy
+          idle: rest
+          marks:
+            - {tick: 0, at: "4.5 65 -36.5 200 0"}
+            - {tick: 160, at: "4.5 65 -36.5 200 0"}
+            - {tick: 215, at: "3.5 65 -43.5 180 0"}
       lines:
-        - {tick: 5, ticks: 75, speaker: vela, text: cutscene.ending-gefangene.1}
-        - {tick: 120, ticks: 78, speaker: funk, text: cutscene.ending-gefangene.2}
+        - {tick: 5, ticks: 78, speaker: vela, text: cutscene.ending-gefangene.1}
+        - {tick: 130, ticks: 80, speaker: funk, text: cutscene.ending-gefangene.2}
+        - {tick: 228, ticks: 78, speaker: vela, text: cutscene.ending-gefangene.3}
+      craft:
+        - {tick: 86, ticks: 60, model: sternenfront/dropship/kolonien, scale: 7, from: "40 100 -10", to: "0.5 76 -46"}
+      emitters:
+        - {type: DUST, at: "0.5 66 -45", every: 3}
       effects:
         - {tick: 100, type: FLARE, at: "0.5 82 -43.5"}
         - {tick: 125, type: FLARE, at: "-6.5 80 -38.5"}
         - {tick: 150, type: FLARE, at: "7.5 81 -48.5"}
+      sounds:
+        - {tick: 0, sound: "blockcraft:story.ambience.base", volume: 0.5}
+        - {tick: 86, sound: "blockcraft:story.ambience.wind", volume: 0.6}
+        - {tick: 216, sound: "blockcraft:story.ambience.base", volume: 0.4}

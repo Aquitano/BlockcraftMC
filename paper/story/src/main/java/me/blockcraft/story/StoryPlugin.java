@@ -35,14 +35,17 @@ public final class StoryPlugin extends JavaPlugin {
         var choices = new ChoiceRepository(api.database());
         choices.createTable();
         game = new StoryGame(this, gameConfig, services.messages(), world, services.stats(), services.menus(), choices);
-        game.connect(Quests.register(this, StoryGame.MISSION, game, game.npcs()));
+        game.connect(Quests.register(this, StoryGame.MISSION, game, game.npcs(), game.dialogue(), game.voices()));
         api.presence().maxPlayers(getConfig().getInt("players.max"));
         services.listen(
                 new RoundConnections(game),
                 game.lobbyHotbar(),
                 WorldProtection.during(() -> game.phase() != GamePhase.INGAME, api.buildMode()).rescue(game::lobbySpawn),
                 new ArenaProtection(() -> false));
-        services.commands(commands -> commands.register(StartCommand.of(game.countdown()).build()));
+        services.commands(commands -> {
+            commands.register(StartCommand.of(game.countdown()).build());
+            commands.register(game.sceneCommand());
+        });
         Bukkit.getOnlinePlayers().forEach(game::join);
     }
 

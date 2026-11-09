@@ -34,6 +34,12 @@ npc:
     name: "<sternenfront>Kommandantin Vela"
     role: "<right>Sprechen"
 
+dialogue:
+  hint:
+    advance: "Shift: weiter"
+    close: "Shift: schließen"
+    choose: "Zahl oder Mausrad wählen, Shift bestätigt"
+
 stage:
   briefing: "<sternenfront>Ziel <dark>● <white>Sprich mit Kommandantin Vela"
   relay: "<sternenfront>Ziel <dark>● <white>Erreiche das Relais in der Raffinerie"
@@ -78,10 +84,9 @@ ending:
     summary: "<prefix><muted>Die Gefangenen sind frei. Die Fabrik produziert weiter, und die Separatisten wissen jetzt, wer kommt."
 
 cutscene:
-  line: "<speaker><dark>: <white><text>"
   speaker:
-    vela: "<sternenfront>Vela"
-    funk: "<aqua>Funk"
+    vela: "Kommandantin Vela"
+    funk: "Funk"
   intro:
     "1": "Landung bestätigt. Willkommen auf dem Wrack von Tessar, Trupp."
     "2": "Gut, dass ihr da seid. Die Separatisten haben das Relais besetzt."
@@ -89,6 +94,8 @@ cutscene:
   ending-fabrik:
     "1": "Die Fabrik also. Ich gebe die Koordinaten an die Flotte."
     "2": "Treffer bestätigt. Die Fertigungshallen stehen in Flammen."
+    "3": "Gute Arbeit, Trupp. Hier baut so schnell niemand mehr Droiden."
   ending-gefangene:
     "1": "Die Gefangenen also. Ich schicke ein Kanonenboot zur Raffinerie."
     "2": "Kanonenboot gelandet. Alle zweiundvierzig sind an Bord."
+    "3": "Zweiundvierzig von uns kommen nach Hause. Gut gemacht, Trupp."

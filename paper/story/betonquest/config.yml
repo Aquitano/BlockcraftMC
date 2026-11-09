@@ -1,5 +1,6 @@
 # BetonQuest 3.3.0's own config.yml with only these changes: the version is set, so BetonQuest does not treat
-# it as a pre-2.0 file, the updater is off, German is the default and conversations use native dialog screens.
+# it as a pre-2.0 file, the updater is off, German is the default and conversations use
+# the Story plugin's panel above the hotbar.
 configVersion: 3.3.0-CONFIG-3
 text_parser: legacyminimessage
 date_format: dd.MM.yyyy HH:mm
@@ -31,7 +32,7 @@ language:
   default: de-DE
   questlang_whitelist: [ ]
 conversation:
-  default_io: dialog
+  default_io: blockhud
   block_item_transfer: true
   interceptor:
     default: redischat,packetevents,simple

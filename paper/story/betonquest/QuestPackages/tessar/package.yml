@@ -31,3 +31,10 @@ actions:
 objectives:
   relay: "location 0.5;65;-43.5;world 10 actions:toDefense"
   console: "holdconsole 0.5;65;-43.5;world 5 75 actions:toReport"
+
+# The dialogue panel shows when a conversation starts and ends, so the chat stays out of it.
+notifications:
+  conversation_start:
+    io: suppress
+  conversation_end:
+    io: suppress

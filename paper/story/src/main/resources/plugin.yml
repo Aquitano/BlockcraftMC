@@ -5,3 +5,7 @@ api-version: '${minecraft}'
 author: Aquitano
 depend: [BlockcraftAPI, BetonQuest]
 softdepend: [BetterModel]
+permissions:
+  blockcraft.story.scene:
+    description: Plays a story cutscene to oneself with /storyscene
+    default: op
