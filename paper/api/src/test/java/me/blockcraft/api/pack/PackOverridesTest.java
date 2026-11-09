@@ -64,9 +64,9 @@ public class PackOverridesTest {
                 var firstPerson = drawn.getAsJsonArray("cases").get(0).getAsJsonObject();
                 assertEquals(file.toString(), List.of("firstperson_righthand", "firstperson_lefthand"),
                         firstPerson.getAsJsonArray("when").asList().stream().map(JsonElement::getAsString).toList());
-                var sneaking = firstPerson.getAsJsonObject("model");
-                assertEquals(file.toString(), "key.sneak", sneaking.get("keybind").getAsString());
-                yield sneaking;
+                var aiming = firstPerson.getAsJsonObject("model");
+                assertEquals(file.toString(), "key.use", aiming.get("keybind").getAsString());
+                yield aiming;
             }
         };
         var shown = switch (stance) {

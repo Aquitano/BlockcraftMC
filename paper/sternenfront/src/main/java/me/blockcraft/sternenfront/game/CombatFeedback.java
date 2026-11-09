@@ -489,7 +489,7 @@ public final class CombatFeedback {
         var fighter = game.fighter(player);
         return game.factionOf(player).flatMap(fighter::blaster).flatMap(blaster -> {
             double base = game.config().stats(blaster).spread();
-            return spreadCrosshair.size(base, handling.spread(blaster, base, WeaponHandling.Posture.of(player), fighter.heat().level()));
+            return spreadCrosshair.size(base, handling.spread(blaster, base, WeaponHandling.Posture.of(player, game.aiming(player)), fighter.heat().level()));
         });
     }
 

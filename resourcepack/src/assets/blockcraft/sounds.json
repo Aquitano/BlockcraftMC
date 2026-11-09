@@ -515,5 +515,16 @@
         "attenuation_distance": 64
       }
     ]
+  },
+  "sternenfront.bolt.heavy_impact": {
+    "sounds": [
+      "blockcraft:sternenfront/bolt_heavy_impact"
+    ]
+  },
+  "sternenfront.blaster.heavy_thump": {
+    "sounds": [
+      "blockcraft:sternenfront/blaster_heavy_thump_1",
+      "blockcraft:sternenfront/blaster_heavy_thump_2"
+    ]
   }
 }

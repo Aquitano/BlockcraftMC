@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import io.papermc.paper.math.Angle;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Ballot;
@@ -100,7 +101,6 @@ import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
-import java.util.function.DoubleUnaryOperator;
 
 /**
  * One server, one round of Sternenfront: the Kolonien against the Hegemonie for the map's command posts. Players
@@ -118,6 +118,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private static final float SHOT_VOLUME = 2f;
     private static final float BOT_SHOT_VOLUME = 1.5f;
     private static final float SHOT_SHIFT = 0.06f;
+    /** A click this many ticks before the gun is ready fires once it is, rather than going unanswered. */
+    private static final int PULL_BUFFER_TICKS = 3;
     private static final NamespacedKey AIM = new NamespacedKey("sternenfront", "aim");
     private static final int BANNER_TICKS = 55;
 
@@ -879,6 +881,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                     fighter.sprinted(tick);
                 }
                 fighter.heat().tick(tick);
+                if (fighter.pullDue(tick) && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent()) {
+                    pullTrigger(player);
+                }
                 player.setExp(fighter.heat().level());
                 aim(player);
                 combat.tick(player);
@@ -1078,7 +1083,15 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         var stats = firing(player, blaster);
-        if (!heatAllows(player, fighter, stats)) {
+        var trigger = fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat());
+        if (trigger == Heat.Trigger.TOO_SOON) {
+            long ready = fighter.heat().readyAt(stats.cooldownTicks());
+            if (ready - tick <= PULL_BUFFER_TICKS) {
+                fighter.queuePull(ready);
+            }
+            return;
+        }
+        if (!heatAllows(player, fighter, trigger)) {
             return;
         }
         fighter.endProtection();
@@ -1115,7 +1128,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     /** A vehicle's forward gun shares the rider's heat and experience bar, so boarding cannot skip a vent. */
     public boolean fireCannon(Player rider, Faction faction, Blaster.Stats stats, Location muzzle, Vector nose) {
         var fighter = fighters.get(rider.getUniqueId());
-        if (fighter == null || !onField(rider) || !heatAllows(rider, fighter, stats)) {
+        if (fighter == null || !onField(rider)
+                || !heatAllows(rider, fighter, fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat()))) {
             return false;
         }
         fighter.endProtection();
@@ -1126,8 +1140,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return true;
     }
 
-    private boolean heatAllows(Player player, Fighter fighter, Blaster.Stats stats) {
-        return switch (fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat())) {
+    private boolean heatAllows(Player player, Fighter fighter, Heat.Trigger trigger) {
+        return switch (trigger) {
             case TOO_SOON -> false;
             case VENTING -> {
                 switch (fighter.heat().pull(tick)) {
@@ -1150,10 +1164,30 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var stats = config.stats(blaster);
         bolts.fire(player, faction, blaster, stats);
         shotSound(player, blaster, SHOT_VOLUME);
+        if (blaster.repeater()) {
+            kick(player);
+        }
     }
 
-    private static void shotSound(LivingEntity shooter, Blaster blaster, float volume) {
-        blaster.shotSound().playFrom(shooter, volume, 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT));
+    private void shotSound(LivingEntity shooter, Blaster blaster, float volume) {
+        float shift = 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT);
+        blaster.shotSound().playFrom(shooter, volume, shift);
+        if (blaster.repeater()) {
+            SoundCue.BLASTER_HEAVY_THUMP.playFrom(shooter, volume * effects.config().heavyBlaster().thumpVolume(), shift);
+        }
+    }
+
+    /** Turns the view up and back a tick later; a relative turn is no teleport, so it does not hold the walk. */
+    private void kick(Player player) {
+        float degrees = effects.config().heavyBlaster().kickDegrees();
+        if (degrees > 0) {
+            player.setRotation(Angle.relative(0), Angle.relative(-degrees));
+            Tasks.later(plugin, 1, () -> {
+                if (player.isOnline()) {
+                    player.setRotation(Angle.relative(0), Angle.relative(degrees));
+                }
+            });
+        }
     }
 
     private void fireBursts() {
@@ -1712,33 +1746,42 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     /**
-     * Sneaking with a blaster aims it, and the slower walk that comes with it narrows a client's view. With a blaster in
-     * hand a crouch keeps more of the walk, so aiming slows a little rather than to a crawl. A scope zooms on its own.
+     * A held right click aims a blaster, and the slower walk that comes with it narrows a client's view a little. A scope
+     * zooms on its own.
      */
     private void aim(Player player) {
-        var aim = feel.aim();
-        boolean armed = !player.isInsideVehicle()
-                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
-        scaled(player, Attribute.SNEAKING_SPEED, armed, base -> aim.crouchShare() / base - 1);
-        scaled(player, Attribute.MOVEMENT_SPEED, armed && player.isSneaking() && !lowered(player) && !scoped(player),
-                base -> aim.speedShare() - 1);
+        slowForAim(player, aiming(player), feel.aim().speedShare() - 1);
     }
 
-    private static void scaled(Player player, Attribute attribute, boolean on, DoubleUnaryOperator change) {
-        var instance = player.getAttribute(attribute);
-        if (instance == null || on == (instance.getModifier(AIM) != null)) {
+    /** A right click with a blaster other than a long rifle, which the client repeats while it is held. */
+    public void raiseSights(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        if (fighter != null && onField(player)) {
+            fighter.aimed(tick);
+        }
+    }
+
+    /** Whether {@code player} holds a blaster other than a long rifle at the sights. */
+    public boolean aiming(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        return fighter != null && fighter.aiming(tick) && !player.isInsideVehicle() && !lowered(player)
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(blaster -> !blaster.isLongRifle()).isPresent();
+    }
+
+    private static void slowForAim(Player player, boolean on, double change) {
+        var speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed == null || on == (speed.getModifier(AIM) != null)) {
             return;
         }
         if (on) {
-            AttributeScale.apply(player, attribute, AIM, change.applyAsDouble(instance.getBaseValue()));
+            AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, AIM, change);
         } else {
-            AttributeScale.remove(player, attribute, AIM);
+            AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, AIM);
         }
     }
 
     static void lowerAim(Player player) {
-        scaled(player, Attribute.SNEAKING_SPEED, false, base -> 0);
-        scaled(player, Attribute.MOVEMENT_SPEED, false, base -> 0);
+        slowForAim(player, false, 0);
     }
 
     /** Looking through a long rifle's scope, which the client does while right click is held on it. */

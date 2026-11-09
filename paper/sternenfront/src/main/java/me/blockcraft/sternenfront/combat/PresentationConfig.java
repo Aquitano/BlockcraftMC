@@ -4,7 +4,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 /** Everything {@code presentation} tunes: the look of the round's effects and how much of them clients get. */
 public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch, SaberMark saberMark, int saberTrailTicks, MuzzleFlash muzzleFlash, Bolt bolt,
-                                 Explosion explosion, Damaged damaged, Ambient ambient, Assault assault, Storm storm,
+                                 HeavyBlaster heavyBlaster, Explosion explosion, Damaged damaged, Ambient ambient, Assault assault, Storm storm,
                                  Lightning lightning) {
 
     public record Scorch(int marks, int every, int ticks, int fadeTicks, float scale) { }
@@ -14,7 +14,9 @@ public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch
     public record MuzzleFlash(int ticks, float scale, float heavyScale) { }
 
     public record Bolt(float width, float length, float trailSize, double trailStep, int farEvery, float impactFlash,
-                       int impactTicks, float impactDust) { }
+                       int impactTicks, float impactDust, float ownTrailSize, float ownFlash) { }
+
+    public record HeavyBlaster(int impactSparks, int impactSmoke, float thumpVolume, float impactVolume, float kickDegrees) { }
 
     public record Explosion(int smokePuffs, int smokeTicks, int debris) { }
 
@@ -55,7 +57,14 @@ public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch
                         Math.max(1, config.getInt("presentation.bolt.far-every")),
                         (float) config.getDouble("presentation.bolt.impact-flash"),
                         Math.max(1, config.getInt("presentation.bolt.impact-ticks")),
-                        (float) Math.max(0.1, config.getDouble("presentation.bolt.impact-dust"))),
+                        (float) Math.max(0.1, config.getDouble("presentation.bolt.impact-dust")),
+                        (float) Math.max(0.1, config.getDouble("presentation.bolt.own-trail-size")),
+                        (float) Math.max(0.1, config.getDouble("presentation.bolt.own-flash"))),
+                new HeavyBlaster(Math.max(0, config.getInt("presentation.heavy-blaster.impact-sparks")),
+                        Math.max(0, config.getInt("presentation.heavy-blaster.impact-smoke")),
+                        (float) Math.max(0, config.getDouble("presentation.heavy-blaster.thump-volume")),
+                        (float) Math.max(0, config.getDouble("presentation.heavy-blaster.impact-volume")),
+                        (float) Math.clamp(config.getDouble("presentation.heavy-blaster.kick-degrees"), 0, 5)),
                 new Explosion(Math.max(0, config.getInt("presentation.explosion.smoke-puffs")),
                         Math.max(1, config.getInt("presentation.explosion.smoke-ticks")),
                         Math.max(0, config.getInt("presentation.explosion.debris"))),

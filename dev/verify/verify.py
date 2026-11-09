@@ -18,6 +18,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
+PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
 STACK = ("mariadb", "velocity", "sternenfront", "client")
 PLAYER = "Verify"
 HQ_X = 55
@@ -30,7 +31,7 @@ ALL_SCALES = COMMON_SCALES + [(1366, 768, 2), (1920, 1080, 2), (1920, 1080, 3), 
 
 def compose(*args, capture=False, timeout=None):
     env = {key: value for key, value in os.environ.items() if key != "COMPOSE_FILE"}
-    command = ["docker", "compose", "-p", "bcverify", "--project-directory", str(ROOT), "-f", "dev/verify/compose.yml", *args]
+    command = ["docker", "compose", "-p", PROJECT, "--project-directory", str(ROOT), "-f", "dev/verify/compose.yml", *args]
     return subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=capture, timeout=timeout)
 
 
@@ -321,7 +322,7 @@ def fight(client, run, seconds=20, frames=8):
     while time.monotonic() < deadline:
         if not on_field(client("status")):
             back_on_field(client)
-        client("hold", key="use", ticks=30)
+        client("tap", key="attack", times=6, every=5)
         seen = enemies(client)
         if seen:
             client("look_at", x=seen[0]["x"], y=seen[0]["y"] + 1.1, z=seen[0]["z"])
@@ -335,11 +336,11 @@ def fight(client, run, seconds=20, frames=8):
 
 
 def fire(client, run):
-    """Holds the trigger at a wall and photographs the shooter's view, which nothing should cover."""
+    """Clicks the trigger at a wall and photographs the shooter's view, which nothing should cover."""
     as_trooper(client)
     client("hotbar", slot=0)
     start = client("status")["tick"]
-    client("hold", key="use", ticks=30)
+    client("tap", key="attack", times=6, every=5)
     run.report["frames"] = client("capture", name=f"{run.name}/fire", frames=6, every=5)["files"]
     run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
 
@@ -417,7 +418,7 @@ def hero(client, run, hero_name="jedi"):
     run.shot(client, "stands")
     use_ability(client, run, "swap", "first")
     use_ability(client, run, "drop", "second")
-    client("hold", key="use", ticks=20)
+    client("tap", key="attack", times=4, every=5)
     settle(client, 20)
     run.shot(client, "weapon")
     run.report["hud"] = client("hud")["actionbar"]["text"].encode("unicode_escape").decode()
@@ -504,7 +505,7 @@ def glint(client, run, tries=4, watch_seconds=30):
         deadline, next_burst = time.monotonic() + watch_seconds, 0
         while time.monotonic() < deadline and on_field(client("status")):
             if time.monotonic() >= next_burst:
-                client("tap", key="use")
+                client("tap", key="attack")
                 next_burst = time.monotonic() + 6
             nearby = client("entities", radius=64)["entities"]
             glints = [each for each in nearby if each.get("model", "").endswith("fx/glint")]
@@ -544,7 +545,7 @@ def replay(client, run, round_seconds=75):
         while recording == known and time.monotonic() < deadline:
             if on_field(client("status")) and enemies(client):
                 stand_near_enemy(client)
-                client("hold", key="use", ticks=30)
+                client("tap", key="attack", times=6, every=5)
                 seen = enemies(client)
                 if seen:
                     client("look_at", x=seen[0]["x"], y=seen[0]["y"] + 1.1, z=seen[0]["z"])
@@ -656,7 +657,7 @@ def build_map(name="sturmwerft"):
     built = ROOT / "build/mapgen" / name
     (ROOT / "worlds" / name).mkdir(parents=True, exist_ok=True)
     compose("--profile", "mapgen", "rm", "-sf", "mapbuilder")
-    subprocess.run(["docker", "volume", "rm", "-f", "bcverify_mapbuilder"], check=True, capture_output=True)
+    subprocess.run(["docker", "volume", "rm", "-f", f"{PROJECT}_mapbuilder"], check=True, capture_output=True)
     compose("--profile", "mapgen", "up", "-d", "--no-deps", "mapbuilder")
     deadline = time.monotonic() + 240
     while "Done (" not in compose("logs", "--no-log-prefix", "--tail", "40", "mapbuilder", capture=True).stdout:

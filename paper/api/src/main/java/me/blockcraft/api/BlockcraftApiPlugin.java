@@ -48,6 +48,7 @@ import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.PlayerTasks;
 import me.blockcraft.api.vanish.VanishedPlayers;
 import me.blockcraft.api.world.BuildMode;
+import me.blockcraft.api.world.JoinBorder;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.world.WaitingLobby;
@@ -233,6 +234,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LegacyProjectiles(), this);
         getServer().getPluginManager().registerEvents(new ConfigOverrides(), this);
         getServer().getPluginManager().registerEvents(new LegacyDamage(), this);
+        getServer().getPluginManager().registerEvents(new JoinBorder(this), this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);

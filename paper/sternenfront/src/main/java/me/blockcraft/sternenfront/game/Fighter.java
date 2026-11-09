@@ -17,6 +17,8 @@ import java.util.function.Function;
 public final class Fighter {
 
     private static final long LONG_AGO = Long.MIN_VALUE / 2;
+    /** A late packet may stretch one gap between a held use's repeats from 4 ticks to 6. */
+    private static final int AIM_HELD_TICKS = 6;
 
     /**
      * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do. A hero or
@@ -71,6 +73,8 @@ public final class Fighter {
     private long lastHurt = LONG_AGO;
     private long fallSafeUntil;
     private long sprintedAt = LONG_AGO;
+    private long aimedAt = LONG_AGO;
+    private long queuedPull = Long.MAX_VALUE;
     private final Map<Ability, Charges> charges = new EnumMap<>(Ability.class);
     private final Function<Ability, Charges> freshCharges;
     private Optional<Hero> hero = Optional.empty();
@@ -113,6 +117,8 @@ public final class Fighter {
         this.lastHurt = LONG_AGO;
         this.fallSafeUntil = 0;
         this.sprintedAt = LONG_AGO;
+        this.aimedAt = LONG_AGO;
+        this.queuedPull = Long.MAX_VALUE;
         this.charges.clear();
         this.hero = hero;
         this.reinforcement = Optional.empty();
@@ -129,6 +135,29 @@ public final class Fighter {
 
     public long sprintedAt() {
         return sprintedAt;
+    }
+
+    /** A held right click reaches the server as a use every 4 ticks, so the last one tells whether it is still held. */
+    public void aimed(long tick) {
+        aimedAt = tick;
+    }
+
+    public boolean aiming(long tick) {
+        return tick - aimedAt <= AIM_HELD_TICKS;
+    }
+
+    /** A click just before the gun was ready, held over until {@code at}. */
+    public void queuePull(long at) {
+        queuedPull = at;
+    }
+
+    /** Whether a held-over click is due at {@code tick}; it is due only once. */
+    public boolean pullDue(long tick) {
+        if (tick < queuedPull) {
+            return false;
+        }
+        queuedPull = Long.MAX_VALUE;
+        return true;
     }
 
     public boolean isProtected(long tick) {

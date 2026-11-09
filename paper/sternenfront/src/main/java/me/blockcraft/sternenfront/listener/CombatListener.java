@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.listener;
 
 import io.papermc.paper.event.player.PlayerArmSwingEvent;
 import io.papermc.paper.event.player.PlayerStopUsingItemEvent;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.world.BuildMode;
@@ -26,9 +27,10 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * The round's controls: right click fires the blaster, guards with a blade or throws a streak's orbital strike. A long
- * rifle instead looks through its scope while right click is held and fires when it is let go. F and Q use the first
- * and second ability of the class or the hero. Only authored battlefield controls answer block clicks during a round.
+ * The round's controls: left click fires the blaster or swings a blade, and right click aims the blaster or guards with
+ * the blade. A long rifle looks through its scope while right click is held and fires when it is let go, since the
+ * client sends no clicks while it scopes. F and Q use the first and second ability of the class or the hero. Only
+ * authored battlefield controls answer block clicks during a round.
  */
 public final class CombatListener implements Listener {
 
@@ -83,7 +85,7 @@ public final class CombatListener implements Listener {
             return;
         }
         if (HotbarItem.of(item, Blaster.class).isPresent()) {
-            game.pullTrigger(player);
+            game.raiseSights(player);
             return;
         }
         HotbarItem.of(item, SternenfrontItem.class).ifPresent(roundItem -> {
@@ -106,14 +108,30 @@ public final class CombatListener implements Listener {
         return HotbarItem.of(item, Blaster.class).filter(Blaster::isLongRifle).isPresent();
     }
 
+    /** Paper fires this once for each left click, whether it met air, a block or an entity. */
     @EventHandler
     public void onSwing(PlayerArmSwingEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND || !fighting(event.getPlayer()) || game.speeders().fire(event.getPlayer())) {
+        var player = event.getPlayer();
+        if (event.getHand() != EquipmentSlot.HAND || !fighting(player) || game.speeders().fire(player)) {
             return;
         }
-        if (!event.getPlayer().isHandRaised()) {
-            game.swing(event.getPlayer());
+        if (holdsBlaster(player)) {
+            game.pullTrigger(player);
+        } else if (!player.isHandRaised()) {
+            game.swing(player);
         }
+    }
+
+    /** A left click on someone close with a blaster in hand is a shot, which {@link #onSwing} fires, and no punch. */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onAttack(PrePlayerAttackEntityEvent event) {
+        if (fighting(event.getPlayer()) && holdsBlaster(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    private static boolean holdsBlaster(Player player) {
+        return HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
     }
 
     @EventHandler(priority = EventPriority.HIGH)

@@ -80,6 +80,7 @@ public final class BattleEffects {
     private static final int GROUND_PROBE = 4;
     private static final double PARTICLE_RANGE_SQUARED = 32 * 32;
     private static final double CLEAR_OF_EYES_SQUARED = 2.5 * 2.5;
+    private static final double HEAVY_CLEAR_OF_EYES_SQUARED = 4 * 4;
     private static final int TRACER_TICKS = 3;
     private static final int PUSH_TICKS = 8;
     private static final int RALLY_TICKS = 12;
@@ -341,6 +342,34 @@ public final class BattleEffects {
                     mark.ticks(), mark.fadeTicks(), block);
             scorches.cooling(SABER_SLASH, blade, at.clone().add(normal.clone().multiply(SLASH_LIFT)), turn, mark.scale(),
                     mark.glowTicks(), block);
+        }
+    }
+
+    /**
+     * The glow a shooter alone sees where their bolt first shows, a short flash out in front, since the muzzle's own
+     * flash is too close to their eyes to show them.
+     */
+    public void ownBolt(Player shooter, Location at, Faction faction) {
+        if (enabled) {
+            shooter.spawnParticle(Particle.DUST_COLOR_TRANSITION, at, 2, 0.04, 0.04, 0.04, 0,
+                    new Particle.DustTransition(Color.WHITE, faction.bolt(), config.bolt().ownFlash()), true);
+        }
+    }
+
+    /**
+     * A repeater's bolt bursts where it lands, in thin sparks and smoke. Its sparks fly a block or more, so nobody whose
+     * eyes are within {@link #HEAVY_CLEAR_OF_EYES_SQUARED} of it gets them, such as the fighter it hit.
+     */
+    public void heavyImpact(Location at) {
+        var heavy = config.heavyBlaster();
+        for (var viewer : at.getWorld().getPlayers()) {
+            if (viewer.getEyeLocation().distanceSquared(at) < HEAVY_CLEAR_OF_EYES_SQUARED) {
+                continue;
+            }
+            viewer.spawnParticle(Particle.ELECTRIC_SPARK, at, heavy.impactSparks(), 0.15, 0.15, 0.15, 0.25, null, true);
+            if (enabled) {
+                viewer.spawnParticle(Particle.SMOKE, at, heavy.impactSmoke(), 0.1, 0.1, 0.1, 0.03, null, true);
+            }
         }
     }
 
