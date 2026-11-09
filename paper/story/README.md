@@ -51,7 +51,7 @@ for a later mission to read.
 [`DialogueHud`](src/main/java/me/blockcraft/story/dialogue/DialogueHud.java) draws a conversation in a panel above the
 hotbar: the speaker, up to five lines of text typing out, then up to five numbered answers. Sneak shows the rest of a
 line, turns a page, confirms the highlighted answer or closes a line without answers, which also closes by itself
-`dialogue.linger-seconds` after it has been spoken. The number keys pick an answer at once and the scroll wheel moves
+`dialogue.linger-seconds` after it has been spoken, or as soon as the player walks six blocks away. The number keys pick an answer at once and the scroll wheel moves
 the highlight. While the panel is open the hotbar rests on slot 7, so a scroll lands on slot 6 or 8 and never on an
 answer's number. Movement and the camera stay free; walking away ends the conversation as BetonQuest's `stop` setting says.
 

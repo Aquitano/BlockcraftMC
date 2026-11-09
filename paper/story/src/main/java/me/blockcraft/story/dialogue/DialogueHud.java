@@ -3,6 +3,7 @@ package me.blockcraft.story.dialogue;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.SoundStop;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -58,6 +59,7 @@ public final class DialogueHud implements Listener, AutoCloseable {
     private static final int RISE = 6;
     private static final int TYPE_EVERY = 3;
     private static final int REFRESH_TICKS = 20;
+    private static final double LEAVE = 6;
 
     private final Settings settings;
     private final Map<UUID, Showing> showing = new HashMap<>();
@@ -66,6 +68,7 @@ public final class DialogueHud implements Listener, AutoCloseable {
     private final class Showing {
         final Player player;
         final int previousSlot;
+        final Location openedAt;
         Line line;
         List<List<String>> pages;
         List<String> answers;
@@ -83,6 +86,7 @@ public final class DialogueHud implements Listener, AutoCloseable {
         Showing(Player player) {
             this.player = player;
             this.previousSlot = player.getInventory().getHeldItemSlot();
+            this.openedAt = player.getLocation();
         }
 
         List<String> current() {
@@ -177,10 +181,12 @@ public final class DialogueHud implements Listener, AutoCloseable {
         }
     }
 
+    /** A line without answers also closes once the player has walked away from where the conversation began. */
     private boolean lingeredOut(Showing view) {
-        if (settings.lingerTicks() <= 0 || !view.answers.isEmpty() || !view.pageRevealed() || view.page < view.pages.size() - 1) {
-            return false;
-        }
+        if (!view.answers.isEmpty()) return false;
+        var at = view.player.getLocation();
+        if (!at.getWorld().equals(view.openedAt.getWorld()) || at.distanceSquared(view.openedAt) > LEAVE * LEAVE) return true;
+        if (settings.lingerTicks() <= 0 || !view.pageRevealed() || view.page < view.pages.size() - 1) return false;
         int spoken = view.line.voice().map(Voices.Voice::ticks).orElse(0);
         return view.lineAge >= Math.max(spoken, (int) Math.ceil(view.revealed / view.rate)) + settings.lingerTicks();
     }
