@@ -2,13 +2,16 @@ package me.blockcraft.api.scene;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
 /**
  * Keyframes grouped into shots: a keyframe marked {@code cut} holds the previous shot until its tick and then starts a
  * new one. Within a shot the camera follows a cubic Hermite spline whose tangents come from the neighbouring keyframes,
- * so it glides through interior keyframes at an even speed and eases only where a shot starts and ends.
+ * so it glides through interior keyframes at an even speed and eases only where a shot starts and ends. Between two
+ * keyframes that both look at a point, that point follows its own spline and the camera turns to it at every tick, so
+ * the subject stays framed while the camera moves instead of drifting off between keyframes.
  */
 public record CameraPath(List<Keyframe> frames) {
     public record Pose(double x, double y, double z, float yaw, float pitch) {
@@ -28,7 +31,19 @@ public record CameraPath(List<Keyframe> frames) {
         }
     }
 
-    public record Keyframe(int tick, Pose pose, boolean cut) { }
+    public record Target(double x, double y, double z) { }
+
+    public record Keyframe(int tick, Pose pose, boolean cut, @Nullable Target look) {
+        public Keyframe(int tick, Pose pose, boolean cut) {
+            this(tick, pose, cut, null);
+        }
+
+        /** A keyframe at {@code at} that looks at {@code look}. */
+        public static Keyframe aimed(int tick, Location at, Location look, boolean cut) {
+            var pose = at.clone().setDirection(look.toVector().subtract(at.toVector()));
+            return new Keyframe(tick, Pose.of(pose), cut, new Target(look.getX(), look.getY(), look.getZ()));
+        }
+    }
 
     public CameraPath {
         frames = List.copyOf(frames);
@@ -78,7 +93,40 @@ public record CameraPath(List<Keyframe> frames) {
         for (int axis = 0; axis < 5; axis++) {
             p[axis] = h00 * a[axis] + h10 * span * ta[axis] + h01 * b[axis] + h11 * span * tb[axis];
         }
+        if (from.look() != null && next.look() != null) {
+            double[] la = looks(to - 1);
+            double[] lb = looks(to);
+            double[] lta = lookTangent(to - 1);
+            double[] ltb = lookTangent(to);
+            double[] direction = new double[3];
+            for (int axis = 0; axis < 3; axis++) {
+                direction[axis] = h00 * la[axis] + h10 * span * lta[axis] + h01 * lb[axis] + h11 * span * ltb[axis] - p[axis];
+            }
+            double flat = Math.hypot(direction[0], direction[2]);
+            if (flat > 1e-6 || Math.abs(direction[1]) > 1e-6) {
+                p[3] = Math.toDegrees(Math.atan2(-direction[0], direction[2]));
+                p[4] = Math.toDegrees(-Math.atan2(direction[1], flat));
+            }
+        }
         return new Pose(p[0], p[1], p[2], (float) p[3], (float) Math.clamp(p[4], -90, 90));
+    }
+
+    private double[] looks(int index) {
+        var look = frames.get(index).look();
+        return new double[] {look.x(), look.y(), look.z()};
+    }
+
+    /** Like {@link #tangent}, for the point looked at; zero where a neighbour looks nowhere in particular. */
+    private double[] lookTangent(int index) {
+        if (startsShot(index) || endsShot(index) || frames.get(index - 1).look() == null || frames.get(index + 1).look() == null) {
+            return new double[3];
+        }
+        double[] before = looks(index - 1);
+        double[] after = looks(index + 1);
+        double span = frames.get(index + 1).tick() - frames.get(index - 1).tick();
+        double[] tangent = new double[3];
+        for (int axis = 0; axis < 3; axis++) tangent[axis] = (after[axis] - before[axis]) / span;
+        return tangent;
     }
 
     private boolean startsShot(int index) {

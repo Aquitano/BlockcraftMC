@@ -199,8 +199,7 @@ public final class BattleIntro implements AutoCloseable {
             var offset = (List<?>) shot.get("offset");
             at.add(((Number) offset.get(0)).doubleValue(), ((Number) offset.get(1)).doubleValue(), ((Number) offset.get(2)).doubleValue());
             var target = anchor.apply(String.valueOf(shot.get("look-at"))).clone().add(0, 1.4, 0);
-            at.setDirection(target.toVector().subtract(at.toVector()));
-            frames.add(new CameraPath.Keyframe(tick, CameraPath.Pose.of(at), Boolean.TRUE.equals(shot.get("cut"))));
+            frames.add(CameraPath.Keyframe.aimed(tick, at, target, Boolean.TRUE.equals(shot.get("cut"))));
             if (briefingStart < 0 && name.equals("headquarters")) briefingStart = tick;
         }
         var path = new CameraPath(frames);

@@ -1,5 +1,6 @@
 package me.blockcraft.api.scene;
 
+import org.bukkit.Location;
 import org.junit.Test;
 
 import java.util.List;
@@ -39,6 +40,16 @@ public class CameraPathTest {
         assertEquals(10, path.sample(20).x(), 0.0001);
         assertEquals(0.5, path.sample(20).x() - path.sample(19).x(), 0.05);
         assertEquals(0.5, path.sample(21).x() - path.sample(20).x(), 0.05);
+    }
+
+    @Test
+    public void keepsLookingAtItsTargetBetweenKeyframes() {
+        var look = new Location(null, 10, 0, 10);
+        var path = new CameraPath(List.of(
+                CameraPath.Keyframe.aimed(0, new Location(null, 0, 0, 0), look, false),
+                CameraPath.Keyframe.aimed(20, new Location(null, 20, 0, 0), look, false)));
+        var pose = path.sample(5);
+        assertEquals(Math.toDegrees(Math.atan2(-(10 - pose.x()), 10)), pose.yaw(), 0.01);
     }
 
     @Test(expected = IllegalArgumentException.class)
