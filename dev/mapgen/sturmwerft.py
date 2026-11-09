@@ -8,6 +8,7 @@ at y 82. The headquarters, posts and six open landing grounds retain their origi
 import json
 import math
 import random
+import runpy
 import sys
 from collections import defaultdict, deque
 from pathlib import Path
@@ -113,10 +114,10 @@ class Builder:
             else:
                 self.box(cx - half, y1, cz + dz, cx + half, y2, cz + dz, block)
 
-    def dome(self, cx, cz, rx, rz, base, height):
+    def dome(self, cx, cz, rx, rz, base, height, block=FRAME):
         for dy in range(height + 1):
             scale = math.sqrt(max(0, 1 - (dy / (height + 0.4)) ** 2))
-            self.ellipse(cx, cz, max(1, round(rx * scale)), max(1, round(rz * scale)), base + dy, base + dy, FRAME)
+            self.ellipse(cx, cz, max(1, round(rx * scale)), max(1, round(rz * scale)), base + dy, base + dy, block)
 
     def rounded_deck(self, x1, z1, x2, z2, radius=5):
         for z in range(z1, z2 + 1):
@@ -246,6 +247,11 @@ def bridges(b):
                 b.box(gate, SKY, z + 3, gate, SKY + 6, z + 3, FRAME)
                 b.box(gate, SKY + 7, z - 3, gate, SKY + 7, z + 3, FRAME)
                 b.box(gate, SKY + 6, z, gate, SKY + 6, z, LIGHT)
+                b.ellipse(gate, z, 3, 3, SEA - 5, DECK - 5, FRAME)
+                b.ellipse(gate, z, 4, 4, DECK - 4, DECK - 3, DARK)
+            for x in range(min(near, far) + 2, max(near, far), 6):
+                for edge in (z - 3, z + 3):
+                    b.box(x, DECK - 1, edge, x + 1, DECK - 1, edge, COLD_LIGHT)
 
 
 def roads(b):
@@ -422,13 +428,48 @@ def goliath(b, x):
         b.warning_light(x + 1, top + 6, z)
 
 
+def tower_roof(b, x, z, radius, base, height):
+    b.dome(x, z, radius, radius, base, height, HULL)
+    layers = [max(1, round(radius * math.sqrt(max(0, 1 - (dy / (height + 0.4)) ** 2))))
+              for dy in range(height + 1)]
+    for angle in range(0, 360, 30):
+        cosine, sine = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+        for distance in range(4, radius + 1):
+            dx, dz = round(distance * cosine), round(distance * sine)
+            for dy in range(height, -1, -1):
+                r = layers[dy]
+                if abs(dz) <= r and abs(dx) <= round(r * math.sqrt(max(0, 1 - (dz / (r + 0.3)) ** 2))):
+                    b.box(x + dx, base + dy, z + dz, x + dx, base + dy, z + dz, "polished_andesite")
+                    break
+
+
+def tower_buttresses(b, x, z, radius, floor, roof_top):
+    bottom, top = floor - 14, roof_top + 2
+    for angle in (30, 150, 210, 330):
+        cosine, sine = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+        for y in range(bottom, top + 1):
+            t = (y - bottom) / (top - bottom)
+            distance = (1 - t) ** 2 * radius * 0.7 + 2 * (1 - t) * t * (radius + 20) + t ** 2 * radius * 0.5
+            bx, bz = x + round(distance * cosine), z + round(distance * sine)
+            b.box(bx - 1, y, bz - 1, bx + 1, y, bz + 1, "polished_andesite")
+            b.box(bx, y, bz - 1, bx, y, bz + 1, "smooth_quartz")
+            b.box(bx - 1, y, bz, bx + 1, y, bz, "smooth_quartz")
+
+
 def ocean_tower(b, x, z, radius, floor, height, occupied=False):
-    b.ellipse(x, z, 4, 4, SEA - 5, floor - 5, "smooth_quartz")
-    for dy in range(4):
-        b.ellipse(x, z, radius - 6 + dy * 2, radius - 6 + dy * 2, floor - 4 + dy, floor - 4 + dy, FRAME)
+    for y in range(SEA - 5, floor - 4):
+        t = (y - (SEA - 5)) / (floor - 5 - (SEA - 5))
+        body_radius = round(radius * (0.43 + 0.33 * t ** 0.65))
+        b.ellipse(x, z, body_radius, body_radius, y, y,
+                  DARK if y in (floor - 12, floor - 11, floor - 7) else "smooth_quartz")
+    for dy, extra, block in ((-4, -3, FRAME), (-3, 0, DARK), (-2, 2, HULL), (-1, 3, "smooth_quartz")):
+        b.ellipse(x, z, radius + extra, radius + extra, floor + dy, floor + dy, block)
     b.ellipse(x, z, radius + 2, radius + 2, floor, floor if occupied else floor + 1, "smooth_quartz")
     b.ellipse(x, z, radius, radius, floor + (1 if occupied else 2), floor + height, FRAME, hollow=occupied)
-    b.ellipse(x, z, radius, radius, floor + 3, floor + 5, "cyan_stained_glass", hollow=True)
+    b.ellipse(x, z, radius, radius, floor + 3, floor + 5, "black_stained_glass", hollow=True)
+    for dy in (2, 6):
+        trim_radius = radius if dy == 2 else radius + 1
+        b.ellipse(x, z, trim_radius, trim_radius, floor + dy, floor + dy, DARK, hollow=True)
     light_y = floor + (9 if occupied else 4)
     b.ellipse(x, z, radius - 1, radius - 1, light_y, light_y, DARK if occupied else COLD_LIGHT, hollow=True)
     if occupied:
@@ -437,10 +478,59 @@ def ocean_tower(b, x, z, radius, floor, height, occupied=False):
             for sign in (-1, 1):
                 b.box(x + sign * half, light_y, z + dz, x + sign * half, light_y, z + dz + 1,
                       "shroomlight" if x < 0 else COLD_LIGHT)
-    b.dome(x, z, radius + 1, radius + 1, floor + height + 1, max(4, radius // 2))
-    top = floor + height + max(4, radius // 2) + 2
-    b.ellipse(x, z, 3, 3, top, top + 3, FRAME)
-    b.box(x, top + 4, z, x, top + 17, z, "end_rod")
+    b.ellipse(x, z, radius + 3, radius + 3, floor + height - 1, floor + height - 1, DARK, hollow=True)
+    b.ellipse(x, z, radius + 4, radius + 4, floor + height, floor + height, "smooth_quartz", hollow=True)
+    roof_height = max(7, round(radius * 0.4))
+    roof_base = floor + height + 1
+    tower_roof(b, x, z, radius + 5, roof_base, roof_height)
+    tower_buttresses(b, x, z, radius, floor, roof_base + roof_height)
+    for angle in range(0, 360, 30):
+        dx, dz = round((radius + 3) * math.cos(math.radians(angle))), round((radius + 3) * math.sin(math.radians(angle)))
+        b.box(x + dx, floor + height - 1, z + dz, x + dx, floor + height - 1, z + dz, COLD_LIGHT)
+    top = roof_base + roof_height + 1
+    for dy, crown_radius in ((0, 3), (1, 3), (2, 2), (3, 2), (4, 1), (5, 1), (6, 1)):
+        b.ellipse(x, z, crown_radius, crown_radius, top + dy, top + dy, FRAME)
+    b.box(x, top + 7, z, x, top + 15, z, "end_rod")
+
+
+def dome_breacher(b, x, z, radius, floor, height):
+    roof_top = floor + height + 1 + max(7, round(radius * 0.4))
+    base = roof_top + 1
+    b.box(x - 3, base, z - 3, x + 3, base + 15, z + 3, "air")
+    b.ellipse(x, z, 3, 3, roof_top - 4, base + 1, "polished_blackstone")
+    for low, high, rx, rz in ((0, 1, 4, 8), (2, 5, 6, 10), (6, 7, 5, 8)):
+        b.ellipse(x, z, rx, rz, base + low, base + high, "polished_blackstone")
+    b.box(x - 2, base + 8, z - 6, x + 2, base + 8, z + 6, DARK)
+    inward = 1 if x < 0 else -1
+    b.box(x + inward * 5, base + 4, z - 2, x + inward * 5, base + 4, z + 2, COLD_LIGHT)
+    b.box(x + inward * 6, base + 3, z - 3, x + inward * 6, base + 5, z + 3, "cyan_stained_glass")
+    b.box(x, base + 8, z - 5, x, base + 8, z - 5, "redstone_block")
+    b.box(x, base + 9, z - 5, x, base + 9, z - 5, "redstone_lamp[lit=true]")
+    for side in (-1, 1):
+        b.box(x - side, base + 3, z + side * 9, x + side, base + 4, z + side * 10, "cyan_concrete")
+        b.box(x - 1, base + 3, z + side * 11, x + 1, base + 4, z + side * 11, COLD_LIGHT)
+    impact = round((radius + 1) / math.sqrt(2))
+    impact_y = floor + height + 3
+    for sx, sz in ((-1, -1), (-1, 1), (1, -1), (1, 1)):
+        points = ((x + sx * 4, base + 4, z + sz * 6),
+                  (x + sx * 12, base + 27, z + sz * 10),
+                  (x + sx * 29, base + 29, z + sz * 28),
+                  (x + sx * impact, impact_y, z + sz * impact))
+        joints = []
+        for step in range(81):
+            t = step / 80
+            weights = ((1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3)
+            px, py, pz = (round(sum(point[axis] * weight for point, weight in zip(points, weights)))
+                          for axis in range(3))
+            b.box(px - 1, py - 1, pz - 1, px + 1, py + 1, pz + 1, DARK)
+            if step in (16, 40, 64):
+                joints.append((px, py, pz))
+        for px, py, pz in joints:
+            b.box(px - 1, py - 1, pz - 1, px + 1, py + 1, pz + 1, "polished_andesite")
+        tx, tz = x + sx * impact, z + sz * impact
+        b.box(tx - 2, impact_y + 1, tz - 2, tx + 2, impact_y + 2, tz + 2, DARK)
+        b.box(tx - 1, impact_y - 1, tz - 1, tx + 1, impact_y + 1, tz + 1, STEEL)
+        b.box(tx, impact_y - 4, tz, tx, impact_y - 2, tz, "polished_blackstone_wall")
 
 
 def skyline(b):
@@ -449,6 +539,15 @@ def skyline(b):
                                        (139, -20, 18, 88, 9), (-141, -46, 15, 93, 8),
                                        (142, 115, 15, 101, 8), (-104, 148, 17, 95, 10)):
         ocean_tower(b, x, z, radius, floor, height, occupied=(x, z) in {(-66, 103), (0, 110), (68, 109)})
+    for x, z1, z2, floor in ((-139, -32, 24, 85), (141, -2, 100, 93)):
+        b.box(x - 3, floor - 2, z1, x + 3, floor - 1, z2, DARK)
+        b.box(x - 3, floor, z1, x + 3, floor, z2, "smooth_quartz")
+        for edge in (x - 3, x + 3):
+            b.box(edge, floor + 1, z1, edge, floor + 1, z2, RAIL)
+            for at in range(z1 + 2, z2, 5):
+                b.box(edge, floor - 1, at, edge, floor - 1, at + 1, COLD_LIGHT)
+    dome_breacher(b, -137, 42, 20, 80, 10)
+    dome_breacher(b, 142, 115, 15, 101, 8)
 
 
 def shuttle(b, x, z, sign):
@@ -757,12 +856,10 @@ def northern_details(b):
 
 def southern_details(b):
     for cx, cz, radius in ((-66, 103, 18), (0, 110, 25), (68, 109, 20)):
-        b.ellipse(cx, cz, 6, 6, 70, 71, "waxed_oxidized_cut_copper", hollow=True)
-        b.ellipse(cx, cz, 7, 7, 75, 76, DARK, hollow=True)
-        for sign in (-1, 1):
-            for step in range(4):
-                b.box(cx + sign * (5 + step), 72 + step, cz - 1,
-                      cx + sign * (6 + step), 73 + step, cz + 1, FRAME)
+        lower_collar = round(radius * 0.7) + 1
+        upper_collar = round(radius * 0.76) + 1
+        b.ellipse(cx, cz, lower_collar, lower_collar, 70, 71, "waxed_oxidized_cut_copper", hollow=True)
+        b.ellipse(cx, cz, upper_collar, upper_collar, 75, 76, DARK, hollow=True)
         for dz in (-10, 0, 10):
             half = round(radius * math.sqrt(1 - (dz / (radius + 0.3)) ** 2))
             for sign in (-1, 1):
@@ -782,6 +879,12 @@ def southern_details(b):
     b.box(-46, 80, 109, 46, 80, 109, "iron_trapdoor[half=top,open=false,powered=false]")
     for x in (-40, -30, -20, 20, 30, 40):
         b.box(x, 80, 107, x, 80, 113, "polished_andesite")
+    for x in (-38, 38):
+        b.ellipse(x, 110, 3, 4, SEA - 5, 74, FRAME)
+        b.ellipse(x, 110, 4, 5, 75, 77, DARK)
+    for x in (*range(-44, -26, 5), *range(29, 47, 5)):
+        for z in (106, 114):
+            b.box(x, 79, z, x + 1, 79, z, COLD_LIGHT)
     b.box(-78, 88, 98, -56, 88, 98, "waxed_weathered_cut_copper")
     for x in (-76, -64, -56):
         b.box(x, 89, 98, x, 90, 98, "iron_chain")
@@ -829,6 +932,7 @@ def southern_details(b):
         b.box(x, 110, 110, x, 110, 110, COLD_LIGHT)
     b.box(-4, 109, 110, 4, 109, 110, "iron_bars")
     for x, z in ((61, 109), (73, 114)):
+        b.box(x - 1, 99, z - 1, x + 1, 100, z + 1, DARK)
         b.box(x - 2, 101, z - 2, x + 2, 102, z + 2, "smooth_quartz")
         b.box(x - 1, 102, z - 2, x + 1, 102, z - 2, "waxed_oxidized_cut_copper")
         b.box(x - 2, 103, z - 2, x + 2, 103, z + 2, "smooth_quartz_slab[type=bottom]")
@@ -1165,6 +1269,7 @@ def validate_expansion(fills, plan, levels, cells, connected, stairs):
              spot(-69, 96, 81), spot(-61, 114, 81), spot(0, 100, 81), spot(0, 128, 81),
              spot(61, 100, 81), spot(73, 122, 81), spot(-58, -126, 83),
              spot(-24, -131, 83), spot(21, -132, 83), spot(-20, -132, 78)]
+    rooms.extend(spot(x, 84, 81) for x in (*range(-64, -29), *range(30, 65)))
     require_reachable(rooms, connected, plan["play-area"])
     walking = walk_reachable(cells, (-82, 65, -6), levels, stairs)
     require_reachable([*fighter_positions(plan), *rooms], walking, plan["play-area"])
@@ -1419,6 +1524,7 @@ def build():
     far = Builder()
     scenery(far)
     expansion(far)
+    runpy.run_path(str(Path(__file__).with_name("fleets.py")))["sturmwerft_fleet"](far)
     return b, far
 
 

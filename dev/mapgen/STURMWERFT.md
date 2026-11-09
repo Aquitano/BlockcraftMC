@@ -25,6 +25,12 @@ routes through these passages. All posts retain both direct approaches.
 
 ## Architecture and lighting
 
+The ocean towers have tapered lower bodies, dark horizontal collars, and layered overhangs below their occupied floors.
+Four curved buttresses rise around each tower into a broad ribbed roof. Dark window bands and spaced lights separate
+the pale walls from the roof rims. The offshore towers have elevated connecting bridges.
+Two offshore domes carry dark breaching craft with raised central bodies and four curved drilling arms each.
+The arms grip the outer roof rims beyond the combat area.
+
 The engine room has covered copper service trenches at z=-121 and z=-99, ribbed machinery bays, and copper work shelves
 at the existing tall cabinets. The assembly room keeps its central component cradle and adds suspended support rails
 and local task lights. Both northern entrances have quartz frames, cyan lintels, and lit outer jambs.
@@ -40,6 +46,15 @@ The southern stairs have lights in both side supports every four steps. The five
 All three northern dome entrances have illuminated jambs outside their five-wide passages.
 Occupied domes use spaced perimeter lights rather than continuous lantern rings. Sea lanterns, shroomlights, and
 ochre froglights provide world light. The generator does not add fullbright displays or invisible light blocks.
+
+`fleets.py` builds the ships above both maps. Sturmwerft has a Republic carrier, two Separatist frigates, and three escorts.
+Tessar has a carrier, a frigate, and three escorts, with sandstone hull panels and terracotta markings above the desert.
+The ships have blue engine exhaust, underside lights, and separate bridge structures. Their footprints leave all six
+landing cylinders open to the sky. They are saved blocks, so they add no display entities or recurring tasks.
+
+Sturmwerft includes its fleet when regenerated. `python3 -I dev/mapgen/fleets.py` also writes both formations as a datapack
+under `build/mapgen/fleets`, with `fleets:sturmwerft` and `fleets:tessar`, chunk-loading lists, and a bounds manifest.
+Apply the Tessar function to a copy of its existing world to retain the hand-built terrain.
 
 Floor wear follows paired wheel tracks with short connected repair patches. Drainage covers and transverse seams
 break up the southern skybridge, and the ship passage has long edge seams. Floor treatments retain their original height.
