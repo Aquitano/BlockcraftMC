@@ -483,14 +483,13 @@ streaks:
 career:
   ranks: [0, 1500, 4000, 8000, 15000, 25000, 40000, 60000, 90000, 130000]
 
-# Sneaking with a blaster aims it: the gun comes up to the sights and combat.handling's aiming tightens its spread. The walk
-# slows to walk of its normal pace and the view narrows to zoom of its width. The client narrows the view only from a
-# slower walking speed and only with FOV effects on, so zoom slows the walk too and a crouch makes up the rest. Holding
-# right click with a long rifle looks through its scope, which the client zooms tenfold whatever its settings, at
-# scoped-walk of the normal pace.
+# Holding right click with a blaster aims it: the gun comes up to the sights and combat.handling's aiming tightens its
+# spread. The client narrows the view only from a slower walking speed and only with FOV effects on, so the walk slows
+# to 2 * zoom - 1 of its normal pace while the view narrows to zoom of its width. Holding right click with a long rifle
+# looks through its scope instead, which the client zooms tenfold whatever its settings, at scoped-walk of the normal
+# pace.
 aim:
   zoom: 0.92
-  walk: 0.5
   scoped-walk: 0.3
 
 outlines: {enabled: true, range: 64, allies: false}

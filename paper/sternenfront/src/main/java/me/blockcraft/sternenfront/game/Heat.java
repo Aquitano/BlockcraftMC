@@ -28,7 +28,7 @@ public final class Heat {
 
     /** The meter shows heat in these cells, and a window covers whole cells so the HUD draws exactly what a pull must hit. */
     public static final int METER_CELLS = 10;
-    /** A held trigger pulls every 4 ticks, and lag can stretch one gap to 7, so a pull this long after the last is fresh. */
+    /** A pull this long after the last pull or shot is fresh, so clicking straight on through a vent catches nothing. */
     private static final int RELEASED_AFTER_TICKS = 8;
     private static final double FULL = 100;
     private static final long LONG_AGO = Long.MIN_VALUE / 2;
@@ -73,7 +73,7 @@ public final class Heat {
     }
 
     /**
-     * A pull of the trigger during a vent. Only the first fresh pull counts: a trigger held since the overheating shot
+     * A pull of the trigger during a vent. Only the first fresh pull counts: one that keeps on from the overheating shot
      * does not, and after one try the window is gone.
      */
     public VentCatch pull(long tick) {
@@ -104,6 +104,11 @@ public final class Heat {
         } else if (tick - lastShot >= rules.coolDelayTicks()) {
             heat = Math.max(0, heat - rules.coolPerTick());
         }
+    }
+
+    /** The first tick a gun that waits {@code minTicksBetween} between shots fires again, venting aside. */
+    public long readyAt(int minTicksBetween) {
+        return lastShot + minTicksBetween;
     }
 
     public boolean venting(long tick) {

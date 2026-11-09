@@ -70,7 +70,7 @@ exported with "Java Block/Item".
 transforms, a firing kick, a sprint pose, lowered and turned across the body, and an aim pose with its own smaller kick,
 for both hands. The aim pose puts the rear of the top of the gun's centre line, its sight, half a block ahead of the eye
 and just below it, so the barrel runs to the crosshair; a pair of pistols sits either side of it. The vanilla item
-override draws `<model>_aim` only in the first-person hands, while the client's own sneak key is down.
+override draws `<model>_aim` only in the first-person hands, while the client's own use key (right click) is down.
 A long rifle is a spyglass to the client, which draws it in its `head` transform at the eye while the player scopes. Vanilla mirrors the left hand's X translation, yaw and roll, so the authored
 hand transforms are identical. Third-person, GUI, ground and fixed transforms retain their existing values.
 

@@ -1268,7 +1268,7 @@ public final class SternenfrontArt {
             """;
     /**
      * How the hands hold a gun: at rest, kicked back by a shot, lowered across the body in a sprint, or at the sights
-     * and kicked back there, which the pack swaps in while the player's sneak key is down.
+     * and kicked back there, which the pack swaps in while the player's use key is down.
      */
     private enum Hold {
         REST, FIRING, LOWERED, AIM, FIRING_AIM;

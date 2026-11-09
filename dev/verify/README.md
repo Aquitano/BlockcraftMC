@@ -27,7 +27,7 @@ a short summary with that folder's path. The folder holds `report.json`, its fra
 first and open a full frame only where it shows something.
 
 - `fight` stands beside an enemy and shoots: sounds, lowest health, every title and marker and chat line, HUD width range.
-- `fire` holds the trigger and photographs the shooter's own view.
+- `fire` clicks the trigger and photographs the shooter's own view.
 - `scales` covers common windows and GUI scales and reports what overflows; `--full` covers every combination.
 - `menus` photographs the deploy menu at each common scale.
 - `bodies` watches an enemy's rig from close by.

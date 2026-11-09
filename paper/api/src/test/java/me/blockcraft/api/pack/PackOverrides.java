@@ -127,18 +127,18 @@ public final class PackOverrides {
     }
 
     /**
-     * The client's own sneak key, not the server's word, so the gun comes up the moment the key goes down. Only the
+     * The client's own use key, not the server's word, so the gun comes up the moment the key goes down. Only the
      * first-person hands ask, since everyone else who draws this item would be asking about their own key.
      */
     private static JsonObject aimed(Case drawn) {
-        var sneaking = condition("minecraft:keybind_down", drawn);
-        sneaking.addProperty("keybind", "key.sneak");
+        var aiming = condition("minecraft:keybind_down", drawn);
+        aiming.addProperty("keybind", "key.use");
         var contexts = new JsonArray();
         contexts.add("firstperson_righthand");
         contexts.add("firstperson_lefthand");
         var firstPerson = new JsonObject();
         firstPerson.add("when", contexts);
-        firstPerson.add("model", sneaking);
+        firstPerson.add("model", aiming);
         var cases = new JsonArray();
         cases.add(firstPerson);
         var select = new JsonObject();

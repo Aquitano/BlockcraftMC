@@ -126,11 +126,20 @@ also removes them from that viewer's tab list.
 A recording holds the bare fighters. `RecordedModel` marks a bot with its model, so a replay server with BetterModel draws
 and animates it again; without the plugin it plays back as an equipped skeleton. Players play back as mannequins.
 
-A held left click on air sends nothing after the first click, and the client drops every click while an item is in
-use, so fire stays on right click, which the client repeats every four ticks while it is held. Aiming is sneaking:
-the server sees it, and the item's model sees the client's own sneak key. The client narrows its view only from a slower
-walk and only with FOV effects on, so aiming zooms only for those clients. A spyglass is the one item the client scopes
-with whatever its settings, which is why a long rifle is a spyglass to the client and fires when right click is let go.
+Left click fires and right click aims. The 26.3 client sends a left click once when it goes down and never again while
+it is held, so every click is one pull of the trigger and no blaster fires on its own: a repeater fires its burst per
+click. A held click repeats only while it breaks a block, which an adventure player can do only with `can_break`; that
+sends nothing against the sky and plays the block's hit sound every four ticks, so it stays unused. A click up to three
+ticks before the blaster is ready fires once it is, and an earlier one does nothing. Paper fires `PlayerArmSwingEvent`
+once for each left click, on air, a block or an entity, and a click on a fighter close by with a blaster in hand fires
+instead of punching. A blaster's `attack_animation` is none, so the click does not swing the gun out of view. Neither
+the spear's `piercing_weapon` nor its `kinetic_weapon`, `attack_range`, `minimum_attack_charge` or `swing_animation`
+repeats a held click: a piercing weapon's jab reaches the server as a `STAB` action that Paper turns into no event, and
+a kinetic weapon charges while right click is held. The client repeats a held right click every four ticks, which the
+server reads as aiming until the next would have arrived, and the item's model sees the client's own use key. The client
+narrows its view only from a slower walk and only with FOV effects on, so aiming zooms only for those clients. A
+spyglass is the one item the client scopes with whatever its settings, which is why a long rifle is a spyglass to the
+client. The client drops every click while an item is in use, so a scoped long rifle fires when right click is let go.
 The scope's look, `textures/misc/spyglass_scope.png`, is the pack's for every server, so a spyglass in another game shows
 the same reticle.
 Music and cantina audio use the Music category. Combat effects use the Players category.
@@ -325,14 +334,16 @@ reinforcements and the time left in a boss bar's text line, and the pack draws t
 A spectator has no side to call `Wir` and sees no such line. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 
-Holding the sneak key with a blaster aims it. In first person the gun swaps to its `_aim` model the moment the key goes
-down, with the top of its sights just under the crosshair, and kicks back there with a shot. The spread multiplies by
-`combat.handling`'s `aiming`, and right click still fires automatically. A blaster in hand lets the crouch keep more of
-the walk, so aiming walks at `aim.walk` of the normal pace. Part of that slowing is on the movement speed, which a client
-with FOV effects on draws as a view narrowed to `aim.zoom`; without FOV effects the view keeps its width.
+Holding right click with a blaster aims it, and sneaking does not. In first person the gun swaps to its `_aim` model
+the moment the button goes down, with the top of its sights just under the crosshair, and kicks back there with a shot.
+The spread multiplies by `combat.handling`'s `aiming`, and left click fires. Aiming slows the walk a little, to
+`2 * aim.zoom - 1` of its pace, which a client with FOV effects on draws as a view narrowed to `aim.zoom`; without FOV
+effects the view keeps its width. The server learns of the release only when the next repeat fails to come, so the
+slower walk and tighter spread last up to six ticks after it.
 A long rifle looks through its scope while right click is held: the client zooms tenfold, hides the gun and draws the
-pack's scope, with or without FOV effects, and the walk drops to `aim.scoped-walk`. Letting go fires, so a tap fires
-from the hip. In the scope the spread shrinks to nothing over `settle-ticks`, after which a shot goes exactly where the
+pack's scope, with or without FOV effects, and the walk drops to `aim.scoped-walk`. Letting go fires, and a left click
+fires from the hip.
+In the scope the spread shrinks to nothing over `settle-ticks`, after which a shot goes exactly where the
 reticle points. After a shot the client cannot raise the scope again, and shades the slot, until the rifle is ready. To
 lower the scope without firing, switch slots. Other viewers see the rifle held to the eye. Bots aim as before.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
@@ -345,8 +356,9 @@ The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the 
 Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. A vent also brackets `heat.window-share` of the
 meter in cyan, somewhere in its lower half, and the meter then lights every cell the cooling heat has not left. The first
 fresh pull of the trigger while the last lit cell is inside the bracket ends the vent with a click and steam; one outside
-it adds `heat.miss-penalty-share` of the vent and closes the window. A trigger held since the overheating shot counts for
-neither, and bots never try. `combat-feedback` tunes marker and
+it adds `heat.miss-penalty-share` of the vent and closes the window. A click less than eight ticks after the overheating
+shot or the click before counts for neither, so clicking straight through a vent catches nothing, and bots never try.
+`combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.
 The vents on every blaster show its heat to its holder and everyone else: grey when cold, orange from `heat.glow.warm`,
 bright from `heat.warning-level`, and pulsing while venting. The colour is the held item's first custom_model_data

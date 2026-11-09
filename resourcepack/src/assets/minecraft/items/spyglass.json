@@ -47,7 +47,7 @@
                     }
                   ]
                 },
-                "keybind": "key.sneak"
+                "keybind": "key.use"
               }
             }
           ],
@@ -100,7 +100,7 @@
                     }
                   ]
                 },
-                "keybind": "key.sneak"
+                "keybind": "key.use"
               }
             }
           ],
@@ -167,7 +167,7 @@
                     }
                   ]
                 },
-                "keybind": "key.sneak"
+                "keybind": "key.use"
               }
             }
           ],
@@ -220,7 +220,7 @@
                     }
                   ]
                 },
-                "keybind": "key.sneak"
+                "keybind": "key.use"
               }
             }
           ],
