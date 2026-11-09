@@ -1,0 +1,33 @@
+npcs:
+  vela: "blockcraft vela"
+
+npc_conversations:
+  vela: vela
+
+conditions:
+  briefing: "storystage BRIEFING"
+  relay: "storystage RELAY"
+  defense: "storystage DEFENSE"
+  report: "storystage REPORT"
+  voted: "storyvoted"
+  choseFabrik: "storychoice FABRIK"
+  choseGefangene: "storychoice GEFANGENE"
+
+actions:
+  depart: "storystage RELAY"
+  toDefense: "storystage DEFENSE"
+  toReport: "storystage REPORT"
+  voteFabrik: "storyvote FABRIK"
+  voteGefangene: "storyvote GEFANGENE"
+  stage_briefing: "objective delete relay,console"
+  stage_relay: "objective add relay"
+  stage_defense: "folder dropRelay,giveConsole"
+  stage_report: "objective delete relay,console"
+  stage_ending: "objective delete relay,console"
+  stage_done: "objective delete relay,console"
+  dropRelay: "objective delete relay"
+  giveConsole: "objective add console"
+
+objectives:
+  relay: "location 0.5;65;-43.5;world 10 actions:toDefense"
+  console: "holdconsole 0.5;65;-43.5;world 5 75 actions:toReport"

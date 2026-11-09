@@ -1,0 +1,105 @@
+players:
+  min: 1
+  max: 4
+countdown:
+  lobby: 30
+  start: 5
+  restart: 15
+idle-restart-minutes: 50
+timer-bar: false
+global-stats-head: Kevos
+# How long a running mission keeps the place of a member who dropped out; 0 turns it off.
+rejoin-seconds: 300
+rewards:
+  win: 25
+
+blaster:
+  damage: 6
+  cooldown-ticks: 6
+  range: 48
+
+defense:
+  wave-seconds: 15
+  wave-size: 3
+  most-droids: 6
+  droid-health: 12
+  droid-damage: 2
+  # How far a droid's bolt strays from its aim, as a share of its direction.
+  droid-spread: 0.06
+  droid-model: hegemonie_soldier
+
+# Positions on Wrack von Tessar as x y z [yaw pitch]. The BetonQuest package names the relay and console itself.
+mission:
+  landing:
+    - -81.5 65 -5.5 270 0
+    - -81.5 65 -1.5 270 0
+    - -81.5 65 2.5 270 0
+    - -81.5 65 6.5 270 0
+  rally: -81.5 65 0.5 270 0
+  vela: -75.5 65 0.5 90 0
+  vela-model: kolonien_soldier
+  droid-spawns:
+    - -4.5 65 -52.5
+    - 5.5 65 -52.5
+    - -6.5 65 -34.5
+    - 7.5 65 -34.5
+
+# Camera shots look from `at` towards `look`; `cut: true` starts a new shot at that tick. `actor` walks Vela through
+# her marks, `lines` are subtitles from messages.yml, `effects` are EXPLOSION or FLARE.
+cutscenes:
+  characters-per-tick: 2
+  fade-ticks: 12
+  scenes:
+    intro:
+      shots:
+        - {tick: 0, at: "-20 104 48", look: "-78 66 0"}
+        - {tick: 45, at: "-38 98 40", look: "-78 66 0"}
+        - {tick: 90, at: "-56 90 28", look: "-78 66 0"}
+        - {tick: 91, at: "-79.5 66.6 -3.5", look: "-72.5 66.4 0.5", cut: true}
+        - {tick: 170, at: "-79 66.5 -1.5", look: "-75.5 66.5 0.5"}
+        - {tick: 240, at: "-78.4 66.4 -0.2", look: "-75.5 66.6 0.5"}
+      actor:
+        - {tick: 0, at: "-69.5 65 0.5 90 0"}
+        - {tick: 95, at: "-69.5 65 0.5 90 0"}
+        - {tick: 165, at: "-75.5 65 0.5 90 0"}
+        - {tick: 240, at: "-75.5 65 0.5 90 -5"}
+      lines:
+        - {tick: 20, ticks: 60, speaker: funk, text: cutscene.intro.1}
+        - {tick: 105, ticks: 65, speaker: vela, text: cutscene.intro.2}
+        - {tick: 172, ticks: 66, speaker: vela, text: cutscene.intro.3}
+    ending-fabrik:
+      shots:
+        - {tick: 0, at: "-78.6 66.5 -1.8", look: "-75.5 66.6 0.5"}
+        - {tick: 80, at: "-78.2 66.4 2.6", look: "-74.5 66.6 0.5"}
+        - {tick: 81, at: "8 96 34", look: "82 70 0", cut: true}
+        - {tick: 140, at: "22 92 30", look: "82 70 0"}
+        - {tick: 200, at: "34 88 24", look: "82 70 0"}
+      actor:
+        - {tick: 0, at: "-75.5 65 0.5 90 0"}
+        - {tick: 30, at: "-75.5 65 0.5 90 0"}
+        - {tick: 75, at: "-73.5 65 0.5 270 0"}
+      lines:
+        - {tick: 5, ticks: 75, speaker: vela, text: cutscene.ending-fabrik.1}
+        - {tick: 120, ticks: 78, speaker: funk, text: cutscene.ending-fabrik.2}
+      effects:
+        - {tick: 100, type: EXPLOSION, at: "80 72 -6"}
+        - {tick: 118, type: EXPLOSION, at: "86 76 4"}
+        - {tick: 135, type: EXPLOSION, at: "78 70 1"}
+    ending-gefangene:
+      shots:
+        - {tick: 0, at: "-78.6 66.5 -1.8", look: "-75.5 66.6 0.5"}
+        - {tick: 80, at: "-78.2 66.4 2.6", look: "-74.5 66.6 0.5"}
+        - {tick: 81, at: "22 84 -18", look: "0.5 66 -43.5", cut: true}
+        - {tick: 140, at: "14 80 -24", look: "0.5 66 -43.5"}
+        - {tick: 200, at: "8 77 -28", look: "0.5 66 -43.5"}
+      actor:
+        - {tick: 0, at: "-75.5 65 0.5 90 0"}
+        - {tick: 30, at: "-75.5 65 0.5 90 0"}
+        - {tick: 75, at: "-73.5 65 0.5 270 0"}
+      lines:
+        - {tick: 5, ticks: 75, speaker: vela, text: cutscene.ending-gefangene.1}
+        - {tick: 120, ticks: 78, speaker: funk, text: cutscene.ending-gefangene.2}
+      effects:
+        - {tick: 100, type: FLARE, at: "0.5 82 -43.5"}
+        - {tick: 125, type: FLARE, at: "-6.5 80 -38.5"}
+        - {tick: 150, type: FLARE, at: "7.5 81 -48.5"}

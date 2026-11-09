@@ -1,0 +1,94 @@
+prefix: "<sternenfront>Tessar <dark>» <reset>"
+game-name: "<sternenfront>Einsatz: Tessar"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Ein Einsatz für bis zu vier Klone: Sprich mit Kommandantin Vela, halte das Relais und entscheidet gemeinsam."
+
+lobby:
+  previous: "<prefix><muted>Eure letzte Entscheidung auf Tessar: <accent><choice>"
+
+item:
+  blaster: "<arrow><primary>DC-15-Karabiner"
+
+menu:
+  stats:
+    title: "<arrow><sternenfront>Tessar <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Einsätze geschafft<dark>: <muted><wins>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><sternenfront>Tessar <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Einsätze geschafft"
+
+npc:
+  vela:
+    name: "<sternenfront>Kommandantin Vela"
+    role: "<right>Sprechen"
+
+stage:
+  briefing: "<sternenfront>Ziel <dark>● <white>Sprich mit Kommandantin Vela"
+  relay: "<sternenfront>Ziel <dark>● <white>Erreiche das Relais in der Raffinerie"
+  defense: "<sternenfront>Ziel <dark>● <white>Halte die Konsole, bis der Upload steht"
+  report: "<sternenfront>Ziel <dark>● <white>Erstatte Vela Bericht und entscheidet"
+  ending: "<sternenfront>Einsatz <dark>● <white>Abschluss"
+  done: "<sternenfront>Einsatz <dark>● <white>Abgeschlossen"
+
+# Each stage's line when the whole party enters it. The `stage.<name>` keys above stay the boss bar's text.
+stage-start:
+  briefing: "<prefix><muted>Kommandantin Vela wartet im Hauptquartier auf euren Trupp."
+  relay: "<prefix><muted>Neues Ziel: das Relais in der Raffinerie, nordöstlich vom Hauptquartier."
+  defense: "<prefix><error>Droiden im Anflug! <muted>Stellt euch an die Konsole und haltet sie."
+  report: "<prefix><success>Upload vollständig. <muted>Zurück zu Vela, sie hat die Daten."
+
+defense:
+  droid: "<red>B1-Kampfdroide"
+  started: "<prefix><muted>Der Upload läuft, solange jemand an der Konsole steht."
+  held: "<prefix><success>Die Droiden ziehen sich zurück."
+  down: "<prefix><error>Du bist gefallen. <muted>Ein Sanitäter hat dich zum Hauptquartier gebracht."
+
+vote:
+  cast: "<prefix><accent><player> <muted>stimmt für <white><choice> <dark>(<votes>/<members>)"
+  decided: "<prefix><muted>Der Trupp hat entschieden: <accent><choice>"
+
+choice:
+  fabrik: "Die Droidenfabrik sprengen"
+  gefangene: "Die Gefangenen befreien"
+
+rejoin:
+  stage: "<prefix><muted>Willkommen zurück. Euer Trupp ist hier: <white><stage>"
+  choice: "<prefix><muted>Während du weg warst, hat der Trupp entschieden: <accent><choice>"
+
+ending:
+  fabrik:
+    title: "<sternenfront>Die Fabrik brennt"
+    subtitle: "<muted>Ende A: Der Nachschub der Separatisten ist zerschlagen"
+    summary: "<prefix><muted>Die Fabrik auf Tessar liefert keinen Droiden mehr. Die Gefangenen bleiben an Bord des Gefängnisschiffs."
+  gefangene:
+    title: "<sternenfront>Alle an Bord"
+    subtitle: "<muted>Ende B: Zweiundvierzig Klone kehren heim"
+    summary: "<prefix><muted>Die Gefangenen sind frei. Die Fabrik produziert weiter, und die Separatisten wissen jetzt, wer kommt."
+
+cutscene:
+  line: "<speaker><dark>: <white><text>"
+  speaker:
+    vela: "<sternenfront>Vela"
+    funk: "<aqua>Funk"
+  intro:
+    "1": "Landung bestätigt. Willkommen auf dem Wrack von Tessar, Trupp."
+    "2": "Gut, dass ihr da seid. Die Separatisten haben das Relais besetzt."
+    "3": "Kommt zu mir, bevor ihr loszieht. Ich erkläre euch den Plan."
+  ending-fabrik:
+    "1": "Die Fabrik also. Ich gebe die Koordinaten an die Flotte."
+    "2": "Treffer bestätigt. Die Fertigungshallen stehen in Flammen."
+  ending-gefangene:
+    "1": "Die Gefangenen also. Ich schicke ein Kanonenboot zur Raffinerie."
+    "2": "Kanonenboot gelandet. Alle zweiundvierzig sind an Bord."

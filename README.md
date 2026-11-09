@@ -46,6 +46,7 @@ Start with [Build](#build), [Run locally](#run-locally) or [Deploy](#deploy). Ot
 | [`paper/sternenfront`](paper/sternenfront/README.md) | Next-Gen | Clone Wars: Republic versus Separatists conquest; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/ttt`](paper/ttt/README.md) | Next-Gen | TTT 2 (group `ttt2`): TTT with chores and sabotage; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/zombies`](paper/zombies/README.md) | Next-Gen | Solo or co-op Zombies survival |
+| [`paper/story`](paper/story/README.md) | Prototype | A co-op story mission on BetonQuest; only with `docker compose --profile story` |
 
 ## Build
 

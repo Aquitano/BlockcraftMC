@@ -1,0 +1,63 @@
+conversations:
+  vela:
+    quester: "Kommandantin Vela"
+    first: "decidedFabrik,decidedGefangene,waiting,report,defending,underway,greeting"
+    NPC_options:
+      greeting:
+        conditions: "briefing"
+        text: "Gut, dass ihr da seid. Die Separatisten halten das Relais in der Raffinerie. Darüber läuft ihr gesamter Funkverkehr auf Tessar."
+        pointers: "askPlan,askWreck,ready"
+      plan:
+        text: "Wir ziehen ihre Daten über die Konsole am Relais. Der Upload braucht Zeit, und die Droiden werden es merken. Haltet die Konsole, bis er durch ist."
+        pointers: "askWreck,ready"
+      wreck:
+        text: "Das war einmal ein Frachter der Handelsföderation. Jetzt ist es ein Außenposten der Separatisten, und unter dem Sand liegt mehr, als man sieht."
+        pointers: "askPlan,ready"
+      go:
+        text: "Dann los. Die Raffinerie liegt nordöstlich von hier. Möge die Macht mit euch sein."
+        actions: "depart"
+      underway:
+        conditions: "relay"
+        text: "Das Relais steht in der Raffinerie, nordöstlich von hier. Beeilt euch."
+      defending:
+        conditions: "defense"
+        text: "Was macht ihr hier? Die Konsole hält sich nicht von allein!"
+      report:
+        conditions: "report,!voted"
+        text: "Gute Arbeit. Die Daten zeigen zwei Ziele: die Droidenfabrik unter dem Wrack und ein Gefängnisschiff mit zweiundvierzig unserer Leute. Für beides reicht die Zeit nicht. Euer Trupp entscheidet."
+        pointers: "chooseFabrik,chooseGefangene,askDifference"
+      difference:
+        text: "Ohne die Fabrik baut hier niemand mehr Droiden, das rettet auf lange Sicht mehr Leben. Die Gefangenen leben heute. Morgen vielleicht nicht mehr."
+        pointers: "chooseFabrik,chooseGefangene"
+      noted:
+        text: "Eure Stimme ist notiert. Sobald der ganze Trupp abgestimmt hat, gebe ich den Befehl."
+      waiting:
+        conditions: "report,voted"
+        text: "Ich warte, bis der ganze Trupp abgestimmt hat."
+      decidedFabrik:
+        conditions: "choseFabrik"
+        text: "Die Flotte nimmt Kurs auf die Fabrik."
+      decidedGefangene:
+        conditions: "choseGefangene"
+        text: "Das Kanonenboot ist unterwegs zum Gefängnisschiff."
+    player_options:
+      askPlan:
+        text: "Was genau sollen wir tun?"
+        pointers: "plan"
+      askWreck:
+        text: "Was ist das hier für ein Ort?"
+        pointers: "wreck"
+      ready:
+        text: "Wir sind bereit."
+        pointers: "go"
+      chooseFabrik:
+        text: "Sprengt die Fabrik."
+        actions: "voteFabrik"
+        pointers: "noted"
+      chooseGefangene:
+        text: "Holt die Gefangenen raus."
+        actions: "voteGefangene"
+        pointers: "noted"
+      askDifference:
+        text: "Was spricht wofür?"
+        pointers: "difference"

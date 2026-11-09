@@ -1,0 +1,7 @@
+name: Story
+version: '${version}'
+main: me.blockcraft.story.StoryPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI, BetonQuest]
+softdepend: [BetterModel]

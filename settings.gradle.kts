@@ -23,6 +23,7 @@ include(
     "paper:skywars",
     "paper:statussigns",
     "paper:sternenfront",
+    "paper:story",
     "paper:ttt",
     "paper:zombies",
     "velocity:system",

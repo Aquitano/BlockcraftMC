@@ -72,6 +72,10 @@ val downloadBetterModel = downloadPlugin(
     "BetterModel",
     "https://github.com/toxicity188/BetterModel/releases/download/${libs.versions.bettermodel.get()}/bettermodel-${libs.versions.bettermodel.get()}-paper.jar",
 )
+val downloadBetonQuest = downloadPlugin(
+    "BetonQuest",
+    "https://github.com/BetonQuest/BetonQuest/releases/download/v${libs.versions.betonquest.get()}/BetonQuest-${libs.versions.betonquest.get()}.jar",
+)
 val downloadLuckPermsPaper = downloadPlugin(
     "LuckPermsPaper",
     "https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar",
@@ -139,6 +143,16 @@ tasks.register<Sync>("stagePlugins") {
     from("resourcepack/bettermodel") {
         include("*.bbmodel")
         into("paper/bettermodel/BetterModel/models")
+    }
+    from(downloadBetonQuest) {
+        into("paper/betonquest")
+        rename { "BetonQuest.jar" }
+    }
+    from("paper/story/betonquest") {
+        into("paper/betonquest/BetonQuest")
+    }
+    from("paper/story/faststats") {
+        into("paper/betonquest/faststats")
     }
     from(downloadLuckPermsPaper) {
         into("paper/luckperms")
