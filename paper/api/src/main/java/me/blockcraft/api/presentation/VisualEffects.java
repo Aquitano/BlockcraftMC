@@ -42,7 +42,9 @@ import java.util.function.Predicate;
 public final class VisualEffects implements Listener, AutoCloseable {
     public enum Style { HOLOGRAM, PLASMA, PULSE, TEXT, CINEMATIC, HOLOSCREEN, STORM, PORTAL, FOCUS }
     public enum MaterialEffect {
-        HOLOGRAM(1), PLASMA(2), PULSE(3);
+        HOLOGRAM(1), PLASMA(2), PULSE(3),
+        /** The model's own colours at full light, without the world's shading of item faces. */
+        UNLIT(4);
         private final int marker;
         MaterialEffect(int marker) { this.marker = marker; }
         public Color color() { return Color.fromRGB(233, marker, 197); }

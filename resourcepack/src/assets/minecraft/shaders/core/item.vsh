@@ -40,7 +40,7 @@ layout(location = 8) out vec3 materialPosition;
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     ivec3 marker = ivec3(round(Color.rgb * 255.0));
-    materialEffect = marker.r == 233 && marker.b == 197 && marker.g >= 1 && marker.g <= 3 ? marker.g : 0;
+    materialEffect = marker.r == 233 && marker.b == 197 && marker.g >= 1 && marker.g <= 4 ? marker.g : 0;
     materialPosition = Position;
 
     #ifndef OIT_ALPHA_ONLY
