@@ -15,6 +15,7 @@ import me.blockcraft.story.game.StoryGame;
 import me.blockcraft.story.quest.Quests;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Difficulty;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class StoryPlugin extends JavaPlugin {
@@ -29,6 +30,8 @@ public final class StoryPlugin extends JavaPlugin {
         var services = GameServices.load(this, gameConfig, "bc_story_stats");
         var world = Bukkit.getWorlds().getFirst();
         Worlds.settle(world);
+        // A peaceful world removes the droids, which are monsters, in the tick they spawn.
+        world.setDifficulty(Difficulty.NORMAL);
         var choices = new ChoiceRepository(api.database());
         choices.createTable();
         game = new StoryGame(this, gameConfig, services.messages(), world, services.stats(), services.menus(), choices);
