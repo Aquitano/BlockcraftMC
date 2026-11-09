@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import io.papermc.paper.math.Angle;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Ballot;
@@ -1150,10 +1151,30 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var stats = config.stats(blaster);
         bolts.fire(player, faction, blaster, stats);
         shotSound(player, blaster, SHOT_VOLUME);
+        if (blaster.repeater()) {
+            kick(player);
+        }
     }
 
-    private static void shotSound(LivingEntity shooter, Blaster blaster, float volume) {
-        blaster.shotSound().playFrom(shooter, volume, 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT));
+    private void shotSound(LivingEntity shooter, Blaster blaster, float volume) {
+        float shift = 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT);
+        blaster.shotSound().playFrom(shooter, volume, shift);
+        if (blaster.repeater()) {
+            SoundCue.BLASTER_HEAVY_THUMP.playFrom(shooter, volume * effects.config().heavyBlaster().thumpVolume(), shift);
+        }
+    }
+
+    /** Turns the view up and back a tick later; a relative turn is no teleport, so it does not hold the walk. */
+    private void kick(Player player) {
+        float degrees = effects.config().heavyBlaster().kickDegrees();
+        if (degrees > 0) {
+            player.setRotation(Angle.relative(0), Angle.relative(-degrees));
+            Tasks.later(plugin, 1, () -> {
+                if (player.isOnline()) {
+                    player.setRotation(Angle.relative(0), Angle.relative(degrees));
+                }
+            });
+        }
     }
 
     private void fireBursts() {

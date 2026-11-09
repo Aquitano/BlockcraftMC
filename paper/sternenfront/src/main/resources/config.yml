@@ -110,8 +110,14 @@ presentation:
   saber-trail-ticks: 3
   muzzle-flash: {ticks: 2, scale: 0.3, heavy-scale: 0.5}
   # A hit shows a flash impact-flash blocks across for impact-ticks and sparks of impact-dust size, small enough to leave
-  # a fighter at the crosshair in sight.
-  bolt: {width: 1.8, length: 1.6, trail-size: 1.1, trail-step: 0.9, far-every: 3, impact-flash: 0.15, impact-ticks: 1, impact-dust: 0.5}
+  # a fighter at the crosshair in sight. A shooter sees their own bolt appear with a glow own-flash across and its trail at
+  # own-trail-size, smaller than the trail-size others see, because from behind the whole trail lines up on the crosshair.
+  bolt: {width: 1.8, length: 1.6, trail-size: 1.1, trail-step: 0.9, far-every: 3, impact-flash: 0.15, impact-ticks: 1, impact-dust: 0.5,
+         own-trail-size: 0.35, own-flash: 0.7}
+  # A repeater's bolt, from the Z-6 or a blaster built on it, bursts where it lands into impact-sparks sparks and
+  # impact-smoke puffs of smoke with a blast at impact-volume. Each of its shots thumps at thump-volume of the shot's own
+  # volume and kicks the shooter's view up kick-degrees for a tick.
+  heavy-blaster: {impact-sparks: 10, impact-smoke: 2, thump-volume: 0.9, impact-volume: 0.8, kick-degrees: 0.7}
   explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 12}
   damaged: {below: 0.35, interval-ticks: 12}
   ambient: {interval-ticks: 10, range: 72}
@@ -363,8 +369,8 @@ classes:
 # twin-pistol profile.
 blasters:
   carbine: {damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 4.5, range: 90}
-  repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 4.5, range: 60}
-  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 4.5, range: 75}
+  repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 7, range: 60}
+  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 7, range: 75}
   commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 4.5, range: 28}
   long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0.025, speed: 6, range: 160}
   pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 4.5, range: 70}

@@ -90,6 +90,11 @@ public enum Blaster implements HotbarItem {
         return profile() == LONG_RIFLE;
     }
 
+    /** A rapid-firing heavy blaster, the Z-6 or one built on it, whose bolts land hard. */
+    public boolean repeater() {
+        return profile() == REPEATER;
+    }
+
     public boolean dual() {
         return profile() == TWIN_PISTOL;
     }

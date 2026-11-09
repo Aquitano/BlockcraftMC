@@ -260,7 +260,13 @@ block rays. Outlines stay disabled until the pack has loaded.
 
 Each shot's sound is pitched up to 6% higher or lower at random. A player's shots carry 32 blocks and a bot's 24. The
 shooter hears their own shot at full volume, and it follows them as they move. A bolt that hits a fighter or a wall
-plays an impact sound. A hit body flashes `appearance.hurt-tint` for ten ticks, and an animated bot body also flinches.
+plays an impact sound. A shooter's own bolt first shows four blocks ahead of their eyes, in a small glow, and leaves
+smaller glowing dots (`presentation.bolt.own-trail-size`) than the trail everyone else sees, because from behind every
+dot lies on the crosshair. A repeater (the Z-6, the B2's wrist blaster and the ARC trooper's support blaster) also
+thumps with every bolt and kicks its shooter's view up for a tick by `presentation.heavy-blaster.kick-degrees`. A
+relative turn of the view needs no teleport, so the kick holds no movement. Its bolts land with a blast sound and burst
+in sparks and smoke, which nobody within four blocks gets.
+A hit body flashes `appearance.hurt-tint` for ten ticks, and an animated bot body also flinches.
 A hit bot clanks if it is a droid and grunts if it is a clone, at most once per `bots.hurt-sound.cooldown-ticks`.
 
 An enemy bolt, a bot's included, that passes within `combat-feedback.near-miss.radius` blocks of a player's eyes without
