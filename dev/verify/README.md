@@ -22,6 +22,9 @@ picks up a changed mod or a new resource pack.
 `VERIFY_GAME=story` runs the story prototype (`paper/story`) instead of Sternenfront for every command; `down` the other
 one first, since both take the proxy's first-join route.
 
+`VERIFY_PROJECT` names the Docker project (default `bcverify`), so a second rig can run beside the first with its own
+`VERIFY_PORT`. `VERIFY_PACK_URL` overrides the address the proxy offers the resource pack at, for a client outside Docker.
+
 ## Scenarios
 
 Each scenario reaches the state it needs itself, writes a folder under `dev/verify/client-mod/run/screenshots` and prints

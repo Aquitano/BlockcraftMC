@@ -27,7 +27,7 @@ services:
     memswap_limit: 900m
     environment:
       BLOCKCRAFT_ON_DEMAND_GROUPS: ""
-      BLOCKCRAFT_RESOURCE_PACK_URL: http://velocity:8080/blockcraft.zip
+      BLOCKCRAFT_RESOURCE_PACK_URL: ${VERIFY_PACK_URL:-http://velocity:8080/blockcraft.zip}
     volumes:
       - ./dev/verify/velocity.toml:/config/velocity.toml:ro
 
