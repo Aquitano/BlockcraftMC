@@ -1729,6 +1729,34 @@ public final class SternenfrontArt {
         };
     }
 
+    /**
+     * A scope's glint on a 16-pixel grid: a white core four pixels square, a long level flare and a shorter upright one
+     * that run from white through pale gold and thin towards their tips, and four specks on the diagonals.
+     */
+    private static int[] glint(int width, int height, Random random) {
+        var pixels = new int[width * height];
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int column = x * 16 / width;
+                int row = y * 16 / height;
+                int across = Math.min(Math.abs(column * 2 - 15), Math.abs(row * 2 - 15));
+                int level = Math.abs(column * 2 - 15) / 2;
+                int upright = Math.abs(row * 2 - 15) / 2;
+                if (level <= 1 && upright <= 1) {
+                    pixels[y * width + x] = argb(255, 0xFFFFFF);
+                } else if (across == 1 && (upright == 0 && level <= 7 || level == 0 && upright <= 4)) {
+                    int reach = Math.max(level, upright);
+                    int limit = upright == 0 ? 7 : 4;
+                    int colour = reach == 2 ? 0xFFFFFF : reach <= limit / 2 + 1 ? 0xFFF1B8 : 0xFFD27A;
+                    pixels[y * width + x] = argb(Math.max(150, 255 - 105 * (reach - 2) / (limit - 2)), colour);
+                } else if (level == 2 && upright == 2) {
+                    pixels[y * width + x] = argb(170, 0xFFF1B8);
+                }
+            }
+        }
+        return pixels;
+    }
+
     private static int[] scorchMark(int size, int height, Random random) {
         var pixels = new int[size * height];
         long seed = random.nextLong();
@@ -1846,6 +1874,7 @@ public final class SternenfrontArt {
         var melted = new Sprite("slash_edge", false, false, SternenfrontArt::slashEdge);
         var glowing = new Sprite("slash_glow", true, true, SternenfrontArt::slashGlow);
         var core = new Sprite("slash_core", true, false, SternenfrontArt::slashCore);
+        var glint = new Sprite("glint", true, true, SternenfrontArt::glint);
         return new Family("fx", 96, true, List.of(
                 new Model("sternenfront/fx/saber_slash", new Shape().add(
                         box(0, 0, 0, 1, SLASH_HEIGHT, 0, melted).only(Face.NORTH, Face.SOUTH),
@@ -1856,6 +1885,7 @@ public final class SternenfrontArt {
                 new Model("sternenfront/fx/scorch", new Shape().add(box(0, 0, 0, 1, 1, 0, scorch).only(Face.NORTH, Face.SOUTH))),
                 new Model("sternenfront/fx/flash_kolonien", flash(kolonien, CYAN)),
                 new Model("sternenfront/fx/flash_hegemonie", flash(hegemonie, RED)),
+                new Model("sternenfront/fx/glint", new Shape().add(box(0, 0, 0, 1, 1, 0, glint).only(Face.NORTH, Face.SOUTH))),
                 new Model("sternenfront/fx/smoke_puff", new Shape()
                         .add(puff(0, 0, 0, 1, puff))
                         .add(puff(.2, .14, .12, .6, puff))

@@ -243,6 +243,11 @@ split colours for `combat-feedback.headshot-rattle.ticks`. A forced turn of the 
 holds the player's movement until their client confirms it, so the rotation and with it the aim stay the player's own.
 A headshot bot's aim scatters again as on a fresh target.
 
+A long rifle's scope glints (`presentation.scope-glint`): while a player looks through one, and while a bot with one has
+an enemy in its sights, a small pixel star flares at the scope every `interval-ticks` for each enemy player within
+`range` who is in front of the scope, sees it within `view-degrees` of their look and has no wall in between. Each such
+viewer gets a display of their own, sized by distance so it stays a few pixels across.
+
 Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair; a headshot's has a diamond above it. A kill replaces a weaker
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. While a player with the pack holds a blaster that has spread,

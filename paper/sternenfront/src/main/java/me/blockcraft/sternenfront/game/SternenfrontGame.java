@@ -38,6 +38,7 @@ import me.blockcraft.sternenfront.combat.Combat;
 import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.combat.CombatConfig;
 import me.blockcraft.sternenfront.combat.HitPush;
+import me.blockcraft.sternenfront.combat.ScopeGlint;
 import me.blockcraft.sternenfront.combat.Spectacle;
 import me.blockcraft.sternenfront.vehicle.Speeders;
 import me.blockcraft.sternenfront.vehicle.SpeederConfig;
@@ -149,6 +150,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final CombatFeedback feedback;
     private final Speeders speeders;
     private final HitPush hitPush;
+    private final ScopeGlint glint;
     private final SpawnSpots spawnSpots;
     private final Deployment deployment;
     private final BattleIntro intro;
@@ -235,6 +237,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.combat = new Combat(this, CombatConfig.from(plugin.getConfig()));
         this.speeders = new Speeders(this, SpeederConfig.from(plugin.getConfig()));
         this.hitPush = HitPush.from(plugin.getConfig());
+        this.glint = new ScopeGlint(this, ScopeGlint.Settings.from(plugin.getConfig()));
         this.spawnSpots = new SpawnSpots(this);
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
@@ -859,6 +862,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                         BlockcraftApi.get().resourcePack().applied(player)))).toList());
         bots.tick(tick);
         bolts.tick();
+        glint.tick(tick);
         gadgets.tick(tick);
         relic.tick(tick);
         heroes.tick(tick);
@@ -1637,6 +1641,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         bursts.clear();
         bolts.clear();
+        glint.clear();
         effects.clear();
         spectacle.clear();
         music.clear();

@@ -123,6 +123,11 @@ presentation:
     crane-cable-length: 4
   assault: {ticks: 100, distance: 90, height: 45, scale: 7, clearance: 0}
   storm: {density: 5, haze: 3, interval-ticks: 2, haze-ticks: 6, radius: 14, wind-speed: 0.8, gust-seconds: 7, gust-ticks: 40, gust-boost: 1.2}
+  # A player looking through a long rifle's scope glints at the scope every interval-ticks, flaring and fading over
+  # ticks, for each enemy player within range blocks who is in front of the scope, sees it within view-degrees of their
+  # look and has no wall in between. The glint grows by size blocks per block of distance, so it stays a few pixels
+  # across. bots: a bot with a long rifle glints the same way while it has an enemy in its sights.
+  scope-glint: {enabled: true, range: 96, interval-ticks: 24, ticks: 6, view-degrees: 50, size: 0.06, bots: true}
   # On a map with rain, a harmless strike this many blocks from a random fighter every so often; a last stand halves the wait.
   lightning: {min-seconds: 20, max-seconds: 55, distance: 50}
 combat:
