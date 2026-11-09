@@ -96,6 +96,12 @@ presentation:
     siege-mode-ticks: 20
     force-push-ticks: 12
   deployment: {fade-ticks: 6, briefing: true, banner-ticks: 25}
+  # Deploying at headquarters or a post lands the player from their side's craft: it comes down height blocks and glide
+  # blocks along its nose over descent-ticks (at most 59), opens its doors over the last door-ticks of that, sets them
+  # down settle-ticks after touching down and climbs away over lift-ticks. Over stalls and walls up to six blocks high it
+  # hovers and drops them. Teammates who deploy at the same spawn within share-ticks ride along. Under a roof the craft
+  # comes straight down from just below it; a spawn without room for that, and the assault's dropship, keep the fade alone.
+  landing: {enabled: true, height: 16, glide: 4, descent-ticks: 30, door-ticks: 20, settle-ticks: 4, lift-ticks: 20, share-ticks: 10}
   capture: {ticks: 24, radius: 6, points: 40}
   holographic-posts: true
   live-effects: 64
