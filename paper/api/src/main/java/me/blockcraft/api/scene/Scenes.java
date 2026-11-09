@@ -1,8 +1,11 @@
 package me.blockcraft.api.scene;
 
 import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
+import io.papermc.paper.event.player.PlayerClientLoadedWorldEvent;
+import io.papermc.paper.event.player.PlayerUntrackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.presentation.PresentationScope;
+import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.ItemDisplay;
@@ -15,12 +18,16 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInputEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.DisplaySlot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,9 +36,29 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * Plays a {@link SceneTimeline} through a private display entity the player spectates.
+ * <p>
+ * A client takes a spectator target only if it already knows that entity, so a camera is attached once the player
+ * tracks it, and the timeline's clock starts then. While the client is still loading a world it joined or was sent
+ * to, even by the caller just before the scene, the first camera waits: a display spawned in the tick of such a
+ * teleport joins the world late, and showing it then has no effect. Attaching can make the server drop and resend the
+ * camera, after which the client still looks through the dropped copy, so a camera that was untracked is attached again.
+ * <p>
+ * The display eases every move over {@link #SMOOTHING} ticks, which hides uneven server ticks and the coarse rotation
+ * steps of entity movement packets, and the camera aims that far ahead to make up for the lag. A cut swaps to a second
+ * display prepared at the new shot, because a teleport of the same display would glide there.
+ */
 public final class Scenes implements Listener, AutoCloseable {
     public enum End { COMPLETED, SKIPPED, CANCELLED, DISCONNECTED, TELEPORTED, FAILED }
+    static final int SMOOTHING = 4;
+    private static final int LEAD = SMOOTHING - 1;
+    private static final int PREPARE_TICKS = 10;
+    /** A client still loading a world it was just sent to can take seconds before it knows the camera. */
+    private static final int ATTACH_TIMEOUT_TICKS = 200;
     private static final Set<UUID> VIEWING = new HashSet<>();
+    /** Players whose client has not yet finished loading the world they joined or changed to. */
+    private static final Set<UUID> LOADING = new HashSet<>();
     private final Plugin plugin;
     private final Map<UUID, Session> sessions = new HashMap<>();
     private final BukkitTask task;
@@ -80,14 +107,8 @@ public final class Scenes implements Listener, AutoCloseable {
         api.visuals().clearAccent(player);
         var saved = Saved.capture(player);
         var at = timeline.camera().sample(0).in(timeline.world());
-        ItemDisplay camera;
-        try {
-            camera = spawnCamera(at);
-        } catch (RuntimeException failure) {
-            plugin.getSLF4JLogger().warn("Could not create scene camera", failure);
-            return false;
-        }
-        var session = new Session(player, timeline, completion, saved, camera, resources, new PresentationScope(plugin));
+        var session = new Session(player, timeline, completion, saved, resources, new PresentationScope(plugin));
+        session.loading = LOADING.contains(player.getUniqueId()) || !player.getWorld().equals(at.getWorld());
         sessions.put(player.getUniqueId(), session);
         VIEWING.add(player.getUniqueId());
         try {
@@ -99,8 +120,8 @@ public final class Scenes implements Listener, AutoCloseable {
                 finish(session, End.FAILED, true);
                 return false;
             }
-            player.showEntity(plugin, camera);
-            player.setSpectatorTarget(camera);
+            if (!session.loading) prepare(session, timeline.camera().sample(0), 0);
+            session.conceal(JavaPlugin.getProvidingPlugin(Scenes.class));
             render(session);
             return true;
         } catch (RuntimeException failure) {
@@ -121,7 +142,7 @@ public final class Scenes implements Listener, AutoCloseable {
             camera.setVisibleByDefault(false);
             camera.setShadowRadius(0);
             camera.setShadowStrength(0);
-            camera.setTeleportDuration(1);
+            camera.setTeleportDuration(SMOOTHING);
         });
     }
 
@@ -134,8 +155,15 @@ public final class Scenes implements Listener, AutoCloseable {
         var session = sessions.get(player.getUniqueId());
         if (session == null || session.skipped) return;
         session.skipped = true;
-        if (session.timeline.skipMode() == SceneTimeline.SkipMode.COMPLETE) finish(session, End.SKIPPED, true);
-        else session.resources.close();
+        if (session.timeline.skipMode() == SceneTimeline.SkipMode.COMPLETE) {
+            finish(session, End.SKIPPED, true);
+            return;
+        }
+        session.resources.close();
+        var camera = session.timeline.camera();
+        if (session.camera != null && camera.shotEnd(session.tick) <= camera.duration()) {
+            prepare(session, camera.sample(camera.duration()), session.tick);
+        }
     }
 
     private void tick() {
@@ -143,10 +171,11 @@ public final class Scenes implements Listener, AutoCloseable {
             try {
                 if (!session.player.isOnline()) {
                     finish(session, End.DISCONNECTED, true);
-                } else if (session.player.isDead() || session.player.getGameMode() != GameMode.SPECTATOR || !session.camera.isValid()) {
+                } else if (session.player.isDead() || session.player.getGameMode() != GameMode.SPECTATOR
+                        || session.camera != null && !session.camera.isValid()) {
                     finish(session, End.CANCELLED, true);
                 } else {
-                    session.tick++;
+                    if (session.camera != null) session.tick++;
                     render(session);
                     if (session.tick >= session.timeline.camera().duration()) {
                         finish(session, session.skipped ? End.SKIPPED : End.COMPLETED, true);
@@ -161,15 +190,62 @@ public final class Scenes implements Listener, AutoCloseable {
 
     private void render(Session session) {
         var timeline = session.timeline;
-        int shownTick = session.skipped ? timeline.camera().duration() : session.tick;
-        boolean cut = timeline.camera().frames().stream().anyMatch(frame -> frame.tick() == shownTick && frame.cut());
-        session.camera.setTeleportDuration(cut ? 0 : 1);
-        session.camera.teleport(timeline.camera().sample(shownTick).in(timeline.world()));
-        if (session.player.getSpectatorTarget() != session.camera) session.player.setSpectatorTarget(session.camera);
+        var path = timeline.camera();
+        if (session.pending != null && session.tick >= session.swapAt
+                && (session.pending.isTrackedBy(session.player) && session.waited > 0 || session.waited >= ATTACH_TIMEOUT_TICKS)) {
+            swap(session);
+        } else if (session.pending != null) {
+            session.waited++;
+        } else if (session.camera == null && (!session.loading || ++session.waited >= ATTACH_TIMEOUT_TICKS)) {
+            prepare(session, path.sample(0), 0);
+        }
+        if (session.camera != null && session.untracked && session.camera.isTrackedBy(session.player)) {
+            session.untracked = false;
+            attach(session, null);
+            attach(session, session.camera);
+        }
+        session.hideHud();
+        if (session.camera == null) {
+            timeline.frame().show(session.player, 0, path.duration(), session.skipped);
+            return;
+        }
+        int shownTick = session.skipped ? path.duration() : session.tick;
+        int shotEnd = path.shotEnd(shownTick);
+        if (session.pending == null && !session.skipped && shotEnd <= path.duration() && shotEnd - shownTick <= PREPARE_TICKS) {
+            prepare(session, path.sample(shotEnd), shotEnd);
+        }
+        session.camera.teleport(path.sample(Math.min(shownTick + LEAD, Math.min(shotEnd - 1, path.duration()))).in(timeline.world()));
+        if (session.player.getSpectatorTarget() != session.camera) attach(session, session.camera);
         while (!session.skipped && session.nextCue < timeline.cues().size() && timeline.cues().get(session.nextCue).tick() <= session.tick) {
             timeline.cues().get(session.nextCue++).action().run();
         }
         timeline.frame().show(session.player, session.tick, timeline.camera().duration(), session.skipped);
+    }
+
+    private void prepare(Session session, CameraPath.Pose pose, int swapAt) {
+        var camera = spawnCamera(pose.in(session.timeline.world()));
+        session.prepare(camera, swapAt);
+        session.player.showEntity(plugin, camera);
+    }
+
+    private void swap(Session session) {
+        var previous = session.camera;
+        session.camera = session.pending;
+        session.pending = null;
+        session.waited = 0;
+        session.untracked = !session.camera.isTrackedBy(session.player);
+        attach(session, session.camera);
+        if (previous != null) previous.remove();
+    }
+
+    private void attach(Session session, Entity camera) {
+        boolean previousChanging = changing;
+        changing = true;
+        try {
+            session.player.setSpectatorTarget(camera);
+        } finally {
+            changing = previousChanging;
+        }
     }
 
     private void finish(Session session, End reason, boolean returnToStart) {
@@ -182,6 +258,7 @@ public final class Scenes implements Listener, AutoCloseable {
         } catch (RuntimeException failure) {
             plugin.getSLF4JLogger().warn("Could not restore scene participant", failure);
         } finally {
+            session.reveal();
             session.cameraResources.close();
             session.resources.close();
             changing = previousChanging;
@@ -191,6 +268,24 @@ public final class Scenes implements Listener, AutoCloseable {
         } catch (RuntimeException failure) {
             plugin.getSLF4JLogger().warn("Scene completion failed", failure);
         }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onJoin(PlayerJoinEvent event) {
+        LOADING.add(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onUntrack(PlayerUntrackEntityEvent event) {
+        var session = sessions.get(event.getPlayer().getUniqueId());
+        if (session != null && event.getEntity().equals(session.camera)) session.untracked = true;
+    }
+
+    @EventHandler
+    public void onLoaded(PlayerClientLoadedWorldEvent event) {
+        LOADING.remove(event.getPlayer().getUniqueId());
+        var session = sessions.get(event.getPlayer().getUniqueId());
+        if (session != null) session.loading = false;
     }
 
     @EventHandler
@@ -215,6 +310,7 @@ public final class Scenes implements Listener, AutoCloseable {
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
+        LOADING.add(event.getPlayer().getUniqueId());
         if (changing) return;
         var session = sessions.get(event.getPlayer().getUniqueId());
         if (session != null) finish(session, End.TELEPORTED, false);
@@ -228,6 +324,7 @@ public final class Scenes implements Listener, AutoCloseable {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
+        LOADING.remove(event.getPlayer().getUniqueId());
         var session = sessions.get(event.getPlayer().getUniqueId());
         if (session != null) finish(session, End.DISCONNECTED, true);
     }
@@ -272,23 +369,81 @@ public final class Scenes implements Listener, AutoCloseable {
         final SceneTimeline timeline;
         final Consumer<End> completion;
         final Saved saved;
-        final ItemDisplay camera;
         final PresentationScope resources;
         final PresentationScope cameraResources;
+        final List<BossBar> hiddenBars = new ArrayList<>();
+        final List<Player> hiddenPlayers = new ArrayList<>();
+        Plugin hider;
+        String hiddenSidebar;
+        ItemDisplay camera;
+        ItemDisplay pending;
+        int swapAt;
+        int waited;
+        /** Attached before the client knew the camera, or the camera was dropped since: attached again once it is back. */
+        boolean untracked;
+        boolean loading;
         int tick;
         int nextCue;
         boolean skipped;
 
-        Session(Player player, SceneTimeline timeline, Consumer<End> completion, Saved saved, ItemDisplay camera,
+        Session(Player player, SceneTimeline timeline, Consumer<End> completion, Saved saved,
                 PresentationScope resources, PresentationScope cameraResources) {
             this.player = player;
             this.timeline = timeline;
             this.completion = completion;
             this.saved = saved;
-            this.camera = camera;
             this.resources = resources;
             this.cameraResources = cameraResources;
-            cameraResources.own(camera::remove);
+        }
+
+        void prepare(ItemDisplay next, int at) {
+            if (pending != null) pending.remove();
+            pending = next;
+            swapAt = at;
+            waited = 0;
+            cameraResources.own(next::remove);
+        }
+
+        /**
+         * Boss bars, the sidebar and other players would sit in the shot. The game keeps owning them and may show them
+         * again at any time, as a countdown does every second, so the HUD is hidden every tick and given back at the end.
+         */
+        void conceal(Plugin hider) {
+            this.hider = hider;
+            hideHud();
+            for (var other : player.getServer().getOnlinePlayers()) {
+                if (other != player && player.canSee(other)) {
+                    player.hidePlayer(hider, other);
+                    hiddenPlayers.add(other);
+                }
+            }
+        }
+
+        void hideHud() {
+            var shown = new ArrayList<BossBar>();
+            player.activeBossBars().forEach(shown::add);
+            for (var bar : shown) {
+                player.hideBossBar(bar);
+                if (!hiddenBars.contains(bar)) hiddenBars.add(bar);
+            }
+            var sidebar = player.getScoreboard().getObjective(DisplaySlot.SIDEBAR);
+            if (sidebar != null) {
+                hiddenSidebar = sidebar.getName();
+                sidebar.setDisplaySlot(null);
+            }
+        }
+
+        void reveal() {
+            hiddenBars.forEach(player::showBossBar);
+            hiddenBars.clear();
+            var board = player.getScoreboard();
+            var sidebar = hiddenSidebar == null ? null : board.getObjective(hiddenSidebar);
+            if (sidebar != null && board.getObjective(DisplaySlot.SIDEBAR) == null) sidebar.setDisplaySlot(DisplaySlot.SIDEBAR);
+            hiddenSidebar = null;
+            for (var other : hiddenPlayers) {
+                if (other.isOnline()) player.showPlayer(hider, other);
+            }
+            hiddenPlayers.clear();
         }
     }
 }

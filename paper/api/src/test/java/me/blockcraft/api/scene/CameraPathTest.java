@@ -30,6 +30,17 @@ public class CameraPathTest {
         assertEquals(second, path.sample(20));
     }
 
+    @Test
+    public void glidesThroughAnInteriorKeyframeWithoutStopping() {
+        var path = new CameraPath(List.of(
+                new CameraPath.Keyframe(0, new CameraPath.Pose(0, 0, 0, 0, 0), false),
+                new CameraPath.Keyframe(20, new CameraPath.Pose(10, 0, 0, 0, 0), false),
+                new CameraPath.Keyframe(40, new CameraPath.Pose(20, 0, 0, 0, 0), false)));
+        assertEquals(10, path.sample(20).x(), 0.0001);
+        assertEquals(0.5, path.sample(20).x() - path.sample(19).x(), 0.05);
+        assertEquals(0.5, path.sample(21).x() - path.sample(20).x(), 0.05);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void rejectsRepeatedFrameTimes() {
         var pose = new CameraPath.Pose(0, 0, 0, 0, 0);
