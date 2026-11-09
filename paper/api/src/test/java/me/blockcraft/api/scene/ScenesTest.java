@@ -48,7 +48,7 @@ public class ScenesTest {
                     assertEquals(false, properties.get("setGravity"));
                     assertEquals(0f, properties.get("setShadowRadius"));
                     assertEquals(0f, properties.get("setShadowStrength"));
-                    assertEquals(1, properties.get("setTeleportDuration"));
+                    assertEquals(Scenes.SMOOTHING, properties.get("setTeleportDuration"));
                     return camera;
                 });
         assertSame(camera, Scenes.spawnCamera(new Location(world, 1, 2, 3)));
