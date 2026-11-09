@@ -9,6 +9,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import threading
 import time
 import zipfile
 from pathlib import Path
@@ -18,7 +19,9 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
-STACK = ("mariadb", "velocity", "sternenfront", "client")
+# The game server under test: sternenfront, or story for the story prototype.
+GAME = os.environ.get("VERIFY_GAME", "sternenfront")
+STACK = ("mariadb", "velocity", GAME, "client")
 PLAYER = "Verify"
 HQ_X = 55
 MODEL_ABOVE_FEET = 2
@@ -34,7 +37,7 @@ def compose(*args, capture=False, timeout=None):
     return subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=capture, timeout=timeout)
 
 
-def rcon(command, service="sternenfront"):
+def rcon(command, service=GAME):
     try:
         return compose("exec", "-T", service, "rcon-cli", command, capture=True, timeout=30).stdout.strip()
     except subprocess.CalledProcessError as failure:
@@ -187,12 +190,12 @@ def set_window(client, width, height, scale):
 @functools.cache
 def running_template():
     """The template the game server started with, so that scenarios use the map it is playing."""
-    return compose("exec", "-T", "sternenfront", "printenv", "BLOCKCRAFT_WORLD_TEMPLATE", capture=True).stdout.strip()
+    return compose("exec", "-T", GAME, "printenv", "BLOCKCRAFT_WORLD_TEMPLATE", capture=True).stdout.strip()
 
 
 def keep_running_map():
     """Recreating the game server without this would put it back on the default map."""
-    if "VERIFY_MAP" not in os.environ and compose("ps", "-q", "--status", "running", "sternenfront", capture=True).stdout.strip():
+    if "VERIFY_MAP" not in os.environ and compose("ps", "-q", "--status", "running", GAME, capture=True).stdout.strip():
         os.environ["VERIFY_MAP"] = Path(running_template()).name
 
 
@@ -604,13 +607,140 @@ def bodies_shown(client):
     return sum(each.get("model", "").endswith("_torso") for each in client("entities", radius=250)["entities"])
 
 
+def camera(client, run, command="sfintro", ticks=200, every=10):
+    """Plays a cinematic and records the camera's pose at every client tick beside a frame every few ticks."""
+    if client("status")["screen"]:
+        client("close")
+    traced = {}
+    tracer = threading.Thread(target=lambda: traced.update(Client()("trace", ticks=ticks)))
+    tracer.start()
+    client("command", text=command)
+    client("capture", name=f"{run.name}/frame", frames=max(1, ticks // every), every=every)
+    tracer.join()
+    samples = [sample for sample in traced.get("samples", []) if sample and sample[5] != "player"]
+    (run.folder / "trace.json").write_text(json.dumps(traced.get("samples", [])))
+    run.report["camera"] = motion(samples)
+
+
+def motion(samples):
+    """Smoothness of a traced camera within each shot; a jump of more than four blocks in one tick is a cut between shots."""
+    shots = [[]]
+    for sample in samples:
+        if shots[-1] and math.dist(shots[-1][-1][:3], sample[:3]) > 4:
+            shots.append([])
+        shots[-1].append(sample)
+    steps, jerks, turns, pitches = [], [], [], []
+    stalls = 0
+    for shot in shots:
+        shot_steps = [math.dist(a[:3], b[:3]) for a, b in zip(shot, shot[1:])]
+        steps += shot_steps
+        jerks += [math.dist([c - 2 * b + a for a, b, c in zip(p[:3], q[:3], r[:3])], [0, 0, 0]) for p, q, r in zip(shot, shot[1:], shot[2:])]
+        turns += [abs((b[3] - a[3] + 180) % 360 - 180) for a, b in zip(shot, shot[1:])]
+        pitches += [abs(b[4] - a[4]) for a, b in zip(shot, shot[1:])]
+        stalls += sum(1 for a, b, c in zip(shot_steps, shot_steps[1:], shot_steps[2:]) if b < 0.2 * min(a, c) and min(a, c) > 0.01)
+    if not jerks:
+        return {"ticks": len(samples)}
+    moving = [step for step in steps if step > 0.005]
+    mean = sum(moving) / len(moving) if moving else 0
+    byte_angle = 360 / 256
+    quantized = sum(abs(sample[3] / byte_angle - round(sample[3] / byte_angle)) < 0.01 for sample in samples)
+    return {
+        "ticks": len(samples),
+        "shots": len(shots),
+        "mean_step": round(mean, 3),
+        "max_step": round(max(steps), 3),
+        "stalls": stalls,
+        "max_jerk": round(max(jerks), 3),
+        "hitches": sum(1 for jerk in jerks if mean and jerk > 0.5 * mean),
+        "max_turn": round(max(turns), 2),
+        "turn_hitches": sum(1 for a, b, c in zip(turns, turns[1:], turns[2:]) if b > 2 * max(a, c) + 0.3),
+        "max_pitch_step": round(max(pitches), 2),
+        "yaw_on_byte_steps": f"{quantized}/{len(samples)}",
+    }
+
+
+def talk(client, run, name, *answers):
+    """Walks up to an NPC, opens its conversation and picks each answer in turn, photographing every dialog."""
+    if client("status")["screen"]:
+        client("close")
+    for _ in range(12):
+        client("aim", name=name)
+        near = min((each["distance"] for each in client("entities", radius=16)["entities"] if name in each.get("name", "")), default=99)
+        if near < 2.8:
+            break
+        client("hold", key="forward", ticks=max(2, int((near - 2.2) * 4)))
+        settle(client, 12)
+    client("tap", key="use")
+    client.until("the conversation", lambda: client("status")["screen"], 20)
+    run.shot(client, f"talk-{run.frames:02d}")
+    for answer in answers:
+        client("press", label=answer)
+        settle(client, 25)
+        run.shot(client, f"talk-{run.frames:02d}")
+    if client("status")["screen"]:
+        client("press", label="Ok")
+        settle(client, 10)
+
+
+def story(client, run, choice="fabrik", rejoin=False):
+    """Plays the Tessar mission: intro, briefing, relay, console, report, vote and ending, with a short cut to the relay.
+    With rejoin the player drops out after the briefing and comes back, as a member who lost their connection would."""
+    events_from = client("status")["tick"]
+    client("command", text="start")
+    client.until("the intro", lambda: client("status")["gamemode"] == "spectator", 60)
+    run.shot(client, "intro")
+    client.until("the mission", lambda: client("status")["gamemode"] == "adventure", 60)
+    talk(client, run, "Vela", "1. Was genau sollen wir tun?", "2. Wir sind bereit.")
+    run.report["after_briefing"] = client("hud")["bossbars"]
+    if rejoin:
+        back_from = client("status")["tick"]
+        client("disconnect")
+        time.sleep(5)
+        join(client)
+        settle(client, 60)
+        run.shot(client, "rejoined")
+        run.report["rejoined"] = {"bossbars": client("hud")["bossbars"],
+                                  "chat": [e["value"] for e in client("events", since=back_from)["events"] if e["kind"] == "chat"][-4:]}
+    rcon(f"tp {PLAYER} 0.5 65 -40.5 180 0")
+    settle(client, 40)
+    run.shot(client, "relay")
+    held = time.monotonic() + 150
+    while time.monotonic() < held:
+        hud = client("hud")
+        if "Bericht" in json.dumps(hud, ensure_ascii=False):
+            break
+        try:
+            client("aim", name="droide")
+            client("tap", key="use")
+        except RuntimeError:
+            pass
+        rcon(f"tp {PLAYER} 0.5 65 -43.5")
+        settle(client, 10)
+        if run.frames < 8:
+            run.shot(client, f"defense-{run.frames:02d}")
+    run.report["droid_shots_heard"] = sum(1 for e in client("events", since=events_from)["events"] if e["kind"] == "sound" and "blaster" in e["value"])
+    run.report["defended_in_seconds"] = round(150 - (held - time.monotonic()))
+    rcon(f"tp {PLAYER} -79.5 65 0.5 270 0")
+    settle(client, 40)
+    pick = {"fabrik": "1. Sprengt die Fabrik.", "gefangene": "2. Holt die Gefangenen raus."}[choice]
+    talk(client, run, "Vela", "3. Was spricht wofür?", pick)
+    client.until("the ending", lambda: client("status")["gamemode"] == "spectator", 30)
+    client("capture", name=f"{run.name}/ending", frames=12, every=20)
+    client.until("the end of the ending", lambda: client("status")["gamemode"] != "spectator", 60)
+    settle(client, 20)
+    run.shot(client, "after")
+    chat = [e["value"] for e in client("events", since=events_from)["events"] if e["kind"] in ("chat", "title", "subtitle")]
+    run.report["lines"] = [line for line in chat if "Tessar" in line or "Ende" in line or "Fabrik" in line or "Gefangene" in line][-14:]
+    run.report["database"] = database(f"SELECT choice FROM bc_story_choices WHERE mission = 'tessar'")
+
+
 def database(query):
     return compose("exec", "-T", "mariadb", "mariadb", "-ublockcraft", "-pblockcraft", "blockcraft", "-Nse", query, capture=True).stdout.strip()
 
 
 SCENARIOS = {"replay": (replay, "joined"), "scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
              "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field"),
-             "underfire": (under_fire, "field"), "glint": (glint, "field")}
+             "underfire": (under_fire, "field"), "glint": (glint, "field"), "camera": (camera, "world"), "story": (story, "world")}
 
 
 def run_scenario(name, faction=None, **options):
@@ -621,6 +751,8 @@ def run_scenario(name, faction=None, **options):
     try:
         if needs == "field":
             into_round(client, faction=faction)
+        elif needs == "world" and not client("status")["in_world"]:
+            join(client)
         scenario(client, run, **options)
     except Exception as error:
         failure = error
@@ -699,7 +831,7 @@ def build_map(name="sturmwerft"):
     shutil.rmtree(previous)
 
 
-def wait_for_server(service="sternenfront", seconds=240):
+def wait_for_server(service=GAME, seconds=240):
     deadline = time.monotonic() + seconds
     while "Done (" not in compose("logs", "--no-log-prefix", "--since", "5m", "--tail", "60", service, capture=True).stdout:
         if time.monotonic() > deadline:
@@ -736,7 +868,7 @@ def main():
     commands = parser.add_subparsers(dest="action", required=True)
     commands.add_parser("up")
     restart = commands.add_parser("restart", help="restart services, by default the game server, picking up staged jars")
-    restart.add_argument("services", nargs="*", default=["sternenfront"])
+    restart.add_argument("services", nargs="*", default=[GAME])
     down = commands.add_parser("down")
     down.add_argument("-v", action="store_true", help="also delete the database and the client's download cache")
     logs = commands.add_parser("logs")
@@ -754,6 +886,10 @@ def main():
     scenario.add_argument("--full", action="store_true", help="scales: every combination instead of the common ones")
     scenario.add_argument("--hero", choices=sorted(HERO_NAMES), help="hero: which one, of the side being played")
     scenario.add_argument("--faction", help="pick this side first, from the waiting lobby: Republik or Separatisten")
+    scenario.add_argument("--command", help="camera: the command that starts the cinematic, without its slash")
+    scenario.add_argument("--ticks", type=int, help="camera: how many client ticks to trace")
+    scenario.add_argument("--choice", choices=["fabrik", "gefangene"], help="story: what the party decides")
+    scenario.add_argument("--rejoin", action="store_true", help="story: drop out after the briefing and come back")
     call = commands.add_parser("c", help="one client command, as: c hold key=use ticks=20")
     call.add_argument("cmd")
     call.add_argument("fields", nargs="*")
@@ -780,7 +916,8 @@ def main():
     elif args.action == "round":
         print(json.dumps(into_round(wait_for_client(), not args.watch_intro), indent=1, ensure_ascii=False))
     elif args.action == "scenario":
-        return run_scenario(args.name, **({"full": True} if args.full else {}), **({"hero_name": args.hero} if args.hero else {}), faction=args.faction)
+        options = {"full": args.full or None, "hero_name": args.hero, "command": args.command, "ticks": args.ticks, "choice": args.choice, "rejoin": args.rejoin or None}
+        return run_scenario(args.name, faction=args.faction, **{key: value for key, value in options.items() if value is not None})
     elif args.action == "c":
         print(json.dumps(Client()(args.cmd, **dict(map(field, args.fields))), indent=1, ensure_ascii=False))
     return 0

@@ -19,6 +19,9 @@ dev/verify/verify.py down        # -v also deletes the database and the download
 After `stagePlugins`, `restart` restarts the game server and `join` reconnects; `restart client` or `restart velocity`
 picks up a changed mod or a new resource pack.
 
+`VERIFY_GAME=story` runs the story prototype (`paper/story`) instead of Sternenfront for every command; `down` the other
+one first, since both take the proxy's first-join route.
+
 ## Scenarios
 
 Each scenario reaches the state it needs itself, writes a folder under `dev/verify/client-mod/run/screenshots` and prints
@@ -38,6 +41,11 @@ first and open a full frame only where it shows something.
   headshot lands, how many of each it heard, and how far each hit moved the player.
 - `glint` faces an enemy scout from 20 to 40 blocks and photographs its scope's glint once the scout has the player in
   its sights. A player's own scope needs a second player, which this rig does not have.
+
+- `camera --command sfintro` starts a cinematic and records the camera's pose at every client tick to `trace.json`. The
+  report says how long the client really looked through the camera and how evenly it moved within each shot.
+- `story --choice fabrik` (with `VERIFY_GAME=story`) plays the whole mission, with a teleport to the relay, and ends with
+  that decision; `--rejoin` drops out after the briefing and comes back.
 
 `sternenfront-overrides.yml` makes heroes free and brings the relic early on this network only.
 
@@ -71,8 +79,9 @@ recording there and reports how many animated bodies it drew.
 | `gui_scale`, `window` | `value`; `width height` | changes the UI scale or the window |
 | `option` | `fov fov_effects render_distance particles perspective hide_hud` | client options; `fov_effects` is the 0 to 1 FOV effects slider |
 | `screenshot`, `capture` | `name`; `frames every` | one image, or one every few ticks |
+| `trace` | `ticks` | the camera entity's position, rotation and type at the end of each client tick |
 | `entities` | `radius totals_only` | what the client sees around the player |
-| `events` | `since` | every change to the HUD, screen, health and chat and every sound played, by client tick, recorded each tick so nothing short-lived is missed |
+| `events` | `since` | every change to the HUD, screen, camera entity, health and chat and every sound played, by client tick, recorded each tick so nothing short-lived is missed |
 
 `verify.py rcon "<command>"` runs a server command, such as `tp` or `damage`.
 
