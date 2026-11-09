@@ -34,6 +34,10 @@ first and open a full frame only where it shows something.
 - `hero --hero jedi` deploys as a hero and uses both abilities beside an enemy. Separatist heroes need
   `--faction Separatisten` from the waiting lobby, so `restart` and `join` first.
 - `relic` takes the relic and uses the champion's abilities.
+- `underfire` stands still in the enemy's sight without shooting back: frames right after a bolt whizzes past or a
+  headshot lands, how many of each it heard, and how far each hit moved the player.
+- `glint` faces an enemy scout from 20 to 40 blocks and photographs its scope's glint once the scout has the player in
+  its sights. A player's own scope needs a second player, which this rig does not have.
 
 `sternenfront-overrides.yml` makes heroes free and brings the relic early on this network only.
 
