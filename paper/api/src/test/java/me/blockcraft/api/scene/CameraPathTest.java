@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CameraPathTest {
     @Test
@@ -32,14 +33,37 @@ public class CameraPathTest {
     }
 
     @Test
-    public void glidesThroughAnInteriorKeyframeWithoutStopping() {
+    public void keepsItsPaceThroughAnInteriorKeyframeAndEasesOnlyAtTheShotsEnds() {
         var path = new CameraPath(List.of(
                 new CameraPath.Keyframe(0, new CameraPath.Pose(0, 0, 0, 0, 0), false),
-                new CameraPath.Keyframe(20, new CameraPath.Pose(10, 0, 0, 0, 0), false),
-                new CameraPath.Keyframe(40, new CameraPath.Pose(20, 0, 0, 0, 0), false)));
-        assertEquals(10, path.sample(20).x(), 0.0001);
-        assertEquals(0.5, path.sample(20).x() - path.sample(19).x(), 0.05);
-        assertEquals(0.5, path.sample(21).x() - path.sample(20).x(), 0.05);
+                new CameraPath.Keyframe(30, new CameraPath.Pose(15, 0, 0, 0, 0), false),
+                new CameraPath.Keyframe(60, new CameraPath.Pose(30, 0, 0, 0, 0), false)));
+        double cruise = path.sample(30).x() - path.sample(29).x();
+        assertEquals(15, path.sample(30).x(), 0.0001);
+        assertEquals(cruise, path.sample(31).x() - path.sample(30).x(), 0.0001);
+        assertEquals(cruise, path.sample(25).x() - path.sample(24).x(), 0.0001);
+        assertTrue(path.sample(1).x() - path.sample(0).x() < cruise / 10);
+    }
+
+    @Test
+    public void neverSwingsPastAKeyframeWhenTheyAreUnevenlySpaced() {
+        var path = new CameraPath(List.of(
+                new CameraPath.Keyframe(0, new CameraPath.Pose(0, 0, 0, 0, 0), false),
+                new CameraPath.Keyframe(10, new CameraPath.Pose(20, 0, 0, 0, 0), false),
+                new CameraPath.Keyframe(60, new CameraPath.Pose(21, 0, 0, 0, 0), false)));
+        for (int tick = 1; tick <= 60; tick++) {
+            assertTrue(path.sample(tick).x() >= path.sample(tick - 1).x());
+            assertTrue(path.sample(tick).x() <= 21);
+        }
+    }
+
+    @Test
+    public void followsASubjectThatMovesBetweenKeyframes() {
+        CameraPath.Look walker = tick -> new CameraPath.Target(tick, 0, 10);
+        var path = new CameraPath(List.of(
+                CameraPath.Keyframe.aimed(0, new Location(null, 0, 0, 0), walker, false),
+                CameraPath.Keyframe.aimed(40, new Location(null, 0, 0, 0), walker, false)));
+        assertEquals(Math.toDegrees(Math.atan2(-15, 10)), path.sample(15).yaw(), 0.01);
     }
 
     @Test
