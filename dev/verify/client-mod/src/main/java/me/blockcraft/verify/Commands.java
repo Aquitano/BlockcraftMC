@@ -77,6 +77,20 @@ final class Commands {
     private record Trace(int ticks, JsonArray samples, CompletableFuture<JsonObject> done) { }
 
     private final Map<KeyMapping, Integer> held = new HashMap<>();
+    private final Map<KeyMapping, Taps> taps = new HashMap<>();
+
+    /** Taps still to come on one key, {@code every} ticks apart. */
+    private static final class Taps {
+        private int left;
+        private final int every;
+        private long next;
+
+        private Taps(int left, int every, long next) {
+            this.left = left;
+            this.every = every;
+            this.next = next;
+        }
+    }
     private final Deque<JsonObject> events = new ArrayDeque<>();
     private final Map<String, String> lastSeen = new HashMap<>();
     private GuiMessage newestChat;
@@ -93,6 +107,15 @@ final class Commands {
         if (minecraft.gui.screen() == null && !minecraft.mouseHandler.mouseGrabbed) {
             minecraft.mouseHandler.grabMouse();
         }
+        taps.entrySet().removeIf(entry -> {
+            var tap = entry.getValue();
+            if (tap.next > ticks) {
+                return false;
+            }
+            press(entry.getKey());
+            tap.next = ticks + tap.every;
+            return --tap.left <= 0;
+        });
         held.entrySet().removeIf(entry -> {
             boolean expired = entry.getValue() >= 0 && entry.getValue() <= ticks;
             entry.getKey().isDown = !expired;
@@ -214,8 +237,12 @@ final class Commands {
             }
             case "tap" -> {
                 var mapping = key(minecraft, body.get("key").getAsString());
-                mapping.clickCount++;
-                held.put(mapping, (int) (ticks + 2));
+                int times = body.has("times") ? body.get("times").getAsInt() : 1;
+                press(mapping);
+                int every = Math.max(3, body.has("every") ? body.get("every").getAsInt() : 5);
+                if (times > 1) {
+                    taps.put(mapping, new Taps(times - 1, every, ticks + every));
+                }
                 yield done(new JsonObject());
             }
             case "hotbar" -> {
@@ -254,6 +281,11 @@ final class Commands {
             }
             default -> throw new IllegalArgumentException("Unknown command: " + name);
         };
+    }
+
+    private void press(KeyMapping mapping) {
+        mapping.clickCount++;
+        held.put(mapping, (int) (ticks + 2));
     }
 
     private static CompletableFuture<JsonObject> done(JsonObject value) {
@@ -296,6 +328,14 @@ final class Commands {
             if (minecraft.hitResult instanceof EntityHitResult hit) {
                 value.addProperty("looking_at", name(hit.getEntity()));
             }
+            value.addProperty("dimension", minecraft.level.dimension().identifier().toString());
+            var border = minecraft.level.getWorldBorder();
+            var edge = new JsonObject();
+            edge.addProperty("x", round(border.getCenterX()));
+            edge.addProperty("z", round(border.getCenterZ()));
+            edge.addProperty("size", round(border.getSize()));
+            edge.addProperty("distance", round(border.getDistanceToBorder(player)));
+            value.add("border", edge);
         }
         return value;
     }

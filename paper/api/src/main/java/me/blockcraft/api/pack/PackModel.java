@@ -148,7 +148,7 @@ public enum PackModel {
         NONE(""),
         /** {@code <path>_guard} while its holder uses the item, as a blade raised to block. */
         GUARD("_guard"),
-        /** {@code <path>_aim} in the holder's own first-person view while their sneak key is down, as a gun at the sights. */
+        /** {@code <path>_aim} in the holder's own first-person view while their use key is down, as a gun at the sights. */
         AIM("_aim");
 
         private final String suffix;

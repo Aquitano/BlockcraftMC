@@ -138,6 +138,19 @@ def bolt_impact(rng):
     return layer(0.6 * sizzle, splash, 0.7 * thump(300, 80, 0.08, 40))
 
 
+def heavy_thump(rng):
+    """The kick under a heavy repeater's shot: a short low boom and a dry crack, so a burst reads as separate blows."""
+    boom = thump(150, 42, 0.22, 16)
+    body = unit(filtered(noise(rng, 0.12), "lowpass", 500, 4)) * decay(0.12, 30, 0.001)
+    crack = unit(filtered(noise(rng, 0.03), "bandpass", [1500, 5000])) * decay(0.03, 140, 0.0005)
+    return np.tanh(1.8 * layer(boom, 0.7 * body, 0.35 * crack))
+
+
+def bolt_heavy_impact(rng):
+    """A heavy bolt bursting on what it hits: a small blast under the usual sizzle."""
+    return layer(explosion(rng, 0.45, 0.32), (0.005, 0.7 * bolt_impact(rng)))
+
+
 def bolt_whizz(rng, seconds, top, bottom):
     """A bolt passing the ear: a buzzing charge that swells to its nearest point and drops in pitch as it goes."""
     t = progress(seconds)
@@ -397,6 +410,8 @@ SOUNDS = {
     "intro.radio_close": (0.35, lambda rng: radio_click(rng, False)),
     "intro.transition": (0.45, intro_transition),
     "bolt.impact": (0.7, bolt_impact),
+    "bolt.heavy_impact": (0.8, bolt_heavy_impact),
+    "blaster.heavy_thump": (0.8, lambda rng: [heavy_thump(rng), heavy_thump(rng)]),
     "bolt.whizz": (0.7, lambda rng: [bolt_whizz(rng, 0.26, 1500, 520), bolt_whizz(rng, 0.3, 1300, 430),
                                      bolt_whizz(rng, 0.22, 1750, 640)]),
     "saber.whirl": (0.6, saber_whirl),
@@ -488,6 +503,7 @@ with tempfile.TemporaryDirectory() as directory:
 if not args.only:
     events.update(recorded_sabers(ROOT))
     events.update(recorded_battle(ROOT))
+    events.update(recorded_battle(ROOT, Path(__file__).parent / "audio/ocean"))
     events.update(intro_briefings(ROOT))
     events.update(bot_voices(ROOT))
     events.update(radio_calls(ROOT))

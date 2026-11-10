@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.game;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
+import io.papermc.paper.datacomponent.item.SwingAnimation;
 import io.papermc.paper.datacomponent.item.UseEffects;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
@@ -87,6 +88,8 @@ public final class Loadouts {
                 Formatter.number("range", Math.round(stats.range()))));
         var item = blaster.build(blaster.model().item().name(messages.get("blaster." + blaster.key() + ".name")).lore(lore)
                 .hideAttributes().edit(meta -> meta.setUnbreakable(true)));
+        // A left click fires, and the vanilla swing that comes with it would dip the gun out of view.
+        item.setData(DataComponentTypes.ATTACK_ANIMATION, SwingAnimation.swingAnimation().type(SwingAnimation.Animation.NONE).build());
         if (blaster.isLongRifle()) {
             item.setData(DataComponentTypes.USE_EFFECTS, UseEffects.useEffects().canSprint(false).speedMultiplier((float) aim.scopedWalk()).build());
         }
