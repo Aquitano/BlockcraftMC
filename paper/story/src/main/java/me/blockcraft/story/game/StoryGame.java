@@ -123,9 +123,12 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
                 OptionalInt.empty(), this::greet);
         this.voices = Voices.load();
         warnLongVoices();
-        this.dialogue = new DialogueHud(plugin, DialogueHud.Settings.from(config.getConfigurationSection("dialogue"),
-                new DialogueHud.Settings.Hints(plain("dialogue.hint.advance"), plain("dialogue.hint.choose"), plain("dialogue.hint.close"))));
-        this.scenes = new Cutscenes(plugin, messages, voices, config.getDouble("cutscenes.characters-per-tick"), config.getInt("cutscenes.fade-ticks"));
+        var dialogueSettings = DialogueHud.Settings.from(config.getConfigurationSection("dialogue"),
+                new DialogueHud.Settings.Hints(plain("dialogue.hint.advance"), plain("dialogue.hint.choose"), plain("dialogue.hint.close"),
+                        speaker -> PlainTextComponentSerializer.plainText().serialize(
+                                messages.get("dialogue.hint.watching", Placeholder.unparsed("player", speaker.getName())))));
+        this.dialogue = new DialogueHud(plugin, dialogueSettings, round::players);
+        this.scenes = new Cutscenes(plugin, messages, voices, dialogueSettings.typing(), config.getInt("cutscenes.fade-ticks"));
         this.npcs = new StoryNpcs(plugin);
         this.blasters = new Blasters(plugin, config.getDouble("blaster.damage"), config.getInt("blaster.cooldown-ticks"),
                 config.getDouble("blaster.range"));

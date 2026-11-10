@@ -10,6 +10,7 @@ import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.SceneTimeline;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.story.dialogue.DialogueHud;
 import me.blockcraft.story.dialogue.DialoguePanel;
 import me.blockcraft.story.dialogue.Voices;
 import net.kyori.adventure.key.Key;
@@ -58,16 +59,16 @@ public final class Cutscenes implements AutoCloseable {
     private final Messages messages;
     private final Voices voices;
     private final Scenes scenes;
-    private final double charactersPerTick;
+    private final DialogueHud.Typing typing;
     private final int fadeTicks;
     private final Set<Showing> showing = new HashSet<>();
 
-    public Cutscenes(Plugin plugin, Messages messages, Voices voices, double charactersPerTick, int fadeTicks) {
+    public Cutscenes(Plugin plugin, Messages messages, Voices voices, DialogueHud.Typing typing, int fadeTicks) {
         this.plugin = plugin;
         this.messages = messages;
         this.voices = voices;
         this.scenes = new Scenes(plugin);
-        this.charactersPerTick = Math.max(0.5, charactersPerTick);
+        this.typing = typing;
         this.fadeTicks = Math.max(1, fadeTicks);
     }
 
@@ -122,16 +123,13 @@ public final class Cutscenes implements AutoCloseable {
         }
     }
 
-    /** The line in the dialogue panel, typing out at the pace of its recording, or at the configured pace without one. */
+    /** The line in the dialogue panel, typing out as a conversation's does. */
     private void subtitle(Cutscene cutscene, Player viewer, int tick) {
         cutscene.lineAt(tick).ifPresentOrElse(line -> {
-            var text = plain(messages.get(line.text()));
-            var page = DialoguePanel.pages(text).getFirst();
-            double rate = voices.of(line.text()).map(voice -> Math.max(charactersPerTick / 2, text.length() / (voice.ticks() * 0.85)))
-                    .orElse(charactersPerTick);
+            var page = DialoguePanel.pages(plain(messages.get(line.text()))).getFirst();
             int age = tick - line.tick();
             viewer.sendActionBar(DialoguePanel.render(new DialoguePanel.View(plain(messages.get("cutscene.speaker." + line.speaker())),
-                    DialoguePanel.revealed(page, (int) ((age + 1) * rate)), false, List.of(), 0, "",
+                    DialoguePanel.revealed(page, (int) ((age + 1) * typing.rate(DialoguePanel.length(page)))), false, List.of(), 0, "",
                     Math.max(0, RISE - age * 2), false), new DialoguePanel.Size(page.size(), 0, false)));
         }, () -> {
             if (cutscene.lines().stream().anyMatch(line -> line.tick() + line.ticks() == tick)) viewer.sendActionBar(Component.empty());

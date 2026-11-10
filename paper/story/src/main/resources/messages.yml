@@ -39,6 +39,7 @@ dialogue:
     advance: "Shift: weiter"
     close: "Shift: schließen"
     choose: "Zahl oder Mausrad wählen, Shift bestätigt"
+    watching: "<player> antwortet"
 
 stage:
   briefing: "<sternenfront>Ziel <dark>● <white>Sprich mit Kommandantin Vela"

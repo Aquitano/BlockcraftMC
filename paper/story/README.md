@@ -49,11 +49,18 @@ for a later mission to read.
 ## Conversations
 
 [`DialogueHud`](src/main/java/me/blockcraft/story/dialogue/DialogueHud.java) draws a conversation in a panel above the
-hotbar: the speaker, up to five lines of text typing out, then up to five numbered answers. Sneak shows the rest of a
+hotbar: the speaker, up to five lines of text typing out, then up to five numbered answers. A page types out evenly in
+`dialogue.typing-ticks` (1.5 seconds, as Typewriter's dialogue does), well ahead of its voice, and only a short page
+types slower, at `slowest-characters-per-tick`. Sneak shows the rest of a
 line, turns a page, confirms the highlighted answer or closes a line without answers, which also closes by itself
 `dialogue.linger-seconds` after it has been spoken, or as soon as the player walks six blocks away. The number keys pick an answer at once and the scroll wheel moves
 the highlight. While the panel is open the hotbar rests on slot 7, so a scroll lands on slot 6 or 8 and never on an
 answer's number. Movement and the camera stay free; walking away ends the conversation as BetonQuest's `stop` setting says.
+
+Party members within `dialogue.audience-radius` of the member who talks watch the same panel and hear the same voice.
+Only that member answers: the others see the highlight move and the hint names who is answering. A member joins as a
+line starts and stops watching on walking away, starting a conversation of their own or entering a cutscene. The
+report's decision stays a vote, which each member casts in their own conversation with Vela.
 
 The panel is one action bar line whose glyphs the pack's text shader moves into place (`hud_panel.glsl`, red 234), with
 letters from the pack's `blockcraft:text` so their widths hold under a player's own font pack. It knows nothing of
@@ -73,8 +80,8 @@ Every spoken line has its own sound event, `story.voice.<key>`, played as its te
 To use a recording, put it at `resourcepack/audio/story/recorded/<key>.wav` (`.ogg`, `.flac` and `.mp3` work too), as
 `vela.greeting.wav`, and run `uv run resourcepack/StoryVoices.py`. A recording wins over the Piper placeholder in
 `audio/story/placeholder/`. The script normalizes it, puts the radio filter on `funk` lines, writes it into the pack and
-writes its length to `voices.properties`. The subtitle types out at the pace of that length, and the server warns at
-start when a voice outlasts its cutscene line's `ticks`. Without arguments the script also lists every line that has
+writes its length to `voices.properties`. A line without answers stays open until its voice ends, and the server warns
+at start when a voice outlasts its cutscene line's `ticks`. Without arguments the script also lists every line that has
 no audio. `--model <path to de_DE-thorsten-high.onnx>` synthesizes placeholders for new or changed lines.
 
 ## Cutscenes

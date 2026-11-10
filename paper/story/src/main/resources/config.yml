@@ -13,11 +13,14 @@ rejoin-seconds: 300
 rewards:
   win: 25
 
-# The conversation panel above the hotbar. A line with a recording types out at its pace instead, never slower than
-# half this. A line without answers closes this long after it is read and spoken; 0 waits for sneak.
+# The conversation panel above the hotbar. A page types out evenly in typing-ticks, ahead of its voice, but a short one
+# no slower than slowest-characters-per-tick. A line without answers closes this long after it is read and spoken; 0
+# waits for sneak. Party members within audience-radius of the member who talks watch and hear the conversation.
 dialogue:
-  characters-per-tick: 1.5
+  typing-ticks: 30
+  slowest-characters-per-tick: 1
   linger-seconds: 6
+  audience-radius: 12
   # The hotbar slot the panel rests on, whose neighbours are not among the numbered answers 1 to 5.
   resting-slot: 6
 
@@ -56,10 +59,9 @@ mission:
 # head with `follow`; `cut: true` starts a new shot. `actors` walk through their `marks` with BetterModel's walk and
 # play the `gestures` of their model (talk, point, beckon, nod, rest, look), `idle` for the whole scene; `vela` is the
 # NPC herself and every other actor is spawned for the scene. `lines` are subtitles from messages.yml with the voice
-# of the same key. `craft` flies a ship's model past, `emitters` keep particles going, `sounds` play to each viewer,
-# at `at` when it is given, and `effects` are EXPLOSION or FLARE.
+# of the same key, typing out at the dialogue's pace. `craft` flies a ship's model past, `emitters` keep particles
+# going, `sounds` play to each viewer, at `at` when it is given, and `effects` are EXPLOSION or FLARE.
 cutscenes:
-  characters-per-tick: 1.5
   fade-ticks: 12
   scenes:
     intro:
