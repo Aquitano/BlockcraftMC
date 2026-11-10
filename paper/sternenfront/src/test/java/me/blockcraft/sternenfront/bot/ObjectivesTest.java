@@ -1,9 +1,12 @@
 package me.blockcraft.sternenfront.bot;
 
 import me.blockcraft.sternenfront.bot.Objectives.Hold;
+import me.blockcraft.sternenfront.game.BattlePlan.Point;
+import me.blockcraft.sternenfront.game.Spawn;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
@@ -58,5 +61,15 @@ public class ObjectivesTest {
         assertEquals(0, Objectives.choose(List.of(
                 new Objectives.Post(0, Hold.OPEN, 20, 80, 0, 0),
                 new Objectives.Post(1, Hold.OPEN, 70, 80, 2, 60)), -1, 25, 80).orElseThrow());
+    }
+
+    @Test
+    public void aBotDeploysAtTheLegalSpawnNearestItsObjectiveAndAtHeadquartersWithoutOne() {
+        var legal = List.of(new Objectives.Start(new Spawn.Headquarters(), new Point(0, 0)),
+                new Objectives.Start(new Spawn.Post(0), new Point(60, 0)),
+                new Objectives.Start(new Spawn.Post(1), new Point(100, 40)));
+        assertEquals(new Spawn.Post(0), Objectives.start(legal, Optional.of(new Point(70, -10))));
+        assertEquals(new Spawn.Headquarters(), Objectives.start(legal, Optional.of(new Point(-20, 0))));
+        assertEquals(new Spawn.Headquarters(), Objectives.start(legal, Optional.empty()));
     }
 }

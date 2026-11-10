@@ -26,6 +26,13 @@ public class BotAimTest {
     }
 
     @Test
+    public void aHitThrowsASettledAimPartWayBackAndAHeadshotAllTheWay() {
+        assertEquals(185, BotAim.flinched(100, 200, 30, 0.5));
+        assertEquals(195, BotAim.flinched(195, 200, 30, 0.5));
+        assertEquals(200, BotAim.flinched(100, 200, 30, 1));
+    }
+
+    @Test
     public void firstShotsMissToOneSideUntilTheAimSettles() {
         var aim = new Vector(0, 0, 1);
         var first = BotAim.misaim(aim, 0, 0.15, 0, 30);
@@ -45,6 +52,23 @@ public class BotAimTest {
         assertEquals(1, turned.length(), 0.001);
         assertTrue(turned.getZ() > 0);
         assertEquals(new Vector(0, 0, 1), BotAim.turn(new Vector(0.01, 0, 1), start, 12));
+    }
+
+    @Test
+    public void leadsAMovingTargetByTheShareOfItsMoveWhileTheBoltFlies() {
+        var relative = new Vector(0, 0, 45);
+        var strafe = new Vector(0.2, 0, 0);
+        assertEquals(new Vector(2, 0, 0), BotAim.lead(relative, strafe, 4.5, 1));
+        assertEquals(new Vector(0.6, 0, 0), BotAim.lead(relative, strafe, 4.5, 0.3));
+        assertEquals(0, BotAim.lead(relative, new Vector(), 4.5, 1).length(), 1e-9);
+    }
+
+    @Test
+    public void firesOnlyOnceTheAimHasTurnedOntoTheTarget() {
+        var wanted = new Vector(0, 0, 1);
+        assertTrue(BotAim.onTarget(new Vector(0.1, 0, 1), wanted, 8));
+        assertFalse(BotAim.onTarget(new Vector(0.2, 0, 1), wanted, 8));
+        assertTrue(BotAim.onTarget(new Vector(1, 0, 0), new Vector(), 8));
     }
 
     @Test

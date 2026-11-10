@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "Tells the resource pack's shaders that this world is a Sternenfront battlefield",
+    "min_format": 121,
+    "max_format": 121
+  }
+}

@@ -60,12 +60,12 @@ recording there and reports how many animated bodies it drew.
 
 | Command | Fields | Does |
 |---|---|---|
-| `status` | | window, GUI scale, position, health, hotbar, FPS, dimension and the world border the client holds |
+| `status` | | window, GUI scale, position, health, hotbar, FPS, dimension, the world border the client holds, the block it looks at and whether it is breaking one |
 | `hud` | | action bar, title, subtitle, boss bars, sidebar and chat as text, each with its width |
 | `screen` | | the open screen's title, buttons and container slots |
 | `press`, `click`, `close` | `label`; `slot`, `button` | use a dialog button or a menu slot |
 | `mouse` | `x y` | moves the cursor in window pixels, for a menu screenshot without a tooltip |
-| `hold`, `release`, `tap` | `key`, `ticks`; `times`, `every` | `forward back left right jump sneak sprint attack use swap drop inventory`; `tap` repeats `times` taps `every` ticks apart |
+| `hold`, `release`, `tap` | `key`, `ticks`; `times`, `every` | `forward back left right jump sneak sprint attack use swap drop inventory`; `hold` clicks as the key goes down, as a mouse does; `tap` repeats `times` taps `every` ticks apart |
 | `hotbar` | `slot` | selects a slot |
 | `look`, `look_at`, `aim` | `yaw pitch`; `x y z`; `name` | turns the camera, `aim` to the nearest match |
 | `command`, `chat` | `text` | sends either as the player |
@@ -73,7 +73,7 @@ recording there and reports how many animated bodies it drew.
 | `option` | `fov fov_effects render_distance particles perspective hide_hud` | client options; `fov_effects` is the 0 to 1 FOV effects slider |
 | `screenshot`, `capture` | `name`; `frames every` | one image, or one every few ticks |
 | `entities` | `radius totals_only` | what the client sees around the player |
-| `events` | `since` | every change to the HUD, screen, health and chat and every sound played, by client tick, recorded each tick so nothing short-lived is missed |
+| `events` | `since` | every change to the HUD, screen, health, chat, field of view and use key and every sound played, by client tick, recorded each tick so nothing short-lived is missed |
 
 `verify.py rcon "<command>"` runs a server command, such as `tp` or `damage`.
 

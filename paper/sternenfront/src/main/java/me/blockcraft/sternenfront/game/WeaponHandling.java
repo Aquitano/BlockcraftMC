@@ -72,7 +72,11 @@ public record WeaponHandling(Map<Blaster, Factors> blasters, double falloffFrom,
 
     /** Whether a gun whose holder last sprinted at {@code sprintedAt} is still coming up at {@code tick}. */
     public boolean lowered(Blaster blaster, long sprintedAt, long tick) {
-        return tick - sprintedAt <= blasters.get(blaster).sprintRecoveryTicks();
+        return tick - sprintedAt <= sprintRecoveryTicks(blaster);
+    }
+
+    public int sprintRecoveryTicks(Blaster blaster) {
+        return blasters.get(blaster).sprintRecoveryTicks();
     }
 
     public double damage(double base, double travelled, double range) {

@@ -1,7 +1,11 @@
 package me.blockcraft.sternenfront.bot;
 
+import me.blockcraft.sternenfront.game.BattlePlan;
+import me.blockcraft.sternenfront.game.Spawn;
+
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 final class Objectives {
@@ -10,6 +14,9 @@ final class Objectives {
 
     /** {@code assigned} counts the other fireteams already going there; {@code fromEnemy} is the walk from the enemy's headquarters. */
     record Post(int index, Hold hold, double distance, double fromEnemy, int assigned, double pull) { }
+
+    /** A spawn the bot's side may deploy at, by the same rule as a player's, and where it lies. */
+    record Start(Spawn spawn, BattlePlan.Point at) { }
 
     private static final double SPREAD = 35;
 
@@ -34,5 +41,11 @@ final class Objectives {
 
     private static double cost(Post post, double reinforce) {
         return post.distance() + post.assigned() * SPREAD - post.pull() - (post.hold() == Hold.THREATENED ? reinforce : 0);
+    }
+
+    /** The start nearest the team's objective, the first of equals, or headquarters for a bot without one. */
+    static Spawn start(List<Start> legal, Optional<BattlePlan.Point> objective) {
+        return objective.flatMap(target -> legal.stream().min(Comparator.comparingDouble(start -> start.at().distanceSquared(target))))
+                .map(Start::spawn).orElseGet(Spawn.Headquarters::new);
     }
 }

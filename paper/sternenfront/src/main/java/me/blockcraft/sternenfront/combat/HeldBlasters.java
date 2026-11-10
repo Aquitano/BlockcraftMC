@@ -6,6 +6,8 @@ import me.blockcraft.sternenfront.game.HeatGlow;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +16,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/** The blasters in fighters' hands, drawn in the pose of their last shot or sprint and glowing with their heat. */
+/**
+ * The blasters in fighters' hands, drawn in the pose of their last shot or sprint and glowing with their heat.
+ * <p>
+ * A player's own item never takes the firing pose: a client that holds its trigger starts breaking its trigger block
+ * again whenever the held item changes, with the block's hit sound each time. Their kick comes from a cooldown on the
+ * item, which their client counts down itself, and everyone else is sent the kicked item as that player's equipment.
+ * For the same reason a held trigger keeps a venting gun's glow from pulsing in its holder's hand.
+ */
 public final class HeldBlasters {
 
     private static final int FIRING_TICKS = 3;
@@ -32,6 +41,8 @@ public final class HeldBlasters {
     /** Shooters whose last shot no body has kicked back for yet. */
     private final Set<UUID> unkicked = new HashSet<>();
     private final Map<UUID, Look> shown = new HashMap<>();
+    /** What other players were last sent as a player's main hand, which is the item itself or that item kicked back. */
+    private final Map<UUID, Look> sentToOthers = new HashMap<>();
 
     HeldBlasters(SternenfrontGame game) {
         this.game = game;
@@ -41,6 +52,9 @@ public final class HeldBlasters {
     void fired(LivingEntity shooter, long tick) {
         lastShots.put(shooter.getUniqueId(), new LastShot(shooter, tick));
         unkicked.add(shooter.getUniqueId());
+        if (shooter instanceof Player player) {
+            player.setCooldown(player.getInventory().getItemInMainHand(), FIRING_TICKS);
+        }
         show(shooter, tick);
     }
 
@@ -57,7 +71,6 @@ public final class HeldBlasters {
     void tick(long tick) {
         lastShots.values().removeIf(shot -> {
             if (!shot.shooter().isValid() || tick - shot.tick() >= FIRING_TICKS) {
-                restore(shot);
                 unkicked.remove(shot.shooter().getUniqueId());
                 return true;
             }
@@ -68,6 +81,7 @@ public final class HeldBlasters {
         if (tick % REFRESH_TICKS == 0) {
             var present = actors.stream().map(LivingEntity::getUniqueId).collect(Collectors.toSet());
             shown.keySet().retainAll(present);
+            sentToOthers.keySet().retainAll(present);
         }
     }
 
@@ -77,42 +91,62 @@ public final class HeldBlasters {
             return;
         }
         var shot = lastShots.get(actor.getUniqueId());
-        var pose = shot != null && tick - shot.tick() < FIRING_TICKS ? Blaster.Pose.FIRING
-                : actor instanceof Player player && game.lowered(player) ? Blaster.Pose.LOWERED : Blaster.Pose.READY;
-        var heat = actor instanceof Player player
-                ? HeatGlow.of(glow, game.fighter(player).heat().level(), game.fighter(player).heat().venting(tick), tick)
-                : HeatGlow.of(glow, game.bots().heat(actor), game.bots().venting(actor, tick), tick);
-        var look = new Look(pose, heat, actor instanceof Player player ? player.getInventory().getHeldItemSlot() : -1);
+        boolean firing = shot != null && tick - shot.tick() < FIRING_TICKS;
+        if (actor instanceof Player player) {
+            show(player, firing, tick);
+            return;
+        }
+        var look = new Look(firing ? Blaster.Pose.FIRING : Blaster.Pose.READY,
+                HeatGlow.of(glow, game.bots().heat(actor), game.bots().venting(actor, tick), tick), -1);
         if (look.equals(shown.put(actor.getUniqueId(), look)) && tick % REFRESH_TICKS != 0) {
             return;
         }
         var main = equipment.getItemInMainHand();
-        if (HotbarItem.of(main, Blaster.class).filter(blaster -> blaster.updateLook(main, pose, heat)).isPresent()) {
+        if (drawn(main, look)) {
             equipment.setItemInMainHand(main);
         }
         var off = equipment.getItemInOffHand();
-        if (HotbarItem.of(off, Blaster.class).filter(blaster -> blaster.updateLook(off, pose, heat)).isPresent()) {
+        if (drawn(off, look)) {
             equipment.setItemInOffHand(off);
         }
     }
 
-    /** A shooter may have put the gun away mid-shot; the hands show their blasters again the same tick. */
-    private static void restore(LastShot shot) {
-        if (shot.shooter() instanceof Player player && player.isValid()) {
-            var inventory = player.getInventory();
-            for (int slot = 0; slot < inventory.getSize(); slot++) {
-                var item = inventory.getItem(slot);
-                if (HotbarItem.of(item, Blaster.class).filter(blaster -> blaster.updateLook(item, Blaster.Pose.READY, HeatGlow.COLD)).isPresent()) {
-                    inventory.setItem(slot, item);
-                }
+    private void show(Player player, boolean firing, long tick) {
+        var fighter = game.fighter(player);
+        var heat = fighter.heat();
+        boolean held = fighter.trigger().held(tick);
+        int slot = player.getInventory().getHeldItemSlot();
+        var pose = game.lowered(player) ? Blaster.Pose.LOWERED : Blaster.Pose.READY;
+        var own = new Look(pose, HeatGlow.of(glow, heat.level(), heat.venting(tick) && !held, tick), slot);
+        var inventory = player.getInventory();
+        if (!own.equals(shown.put(player.getUniqueId(), own)) || tick % REFRESH_TICKS == 0) {
+            var main = inventory.getItemInMainHand();
+            if (drawn(main, own)) {
+                inventory.setItemInMainHand(main);
             }
+            var off = inventory.getItemInOffHand();
+            if (drawn(off, own)) {
+                inventory.setItemInOffHand(off);
+            }
+        }
+        var others = new Look(firing ? Blaster.Pose.FIRING : pose, HeatGlow.of(glow, heat.level(), heat.venting(tick), tick), slot);
+        var before = sentToOthers.put(player.getUniqueId(), others);
+        boolean differs = !others.equals(own);
+        if (before == null ? differs : !others.equals(before) || differs && tick % REFRESH_TICKS == 0) {
+            var seen = inventory.getItemInMainHand().clone();
+            drawn(seen, others);
+            player.getTrackedBy().forEach(viewer -> viewer.sendEquipmentChange(player, EquipmentSlot.HAND, seen));
         }
     }
 
+    private static boolean drawn(ItemStack item, Look look) {
+        return HotbarItem.of(item, Blaster.class).filter(blaster -> blaster.updateLook(item, look.pose(), look.heat())).isPresent();
+    }
+
     void clear() {
-        lastShots.values().forEach(HeldBlasters::restore);
         lastShots.clear();
         unkicked.clear();
         shown.clear();
+        sentToOthers.clear();
     }
 }

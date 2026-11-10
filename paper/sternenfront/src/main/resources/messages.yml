@@ -354,6 +354,7 @@ deploy:
   controls: "<prefix><accent><key> <dark>· <white><name><muted>: <ability>"
   saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
   blaster-controls: "<prefix><left>Jeder Klick ein Schuss <dark>· <right>Halten: über Kimme und Korn zielen, enger streuen."
+  automatic-controls: "<prefix><left>Halten für Dauerfeuer <dark>· <right>Halten: über Kimme und Korn zielen, enger streuen."
   scope-controls: "<prefix><left>Jeder Klick ein Schuss <dark>· <right>Halten: Zielfernrohr <dark>· <muted>Im Fernrohr kurz ruhig halten trifft genau."
   target: "<prefix><accent>Gelbe Ecken <muted>um einen Posten auf der Karte und oben zeigen dein Ziel."
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Einsatz"

@@ -12,12 +12,13 @@ final class Volley {
         this.next = tick;
     }
 
+    /** A volley held back past its next bolt goes on at its spacing from {@code tick}, not with every overdue bolt at once. */
     boolean next(long tick) {
         if (left == 0 || tick < next) {
             return false;
         }
         left--;
-        next += spacing;
+        next = Math.max(next, tick) + spacing;
         return true;
     }
 

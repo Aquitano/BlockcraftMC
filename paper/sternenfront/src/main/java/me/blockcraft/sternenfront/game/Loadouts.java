@@ -1,8 +1,13 @@
 package me.blockcraft.sternenfront.game;
 
+import io.papermc.paper.block.BlockPredicate;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemAdventurePredicate;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import io.papermc.paper.datacomponent.item.SwingAnimation;
+import io.papermc.paper.registry.RegistryKey;
+import io.papermc.paper.registry.keys.BlockTypeKeys;
+import io.papermc.paper.registry.set.RegistrySet;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.MenuState;
@@ -20,6 +25,7 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlotGroup;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -39,6 +45,8 @@ public final class Loadouts {
 
     private static final NamespacedKey BLADE_DAMAGE = new NamespacedKey("sternenfront", "blade_damage");
     private static final NamespacedKey BLADE_SPEED = new NamespacedKey("sternenfront", "blade_speed");
+    private static final NamespacedKey TRIGGER_SPEED = new NamespacedKey("sternenfront", "trigger_speed");
+    private static final double INSTANT_STRIKES = 1000;
     private static final NamespacedKey CLASS_SPEED = new NamespacedKey("sternenfront", "class_speed");
     private static final NamespacedKey CLASS_SCALE = new NamespacedKey("sternenfront", "class_scale");
     private static final double PLAYER_BASE_DAMAGE = 1;
@@ -82,10 +90,22 @@ public final class Loadouts {
         lore.addAll(messages.getLines("blaster.stats", StatIcon.TAG,
                 Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS),
                 Formatter.number("range", Math.round(stats.range()))));
-        var item = blaster.build(blaster.model().item().name(messages.get("blaster." + blaster.key() + ".name")).lore(lore)
-                .hideAttributes().edit(meta -> meta.setUnbreakable(true)));
+        var drawn = blaster.model().item().name(messages.get("blaster." + blaster.key() + ".name")).lore(lore)
+                .hideAttributes().edit(meta -> {
+                    meta.setUnbreakable(true);
+                    meta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+                }).build();
+        // The trigger's cells have a shape only for whoever holds this item, which the pack still draws as the blaster's own.
+        var item = blaster.tag(drawn.withType(TriggerCells.ITEM));
+        item.setData(DataComponentTypes.ITEM_MODEL, drawn.getType().getKey());
+        item.setData(DataComponentTypes.CAN_BREAK, ItemAdventurePredicate.itemAdventurePredicate()
+                .addPredicate(BlockPredicate.predicate().blocks(RegistrySet.keySet(RegistryKey.BLOCK, BlockTypeKeys.LIGHT)).build()).build());
         // A left click fires, and the vanilla swing that comes with it would dip the gun out of view.
         item.setData(DataComponentTypes.ATTACK_ANIMATION, SwingAnimation.swingAnimation().type(SwingAnimation.Animation.NONE).build());
+        // The client lowers the hand after a click for as long as the item takes to strike again, which is then no time.
+        item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes()
+                .addModifier(Attribute.ATTACK_SPEED, new AttributeModifier(TRIGGER_SPEED, INSTANT_STRIKES,
+                        AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND)).build());
         return item;
     }
 

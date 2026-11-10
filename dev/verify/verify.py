@@ -232,8 +232,8 @@ def as_trooper(client):
 
 
 def blaster(item):
-    """A class's blaster, which is a hoe."""
-    return item.endswith("_hoe")
+    """A class's blaster, which is a light item so that its trigger can be held."""
+    return item == "light"
 
 
 def enemies(client, radius=64):
@@ -695,6 +695,8 @@ def build_map(name="sturmwerft"):
     staging.mkdir()
     for part in ("level.dat", "data", "dimensions", "blockcraft"):
         compose("cp", f"mapbuilder:/data/world/{part}", str(staging / part))
+    if (template / "datapacks").is_dir():
+        shutil.copytree(template / "datapacks", staging / "datapacks")
     if not (staging / "blockcraft/Sternenfront/arena.yml").is_file():
         raise RuntimeError(f"The export in {staging} is incomplete; {template} is untouched")
     template.rename(previous)

@@ -311,26 +311,32 @@ public final class Bolts {
     private record Viewer(Player player, Location eye) { }
 
     /**
-     * Enemy players whose eyes the bolt passed within the near-miss radius this tick, other than one it hit, hear it
-     * whizz by from its nearest point. Each tick covers the next stretch of its flight, so each pass counts once.
+     * Enemies whose eyes the bolt passed within the near-miss radius this tick, other than one it hit: a player hears it
+     * whizz by from its nearest point, and a bot is suppressed. Each tick covers the next stretch of its flight, so each
+     * pass counts once.
      */
     private void passBy(Bolt bolt, Vector start, double length, Optional<LivingEntity> struck) {
         double radius = game.feedback().nearMissRadius();
         var world = bolt.position.getWorld();
         var enemy = bolt.shot.faction().enemy();
         for (var fighter : game.combatants()) {
-            if (!(fighter instanceof Player player) || player.equals(bolt.shooter) || struck.filter(player::equals).isPresent()
-                    || game.factionOf(player).filter(enemy::equals).isEmpty() || !player.getWorld().equals(world)) {
+            if (fighter.equals(bolt.shooter) || struck.filter(fighter::equals).isPresent()
+                    || game.factionOf(fighter).filter(enemy::equals).isEmpty() || !fighter.getWorld().equals(world)) {
                 continue;
             }
-            var toEye = player.getEyeLocation().toVector().subtract(start);
+            var toEye = fighter.getEyeLocation().toVector().subtract(start);
             double along = toEye.dot(bolt.direction);
             if (along <= 0 || along > length) {
                 continue;
             }
             double gap = Math.sqrt(Math.max(0, toEye.lengthSquared() - along * along));
-            if (gap < radius) {
+            if (gap >= radius) {
+                continue;
+            }
+            if (fighter instanceof Player player) {
                 game.feedback().nearMiss(player, start.clone().add(bolt.direction.clone().multiply(along)).toLocation(world), 1 - gap / radius);
+            } else {
+                game.bots().passedBy(fighter, 1 - gap / radius, game.tick());
             }
         }
     }

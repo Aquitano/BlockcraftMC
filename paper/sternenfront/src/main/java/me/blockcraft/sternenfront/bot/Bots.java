@@ -11,10 +11,12 @@ import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.sternenfront.combat.Melee;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.Ability;
+import me.blockcraft.sternenfront.game.BattlePlan;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
 import me.blockcraft.sternenfront.game.Loadouts;
+import me.blockcraft.sternenfront.game.Spawn;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.WeaponHandling;
 import me.blockcraft.sternenfront.hero.Sabers;
@@ -53,6 +55,8 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public final class Bots implements Listener {
 
@@ -75,11 +79,20 @@ public final class Bots implements Listener {
     private static final int PRESS_TICKS = 100;
     private static final double EYE_HEIGHT = 1.6;
     private static final int PUSH_RETRY_TICKS = 200;
+    private static final double PLAYER_IDLE_REACH = 3;
     /** A fallen bot keeps its side this long, for its bolts still in flight and its grenades still to go off. */
     private static final int IDENTITY_AFTER_DEATH_TICKS = 200;
     /** Inside the head and arm reach BetterModel gives a body, about 75 degrees either side, with room to spare. */
     private static final double FIRE_ARC_DEGREES = 60;
     private static final float TURN_TO_FIRE_DEGREES = 20;
+    /** How far off its target a bot's aim may still be when it pulls the trigger. */
+    private static final double ON_TARGET_DEGREES = 8;
+    private static final double BELOW_EYES = 0.2;
+    /** A target that moved further than this in a tick was teleported, which no lead can follow. */
+    private static final double TELEPORT_STEP = 1;
+    private static final double SIDESTEP_MIN = 2;
+    private static final double SIDESTEP_MAX = 3;
+    private static final int SIDESTEP_TICKS = 20;
     private static final Set<String> KEEP_RUNNING = Set.of("fall-back", "to-medic", "recover", "retreat-wounded", "bound",
             "catch-up", "flank");
     private static final Set<String> STANDING_ALLOWED = Set.of("defend-peek", "fall-back", "siege", "treat-patient");
@@ -160,8 +173,15 @@ public final class Bots implements Listener {
         private Location heard;
         private long heardUntil;
         private final BotRecovery recovery = new BotRecovery();
-        private final Stillness stillness = new Stillness();
+        private final Suppression suppression = new Suppression();
+        private final Stillness stillness = new Stillness(Stillness.REACH);
         private long pressUntil;
+        private UUID attacker;
+        private long attackedUntil;
+        private Vector tracked;
+        private long trackedAt;
+        private int side = 1;
+        private long sideUntil;
 
         private Life(Heat heat, Location at, long tick, long protectedUntil) {
             this.heat = heat;
@@ -192,6 +212,7 @@ public final class Bots implements Listener {
     private final Map<UUID, Long> identitiesUntil = new HashMap<>();
     private final List<Fireteam> teams = new ArrayList<>();
     private final Map<UUID, Fireteam> squads = new HashMap<>();
+    private final Map<UUID, Stillness> idlePlayers = new HashMap<>();
     private double sightShare = 1;
     private int nextNumber;
     private int nextTeam;
@@ -222,12 +243,24 @@ public final class Bots implements Listener {
                 && tick < soldier.life.seenUntil ? Optional.of(soldier.life.aim.clone()) : Optional.empty();
     }
 
-    /** A blow to the head throws a bot's aim off as a fresh target does, so its next shots settle again. */
-    public void shaken(Entity entity, long tick) {
+    /**
+     * A bolt that hits a bot throws its aim off as a hit throws a player's: in the head as far as a fresh target does,
+     * elsewhere {@code hit-flinch} of the way, so its next shots settle again.
+     */
+    public void hit(Entity entity, boolean headshot, long tick) {
         var soldier = bodies.get(entity.getUniqueId());
-        if (soldier != null) {
-            soldier.life.acquiredAt = tick;
+        if (soldier != null && soldier.life != null) {
+            soldier.life.acquiredAt = BotAim.flinched(soldier.life.acquiredAt, tick, tuning.settleTicks(),
+                    headshot ? 1 : config.shaken().hitFlinch());
             soldier.misaimAngle = ThreadLocalRandom.current().nextDouble(2 * Math.PI);
+        }
+    }
+
+    /** An enemy bolt passed the bot {@code closeness} of the way from the edge of the near-miss radius to dead on. */
+    public void passedBy(Entity entity, double closeness, long tick) {
+        var soldier = bodies.get(entity.getUniqueId());
+        if (soldier != null && soldier.life != null) {
+            soldier.life.suppression.passed(closeness, tick, config.shaken());
         }
     }
 
@@ -420,9 +453,24 @@ public final class Bots implements Listener {
         }
     }
 
+    /** Of the spawns a player of the bot's side could deploy at now, the one nearest its team's objective. */
+    private Spawn start(Soldier soldier) {
+        var headquarters = game.map().headquarters().get(soldier.faction).zone().getCenter();
+        var legal = Stream.concat(Stream.of(new Objectives.Start(new Spawn.Headquarters(),
+                        new BattlePlan.Point(headquarters.getX(), headquarters.getZ()))),
+                game.posts().indices().stream().map(Spawn.Post::new).filter(post -> game.deployment().available(soldier.faction, post))
+                        .map(post -> new Objectives.Start(post, point(game.map().posts().get(post.index()).center())))).toList();
+        var objective = Optional.ofNullable(soldier.team).filter(team -> team.objective >= 0)
+                .map(team -> point(game.map().posts().get(team.objective).center()));
+        return Objectives.start(legal, objective);
+    }
+
+    private static BattlePlan.Point point(Location location) {
+        return new BattlePlan.Point(location.getX(), location.getZ());
+    }
+
     private void deploy(Soldier soldier, long tick) {
-        var spawns = game.map().headquarters().get(soldier.faction).spawns();
-        var at = spawns.get((soldier.number - 1) % spawns.size());
+        var at = game.deployment().spot(soldier.faction, start(soldier));
         var mob = at.getWorld().spawn(at, Skeleton.class, skeleton -> {
             skeleton.setPersistent(false);
             skeleton.setRemoveWhenFarAway(false);
@@ -474,32 +522,49 @@ public final class Bots implements Listener {
     private void think(Soldier soldier, long tick) {
         var mob = soldier.body;
         var here = mob.getLocation();
-        double sight = config.range() * sightShare;
+        forgetGone(soldier);
+        var blaster = soldier.role.blaster(soldier.faction);
+        var stats = game.config().stats(blaster);
+        double sight = (blaster.isLongRifle() ? config.marksman().sightRange() : config.range()) * sightShare;
+        double reach = Math.max(sight, stats.range());
         var visible = game.combatants().stream()
                 .filter(other -> game.hittable(soldier.faction, other))
                 .filter(other -> here.getWorld().equals(other.getWorld()))
-                .filter(other -> here.distanceSquared(other.getLocation()) <= sight * sight)
-                .filter(other -> other.getUniqueId().equals(soldier.life.target) && tick <= soldier.life.seenUntil
-                        || BotSight.sees(soldier.life.aim, other.getEyeLocation().toVector().subtract(mob.getEyeLocation().toVector()), config.visionAngle()))
+                .filter(other -> attackedBy(soldier, other, tick)
+                        ? here.distanceSquared(other.getLocation()) <= reach * reach
+                        : here.distanceSquared(other.getLocation()) <= sight * sight
+                        && (other.getUniqueId().equals(soldier.life.target) && tick <= soldier.life.seenUntil
+                        || BotSight.sees(soldier.life.aim, other.getEyeLocation().toVector().subtract(mob.getEyeLocation().toVector()), config.visionAngle())))
                 .filter(mob::hasLineOfSight).toList();
         var chosen = BotTargeting.choose(visible.stream().map(other -> new BotTargeting.Target(other.getUniqueId(),
-                here.distanceSquared(other.getLocation()))).toList(), soldier.life.target);
+                here.distanceSquared(other.getLocation()), attackedBy(soldier, other, tick))).toList(), soldier.life.target);
         var target = visible.stream().filter(other -> chosen.filter(other.getUniqueId()::equals).isPresent()).findFirst();
         soldier.life.idleAim = null;
         if (target.isPresent()) {
             var enemy = target.get();
             if (!enemy.getUniqueId().equals(soldier.life.target)) {
-                pick(soldier, enemy.getUniqueId(), tick);
+                pick(soldier, enemy.getUniqueId(), tick,
+                        attackedBy(soldier, enemy, tick) ? tuning.reactionTicks() / 2 : tuning.reactionTicks());
                 call(soldier, "contact", tick);
             }
             soldier.life.lastSeen = enemy.getLocation();
             soldier.life.seenUntil = tick + config.memoryTicks();
             soldier.life.suppress = null;
-            var wanted = enemy.getLocation().add(0, enemy.getHeight() * 0.6, 0).toVector().subtract(mob.getEyeLocation().toVector());
+            var at = enemy.getLocation().toVector();
+            var moved = soldier.life.tracked == null ? new Vector()
+                    : at.clone().subtract(soldier.life.tracked).setY(0).multiply(1.0 / (tick - soldier.life.trackedAt));
+            soldier.life.tracked = at;
+            soldier.life.trackedAt = tick;
+            var eye = mob.getEyeLocation();
+            var chest = enemy.getLocation().add(0, enemy.getHeight() * 0.6, 0);
+            var relative = (BotCover.blocked(eye, chest) ? enemy.getEyeLocation().subtract(0, BELOW_EYES, 0) : chest).toVector()
+                    .subtract(eye.toVector());
+            var wanted = relative.clone().add(BotAim.lead(relative,
+                    moved.lengthSquared() > TELEPORT_STEP * TELEPORT_STEP ? new Vector() : moved, stats.speed(), tuning.aimLead()));
             if (wanted.lengthSquared() > 0.01) {
                 soldier.life.aim = BotAim.turn(soldier.life.aim, wanted, tuning.trackingDegrees());
             }
-            if (tick >= soldier.life.reactAt) {
+            if (tick >= soldier.life.reactAt && BotAim.onTarget(soldier.life.aim, wanted, ON_TARGET_DEGREES)) {
                 fire(soldier, tick);
             }
         } else {
@@ -509,7 +574,9 @@ public final class Bots implements Listener {
                 if (wanted.lengthSquared() > 0.01) {
                     soldier.life.aim = BotAim.turn(soldier.life.aim, wanted, tuning.trackingDegrees());
                 }
-                fire(soldier, tick);
+                if (BotAim.onTarget(soldier.life.aim, wanted, ON_TARGET_DEGREES)) {
+                    fire(soldier, tick);
+                }
             } else {
                 soldier.life.volley.clear();
             }
@@ -558,6 +625,20 @@ public final class Bots implements Listener {
         }
     }
 
+    /** A target that died or left the field is gone, so nobody grenades or suppresses where it fell. */
+    private void forgetGone(Soldier soldier) {
+        if (soldier.life.target != null && !(Bukkit.getEntity(soldier.life.target) instanceof LivingEntity remembered
+                && remembered.isValid() && game.hittable(soldier.faction, remembered))) {
+            soldier.life.target = null;
+            soldier.life.lastSeen = null;
+            soldier.life.seenUntil = 0;
+        }
+    }
+
+    private static boolean attackedBy(Soldier soldier, Entity other, long tick) {
+        return other.getUniqueId().equals(soldier.life.attacker) && tick <= soldier.life.attackedUntil;
+    }
+
     /** Each member watches its own side of the team, the last one behind it; a guard looks all round. */
     private static void glance(Soldier soldier, long tick) {
         if (tick < soldier.life.glanceAt) {
@@ -574,7 +655,7 @@ public final class Bots implements Listener {
     private Optional<Location> suppression(Soldier soldier, long tick) {
         var team = soldier.team;
         if (team == null || team.threat == null || soldier.guarding >= 0 || team.flanker == soldier.number
-                || team.bounding.moving() == Bounding.NONE || team.element(soldier.number) == team.bounding.moving()
+                || team.bounding.moving() == Bounding.NONE || team.moves(soldier.number)
                 || tick < soldier.life.reactAt) {
             return Optional.empty();
         }
@@ -801,7 +882,9 @@ public final class Bots implements Listener {
                         call(flanker, "advance", tick);
                     });
         }
-        var bounders = squad.stream().filter(soldier -> soldier.number != team.flanker).toList();
+        var bounders = squad.stream().filter(soldier -> soldier.number != team.flanker)
+                .sorted(Comparator.comparing((Soldier soldier) -> soldier.number != team.leader)).toList();
+        team.bounders = bounders.stream().map(soldier -> soldier.number).toList();
         var present = new boolean[2];
         bounders.forEach(soldier -> present[team.element(soldier.number)] = true);
         int moving = team.bounding.moving();
@@ -844,11 +927,15 @@ public final class Bots implements Listener {
 
     private record Order(UUID player, int post) { }
 
-    /** The order of the nearest player of the team's faction within reach of its leader, which the team takes as its own. */
+    /**
+     * The order of the nearest player of the team's faction within reach of its leader who takes part in the round,
+     * which the team takes as its own.
+     */
     private Optional<Order> followed(Fireteam team, Location leader, long tick) {
         double range = config.squad().followRange();
         return game.combatants().stream().filter(Player.class::isInstance).map(Player.class::cast).filter(game::onField)
                 .filter(player -> game.factionOf(player).filter(team.faction::equals).isPresent())
+                .filter(player -> takingPart(player, tick))
                 .filter(player -> player.getWorld().equals(leader.getWorld()) && player.getLocation().distanceSquared(leader) <= range * range)
                 .min(Comparator.comparingDouble(player -> player.getLocation().distanceSquared(leader)))
                 .flatMap(player -> {
@@ -856,6 +943,13 @@ public final class Bots implements Listener {
                     return post.isPresent() && !team.avoiding(post.getAsInt(), tick)
                             ? Optional.of(new Order(player.getUniqueId(), post.getAsInt())) : Optional.empty();
                 });
+    }
+
+    /** Whether the player left a few blocks round one spot or fired within {@code idle-ticks}; one idle leads no team. */
+    private boolean takingPart(Player player, long tick) {
+        long still = idlePlayers.computeIfAbsent(player.getUniqueId(), ignored -> new Stillness(PLAYER_IDLE_REACH))
+                .update(player.getLocation().toVector(), tick);
+        return Math.min(still, tick - game.fighter(player).heat().lastShot()) < config.squad().idleTicks();
     }
 
     /**
@@ -962,7 +1056,7 @@ public final class Bots implements Listener {
         boolean following = withTeam && leader.filter(other -> other != soldier).isPresent() && tick >= soldier.life.soloUntil;
         boolean flanking = team != null && team.flanker == soldier.number;
         boolean underFire = withTeam && team != null && team.threat != null && !team.assaulting;
-        boolean bounding = underFire && !flanking && team.element(soldier.number) == team.bounding.moving();
+        boolean bounding = underFire && !flanking && team.moves(soldier.number);
         if (bounding && soldier.life.bound != team.bounding.bound()) {
             soldier.life.bound = team.bounding.bound();
             soldier.life.boundDone = false;
@@ -1068,8 +1162,10 @@ public final class Bots implements Listener {
             speed = settings.sprintSpeed();
         } else if (underFire) {
             activity = "overwatch";
+            destination = target.flatMap(enemy -> sidestep(soldier, here, enemy, tick)).orElse(null);
         } else if (place == Fireteam.Place.AHEAD && !flanking) {
             activity = "hold-for-team";
+            destination = target.flatMap(enemy -> sidestep(soldier, here, enemy, tick)).orElse(null);
         } else if (following) {
             activity = "follow";
             var column = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0 && other != leader.get()).toList();
@@ -1148,7 +1244,7 @@ public final class Bots implements Listener {
         }
         if (soldier.life.stuckTicks >= 100 && (activity.equals("assault") || activity.equals("strafe-in-post")
                 || activity.equals("to-medic") || activity.equals("push") || activity.equals("lookout")
-                || activity.equals("press"))) {
+                || activity.equals("press") || activity.equals("overwatch") || activity.equals("hold-for-team"))) {
             if (activity.equals("push")) {
                 soldier.pushBlockedUntil = tick + PUSH_RETRY_TICKS;
             }
@@ -1200,6 +1296,30 @@ public final class Bots implements Listener {
         var eye = new Vector(0, 1.5, 0);
         return game.map().playArea().contains(aside.toVector()) && BotCover.standingSpace(aside)
                 && !BotCover.blocked(slot.clone().add(eye), aside.clone().add(eye)) ? aside : slot;
+    }
+
+    /**
+     * A spot a few blocks to one side of a bot's line to {@code enemy}, swapping sides every second or two, so a bot in
+     * the open with no cover near is no standing target.
+     */
+    private Optional<Location> sidestep(Soldier soldier, Location here, LivingEntity enemy, long tick) {
+        var random = ThreadLocalRandom.current();
+        if (tick >= soldier.life.sideUntil) {
+            soldier.life.side = -soldier.life.side;
+            soldier.life.sideUntil = tick + random.nextInt(SIDESTEP_TICKS, 2 * SIDESTEP_TICKS + 1);
+        }
+        var toward = enemy.getLocation().toVector().subtract(here.toVector()).setY(0);
+        if (toward.lengthSquared() < 0.01) {
+            return Optional.empty();
+        }
+        var across = new Vector(-toward.getZ(), 0, toward.getX()).normalize().multiply(random.nextDouble(SIDESTEP_MIN, SIDESTEP_MAX));
+        soldier.body.getPathfinder().stopPathfinding();
+        return IntStream.of(soldier.life.side, -soldier.life.side).mapToObj(side -> here.clone().add(across.clone().multiply(side)))
+                .filter(aside -> game.map().playArea().contains(aside.toVector()) && BotCover.standingSpace(aside))
+                .filter(aside -> {
+                    var path = soldier.body.getPathfinder().findPath(aside);
+                    return path != null && path.canReachFinalPoint();
+                }).findFirst();
     }
 
     private static Location along(Soldier soldier, Location here, FrontMap.Route route) {
@@ -1349,10 +1469,12 @@ public final class Bots implements Listener {
             var blaster = soldier.role.blaster(soldier.faction);
             var aim = soldier.life.aim.clone();
             var random = ThreadLocalRandom.current();
-            double settled = Math.max(tuning.spread(), game.config().stats(blaster).spread());
+            double profileSpread = blaster.isLongRifle() ? tuning.spread() * config.marksman().aimShare() : tuning.spread();
+            double settled = Math.max(profileSpread, game.config().stats(blaster).spread());
             double spread = handling.spread(blaster, settled, WeaponHandling.Posture.walking(BotAim.moving(false, soldier.body.getVelocity())),
                     soldier.life.heat.level())
-                    * (sighted ? BotAim.settle(tick - soldier.life.acquiredAt, tuning.settleTicks(), tuning.settleSpread()) : SUPPRESSING_SPREAD);
+                    * (sighted ? BotAim.settle(tick - soldier.life.acquiredAt, tuning.settleTicks(), tuning.settleSpread()) : SUPPRESSING_SPREAD)
+                    * soldier.life.suppression.spread(tick, config.shaken());
             if (sighted) {
                 aim.add(BotAim.misaim(soldier.life.aim, soldier.misaimAngle, settled * tuning.settleSpread(),
                         tick - soldier.life.acquiredAt, tuning.settleTicks()));
@@ -1376,17 +1498,11 @@ public final class Bots implements Listener {
         }
         if (soldier != null && event.getFinalDamage() > 0
                 && event.getDamageSource().getCausingEntity() instanceof LivingEntity attacker
-                && game.hittable(soldier.faction, attacker) && attacker.getWorld().equals(soldier.body.getWorld())
-                && soldier.body.hasLineOfSight(attacker)) {
-            if (!attacker.getUniqueId().equals(soldier.life.target)) {
-                // Each switch restarts the reaction time, so two attackers could keep a bot from ever firing.
-                if (soldier.life.target != null && game.tick() <= soldier.life.seenUntil) {
-                    return;
-                }
-                pick(soldier, attacker.getUniqueId(), game.tick());
-            }
-            soldier.life.lastSeen = attacker.getLocation();
-            soldier.life.seenUntil = game.tick() + config.memoryTicks();
+                && game.hittable(soldier.faction, attacker)) {
+            soldier.life.attacker = attacker.getUniqueId();
+            soldier.life.attackedUntil = game.tick() + config.memoryTicks();
+            soldier.life.heard = attacker.getLocation();
+            soldier.life.heardUntil = game.tick() + config.alarmTicks();
         }
     }
 
@@ -1400,11 +1516,13 @@ public final class Bots implements Listener {
                 config.hurtSound().volume(), (float) ThreadLocalRandom.current().nextDouble(0.94, 1.06));
     }
 
-    private void pick(Soldier soldier, UUID target, long tick) {
+    /** Only a change of target calls this, so a reaction under way for one target never starts over. */
+    private void pick(Soldier soldier, UUID target, long tick, int reaction) {
         soldier.life.volley.clear();
         soldier.life.target = target;
-        soldier.life.reactAt = tick + tuning.reactionTicks() + ThreadLocalRandom.current().nextInt(tuning.reactionTicks() + 1);
+        soldier.life.reactAt = tick + reaction + ThreadLocalRandom.current().nextInt(reaction + 1);
         soldier.life.acquiredAt = tick;
+        soldier.life.tracked = null;
         soldier.misaimAngle = ThreadLocalRandom.current().nextDouble(2 * Math.PI);
     }
 
@@ -1572,6 +1690,7 @@ public final class Bots implements Listener {
         soldiers.clear();
         teams.clear();
         squads.clear();
+        idlePlayers.clear();
         bodies.clear();
         identities.clear();
         identitiesUntil.clear();

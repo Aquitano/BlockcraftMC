@@ -64,7 +64,8 @@ public class PackOverridesTest {
                 var firstPerson = drawn.getAsJsonArray("cases").get(0).getAsJsonObject();
                 assertEquals(file.toString(), List.of("firstperson_righthand", "firstperson_lefthand"),
                         firstPerson.getAsJsonArray("when").asList().stream().map(JsonElement::getAsString).toList());
-                var aiming = firstPerson.getAsJsonObject("model");
+                var hands = firstPerson.getAsJsonObject("model");
+                var aiming = hands.get("type").getAsString().equals("minecraft:range_dispatch") ? ready(file, hands) : hands;
                 assertEquals(file.toString(), "key.use", aiming.get("keybind").getAsString());
                 yield aiming;
             }
@@ -84,6 +85,23 @@ public class PackOverridesTest {
             assertEquals(file.toString(), found.tinted(), tintedByItem(variant));
         }
         return found;
+    }
+
+    /** While the item cools down from a shot the hands draw the firing pose, at the sights or off them, and else the gun ready. */
+    private static JsonObject ready(Path file, JsonObject hands) {
+        assertEquals(file.toString(), "minecraft:cooldown", hands.get("property").getAsString());
+        var ready = hands.getAsJsonObject("fallback");
+        var entries = hands.getAsJsonArray("entries");
+        assertEquals(file.toString(), 1, entries.size());
+        var kick = entries.get(0).getAsJsonObject();
+        assertTrue(file.toString(), kick.get("threshold").getAsDouble() > 0);
+        var kicked = kick.getAsJsonObject("model");
+        assertEquals(file.toString(), "key.use", kicked.get("keybind").getAsString());
+        var model = ready.getAsJsonObject("on_false").get("model").getAsString();
+        assertEquals(file.toString(), model + PackOverrides.FIRING, kicked.getAsJsonObject("on_false").get("model").getAsString());
+        assertEquals(file.toString(), model + PackOverrides.FIRING + PackModel.Stance.AIM.suffix(),
+                kicked.getAsJsonObject("on_true").get("model").getAsString());
+        return ready;
     }
 
     /** A tinted model's colour comes from the item's first custom_model_data colour, not from a dye or a map. */

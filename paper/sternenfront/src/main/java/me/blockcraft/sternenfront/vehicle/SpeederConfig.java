@@ -41,7 +41,7 @@ public record SpeederConfig(boolean enabled, double health, int respawnTicks, do
                         Math.max(0, root.getDouble("speeders.cannon.heat", 7)),
                         Math.max(1, root.getInt("speeders.cannon.cooldown-ticks", 4)), 1, 0, 0,
                         Math.max(0.5, root.getDouble("speeders.cannon.speed", 4.5)),
-                        Math.max(1, root.getDouble("speeders.cannon.range", 90))),
+                        Math.max(1, root.getDouble("speeders.cannon.range", 90)), Blaster.FireMode.AUTOMATIC),
                         root.getDouble("speeders.cannon.muzzle-ahead", 1.6),
                         root.getDouble("speeders.cannon.muzzle-height", 0.6)),
                 new Ram(Math.max(0, root.getDouble("speeders.ram.minimum-speed", 0.4)),

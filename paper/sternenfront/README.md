@@ -69,21 +69,29 @@ They have no permanent unlock or database record. Their body rigs and helmets co
 
 Bots fill each side to `bots.fill-per-team` fighters, players included, and fight in fireteams of up to
 `bots.squad.fireteam-size`, led by a soldier where the team has one. Each new bot takes the class its side has fewest of.
+A bot deploys where a player of its side could, at headquarters or a held post, whichever lies nearest its fireteam's
+objective. Within a spawn, bots and players land on the spot whose nearest enemy is farthest off, counted in four-block
+steps up to 24 blocks. Among those they take one with nobody within three blocks, and a spot handed out in the last
+three seconds counts as taken. The rest is chance, so nobody lands on the same spot every life.
 A team shares one objective: a post it can still take, or a held post with enemies in it, keeping its choice unless another
 is `switch-margin` blocks closer. A held post under attack counts `reinforce-pull` blocks closer, enough to bring a team
 back from the neighbouring post but not across the map. When a team moves on from a post it took, it leaves its heavy,
 else a soldier or scout other than its leader, as the post's guard; it keeps one guard out at most. The guard moves
 between the post's lookouts and rejoins the team when the post falls. Once every post is held, teams hold the one nearest
 the enemy. A team at a post its side holds keeps off the capture point, which only a guard holds: it pushes attackers it
-knows of, or enemies standing in the post, and otherwise takes the post's lookouts nearest the enemy, facing them. A team near a player of its faction takes that player's order. A team coming from
+knows of, or enemies standing in the post, and otherwise takes the post's lookouts nearest the enemy, facing them. A team near a player of its faction takes that player's order, unless that player has stayed within three blocks of one
+spot and fired no shot for `idle-ticks`. A team coming from
 another post joins the new route nearest its inner end rather than walking back to its outer waypoints.
 
 On the move the others walk in the leader's steps, `spacing` blocks apart, each `stagger` blocks to alternate sides where the
 ground allows. A member keeps the leader's pace once in its place and runs only when it falls a few places behind. The
 leader slows for a fit member behind it, and a member ahead waits for the column. Under fire the team bounds
 by pairs along its authored route: one pair runs `bound-distance` blocks while the other covers it from cover and fires at
-where the enemy was last seen. A team held up for `flank-after-ticks` sends one member round by another route. Near a
-post it is taking the whole team spreads into it. Bots take cover only while covering, venting or wounded.
+where the enemy was last seen. The pairs alternate over the members near the leader that neither guard nor flank, and
+the pair without the leader runs first. A team held up for `flank-after-ticks` sends one member round by another route. Near a
+post it is taking the whole team spreads into it. Bots take cover only while covering, venting or wounded. A covering
+bot, or one waiting for its column, that sees an enemy and finds no cover steps two or three blocks to alternating sides
+of its line to that enemy.
 
 A bot below 30% health leaves the push until it heals past that: it takes cover, else runs to its fireteam's medic, else
 falls back from the enemy, else stands still. A wounded leader hands the lead to a fit member. Bots regenerate out of
@@ -102,7 +110,16 @@ When a member falls, its teammates take the killer's position as contact for
 explosives at enemies dug into a post or hidden behind cover, and a heavy holding open ground under fire raises its shield
 wall. A bot's aim scatters on a fresh target and settles over `aim-settle-ticks`, and its first shots go to one side
 of the target, closing in over the same ticks. It opens up while the bot walks and as its blaster heats, by the same
-`combat.handling` rule as a player's. Each member watches its own sector.
+`combat.handling` rule as a player's. It aims `aim-lead` of the way ahead of a moving target that its bolt needs, at
+the chest where it can see it and just under the eyes where a wall hides the chest, and fires only once its aim is within
+8 degrees of that point. A bot with a long rifle sees `bots.marksman.sight-range` blocks and aims with `aim-share` of its
+profile's `aim-spread`. A hit and gunfire throw a bot off as they throw a player off: a body hit undoes
+`bots.shaken.hit-flinch` of its settling, and each enemy bolt that passes within the near-miss radius of its eyes
+suppresses it, which widens its spread until it fades. Each member watches its own sector.
+
+A bot turns on whoever shoots it. An enemy that hit it within `memory-ticks` counts as half as far away when it picks a
+target, and it sees that enemy behind it too and as far as its own blaster reaches; turning on it takes half the usual
+reaction time. A bot forgets a target at once when that target dies or leaves the field.
 
 ## Arena template
 
@@ -126,18 +143,49 @@ also removes them from that viewer's tab list.
 A recording holds the bare fighters. `RecordedModel` marks a bot with its model, so a replay server with BetterModel draws
 and animates it again; without the plugin it plays back as an equipped skeleton. Players play back as mannequins.
 
-Left click fires and right click aims. The 26.3 client sends a left click once when it goes down and never again while
-it is held, so every click is one pull of the trigger and no blaster fires on its own: a repeater fires its burst per
-click. A held click repeats only while it breaks a block, which an adventure player can do only with `can_break`; that
-sends nothing against the sky and plays the block's hit sound every four ticks, so it stays unused. A click up to three
-ticks before the blaster is ready fires once it is, and an earlier one does nothing. Paper fires `PlayerArmSwingEvent`
-once for each left click, on air, a block or an entity, and a click on a fighter close by with a blaster in hand fires
-instead of punching. A blaster's `attack_animation` is none, so the click does not swing the gun out of view. Neither
-the spear's `piercing_weapon` nor its `kinetic_weapon`, `attack_range`, `minimum_attack_charge` or `swing_animation`
-repeats a held click: a piercing weapon's jab reaches the server as a `STAB` action that Paper turns into no event, and
-a kinetic weapon charges while right click is held. The client repeats a held right click every four ticks, which the
-server reads as aiming until the next would have arrived, and the item's model sees the client's own use key. The client
-narrows its view only from a slower walk and only with FOV effects on, so aiming zooms only for those clients.
+Left click fires and right click aims. A blaster's `mode` in `blasters` is `automatic` or `single`: an automatic one
+(the carbines, the repeaters, the heavy rifle) fires for as long as left click is held, and a single one (the pistols and
+the long rifles) fires once for each click. A click up to three ticks before the blaster is ready fires once it is, and a
+held trigger fires again by itself after a vent.
+
+The 26.3 client sends a left click once when it goes down and never again while it is held, except while it breaks a
+block: then it swings every tick and sends an abort when the button comes up. `TriggerCells` gives a player with an
+automatic blaster such blocks, which only their client has: unlit `light` blocks in the air cells around their eyes. A
+light block has a shape only for someone holding a `light` item, has no collision, draws nothing and cannot be broken.
+So a player's blaster is a `light` item with the hoe's `item_model`, the pack's models unchanged, and `can_break` for
+light. With the eyes inside a cell every look meets it first, so the click starts breaking it, and `Trigger` reads the
+start, the swings and the abort as a pull, a hold and a release. Neither the spear's `piercing_weapon` nor its
+`kinetic_weapon`, `attack_range`, `minimum_attack_charge` or `swing_animation` repeats a held click: a piercing weapon's
+jab reaches the server as a `STAB` action that Paper turns into no event, and a kinetic weapon charges while right click
+is held.
+
+What this costs, and what keeps it small:
+
+- The client outlines a block it may break, here the cell around the player's head. Each Sternenfront map carries the
+  datapack `datapacks/sternenfront`, which sets the overworld's `fog_end_distance` to 65536, further than any client
+  draws, so nothing looks different. The pack's `rendertype_lines.vsh` reads that distance as "this is Sternenfront" and
+  draws no block outline there, in first and third person, and every outline in every other game. Fog of another kind
+  has its own end, so the outline shows while the camera is under water.
+- The client plays `block.stone.hit` each time it begins breaking a cell: on a pull, when the eyes cross into the next
+  cell, and when the held item changes. The server cuts the sound short as soon as it hears of the start, and nothing
+  can mute it for a cell alone. A player's own item therefore changes as rarely as it can (see the vents below), and a
+  venting gun has no cells, so a trigger held through a vent is silent.
+- The client sends no use while it breaks a block, so the server cannot see a player who holds the trigger begin or
+  stop aiming. Every ten ticks of a held trigger, right after a shot, the cells go away for one tick: the client stops
+  breaking, sends a use if right click is down and starts again before the next shot is due. A right click that goes
+  down or comes up in the middle of a burst therefore counts within about half a second, and until then the aim the
+  hold began with carries on.
+- The server answers a use on a cell with the real blocks there. An aiming player has no cells for that reason: their
+  first shot is a plain click, the cells come back with it, and the hold is read from the swings until the client
+  starts breaking one. Battlefield controls and secrets take the block the player looks at through a cell.
+- Cells are sent only once the pack is applied, and never for a single-shot blaster, which needs none.
+
+Paper fires `PlayerArmSwingEvent` once for each swing, on air, a block or an entity, and a click on a fighter close by
+with a blaster in hand fires instead of punching. A blaster's `attack_animation` is none, so the click does not swing
+the gun out of view, and the swings of a held trigger are cancelled so nobody else sees them. The client repeats a held
+right click every four ticks, which the server reads as aiming until the next would have arrived, and the item's model
+sees the client's own use key. The client narrows its view only from a slower walk and only with FOV effects on, so
+aiming zooms only for those clients.
 
 A long rifle is a hoe like every other blaster. A spyglass would zoom tenfold whatever the settings, but the client
 drops every click while an item is in use, so it could fire only when right click was let go. While the rifle aims, the
@@ -145,8 +193,11 @@ helmet carries the reticle, `blockcraft:misc/long_rifle_scope`, as its `equippab
 wearer sees. The client draws `(movement speed / walking speed + 1) / 2` of its field of view and reads the abilities'
 walking speed for nothing else, so the scope tells it a negative walking speed that leaves `aim.scope-zoom` of the view:
 0.25, a fourfold zoom at full FOV effects. Paper's `setWalkSpeed` also sets the movement speed's base, which the scope
-puts back at once. The client keeps at least a tenth of its view. Nothing else sets a negative walk speed, so it marks
-a raised scope, and joining the game clears one that a crash saved with the player.
+puts back at once. The walking speed reaches the client at once, while the server sends the movement speed with the
+player's entity data every other tick, so the scope flips the silent flag there and back to send both in one tick;
+otherwise the zoom would jump or stall when the scoped walk slows or frees the player. The client keeps at least a tenth
+of its view. Nothing else sets a negative walk speed, so it marks a raised scope, and joining the game clears one that
+a crash saved with the player.
 Music and cantina audio use the Music category. Combat effects use the Players category.
 
 Launched rockets and orbital strikes continue after their owner falls. Lightning channels end with the caster.
@@ -292,7 +343,7 @@ vanilla knockback. Nobody in the air is pushed, nor anyone towards an edge with 
 A headshot rings the victim's helmet, tilts their view back once after the hit's own tilt and shakes the picture with
 split colours for `combat-feedback.headshot-rattle.ticks`. A forced turn of the view would ride on a teleport, which
 holds the player's movement until their client confirms it, so the rotation and with it the aim stay the player's own.
-A headshot bot's aim scatters again as on a fresh target.
+A headshot bot's aim scatters again as on a fresh target, and a body hit undoes part of its settling.
 
 A long rifle's scope glints (`presentation.scope-glint`): while a player looks through one, and while a bot with one has
 an enemy in its sights, a small pixel star flares at the scope every `interval-ticks` for each enemy player within
@@ -348,10 +399,12 @@ slower walk and tighter spread last up to six ticks after it.
 A long rifle aims the same way and looks through its scope while it does: the reticle covers the screen, the walk drops
 to `aim.scoped-walk`, and with FOV effects on the view narrows to `aim.scope-zoom`. Left click fires, in the scope or
 from the hip. In the scope the spread shrinks to nothing over `settle-ticks`, after which a shot goes exactly where the
-reticle points. Other viewers see the rifle at the sights like any blaster. Bots aim as before.
+reticle points. Other viewers see the rifle at the sights like any blaster. Bots have no scope.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
-stay steadier walking and the repeater wants aiming. A sprint shows the lowered pose of the held blaster, which cannot
-fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair ticks use the same factors as the shot.
+stay steadier walking and the repeater wants aiming. A sprint shows the lowered pose of the held blaster. A pull of the
+trigger or a right click brings the gun up out of the sprint: it fires or aims `sprint-recovery-ticks` later, and the
+player moves at a walk until twelve ticks after the last shot or aim. Only the client can end its sprint, so the server
+takes the sprint's pace away instead. The crosshair ticks use the same factors as the shot.
 A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 
 A flame and a muted `Hitze` name the heat meter; a bladed hero's guard meter has a shield and `Deckung` instead.
@@ -365,10 +418,13 @@ shot or the click before counts for neither, so clicking straight through a vent
 popup durations and the hit, headshot, and kill volumes.
 The vents on every blaster show its heat to its holder and everyone else: grey when cold, orange from `heat.glow.warm`,
 bright from `heat.warning-level`, and pulsing while venting. The colour is the held item's first custom_model_data
-colour, set with the firing pose's model string, so the item changes only when the step or the pose does. The client
-does not lower the gun for these changes, because the hoe keeps its item type and its override sets
-`hand_animation_on_swap` to false. Animated bot bodies leave the vents out, because their rig has no item to tint them;
-the display bodies show them.
+colour, so the item changes only when the step does. The client does not lower the gun for these changes, because the
+item keeps its type and its override sets `hand_animation_on_swap` to false. A player's own item never takes the firing
+pose and does not pulse while they hold the trigger, since each change would make their client start breaking its
+trigger cell again. Their own view kicks from a three-tick cooldown on the item instead, which the client counts down
+itself and the model reads as `minecraft:cooldown`, and everyone else is sent the kicked, pulsing item as that player's
+equipment. Animated bot bodies leave the vents out, because their rig has no item to tint them; the display bodies show
+them.
 
 A player's bolts and long-rifle shots meet fighters, speeders and heads where that player's screen showed them, which is
 their ping plus the client's smoothing of other entities behind the server. Each tick records every target's hitbox for that.

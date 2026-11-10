@@ -17,6 +17,8 @@ def variants():
             phases.append({"OIT": "", "OIT_COEFF_COUNT": str(count),
                            "OIT_COEFF_ATTACHMENT_COUNT": str(count // 4),
                            "OIT_WAVELET_RANK": str(count.bit_length() - 2), **dict.fromkeys(flags.split(), "")})
+    for phase in phases:
+        yield "minecraft:core/rendertype_lines", "minecraft:core/rendertype_lines", phase
     for cutout, glint, phase in itertools.product(({}, {"ALPHA_CUTOUT": "0.1"}),
             ({}, {"GLINT": ""}, {"GLINT": "", "GLINT_SPECIAL": ""}), phases):
         yield "minecraft:core/item", "minecraft:core/item", {**cutout, **glint, **phase}

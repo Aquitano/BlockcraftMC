@@ -31,12 +31,23 @@ services:
     volumes:
       - ./dev/verify/velocity.toml:/config/velocity.toml:ro
 
+  # Docker makes the folders above the overrides' mount point as root in a fresh volume, where the server, running as
+  # uid 1000, then cannot copy its plugins in. This makes them first, owned by the server.
+  sternenfront-data:
+    extends: {file: docker-compose.yml, service: replay-storage}
+    command: ["mkdir -p /data/plugins/Sternenfront && chown 1000:1000 /data /data/plugins /data/plugins/Sternenfront"]
+    volumes: !override
+      - sternenfront:/data
+
   sternenfront:
     extends: {file: docker-compose.yml, service: sternenfront}
     <<: *low-priority
     cpus: ${VERIFY_SERVER_CPUS:-1.5}
     mem_limit: 2500m
     memswap_limit: 2500m
+    depends_on:
+      sternenfront-data:
+        condition: service_completed_successfully
     environment:
       # With no lobby running, this server takes the proxy's first-join route.
       BLOCKCRAFT_SERVER_GROUP: lobby

@@ -47,7 +47,7 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
         public Blaster.Stats apply(Blaster.Stats stats) {
             return new Blaster.Stats(stats.damage(), stats.headshot(), stats.heat() * heatScale, cooldownTicks, bolts,
-                    stats.burstTicks(), stats.spread(), stats.speed(), stats.range());
+                    stats.burstTicks(), stats.spread(), stats.speed(), stats.range(), stats.mode());
         }
     }
 
@@ -122,7 +122,7 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
     }
 
     private static Map<Blaster, Blaster.Stats> blasters(ConfigurationSection section) {
-        var fallback = new Blaster.Stats(4, 1.5, 10, 4, 1, 0, 0, 3.5, 80);
+        var fallback = new Blaster.Stats(4, 1.5, 10, 4, 1, 0, 0, 3.5, 80, Blaster.FireMode.AUTOMATIC);
         return byKey(Blaster.class, weapon -> {
             var profile = blaster(section(section, weapon.profile().key()), fallback);
             return blaster(section(section, weapon.key()), profile);
@@ -139,7 +139,8 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                 Math.max(0, section.getInt("burst-ticks", fallback.burstTicks())),
                 Math.max(0, section.getDouble("spread", fallback.spread())),
                 Math.max(0.5, section.getDouble("speed", fallback.speed())),
-                Math.max(1, section.getDouble("range", fallback.range())));
+                Math.max(1, section.getDouble("range", fallback.range())),
+                Blaster.FireMode.of(section.getString("mode"), fallback.mode()));
     }
 
     public ClassStats stats(Faction faction, CombatClass combatClass) {

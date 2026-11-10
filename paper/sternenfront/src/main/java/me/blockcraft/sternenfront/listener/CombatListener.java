@@ -12,12 +12,15 @@ import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
 import me.blockcraft.sternenfront.secret.Secrets;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockDamageAbortEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -28,7 +31,8 @@ import org.bukkit.inventory.ItemStack;
 /**
  * The round's controls: left click fires the blaster or swings a blade, and right click aims the blaster or guards with
  * the blade; a long rifle looks through its scope while it aims. F and Q use the first and second ability of the class
- * or the hero. Only authored battlefield controls answer block clicks during a round.
+ * or the hero. Only authored battlefield controls answer block clicks during a round. A click that the client spent on
+ * one of the player's {@link me.blockcraft.sternenfront.game.TriggerCells} met no block of the world.
  */
 public final class CombatListener implements Listener {
 
@@ -56,16 +60,27 @@ public final class CombatListener implements Listener {
             return;
         }
         event.setUseItemInHand(Event.Result.DENY);
+        var clicked = event.getClickedBlock();
+        boolean cell = clicked != null && game.triggerCells().covers(player, clicked);
+        if (cell && event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            game.triggerStarted(player);
+            return;
+        }
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
             return;
         }
-        if (event.getClickedBlock() != null && secrets.use(player, event.getClickedBlock())) {
+        if (cell) {
+            // The server answers this use with the cell's real block. Hidden first, no neighbouring cell is left for the look to meet.
+            game.triggerCells().hide(player);
+            clicked = lookedAt(player);
+        }
+        if (clicked != null && secrets.use(player, clicked)) {
             return;
         }
         if (game.speeders().fire(player)) {
             return;
         }
-        if (event.getClickedBlock() != null && game.battlefield().use(player, event.getClickedBlock())) {
+        if (clicked != null && game.battlefield().use(player, clicked)) {
             return;
         }
         if (Combat.holdsBlade(player)) {
@@ -74,6 +89,12 @@ public final class CombatListener implements Listener {
         } else {
             use(player, event.getItem());
         }
+    }
+
+    private static Block lookedAt(Player player) {
+        var reach = player.getAttribute(Attribute.BLOCK_INTERACTION_RANGE);
+        var hit = reach == null ? null : player.rayTraceBlocks(reach.getValue());
+        return hit == null ? null : hit.getHitBlock();
     }
 
     private void use(Player player, ItemStack item) {
@@ -97,9 +118,18 @@ public final class CombatListener implements Listener {
             return;
         }
         if (holdsBlaster(player)) {
-            game.pullTrigger(player);
+            // A held trigger swings every tick, and the gun shows its own kick.
+            event.setCancelled(true);
+            game.triggerSwung(player);
         } else if (!player.isHandRaised()) {
             game.swing(player);
+        }
+    }
+
+    @EventHandler
+    public void onStopBreaking(BlockDamageAbortEvent event) {
+        if (fighting(event.getPlayer())) {
+            game.triggerStopped(event.getPlayer());
         }
     }
 

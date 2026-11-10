@@ -46,6 +46,17 @@ final class RifleScope {
         double base = speed.getBaseValue();
         player.setWalkSpeed(walk);
         speed.setBaseValue(base);
+        sendSpeedNow(player);
+    }
+
+    /**
+     * The walk speed reaches the client at once, but the server sends the movement speed with the player's entity data,
+     * every other tick unless that data changed. A tick with only one of them makes the zoom jump or stall, so a flag
+     * flipped there and back sends the speed along in the same tick and changes nothing else.
+     */
+    private static void sendSpeedNow(Player player) {
+        player.setSilent(!player.isSilent());
+        player.setSilent(!player.isSilent());
     }
 
     private static void wear(Player player, boolean reticle) {

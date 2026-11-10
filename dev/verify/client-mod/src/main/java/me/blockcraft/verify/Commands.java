@@ -28,7 +28,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.PlayerTeam;
@@ -130,6 +132,8 @@ final class Commands {
         if (minecraft.player != null) {
             change("health", String.valueOf(round(minecraft.player.getHealth())), minecraft);
             change("gamemode", minecraft.gameMode == null ? "" : minecraft.gameMode.getPlayerMode().getName(), minecraft);
+            change("fov", String.valueOf(round(minecraft.gameRenderer.mainCamera().fovModifier)), minecraft);
+            change("use", String.valueOf(minecraft.options.keyUse.isDown), minecraft);
         }
         var messages = hud.getChat().allMessages;
         var fresh = new ArrayList<String>();
@@ -216,7 +220,10 @@ final class Commands {
             }
             case "aim" -> done(aim(minecraft, body));
             case "hold" -> {
-                held.put(key(minecraft, body.get("key").getAsString()), body.has("ticks") ? (int) (ticks + body.get("ticks").getAsInt()) : -1);
+                var mapping = key(minecraft, body.get("key").getAsString());
+                // A key going down is a click as well, which is what starts an attack or a use.
+                press(mapping);
+                held.put(mapping, body.has("ticks") ? (int) (ticks + body.get("ticks").getAsInt()) : -1);
                 yield done(new JsonObject());
             }
             case "release" -> {
@@ -270,6 +277,8 @@ final class Commands {
 
     private void press(KeyMapping mapping) {
         mapping.clickCount++;
+        // The button is down in the tick that sees the click, as a mouse's is.
+        mapping.isDown = true;
         held.put(mapping, (int) (ticks + 2));
     }
 
@@ -313,6 +322,12 @@ final class Commands {
             if (minecraft.hitResult instanceof EntityHitResult hit) {
                 value.addProperty("looking_at", name(hit.getEntity()));
             }
+            if (minecraft.hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK) {
+                var at = hit.getBlockPos();
+                value.addProperty("looking_at_block", BuiltInRegistries.BLOCK.getKey(minecraft.level.getBlockState(at).getBlock())
+                        + " " + at.getX() + " " + at.getY() + " " + at.getZ());
+            }
+            value.addProperty("mining", minecraft.gameMode != null && minecraft.gameMode.isDestroying());
             value.addProperty("dimension", minecraft.level.dimension().identifier().toString());
             var border = minecraft.level.getWorldBorder();
             var edge = new JsonObject();

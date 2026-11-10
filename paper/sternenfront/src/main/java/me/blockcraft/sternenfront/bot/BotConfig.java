@@ -8,9 +8,19 @@ import java.util.Map;
 public record BotConfig(boolean enabled, int perTeam, double range, double visionAngle, int memoryTicks,
                         double hearingRange, int alarmTicks,
                         double idleTurnDegrees, double stepHeight, int boundaryGraceTicks,
-                        int killPoints, int healTicks, double healAmount,
-                        Medic medic, Cover cover, Voice voice, HurtSound hurtSound, Squad squad, BotDifficulty difficulty,
+                        int killPoints, int healTicks, double healAmount, Marksman marksman,
+                        Shaken shaken, Medic medic, Cover cover, Voice voice, HurtSound hurtSound, Squad squad, BotDifficulty difficulty,
                         Map<BotDifficulty, Tuning> profiles) {
+
+    /** How far a bot with a long rifle sees, and the share of its profile's aim spread it keeps. */
+    public record Marksman(double sightRange, double aimShare) { }
+
+    /**
+     * A body hit undoes {@code hitFlinch} of a bot's aim settling. A passing enemy bolt adds up to {@code nearMiss} of
+     * suppression, to at most {@code max}, which fades from full over {@code fadeTicks} and widens its spread by
+     * {@code spread} times itself.
+     */
+    public record Shaken(double hitFlinch, double nearMiss, double max, int fadeTicks, double spread) { }
 
     public record Medic(int pursuitTicks, int retryTicks) { }
 
@@ -19,14 +29,15 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
     public record Squad(int fireteamSize, double switchMargin, double spacing, double stagger, double regroupDistance,
                         double catchUpDistance, double walkSpeed, double sprintSpeed, double boundDistance,
                         int boundTicks, int flankAfterTicks, double followRange, double reinforcePull,
-                        double fallBackRange, int fallBackTicks, int standTicks) { }
+                        double fallBackRange, int fallBackTicks, int standTicks, int idleTicks) { }
 
     public record Voice(boolean enabled, double range, float volume, int soldierCooldownTicks, int globalCooldownTicks) { }
 
     public record HurtSound(float volume, int cooldownTicks) { }
 
     public record Tuning(int reactionTicks, int shotTicks, double spread, int burstShots, int burstPauseTicks,
-                         double trackingDegrees, double damageScale, boolean headshots, int settleTicks, double settleSpread) { }
+                         double trackingDegrees, double damageScale, boolean headshots, int settleTicks, double settleSpread,
+                         double aimLead) { }
 
     public static BotConfig from(ConfigurationSection config, int capacity) {
         var profiles = new EnumMap<BotDifficulty, Tuning>(BotDifficulty.class);
@@ -42,7 +53,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                     Math.clamp(config.getDouble(key + "damage-scale"), 0.05, 1),
                     config.getBoolean(key + "headshots"),
                     Math.clamp(config.getInt(key + "aim-settle-ticks"), 0, 200),
-                    Math.clamp(config.getDouble(key + "aim-settle-spread"), 1, 5)));
+                    Math.clamp(config.getDouble(key + "aim-settle-spread"), 1, 5),
+                    Math.clamp(config.getDouble(key + "aim-lead"), 0, 1)));
         }
         return new BotConfig(config.getBoolean("bots.enabled"),
                 Math.clamp(config.getInt("bots.fill-per-team"), 1, capacity),
@@ -57,6 +69,13 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                 Math.max(0, config.getInt("bots.kill-points")),
                 Math.max(1, config.getInt("bots.medic.heal-ticks")),
                 Math.max(0, config.getDouble("bots.medic.heal-amount")),
+                new Marksman(Math.clamp(config.getDouble("bots.marksman.sight-range"), 4, 128),
+                        Math.clamp(config.getDouble("bots.marksman.aim-share"), 0, 1)),
+                new Shaken(Math.clamp(config.getDouble("bots.shaken.hit-flinch"), 0, 1),
+                        Math.clamp(config.getDouble("bots.shaken.near-miss"), 0, 1),
+                        Math.clamp(config.getDouble("bots.shaken.max"), 0, 1),
+                        Math.clamp(config.getInt("bots.shaken.fade-ticks"), 1, 200),
+                        Math.clamp(config.getDouble("bots.shaken.spread"), 0, 5)),
                 new Medic(Math.clamp(config.getInt("bots.medic.pursuit-ticks"), 20, 200),
                         Math.clamp(config.getInt("bots.medic.retry-ticks"), 20, 400)),
                 new Cover(Math.clamp(config.getDouble("bots.cover.search-radius"), 3, 16),
@@ -86,7 +105,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         Math.clamp(config.getDouble("bots.squad.reinforce-pull"), 0, 200),
                         Math.clamp(config.getDouble("bots.squad.fall-back-range"), 4, 32),
                         Math.clamp(config.getInt("bots.squad.fall-back-ticks"), 40, 600),
-                        Math.clamp(config.getInt("bots.squad.stand-ticks"), 60, 1200)),
+                        Math.clamp(config.getInt("bots.squad.stand-ticks"), 60, 1200),
+                        Math.clamp(config.getInt("bots.squad.idle-ticks"), 20, 2400)),
                 BotDifficulty.named(config.getString("bots.difficulty", "")).orElse(BotDifficulty.NORMAL),
                 Map.copyOf(profiles));
     }
