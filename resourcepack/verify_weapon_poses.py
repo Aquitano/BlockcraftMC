@@ -10,6 +10,8 @@ REGISTRY = (Path(__file__).parent.parent / "paper/api/src/main/java/me/blockcraf
 GENERATOR = (Path(__file__).parent / "SternenfrontArt.java").read_text()
 HANDS = ("firstperson_righthand", "firstperson_lefthand")
 HOLDS = ("_firing", "_lowered", "_aim", "_firing_aim")
+# A long rifle at the sights is the scope's view, so its aim models draw nothing in the hands.
+SCOPED = ("sternenfront/long_rifle", "sternenfront/e5s")
 # FirstPersonHandsAndItemsRenderer in the 26.3 client: the arm's offset, then the turn it gives a blocking non-shield.
 VANILLA_ARM_SHIFT = (0.56, -0.52, -0.72)
 VANILLA_SWORD_BLOCK_SHIFT = (-0.14142136, 0.08, 0.14142136)
@@ -85,7 +87,8 @@ class WeaponPoses(unittest.TestCase):
                     self.assertEqual(held["display"][HANDS[0]], held["display"][HANDS[1]])
                     for hand in HANDS:
                         self.assertNotEqual(rest["display"][hand], held["display"][hand])
-                        self.assertEqual(rest["display"][hand]["scale"], held["display"][hand]["scale"])
+                        if not (path in SCOPED and hold.endswith("_aim")):
+                            self.assertEqual(rest["display"][hand]["scale"], held["display"][hand]["scale"])
                 for texture in rest["textures"].values():
                     namespace, texture_path = texture.split(":")
                     self.assertTrue((PACK / namespace / "textures" / f"{texture_path}.png").is_file())
@@ -156,6 +159,9 @@ class WeaponPoses(unittest.TestCase):
             with self.subTest(weapon=path):
                 model = read_model(path)
                 aim = read_model(path + "_aim")["display"][HANDS[0]]
+                if path in SCOPED:
+                    self.assertEqual(aim["scale"], [0.0, 0.0, 0.0])
+                    continue
                 x, y, z = held_view(aim, sight(model))
                 self.assertAlmostEqual(z, -0.5, places=2)
                 self.assertTrue(-0.05 < y < 0, y)

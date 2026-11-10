@@ -256,9 +256,9 @@ public final class HudArt {
         var letters = labelLetters(root.getParent().getParent().resolve("font"));
         minimap(root, letters);
         abilities(root, args.length > 1 ? Path.of(args[1]) : null, letters);
-        var misc = root.getParent().getParent().getParent().resolve("minecraft/textures/misc");
+        var misc = root.getParent().resolve("misc");
         Files.createDirectories(misc);
-        ImageIO.write(scope(), "PNG", misc.resolve("spyglass_scope.png").toFile());
+        ImageIO.write(scope(), "PNG", misc.resolve("long_rifle_scope.png").toFile());
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
@@ -267,20 +267,20 @@ public final class HudArt {
         }
     }
 
-    private static final int SCOPE = 256, SCOPE_RADIUS = 110, SCOPE_GAP = 9, SCOPE_POST = 50, SCOPE_TICKS = 10;
+    private static final int SCOPE_WIDTH = 406, SCOPE_HEIGHT = 228, SCOPE_RADIUS = 110, SCOPE_GAP = 9, SCOPE_POST = 50,
+            SCOPE_TICKS = 10;
 
     /**
-     * The long rifle's sight picture, which the client draws over the spyglass's view in every game: a dark tube with
-     * an upper-left lit rim, the glass darkening toward it in steps, and a duplex reticle whose posts thin to lines
-     * with a tick every ten pixels. The middle stays open for the crosshair and its marks. The client draws the square
-     * an eighth taller than the screen, so the circle's 220 of 256 pixels just fit.
+     * The long rifle's sight picture, the camera overlay of a helmet while its wearer aims one: a dark tube with an
+     * upper-left lit rim, the glass darkening toward it in steps, and a duplex reticle whose posts thin to lines with a
+     * tick every ten pixels. The middle stays open for the crosshair and its marks. The client stretches an overlay over
+     * the whole screen, so the image is 16:9 and the circle stays round on such a screen.
      */
     private static BufferedImage scope() {
-        var image = new BufferedImage(SCOPE, SCOPE, BufferedImage.TYPE_INT_ARGB);
-        double middle = (SCOPE - 1) / 2.0;
-        for (int y = 0; y < SCOPE; y++) {
-            for (int x = 0; x < SCOPE; x++) {
-                double dx = x - middle, dy = y - middle;
+        var image = new BufferedImage(SCOPE_WIDTH, SCOPE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < SCOPE_HEIGHT; y++) {
+            for (int x = 0; x < SCOPE_WIDTH; x++) {
+                double dx = x - (SCOPE_WIDTH - 1) / 2.0, dy = y - (SCOPE_HEIGHT - 1) / 2.0;
                 double from = Math.hypot(dx, dy);
                 double inside = SCOPE_RADIUS - from;
                 boolean lit = Math.atan2(dy, dx) < -Math.PI / 2 && Math.atan2(dy, dx) > -Math.PI + .35;
@@ -303,22 +303,22 @@ public final class HudArt {
                 image.setRGB(x, y, colour);
             }
         }
-        int centre = SCOPE / 2;
+        int centreX = SCOPE_WIDTH / 2, centreY = SCOPE_HEIGHT / 2;
         for (int along = SCOPE_GAP; along < SCOPE_RADIUS; along++) {
             boolean post = along > SCOPE_POST;
             int half = post ? 1 : 0;
             for (int across = -half; across <= half; across++) {
-                reticle(image, centre + along, centre + across);
-                reticle(image, centre - along - 1, centre + across);
-                reticle(image, centre + across, centre + along);
-                reticle(image, centre + across, centre - along - 1);
+                reticle(image, centreX + along, centreY + across);
+                reticle(image, centreX - along - 1, centreY + across);
+                reticle(image, centreX + across, centreY + along);
+                reticle(image, centreX + across, centreY - along - 1);
             }
             if (!post && along % SCOPE_TICKS == 0) {
                 for (int across = -2; across <= 2; across++) {
-                    reticle(image, centre + along, centre + across);
-                    reticle(image, centre - along - 1, centre + across);
-                    reticle(image, centre + across, centre + along);
-                    reticle(image, centre + across, centre - along - 1);
+                    reticle(image, centreX + along, centreY + across);
+                    reticle(image, centreX - along - 1, centreY + across);
+                    reticle(image, centreX + across, centreY + along);
+                    reticle(image, centreX + across, centreY - along - 1);
                 }
             }
         }
@@ -326,7 +326,7 @@ public final class HudArt {
     }
 
     private static void reticle(BufferedImage image, int x, int y) {
-        if (Math.hypot(x - (SCOPE - 1) / 2.0, y - (SCOPE - 1) / 2.0) < SCOPE_RADIUS - 4) {
+        if (Math.hypot(x - (SCOPE_WIDTH - 1) / 2.0, y - (SCOPE_HEIGHT - 1) / 2.0) < SCOPE_RADIUS - 4) {
             image.setRGB(x, y, 0xE80B0F14);
         }
     }

@@ -1311,8 +1311,6 @@ public final class SternenfrontArt {
         private static final double HAND_RIGHT = .56, HAND_DOWN = .52, HAND_AHEAD = .72;
         /** At the sights the gun's top runs this far below the eye, its rear this far ahead, so it points at the crosshair. */
         private static final double SIGHT_DROP = .04, SIGHT_AHEAD = .5;
-        /** How far ahead of the head's centre a scope held to the eye ends, in the head item's own units. */
-        private static final double EYEPIECE_AHEAD = -.45;
         /** A shot at the sights kicks this share of the hip shot's kick. */
         private static final double AIMED_KICK = .5;
 
@@ -1335,8 +1333,10 @@ public final class SternenfrontArt {
         String hands(Hold hold, Sight sight) {
             boolean lowered = hold == Hold.LOWERED;
             double kicked = hold.firing() ? hold.aimed() ? AIMED_KICK : 1 : 0;
+            // A long rifle at the sights looks through its scope, whose reticle the server lays over the view instead.
+            double aimedScale = this == LONG_RIFLE ? 0 : scale;
             var pose = hold.aimed()
-                    ? pose(kick * kicked, 180, 0, aimed(sight).add(0, rise * kicked, back * kicked), scale)
+                    ? pose(kick * kicked, 180, 0, aimed(sight).add(0, rise * kicked, back * kicked), aimedScale)
                     : pose(pitch + kick * kicked - (lowered ? LOWER_PITCH : 0), 180 + yaw - (lowered ? LOWER_YAW : 0),
                     roll + (lowered ? LOWER_ROLL : 0), new Shift(x - (lowered ? LOWER_INWARD : 0),
                             y + rise * kicked - (lowered ? LOWER_DROP : 0), z + back * kicked + (lowered ? LOWER_BACK : 0)), scale);
@@ -1352,19 +1352,6 @@ public final class SternenfrontArt {
             double up = sight.top() / 16 - .5, along = sight.rear() / 16 - .5;
             return new Shift(round(16 * (aimBeside() - HAND_RIGHT)), round(16 * (HAND_DOWN - SIGHT_DROP - scale * up)),
                     round(16 * (HAND_AHEAD - SIGHT_AHEAD + scale * along)));
-        }
-
-        /**
-         * A long rifle is a spyglass to the client, which draws it held to the eye in its head transform while it is
-         * in use: level, the muzzle ahead, the sight's rear a little in front of the face and the scope at eye height.
-         */
-        String heldToEye(Sight sight) {
-            if (this != LONG_RIFLE) {
-                return "";
-            }
-            double size = .96, eyeLine = sight.top() - 1;
-            var shift = new Shift(0, round(-16 * size * (eyeLine / 16 - .5)), round(16 * (EYEPIECE_AHEAD + size * (sight.rear() / 16 - .5))));
-            return ",\"head\":" + pose(0, 180, 0, shift, size);
         }
 
         private double aimBeside() {
@@ -1389,8 +1376,7 @@ public final class SternenfrontArt {
 
     private static Family gun(String name, Shape shape, GunPose pose) {
         return new Family("equipment_" + name, 64, false, List.of(
-                new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(Hold.REST, Sight.of(shape))
-                        + pose.heldToEye(Sight.of(shape))), pose)));
+                new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(Hold.REST, Sight.of(shape))), pose)));
     }
 
     /**

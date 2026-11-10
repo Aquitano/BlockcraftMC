@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.game;
 
-import me.blockcraft.api.item.HotbarItem;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -37,14 +36,12 @@ public record WeaponHandling(Map<Blaster, Factors> blasters, double falloffFrom,
     /** How the shooter stands, and for how many ticks they have looked through a scope, if they do. */
     public record Posture(boolean moving, boolean aiming, boolean airborne, OptionalInt scopedTicks) {
 
-        public static Posture of(Player shooter, boolean aiming) {
+        public static Posture of(Player shooter, boolean aiming, OptionalInt scopedTicks) {
             var input = shooter.getCurrentInput();
             // Player deprecates isOnGround as client-reported; through Entity it is the same call without the warning.
             Entity body = shooter;
-            var scoped = HotbarItem.of(shooter.getActiveItem(), Blaster.class).filter(Blaster::isLongRifle).isPresent()
-                    ? OptionalInt.of(shooter.getActiveItemUsedTime()) : OptionalInt.empty();
             return new Posture(input.isForward() || input.isBackward() || input.isLeft() || input.isRight(), aiming,
-                    !body.isOnGround() && !shooter.isInsideVehicle(), scoped);
+                    !body.isOnGround() && !shooter.isInsideVehicle(), scopedTicks);
         }
 
         public static Posture walking(boolean moving) {

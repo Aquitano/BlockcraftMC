@@ -137,11 +137,16 @@ the spear's `piercing_weapon` nor its `kinetic_weapon`, `attack_range`, `minimum
 repeats a held click: a piercing weapon's jab reaches the server as a `STAB` action that Paper turns into no event, and
 a kinetic weapon charges while right click is held. The client repeats a held right click every four ticks, which the
 server reads as aiming until the next would have arrived, and the item's model sees the client's own use key. The client
-narrows its view only from a slower walk and only with FOV effects on, so aiming zooms only for those clients. A
-spyglass is the one item the client scopes with whatever its settings, which is why a long rifle is a spyglass to the
-client. The client drops every click while an item is in use, so a scoped long rifle fires when right click is let go.
-The scope's look, `textures/misc/spyglass_scope.png`, is the pack's for every server, so a spyglass in another game shows
-the same reticle.
+narrows its view only from a slower walk and only with FOV effects on, so aiming zooms only for those clients.
+
+A long rifle is a hoe like every other blaster. A spyglass would zoom tenfold whatever the settings, but the client
+drops every click while an item is in use, so it could fire only when right click was let go. While the rifle aims, the
+helmet carries the reticle, `blockcraft:misc/long_rifle_scope`, as its `equippable` camera overlay, which only the
+wearer sees. The client draws `(movement speed / walking speed + 1) / 2` of its field of view and reads the abilities'
+walking speed for nothing else, so the scope tells it a negative walking speed that leaves `aim.scope-zoom` of the view:
+0.25, a fourfold zoom at full FOV effects. Paper's `setWalkSpeed` also sets the movement speed's base, which the scope
+puts back at once. The client keeps at least a tenth of its view. Nothing else sets a negative walk speed, so it marks
+a raised scope, and joining the game clears one that a crash saved with the player.
 Music and cantina audio use the Music category. Combat effects use the Players category.
 
 Launched rockets and orbital strikes continue after their owner falls. Lightning channels end with the caster.
@@ -340,12 +345,10 @@ The spread multiplies by `combat.handling`'s `aiming`, and left click fires. Aim
 `2 * aim.zoom - 1` of its pace, which a client with FOV effects on draws as a view narrowed to `aim.zoom`; without FOV
 effects the view keeps its width. The server learns of the release only when the next repeat fails to come, so the
 slower walk and tighter spread last up to six ticks after it.
-A long rifle looks through its scope while right click is held: the client zooms tenfold, hides the gun and draws the
-pack's scope, with or without FOV effects, and the walk drops to `aim.scoped-walk`. Letting go fires, and a left click
-fires from the hip.
-In the scope the spread shrinks to nothing over `settle-ticks`, after which a shot goes exactly where the
-reticle points. After a shot the client cannot raise the scope again, and shades the slot, until the rifle is ready. To
-lower the scope without firing, switch slots. Other viewers see the rifle held to the eye. Bots aim as before.
+A long rifle aims the same way and looks through its scope while it does: the reticle covers the screen, the walk drops
+to `aim.scoped-walk`, and with FOV effects on the view narrows to `aim.scope-zoom`. Left click fires, in the scope or
+from the hip. In the scope the spread shrinks to nothing over `settle-ticks`, after which a shot goes exactly where the
+reticle points. Other viewers see the rifle at the sights like any blaster. Bots aim as before.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
 stay steadier walking and the repeater wants aiming. A sprint shows the lowered pose of the held blaster, which cannot
 fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair ticks use the same factors as the shot.

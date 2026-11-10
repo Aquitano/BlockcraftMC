@@ -3,13 +3,11 @@ package me.blockcraft.sternenfront.game;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import io.papermc.paper.datacomponent.item.SwingAnimation;
-import io.papermc.paper.datacomponent.item.UseEffects;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.hero.Sabers;
 import net.kyori.adventure.text.Component;
@@ -49,12 +47,10 @@ public final class Loadouts {
 
     private final Messages messages;
     private final SternenfrontConfig config;
-    private final FeelConfig.Aim aim;
 
-    public Loadouts(Messages messages, SternenfrontConfig config, FeelConfig.Aim aim) {
+    public Loadouts(Messages messages, SternenfrontConfig config) {
         this.messages = messages;
         this.config = config;
-        this.aim = aim;
     }
 
     public void equip(Player player, Faction faction, CombatClass combatClass) {
@@ -90,9 +86,6 @@ public final class Loadouts {
                 .hideAttributes().edit(meta -> meta.setUnbreakable(true)));
         // A left click fires, and the vanilla swing that comes with it would dip the gun out of view.
         item.setData(DataComponentTypes.ATTACK_ANIMATION, SwingAnimation.swingAnimation().type(SwingAnimation.Animation.NONE).build());
-        if (blaster.isLongRifle()) {
-            item.setData(DataComponentTypes.USE_EFFECTS, UseEffects.useEffects().canSprint(false).speedMultiplier((float) aim.scopedWalk()).build());
-        }
         return item;
     }
 

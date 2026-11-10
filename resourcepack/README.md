@@ -13,8 +13,9 @@ screen effects, and the Sternenfront intro.
   square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory. A menu
   item that needs a frame draws it in its own model, as Sternenfront's spawn markers do with `oversized_in_gui` so the
   frame can cover the slot's border.
-- **Scope.** `HudArt` replaces `textures/misc/spyglass_scope.png` with the long rifle's reticle, so a spyglass in any
-  game on the network looks through it.
+- **Scope.** `HudArt` draws the long rifle's reticle into `textures/misc/long_rifle_scope.png`, which a helmet shows as
+  its camera overlay. The client stretches an overlay over the whole screen, so the reticle is drawn for 16:9 and is
+  slightly oval on other screens.
 - **Boss bars.** `HudArt` blanks the `pink_*` and `notched_20_*` boss bar sprites, because Sternenfront's objective
   line and minimap carry only text on a boss bar line. The client has no per-server switch, so on every server of the
   network a pink bar or one with twenty notches shows its text and no bar. Any other plugin's boss bar needs another
@@ -71,8 +72,8 @@ transforms, a firing kick, a sprint pose, lowered and turned across the body, an
 for both hands. The aim pose puts the rear of the top of the gun's centre line, its sight, half a block ahead of the eye
 and just below it, so the barrel runs to the crosshair; a pair of pistols sits either side of it. The vanilla item
 override draws `<model>_aim` only in the first-person hands, while the client's own use key (right click) is down.
-A long rifle is a spyglass to the client, which draws it in its `head` transform at the eye while the player scopes. Vanilla mirrors the left hand's X translation, yaw and roll, so the authored
-hand transforms are identical. Third-person, GUI, ground and fixed transforms retain their existing values.
+A long rifle's aim models draw nothing, because the scope's reticle covers the view while it aims. Vanilla mirrors the
+left hand's X translation, yaw and roll, so the authored hand transforms are identical. Third-person, GUI, ground and fixed transforms retain their existing values.
 
 Run `:resourcepack:generateBattle` to regenerate the equipment, firing, lowered and aim models. Java writes those transforms to
 `build/sternenfront/gun-poses.json`; `BattleArt.py` consumes that manifest and inherits each gun's geometry and other

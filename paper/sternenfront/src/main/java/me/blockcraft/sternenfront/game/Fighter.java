@@ -7,6 +7,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Function;
 
 /**
@@ -74,6 +75,7 @@ public final class Fighter {
     private long fallSafeUntil;
     private long sprintedAt = LONG_AGO;
     private long aimedAt = LONG_AGO;
+    private long scopedSince = LONG_AGO;
     private long queuedPull = Long.MAX_VALUE;
     private final Map<Ability, Charges> charges = new EnumMap<>(Ability.class);
     private final Function<Ability, Charges> freshCharges;
@@ -118,6 +120,7 @@ public final class Fighter {
         this.fallSafeUntil = 0;
         this.sprintedAt = LONG_AGO;
         this.aimedAt = LONG_AGO;
+        this.scopedSince = LONG_AGO;
         this.queuedPull = Long.MAX_VALUE;
         this.charges.clear();
         this.hero = hero;
@@ -144,6 +147,19 @@ public final class Fighter {
 
     public boolean aiming(long tick) {
         return tick - aimedAt <= AIM_HELD_TICKS;
+    }
+
+    /** Marks each tick whether the player looks through a scope, so its settling counts from when they raised it. */
+    public void scoping(long tick, boolean scoped) {
+        if (!scoped) {
+            scopedSince = LONG_AGO;
+        } else if (scopedSince == LONG_AGO) {
+            scopedSince = tick;
+        }
+    }
+
+    public OptionalInt scopedTicks(long tick) {
+        return scopedSince == LONG_AGO ? OptionalInt.empty() : OptionalInt.of((int) Math.min(Integer.MAX_VALUE, tick - scopedSince));
     }
 
     /** A click just before the gun was ready, held over until {@code at}. */

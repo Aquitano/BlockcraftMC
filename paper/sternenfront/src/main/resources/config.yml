@@ -162,7 +162,7 @@ combat:
     parry-ticks: 5
     cost-per-damage: 2
   melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
-  # Spread multiplies while moving, aiming (sneaking with the blaster) and off the ground, and grows by hot times the
+  # Spread multiplies while moving, aiming (holding right click) and off the ground, and grows by hot times the
   # barrel's heat. In a long rifle's scope it then shrinks to nothing over settle-ticks. A sprint lowers the gun, which
   # cannot fire until sprint-recovery-ticks after the sprint ends. Damage holds to falloff-from of a weapon's range, then
   # thins to falloff-minimum of itself at the end of it. blasters overrides the factors per blaster; a Separatist blaster
@@ -485,11 +485,12 @@ career:
 
 # Holding right click with a blaster aims it: the gun comes up to the sights and combat.handling's aiming tightens its
 # spread. The client narrows the view only from a slower walking speed and only with FOV effects on, so the walk slows
-# to 2 * zoom - 1 of its normal pace while the view narrows to zoom of its width. Holding right click with a long rifle
-# looks through its scope instead, which the client zooms tenfold whatever its settings, at scoped-walk of the normal
-# pace.
+# to 2 * zoom - 1 of its normal pace while the view narrows to zoom of its width. A long rifle aims through its scope:
+# the reticle covers the screen, the walk slows to scoped-walk of its normal pace, and the view narrows to scope-zoom
+# of its width at full FOV effects, from 0.1 to 0.45. Lower FOV effects zoom proportionally less.
 aim:
   zoom: 0.92
+  scope-zoom: 0.25
   scoped-walk: 0.3
 
 outlines: {enabled: true, range: 64, allies: false}

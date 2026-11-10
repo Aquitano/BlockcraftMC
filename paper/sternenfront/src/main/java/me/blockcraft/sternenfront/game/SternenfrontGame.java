@@ -71,6 +71,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
@@ -97,6 +98,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -204,7 +206,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.map = map;
         this.lobby = lobby;
         this.teams = new Teams(config.playersPerTeam());
-        this.loadouts = new Loadouts(messages, config, feel.aim());
+        this.loadouts = new Loadouts(messages, config);
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         this.botConfig = BotConfig.from(plugin.getConfig(), config.playersPerTeam());
@@ -547,6 +549,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     @Override
     public void join(Player player) {
         career.greet(player);
+        // Player data saved during a crash keeps a raised scope's walk speed, which would hold the player still.
+        lowerAim(player);
         if (intro.running()) {
             if (round.rejoin(player)) {
                 PlayerReset.reset(player, GameMode.ADVENTURE);
@@ -885,7 +889,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                     pullTrigger(player);
                 }
                 player.setExp(fighter.heat().level());
-                aim(player);
+                aim(player, fighter);
                 combat.tick(player);
                 feedback.aim(player);
                 feedback.screen(player);
@@ -1097,11 +1101,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         fighter.endProtection();
         Bukkit.getPluginManager().callEvent(new ShotEvent(player));
         shoot(player, faction.get(), blaster);
-        var inHand = player.getInventory().getItemInMainHand();
-        if (HotbarItem.of(inHand, Blaster.class).filter(Blaster::isLongRifle).isPresent()) {
-            // The client then cannot raise the scope again until the next shot is ready, and shades the slot meanwhile.
-            player.setCooldown(inHand, stats.cooldownTicks());
-        }
         for (int bolt = 1; bolt < stats.bolts(); bolt++) {
             bursts.add(new Burst(player, blaster, tick + (long) bolt * stats.burstTicks()));
         }
@@ -1746,14 +1745,22 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     /**
-     * A held right click aims a blaster, and the slower walk that comes with it narrows a client's view a little. A scope
-     * zooms on its own.
+     * A held right click aims a blaster, and the slower walk that comes with it narrows a client's view a little. A long
+     * rifle walks slower still and looks through its {@link RifleScope}.
      */
-    private void aim(Player player) {
-        slowForAim(player, aiming(player), feel.aim().speedShare() - 1);
+    private void aim(Player player, Fighter fighter) {
+        boolean aiming = aiming(player);
+        boolean scoped = aiming && longRifleInHand(player);
+        fighter.scoping(tick, scoped);
+        slowForAim(player, aiming ? OptionalDouble.of((scoped ? feel.aim().scopedWalk() : feel.aim().speedShare()) - 1) : OptionalDouble.empty());
+        if (scoped) {
+            RifleScope.raise(player, feel.aim().scopeZoom(), BlockcraftApi.get().resourcePack().applied(player));
+        } else {
+            RifleScope.lower(player);
+        }
     }
 
-    /** A right click with a blaster other than a long rifle, which the client repeats while it is held. */
+    /** A right click with a blaster, which the client repeats while it is held. */
     public void raiseSights(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         if (fighter != null && onField(player)) {
@@ -1761,32 +1768,42 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
     }
 
-    /** Whether {@code player} holds a blaster other than a long rifle at the sights. */
+    /** Whether {@code player} holds a blaster at the sights. */
     public boolean aiming(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         return fighter != null && fighter.aiming(tick) && !player.isInsideVehicle() && !lowered(player)
-                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(blaster -> !blaster.isLongRifle()).isPresent();
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
     }
 
-    private static void slowForAim(Player player, boolean on, double change) {
+    /** Whether {@code player} aims a long rifle, and so looks through its scope. */
+    public boolean scoped(Player player) {
+        return aiming(player) && longRifleInHand(player);
+    }
+
+    public WeaponHandling.Posture posture(Player player) {
+        return WeaponHandling.Posture.of(player, aiming(player), scoped(player) ? fighter(player).scopedTicks(tick) : OptionalInt.empty());
+    }
+
+    private static boolean longRifleInHand(Player player) {
+        return HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::isLongRifle).isPresent();
+    }
+
+    private static void slowForAim(Player player, OptionalDouble change) {
         var speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
-        if (speed == null || on == (speed.getModifier(AIM) != null)) {
+        if (speed == null) {
             return;
         }
-        if (on) {
-            AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, AIM, change);
-        } else {
-            AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, AIM);
+        var current = Optional.ofNullable(speed.getModifier(AIM)).map(AttributeModifier::getAmount);
+        if (current.isEmpty() && change.isEmpty() || current.isPresent() && change.isPresent() && current.get() == change.getAsDouble()) {
+            return;
         }
+        AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, AIM);
+        change.ifPresent(amount -> AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, AIM, amount));
     }
 
     static void lowerAim(Player player) {
-        slowForAim(player, false, 0);
-    }
-
-    /** Looking through a long rifle's scope, which the client does while right click is held on it. */
-    public static boolean scoped(Player player) {
-        return HotbarItem.of(player.getActiveItem(), Blaster.class).filter(Blaster::isLongRifle).isPresent();
+        slowForAim(player, OptionalDouble.empty());
+        RifleScope.lower(player);
     }
 
     private Component factionDisplay(Faction faction) {

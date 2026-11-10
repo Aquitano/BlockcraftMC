@@ -141,7 +141,7 @@ blaster:
     lore:
       - "<muted>Langsam, schwer und weit."
       - "<muted>Kopftreffer zählen fast doppelt."
-      - "<muted>Zielfernrohr: Rechtsklick halten, loslassen schießt."
+      - "<muted>Zielfernrohr: Rechtsklick halten, Linksklick schießt."
   pistol:
     name: "<white>DC-17-Blasterpistole"
     lore:
@@ -166,7 +166,7 @@ blaster:
     name: "<white>E-5s-Scharfschützengewehr"
     lore:
       - "<muted>Präzise Schüsse auf große Entfernung."
-      - "<muted>Zielfernrohr: Rechtsklick halten, loslassen schießt."
+      - "<muted>Zielfernrohr: Rechtsklick halten, Linksklick schießt."
   se14:
     name: "<white>SE-14-Blasterpistole"
     lore:
@@ -354,7 +354,7 @@ deploy:
   controls: "<prefix><accent><key> <dark>· <white><name><muted>: <ability>"
   saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
   blaster-controls: "<prefix><left>Jeder Klick ein Schuss <dark>· <right>Halten: über Kimme und Korn zielen, enger streuen."
-  scope-controls: "<prefix><left>Schuss aus der Hüfte <dark>· <right>Halten: Zielfernrohr, loslassen: Schuss <dark>· <muted>Im Fernrohr kurz ruhig halten trifft genau."
+  scope-controls: "<prefix><left>Jeder Klick ein Schuss <dark>· <right>Halten: Zielfernrohr <dark>· <muted>Im Fernrohr kurz ruhig halten trifft genau."
   target: "<prefix><accent>Gelbe Ecken <muted>um einen Posten auf der Karte und oben zeigen dein Ziel."
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"

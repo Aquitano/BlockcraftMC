@@ -232,8 +232,8 @@ def as_trooper(client):
 
 
 def blaster(item):
-    """A class's blaster: a hoe, or a spyglass for the long rifles, which the client scopes with."""
-    return item.endswith("_hoe") or item == "spyglass"
+    """A class's blaster, which is a hoe."""
+    return item.endswith("_hoe")
 
 
 def enemies(client, radius=64):

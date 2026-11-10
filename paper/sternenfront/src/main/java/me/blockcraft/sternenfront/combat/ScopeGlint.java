@@ -83,7 +83,7 @@ public final class ScopeGlint {
 
     private Optional<Vector> look(LivingEntity sniper, long tick) {
         if (sniper instanceof Player player) {
-            return SternenfrontGame.scoped(player) ? Optional.of(player.getEyeLocation().getDirection()) : Optional.empty();
+            return game.scoped(player) ? Optional.of(player.getEyeLocation().getDirection()) : Optional.empty();
         }
         return settings.bots() ? game.bots().sighting(sniper, tick) : Optional.empty();
     }

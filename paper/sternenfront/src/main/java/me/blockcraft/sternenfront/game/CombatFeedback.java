@@ -481,7 +481,7 @@ public final class CombatFeedback {
 
     /** A blaster in hand, on foot and not in a scope, whose reticle replaces the marks, for a client whose pack draws them. */
     private boolean aiming(Player player) {
-        return BlockcraftApi.get().resourcePack().applied(player) && !player.isInsideVehicle() && !SternenfrontGame.scoped(player)
+        return BlockcraftApi.get().resourcePack().applied(player) && !player.isInsideVehicle() && !game.scoped(player)
                 && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
     }
 
@@ -489,7 +489,7 @@ public final class CombatFeedback {
         var fighter = game.fighter(player);
         return game.factionOf(player).flatMap(fighter::blaster).flatMap(blaster -> {
             double base = game.config().stats(blaster).spread();
-            return spreadCrosshair.size(base, handling.spread(blaster, base, WeaponHandling.Posture.of(player, game.aiming(player)), fighter.heat().level()));
+            return spreadCrosshair.size(base, handling.spread(blaster, base, game.posture(player), fighter.heat().level()));
         });
     }
 

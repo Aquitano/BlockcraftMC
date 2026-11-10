@@ -1,7 +1,6 @@
 package me.blockcraft.sternenfront.listener;
 
 import io.papermc.paper.event.player.PlayerArmSwingEvent;
-import io.papermc.paper.event.player.PlayerStopUsingItemEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.item.HotbarItem;
@@ -28,9 +27,8 @@ import org.bukkit.inventory.ItemStack;
 
 /**
  * The round's controls: left click fires the blaster or swings a blade, and right click aims the blaster or guards with
- * the blade. A long rifle looks through its scope while right click is held and fires when it is let go, since the
- * client sends no clicks while it scopes. F and Q use the first and second ability of the class or the hero. Only
- * authored battlefield controls answer block clicks during a round.
+ * the blade; a long rifle looks through its scope while it aims. F and Q use the first and second ability of the class
+ * or the hero. Only authored battlefield controls answer block clicks during a round.
  */
 public final class CombatListener implements Listener {
 
@@ -73,17 +71,12 @@ public final class CombatListener implements Listener {
         if (Combat.holdsBlade(player)) {
             event.setUseItemInHand(Event.Result.ALLOW);
             game.combat().raise(player);
-        } else if (longRifle(event.getItem())) {
-            event.setUseItemInHand(Event.Result.ALLOW);
         } else {
             use(player, event.getItem());
         }
     }
 
     private void use(Player player, ItemStack item) {
-        if (longRifle(item)) {
-            return;
-        }
         if (HotbarItem.of(item, Blaster.class).isPresent()) {
             game.raiseSights(player);
             return;
@@ -94,18 +87,6 @@ public final class CombatListener implements Listener {
                 case BLADE, SABER -> game.combat().raise(player);
             }
         });
-    }
-
-    /** A tap fires from the hip; a longer hold has looked through the scope, and the shot settles as it does. */
-    @EventHandler
-    public void onStopUsing(PlayerStopUsingItemEvent event) {
-        if (fighting(event.getPlayer()) && longRifle(event.getItem())) {
-            game.pullTrigger(event.getPlayer());
-        }
-    }
-
-    private static boolean longRifle(ItemStack item) {
-        return HotbarItem.of(item, Blaster.class).filter(Blaster::isLongRifle).isPresent();
     }
 
     /** Paper fires this once for each left click, whether it met air, a block or an entity. */
