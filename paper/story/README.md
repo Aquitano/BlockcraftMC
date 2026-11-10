@@ -88,9 +88,22 @@ no audio. `--model <path to de_DE-thorsten-high.onnx>` synthesizes placeholders 
 
 `cutscenes.scenes` in `config.yml` holds each cutscene, timed in ticks: camera shots that may follow an actor, the cast
 with their walks, gestures and idle animations, subtitles with their voices, craft flying past, particle emitters,
-sounds and effects. Gestures are animations of the BetterModel bodies that `resourcepack/RigModels.py` writes: talk,
-point, beckon, nod, rest and look. Between cutscenes Vela turns towards the nearest member and gestures while she speaks. They play on the shared camera in `paper/api`'s scene package. Each member watches through their own camera,
-and the story goes on once every member's scene has ended.
+sounds and effects. They play on the shared camera in `paper/api`'s scene package. Each member watches through their own
+camera, and the story goes on once every member's scene has ended.
+
+A shot eases in and out once and keeps its pace through the keyframes between, so the intro is one move from the
+dropship down to Vela rather than a row of cuts. A cut further than `far-cut-blocks` dips to black, keeps the chunks
+around the new camera loaded from the scene's start and fades in once they have reached the viewer, at most two seconds
+later.
+
+Gestures are animations of the BetterModel bodies that `resourcepack/RigModels.py` writes: point, beckon, nod, rest and
+look, each blending in over a few ticks. An actor talks for as long as the voice of its line plays. It walks at an even
+pace that starts and stops over eight ticks, with its legs at the pace the ground goes by (`walk-paces`), and faces where it goes.
+Its body follows its head a few ticks later. Between cutscenes Vela turns towards the nearest member and talks while she
+speaks.
+
+BetterModel hides the Mannequin under a body by sending it as invisible, which spectators, and so every cutscene viewer,
+see as a translucent figure. Every Mannequin that wears a body therefore also wears an empty skin from the pack.
 
 A cutscene every member has already seen may be skipped: holding sneak asks for it, the subtitle's corner counts who
 holds, and it ends for everyone once they all hold together for half a second. A cutscene someone has not seen yet plays

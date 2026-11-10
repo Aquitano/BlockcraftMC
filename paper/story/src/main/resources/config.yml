@@ -55,44 +55,46 @@ mission:
     - -6.5 65 -34.5
     - 7.5 65 -34.5
 
-# Each scene is timed in ticks. `shots` are camera keyframes that look from `at` towards `look`, or towards an actor's
-# head with `follow`; `cut: true` starts a new shot. `actors` walk through their `marks` with BetterModel's walk and
-# play the `gestures` of their model (talk, point, beckon, nod, rest, look), `idle` for the whole scene; `vela` is the
-# NPC herself and every other actor is spawned for the scene. `lines` are subtitles from messages.yml with the voice
-# of the same key, typing out at the dialogue's pace. `craft` flies a ship's model past, `emitters` keep particles
-# going, `sounds` play to each viewer, at `at` when it is given, and `effects` are EXPLOSION or FLARE; an EXPLOSION
-# with a `radius` breaks the blocks around it, throws debris and leaves fire and smoke until the round ends.
+# Each scene is timed in ticks. `shots` are camera keyframes that look from `at` towards `look`, or with `follow` at an
+# actor `height` blocks above its feet (1.3 unless given) wherever it is; `cut: true` starts a new shot. Within a shot
+# the camera eases in and out once and keeps its pace through every keyframe between. A cut further than
+# `far-cut-blocks` dips to black over `fade-ticks`, since the client still has to load the new place. `actors` walk
+# through their `marks` facing where they go, and play the `gestures` of their model (point, beckon, nod, rest, look),
+# `idle` for the whole scene; an actor talks while a line it speaks is voiced. `vela` is the NPC herself and every
+# other actor is spawned for the scene. `walk-paces` are how far each body's walk carries it per tick, the stride over
+# the cycle that resourcepack/RigModels.py animates, so the legs keep pace with the ground. `lines` are subtitles from
+# messages.yml with the voice of the same key, typing out at the dialogue's pace. `craft` flies a ship's model past,
+# and one that `stays` waits where it arrives; `emitters` keep particles going, `sounds` play to each viewer, at `at`
+# when it is given, and `effects` are EXPLOSION or FLARE; an EXPLOSION with a `radius` breaks the blocks around it,
+# throws debris and leaves fire and smoke until the round ends.
 cutscenes:
   fade-ticks: 12
+  far-cut-blocks: 48
+  walk-paces: {soldier: 0.1125, heavy: 0.059, scout: 0.183, medic: 0.121}
   scenes:
+    # One move: behind the dropship over the basin, down into the yard ahead of Vela, who walks up to the camera.
     intro:
       shots:
         - {tick: 0, at: "-6 122 64", look: "-78 66 0"}
         - {tick: 60, at: "-30 114 46", look: "-78 66 0"}
-        - {tick: 120, at: "-52 104 30", look: "-80 67 0"}
-        - {tick: 121, at: "-80.5 66.2 -4.0", follow: vela, cut: true}
-        - {tick: 160, at: "-80.2 66.25 -3.6", follow: vela}
-        - {tick: 205, at: "-79.6 66.3 -3.0", follow: vela}
-        - {tick: 206, at: "-78.4 66.75 -1.6", follow: vela, cut: true}
-        - {tick: 270, at: "-78.2 66.7 -1.2", follow: vela}
-        - {tick: 271, at: "-77.6 66.2 2.4", follow: vela, cut: true}
-        - {tick: 365, at: "-77.9 66.3 1.9", follow: vela}
+        - {tick: 105, at: "-52 96 22", look: "-68 66 1"}
+        - {tick: 148, at: "-71 70.2 -0.7", follow: vela}
+        - {tick: 185, at: "-76.6 66.9 -0.8", follow: vela}
+        - {tick: 230, at: "-77.6 66.5 -0.9", follow: vela}
+        - {tick: 300, at: "-77.3 66.45 -0.3", follow: vela}
+        - {tick: 365, at: "-77.1 66.4 0.3", follow: vela}
       actors:
         vela:
           model: kolonien_soldier
           marks:
-            - {tick: 0, at: "-66.5 65 0.5 90 0"}
-            - {tick: 125, at: "-66.5 65 0.5 90 0"}
-            - {tick: 195, at: "-75.5 65 0.5 90 0"}
-            - {tick: 215, at: "-75.5 65 0.5 110 -4"}
-            - {tick: 290, at: "-75.5 65 0.5 95 -2"}
-            - {tick: 330, at: "-75.5 65 0.5 70 -4"}
+            - {tick: 0, at: "-64.5 65 0.5 90 0"}
+            - {tick: 130, at: "-64.5 65 0.5 90 0"}
+            - {tick: 210, at: "-75.5 65 0.5 90 0"}
+            - {tick: 224, at: "-75.5 65 0.5 112 -3"}
+            - {tick: 290, at: "-75.5 65 0.5 100 -2"}
+            - {tick: 345, at: "-75.5 65 0.5 80 -3"}
           gestures:
-            - {tick: 214, play: talk}
-            - {tick: 270, stop: talk}
-            - {tick: 292, play: beckon}
-            - {tick: 306, play: talk}
-            - {tick: 350, stop: talk}
+            - {tick: 294, play: beckon}
         guard:
           model: kolonien_heavy
           idle: look
@@ -130,33 +132,32 @@ cutscenes:
       sounds:
         - {tick: 0, sound: "blockcraft:story.ambience.wind", volume: 0.7}
         - {tick: 0, sound: "blockcraft:sternenfront.intro.radio_open", volume: 0.8}
-        - {tick: 121, sound: "blockcraft:story.ambience.base", volume: 0.6}
+        - {tick: 150, sound: "blockcraft:story.ambience.base", volume: 0.6}
         - {tick: 240, sound: "blockcraft:story.ambience.wind", volume: 0.4}
+    # Vela turns to the factory in the east and points, the fleet bombs it, and she turns back to the troop.
     ending-fabrik:
       shots:
-        - {tick: 0, at: "-78.6 66.75 -1.9", follow: vela}
-        - {tick: 85, at: "-78.3 66.7 -1.2", follow: vela}
+        - {tick: 0, at: "-77.6 66.5 -0.9", follow: vela}
+        - {tick: 40, at: "-77.7 66.55 -0.3", follow: vela}
+        - {tick: 85, at: "-77.9 66.9 1.4", look: "-50 68 0.5"}
         - {tick: 86, at: "44 88 36", look: "82 72 2", cut: true}
         - {tick: 150, at: "53 84 27", look: "82 73 2"}
         - {tick: 215, at: "62 80 18", look: "82 73 2"}
-        - {tick: 216, at: "-78.8 66.8 -2.2", follow: vela, cut: true}
-        - {tick: 310, at: "-78.2 66.7 -1.0", follow: vela}
+        - {tick: 216, at: "-77.9 66.55 -1.3", follow: vela, cut: true}
+        - {tick: 310, at: "-77.5 66.5 -0.4", follow: vela}
       actors:
         vela:
           model: kolonien_soldier
           marks:
-            - {tick: 0, at: "-75.5 65 0.5 90 0"}
-            - {tick: 40, at: "-75.5 65 0.5 90 0"}
-            - {tick: 70, at: "-75.5 65 0.5 60 -30"}
-            - {tick: 216, at: "-75.5 65 0.5 90 0"}
+            - {tick: 0, at: "-75.5 65 0.5 115 -2"}
+            - {tick: 34, at: "-75.5 65 0.5 105 0"}
+            - {tick: 50, at: "-75.5 65 0.5 268 -4"}
+            - {tick: 200, at: "-75.5 65 0.5 268 -4"}
+            - {tick: 216, at: "-75.5 65 0.5 115 -2"}
             - {tick: 310, at: "-75.5 65 0.5 100 -2"}
           gestures:
-            - {tick: 6, play: talk}
-            - {tick: 48, stop: talk}
             - {tick: 50, play: point}
             - {tick: 228, play: nod}
-            - {tick: 236, play: talk}
-            - {tick: 290, stop: talk}
         guard:
           model: kolonien_heavy
           idle: look
@@ -190,28 +191,27 @@ cutscenes:
         - {tick: 0, sound: "blockcraft:story.ambience.base", volume: 0.5}
         - {tick: 86, sound: "blockcraft:story.ambience.wind", volume: 0.6}
         - {tick: 216, sound: "blockcraft:story.ambience.base", volume: 0.4}
+    # Vela sends the gunship, it lands at the refinery and the prisoners walk to it, and she thanks the troop.
     ending-gefangene:
       shots:
-        - {tick: 0, at: "-78.6 66.75 -1.9", follow: vela}
-        - {tick: 85, at: "-78.3 66.7 -1.2", follow: vela}
-        - {tick: 86, at: "24 86 -16", look: "0.5 66 -43.5", cut: true}
-        - {tick: 150, at: "16 81 -22", look: "0.5 66 -43.5"}
-        - {tick: 215, at: "9 77 -27", look: "0.5 67 -43.5"}
-        - {tick: 216, at: "-78.8 66.8 -2.2", follow: vela, cut: true}
-        - {tick: 310, at: "-78.2 66.7 -1.0", follow: vela}
+        - {tick: 0, at: "-77.6 66.5 -0.9", follow: vela}
+        - {tick: 85, at: "-77.3 66.45 0.2", follow: vela}
+        - {tick: 86, at: "16 76 -37", look: "1 72 -43", cut: true}
+        - {tick: 150, at: "12.5 71.5 -39.5", look: "1 70.5 -43"}
+        - {tick: 215, at: "11.5 70 -41", look: "1 70 -43.5"}
+        - {tick: 216, at: "-77.9 66.55 -1.3", follow: vela, cut: true}
+        - {tick: 310, at: "-77.5 66.5 -0.4", follow: vela}
       actors:
         vela:
           model: kolonien_soldier
           marks:
-            - {tick: 0, at: "-75.5 65 0.5 90 0"}
-            - {tick: 216, at: "-75.5 65 0.5 90 0"}
+            - {tick: 0, at: "-75.5 65 0.5 115 -2"}
+            - {tick: 85, at: "-75.5 65 0.5 105 -2"}
+            - {tick: 216, at: "-75.5 65 0.5 115 -2"}
             - {tick: 310, at: "-75.5 65 0.5 100 -2"}
           gestures:
-            - {tick: 6, play: talk}
-            - {tick: 80, stop: talk}
+            - {tick: 60, play: nod}
             - {tick: 228, play: nod}
-            - {tick: 236, play: talk}
-            - {tick: 290, stop: talk}
         prisoner-1:
           model: kolonien_soldier
           idle: rest
@@ -231,14 +231,14 @@ cutscenes:
           idle: rest
           marks:
             - {tick: 0, at: "4.5 65 -36.5 200 0"}
-            - {tick: 160, at: "4.5 65 -36.5 200 0"}
+            - {tick: 145, at: "4.5 65 -36.5 200 0"}
             - {tick: 215, at: "3.5 65 -43.5 180 0"}
       lines:
         - {tick: 5, ticks: 78, speaker: vela, text: cutscene.ending-gefangene.1}
         - {tick: 130, ticks: 80, speaker: funk, text: cutscene.ending-gefangene.2}
         - {tick: 228, ticks: 78, speaker: vela, text: cutscene.ending-gefangene.3}
       craft:
-        - {tick: 86, ticks: 60, model: sternenfront/dropship/kolonien, scale: 7, from: "40 100 -10", to: "0.5 76 -46"}
+        - {tick: 86, ticks: 60, model: sternenfront/dropship/kolonien, scale: 7, from: "40 100 -10", to: "0.5 76 -46", stays: true}
       emitters:
         - {type: DUST, at: "0.5 66 -45", every: 3}
       effects:

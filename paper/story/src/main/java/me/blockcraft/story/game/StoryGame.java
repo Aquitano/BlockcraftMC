@@ -131,7 +131,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
                         speaker -> PlainTextComponentSerializer.plainText().serialize(
                                 messages.get("dialogue.hint.watching", Placeholder.unparsed("player", speaker.getName())))));
         this.dialogue = new DialogueHud(plugin, dialogueSettings, round::players);
-        this.scenes = new Cutscenes(plugin, messages, voices, seen, dialogueSettings.typing(), config.getInt("cutscenes.fade-ticks"));
+        this.scenes = new Cutscenes(plugin, messages, voices, seen, dialogueSettings.typing(), Cutscenes.Settings.from(config.getConfigurationSection("cutscenes")));
         this.npcs = new StoryNpcs(plugin);
         this.blasters = new Blasters(plugin, config.getDouble("blaster.damage"), config.getInt("blaster.cooldown-ticks"),
                 config.getDouble("blaster.range"));

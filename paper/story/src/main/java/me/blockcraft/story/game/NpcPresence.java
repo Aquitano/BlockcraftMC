@@ -1,6 +1,5 @@
 package me.blockcraft.story.game;
 
-import kr.toxicity.model.api.animation.AnimationModifier;
 import kr.toxicity.model.api.tracker.EntityTracker;
 import me.blockcraft.story.dialogue.DialogueHud;
 import org.bukkit.Location;
@@ -21,7 +20,6 @@ final class NpcPresence {
 
     private static final double NOTICE = 8;
     private static final float TURN_PER_TICK = 9;
-    private static final String TALK = "talk";
 
     private final LivingEntity npc;
     private final Location post;
@@ -65,13 +63,7 @@ final class NpcPresence {
     private void talk(boolean now) {
         if (now == talking) return;
         talking = now;
-        body.ifPresent(tracker -> {
-            if (now) {
-                tracker.animate(TALK, AnimationModifier.DEFAULT);
-            } else {
-                tracker.stopAnimation(TALK);
-            }
-        });
+        body.ifPresent(tracker -> Bodies.talk(tracker, now));
     }
 
     private static float approach(float from, float to) {

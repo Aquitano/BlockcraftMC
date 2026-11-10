@@ -1,10 +1,10 @@
 package me.blockcraft.story.cutscene;
 
-import kr.toxicity.model.api.animation.AnimationModifier;
 import kr.toxicity.model.api.tracker.EntityTracker;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.presentation.PresentationScope;
 import me.blockcraft.api.presentation.ScreenEffects;
+import me.blockcraft.api.scene.CameraPath;
 import me.blockcraft.api.scene.SceneTimeline;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.common.message.Messages;
@@ -20,10 +20,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Color;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
@@ -48,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Plays a {@link Cutscene} to the whole party at once. Each member gets their own camera, subtitles, voices and sounds;
@@ -61,6 +65,16 @@ import java.util.UUID;
 public final class Cutscenes implements Listener, AutoCloseable {
 
     private static final int RISE = 6;
+    /**
+     * At a far cut the screen stays black at least {@link #DIP_HOLD_TICKS} and until the chunks within
+     * {@link #ARRIVED_CHUNK_RADIUS} of the new camera have reached the viewer, but no longer than
+     * {@link #DIP_WAIT_TICKS}, so a slow connection shows a world that is still loading rather than holding the scene.
+     */
+    private static final int DIP_HOLD_TICKS = 4;
+    private static final int DIP_WAIT_TICKS = 40;
+    private static final int ARRIVED_CHUNK_RADIUS = 2;
+    /** How many chunks around a far cut's camera stay loaded for the scene, so they are ready to send when it cuts. */
+    private static final int KEPT_CHUNK_RADIUS = 4;
     private static final int SKIP_HOLD_TICKS = 10;
     /** How long a skippable scene says so at its start, before only a held sneak brings the hint back. */
     private static final int SKIP_HINT_TICKS = 80;
@@ -75,11 +89,29 @@ public final class Cutscenes implements Listener, AutoCloseable {
     private final SeenScenes seen;
     private final Demolition demolition;
     private final DialogueHud.Typing typing;
-    private final int fadeTicks;
+    private final Settings settings;
     private final Set<Showing> showing = new HashSet<>();
     private final Set<UUID> holding = new HashSet<>();
 
-    public Cutscenes(Plugin plugin, Messages messages, Voices voices, SeenScenes seen, DialogueHud.Typing typing, int fadeTicks) {
+    /**
+     * {@code fadeTicks} fade a scene in and out, and out and in again around a cut further than {@code farCutBlocks},
+     * whose new place the client still has to load; {@code paces} are how far each body's walk carries it per tick, by
+     * the last part of its model's name.
+     */
+    public record Settings(int fadeTicks, double farCutBlocks, Map<String, Double> paces) {
+        public static Settings from(ConfigurationSection section) {
+            var paces = section.getConfigurationSection("walk-paces");
+            return new Settings(Math.max(1, section.getInt("fade-ticks")), section.getDouble("far-cut-blocks"),
+                    paces == null ? Map.of() : paces.getKeys(false).stream().collect(Collectors.toUnmodifiableMap(
+                            key -> key, paces::getDouble)));
+        }
+
+        double pace(String model) {
+            return paces.getOrDefault(model.substring(model.lastIndexOf('_') + 1), 0.11);
+        }
+    }
+
+    public Cutscenes(Plugin plugin, Messages messages, Voices voices, SeenScenes seen, DialogueHud.Typing typing, Settings settings) {
         this.plugin = plugin;
         this.messages = messages;
         this.voices = voices;
@@ -87,13 +119,15 @@ public final class Cutscenes implements Listener, AutoCloseable {
         this.scenes = new Scenes(plugin, false);
         this.demolition = new Demolition(plugin);
         this.typing = typing;
-        this.fadeTicks = Math.max(1, fadeTicks);
+        this.settings = settings;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     public void play(Cutscene cutscene, List<Player> viewers, Optional<LivingEntity> lead, Runnable done) {
         boolean skippable = !viewers.isEmpty() && viewers.stream().allMatch(viewer -> seen.seen(viewer, cutscene.name()));
         var show = new Showing(cutscene, lead, viewers, skippable, done);
+        var farCuts = cutscene.farCuts(settings.farCutBlocks());
+        if (!viewers.isEmpty()) show.keepLoaded(viewers.getFirst().getWorld(), farCuts);
         showing.add(show);
         if (viewers.isEmpty()) {
             show.end();
@@ -103,6 +137,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
             var scope = new PresentationScope(plugin);
             var heard = new int[] {-1};
             var hinted = new boolean[1];
+            var shown = new HashMap<Integer, Integer>();
             scope.own(() -> {
                 viewer.sendActionBar(Component.empty());
                 viewer.stopSound(SoundStop.source(Sound.Source.VOICE));
@@ -110,8 +145,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
             });
             var timeline = new SceneTimeline(viewer.getWorld(), cutscene.camera(), List.of(), SceneTimeline.SkipMode.COMPLETE,
                     (player, tick, total, skipped) -> {
-                        double fade = Math.max(1.0 - (double) tick / fadeTicks, 1.0 - (double) (total - tick) / fadeTicks);
-                        ScreenEffects.frame(scope, player, Math.clamp(fade, 0, 1), true);
+                        ScreenEffects.frame(scope, player, darkness(cutscene, player, tick, total, farCuts, shown), true);
                         show.reach(tick);
                         while (heard[0] < tick) hear(cutscene, player, ++heard[0]);
                         hinted[0] = subtitle(cutscene, player, tick, show.skipHint(tick), hinted[0]);
@@ -144,6 +178,43 @@ public final class Cutscenes implements Listener, AutoCloseable {
 
     public void stop(Player player) {
         scenes.stop(player);
+    }
+
+    /**
+     * How dark the picture is: fading in at the start, out at the end, and out and back in around each far cut, where
+     * {@code shown} keeps the tick at which the viewer's new place was ready.
+     */
+    private double darkness(Cutscene cutscene, Player viewer, int tick, int total, List<Integer> farCuts, Map<Integer, Integer> shown) {
+        int fade = settings.fadeTicks();
+        double dark = Math.max(1.0 - (double) tick / fade, 1.0 - (double) (total - tick) / fade);
+        for (int cut : farCuts) {
+            if (tick < cut) {
+                dark = Math.max(dark, 1.0 - (double) (cut - tick - 1) / fade);
+                continue;
+            }
+            int since = tick - cut;
+            if (!shown.containsKey(cut) && since >= DIP_HOLD_TICKS && (since >= DIP_WAIT_TICKS || arrived(viewer, cutscene.camera().sample(cut)))) {
+                shown.put(cut, tick);
+            }
+            dark = Math.max(dark, shown.containsKey(cut) ? 1.0 - (double) (tick - shown.get(cut)) / fade : 1);
+        }
+        return Math.clamp(dark, 0, 1);
+    }
+
+    private static boolean arrived(Player viewer, CameraPath.Pose at) {
+        int centreX = (int) Math.floor(at.x()) >> 4;
+        int centreZ = (int) Math.floor(at.z()) >> 4;
+        for (int x = centreX - ARRIVED_CHUNK_RADIUS; x <= centreX + ARRIVED_CHUNK_RADIUS; x++) {
+            for (int z = centreZ - ARRIVED_CHUNK_RADIUS; z <= centreZ + ARRIVED_CHUNK_RADIUS; z++) {
+                if (!viewer.isChunkSent(Chunk.getChunkKey(x, z))) return false;
+            }
+        }
+        return true;
+    }
+
+    /** How long {@code line} is spoken: its voice's length, or its subtitle's where it has no voice. */
+    private int spoken(Cutscene.Line line) {
+        return voices.of(line.text()).map(Voices.Voice::ticks).orElse(line.ticks());
     }
 
     /** The voices and sounds that start at {@code tick}, for this viewer alone, since each may skip on their own. */
@@ -198,9 +269,11 @@ public final class Cutscenes implements Listener, AutoCloseable {
         private final Map<String, LivingEntity> cast = new HashMap<>();
         private final Map<String, EntityTracker> bodies = new HashMap<>();
         private final Map<String, Boolean> walking = new HashMap<>();
+        private final Map<String, Double> pace = new HashMap<>();
         private final Map<String, Set<String>> playing = new HashMap<>();
         private final List<Entity> spawned = new ArrayList<>();
         private final Map<Cutscene.Craft, ItemDisplay> flying = new HashMap<>();
+        private final List<Chunk> kept = new ArrayList<>();
         private int reached = -1;
         private int held;
         private boolean skipping;
@@ -256,12 +329,22 @@ public final class Cutscenes implements Listener, AutoCloseable {
                 });
                 var body = bodies.get(name);
                 if (body == null) return;
+                pace.put(name, actor.speed(tick) / settings.pace(actor.model()));
                 boolean moving = actor.walking(tick);
                 if (!Boolean.valueOf(moving).equals(walking.put(name, moving))) {
                     if (moving) {
-                        body.animate("walk");
+                        Bodies.walk(body, () -> (float) Math.clamp(pace.getOrDefault(name, 1.0), 0.3, 2));
                     } else {
-                        body.stopAnimation("walk");
+                        Bodies.stopWalking(body);
+                    }
+                }
+                for (var line : cutscene.lines()) {
+                    if (!line.speaker().equals(name)) continue;
+                    if (line.tick() == tick) {
+                        Bodies.talk(body, true);
+                        playing.computeIfAbsent(name, ignored -> new HashSet<>()).add("talk");
+                    } else if (line.tick() + spoken(line) == tick) {
+                        Bodies.talk(body, false);
                     }
                 }
                 for (var gesture : actor.gestures()) {
@@ -269,7 +352,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
                     if (gesture.stop()) {
                         body.stopAnimation(gesture.animation());
                     } else {
-                        body.animate(gesture.animation(), AnimationModifier.DEFAULT);
+                        Bodies.gesture(body, gesture.animation());
                         playing.computeIfAbsent(name, ignored -> new HashSet<>()).add(gesture.animation());
                     }
                 }
@@ -300,6 +383,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
                         mannequin.setImmovable(true);
                         mannequin.setInvulnerable(true);
                         mannequin.setGravity(false);
+                        mannequin.setDescription(null);
                     });
                     spawned.add(extra);
                     cast.put(name, extra);
@@ -312,7 +396,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
             Bodies.dress(entity, actor.model()).ifPresent(body -> {
                 bodies.put(name, body);
                 if (!actor.idle().isBlank()) {
-                    body.animate(actor.idle(), AnimationModifier.DEFAULT);
+                    Bodies.idle(body, actor.idle());
                     playing.computeIfAbsent(name, ignored -> new HashSet<>()).add(actor.idle());
                 }
             });
@@ -359,8 +443,10 @@ public final class Cutscenes implements Listener, AutoCloseable {
             var ship = flying.get(craft);
             if (ship == null || !ship.isValid()) return;
             if (age == craft.ticks()) {
-                ship.remove();
-                flying.remove(craft);
+                if (!craft.stays()) {
+                    ship.remove();
+                    flying.remove(craft);
+                }
                 return;
             }
             if (age % CRAFT_STEP == 0) {
@@ -386,6 +472,24 @@ public final class Cutscenes implements Listener, AutoCloseable {
             }
         }
 
+        /** Loads the chunks around each far cut's camera ahead of it and keeps them until the scene ends. */
+        void keepLoaded(World world, List<Integer> cuts) {
+            for (int cut : cuts) {
+                var at = cutscene.camera().sample(cut);
+                int centreX = (int) Math.floor(at.x()) >> 4;
+                int centreZ = (int) Math.floor(at.z()) >> 4;
+                for (int x = centreX - KEPT_CHUNK_RADIUS; x <= centreX + KEPT_CHUNK_RADIUS; x++) {
+                    for (int z = centreZ - KEPT_CHUNK_RADIUS; z <= centreZ + KEPT_CHUNK_RADIUS; z++) {
+                        world.getChunkAtAsync(x, z).thenAccept(chunk -> {
+                            if (!finished && !chunk.getPluginChunkTickets().contains(plugin) && chunk.addPluginChunkTicket(plugin)) {
+                                kept.add(chunk);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
         void ended(Player viewer) {
             watching.remove(viewer);
             if (watching.isEmpty()) end();
@@ -400,7 +504,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
                 if (body != null) animations.forEach(body::stopAnimation);
             });
             var body = bodies.get(Cutscene.LEAD);
-            if (body != null) body.stopAnimation("walk");
+            if (body != null) Bodies.stopWalking(body);
             var leadActor = cutscene.actors().get(Cutscene.LEAD);
             if (leadActor != null) {
                 lead.filter(LivingEntity::isValid).ifPresent(entity -> leadActor.at(cutscene.duration()).ifPresent(entity::teleport));
@@ -409,6 +513,8 @@ public final class Cutscenes implements Listener, AutoCloseable {
                 if (!name.equals(Cutscene.LEAD)) tracker.close();
             });
             spawned.forEach(Entity::remove);
+            kept.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
+            kept.clear();
             done.run();
         }
     }
