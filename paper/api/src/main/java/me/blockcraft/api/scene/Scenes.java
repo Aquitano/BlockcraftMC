@@ -45,13 +45,18 @@ import java.util.function.Consumer;
  * teleport joins the world late, and showing it then has no effect. Attaching can make the server drop and resend the
  * camera, after which the client still looks through the dropped copy, so a camera that was untracked is attached again.
  * <p>
- * The display eases every move over {@link #SMOOTHING} ticks, which hides uneven server ticks and the coarse rotation
- * steps of entity movement packets, and the camera aims that far ahead to make up for the lag. A cut swaps to a second
- * display prepared at the new shot, because a teleport of the same display would glide there.
+ * The display eases every move over {@link #SMOOTHING} ticks and the camera aims that far ahead to make up for the
+ * lag. A client handles packets once a frame and the network delivers them unevenly, so positions often arrive two or
+ * three at once and then not at all; a short easing turns every such gap into a jolt, and ten ticks absorb it along
+ * with uneven server ticks and the coarse rotation steps of entity movement packets. A cut swaps to a second display
+ * prepared at the new shot, because a teleport of the same display would glide there.
+ * <p>
+ * Sneak skips a player's scene unless the scenes were made without {@code sneakSkips}, for a caller that decides
+ * itself when a scene may be skipped and calls {@link #skip}.
  */
 public final class Scenes implements Listener, AutoCloseable {
     public enum End { COMPLETED, SKIPPED, CANCELLED, DISCONNECTED, TELEPORTED, FAILED }
-    static final int SMOOTHING = 4;
+    static final int SMOOTHING = 10;
     private static final int LEAD = SMOOTHING - 1;
     private static final int PREPARE_TICKS = 10;
     /** A client still loading a world it was just sent to can take seconds before it knows the camera. */
@@ -60,13 +65,19 @@ public final class Scenes implements Listener, AutoCloseable {
     /** Players whose client has not yet finished loading the world they joined or changed to. */
     private static final Set<UUID> LOADING = new HashSet<>();
     private final Plugin plugin;
+    private final boolean sneakSkips;
     private final Map<UUID, Session> sessions = new HashMap<>();
     private final BukkitTask task;
     private boolean changing;
     private boolean closed;
 
     public Scenes(Plugin plugin) {
+        this(plugin, true);
+    }
+
+    public Scenes(Plugin plugin, boolean sneakSkips) {
         this.plugin = plugin;
+        this.sneakSkips = sneakSkips;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
     }
@@ -290,14 +301,14 @@ public final class Scenes implements Listener, AutoCloseable {
 
     @EventHandler
     public void onInput(PlayerInputEvent event) {
-        if (event.getInput().isSneak()) skip(event.getPlayer());
+        if (sneakSkips && event.getInput().isSneak()) skip(event.getPlayer());
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onDetach(PlayerStopSpectatingEntityEvent event) {
         if (!changing && active(event.getPlayer())) {
             event.setCancelled(true);
-            skip(event.getPlayer());
+            if (sneakSkips) skip(event.getPlayer());
         }
     }
 
