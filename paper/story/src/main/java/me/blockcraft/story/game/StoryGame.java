@@ -24,6 +24,7 @@ import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.story.cutscene.Cutscene;
 import me.blockcraft.story.cutscene.Cutscenes;
+import me.blockcraft.story.cutscene.SeenScenes;
 import me.blockcraft.story.dialogue.DialogueHud;
 import me.blockcraft.story.dialogue.StorySound;
 import me.blockcraft.story.dialogue.Voices;
@@ -91,6 +92,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private final Blasters blasters;
     private final ConsoleDefense defense;
     private final ChoiceRepository choices;
+    private final SeenScenes seen;
     private final BossBar bar;
     private final Voices voices;
     private final DialogueHud dialogue;
@@ -105,7 +107,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private boolean briefed;
 
     public StoryGame(Plugin plugin, GameConfig gameConfig, Messages messages, World world, StatsRepository stats,
-                     StatsMenus statsMenus, ChoiceRepository choices) {
+                     StatsMenus statsMenus, ChoiceRepository choices, SeenScenes seen) {
         this.plugin = plugin;
         this.messages = messages;
         this.world = world;
@@ -123,12 +125,13 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
                 OptionalInt.empty(), this::greet);
         this.voices = Voices.load();
         warnLongVoices();
+        this.seen = seen;
         var dialogueSettings = DialogueHud.Settings.from(config.getConfigurationSection("dialogue"),
                 new DialogueHud.Settings.Hints(plain("dialogue.hint.advance"), plain("dialogue.hint.choose"), plain("dialogue.hint.close"),
                         speaker -> PlainTextComponentSerializer.plainText().serialize(
                                 messages.get("dialogue.hint.watching", Placeholder.unparsed("player", speaker.getName())))));
         this.dialogue = new DialogueHud(plugin, dialogueSettings, round::players);
-        this.scenes = new Cutscenes(plugin, messages, voices, dialogueSettings.typing(), config.getInt("cutscenes.fade-ticks"));
+        this.scenes = new Cutscenes(plugin, messages, voices, seen, dialogueSettings.typing(), config.getInt("cutscenes.fade-ticks"));
         this.npcs = new StoryNpcs(plugin);
         this.blasters = new Blasters(plugin, config.getDouble("blaster.damage"), config.getInt("blaster.cooldown-ticks"),
                 config.getDouble("blaster.range"));
@@ -208,6 +211,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     }
 
     private void greet(Player player) {
+        seen.load(player);
         Tasks.async(plugin, () -> choices.find(player.getUniqueId(), MISSION), previous -> previous.ifPresent(earlier ->
                 player.sendMessage(messages.get("lobby.previous", Placeholder.component("choice", messages.get("choice." + earlier.key()))))));
     }

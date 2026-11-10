@@ -258,6 +258,13 @@ final class SharedSchema {
                 + "recorded_at TIMESTAMP(3) NOT NULL, check_name VARCHAR(64) NOT NULL, description VARCHAR(255) NOT NULL, "
                 + "violations VARCHAR(32) NOT NULL, verbose VARCHAR(1024) NOT NULL, replay_uuid CHAR(36) NULL, replay_tick INT NULL, "
                 + "INDEX idx_bc_anticheat_player (player_uuid, id), INDEX idx_bc_anticheat_time (recorded_at))"
+        )),
+        new Migration(23, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_story_seen_scenes ("
+                + "player_uuid CHAR(36) NOT NULL, "
+                + "scene VARCHAR(64) NOT NULL, "
+                + "seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (player_uuid, scene))"
         ))
     );
 

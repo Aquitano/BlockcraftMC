@@ -10,6 +10,7 @@ import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
+import me.blockcraft.story.cutscene.SeenScenes;
 import me.blockcraft.story.game.ChoiceRepository;
 import me.blockcraft.story.game.StoryGame;
 import me.blockcraft.story.quest.Quests;
@@ -34,7 +35,8 @@ public final class StoryPlugin extends JavaPlugin {
         world.setDifficulty(Difficulty.NORMAL);
         var choices = new ChoiceRepository(api.database());
         choices.createTable();
-        game = new StoryGame(this, gameConfig, services.messages(), world, services.stats(), services.menus(), choices);
+        game = new StoryGame(this, gameConfig, services.messages(), world, services.stats(), services.menus(), choices,
+                new SeenScenes(this, api.database(), StoryGame.MISSION));
         game.connect(Quests.register(this, StoryGame.MISSION, game, game.npcs(), game.dialogue(), game.voices()));
         api.presence().maxPlayers(getConfig().getInt("players.max"));
         services.listen(

@@ -17,6 +17,8 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.SoundStop;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -29,6 +31,11 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInputEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
@@ -41,16 +48,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 /**
- * Plays a {@link Cutscene} to the whole party at once. Each member gets their own camera, subtitles, voices and sounds
- * and may skip alone; the cast, the craft and the effects are shared, so they follow whichever member's camera has come
- * furthest, and the story goes on once every member's scene has ended. The cast wears BetterModel bodies when
- * BetterModel runs; without it the lead stays a plain figure and the rest of the cast stays away.
+ * Plays a {@link Cutscene} to the whole party at once. Each member gets their own camera, subtitles, voices and sounds;
+ * the cast, the craft and the effects are shared, so they follow whichever member's camera has come furthest, and the
+ * story goes on once every member's scene has ended. The cast wears BetterModel bodies when BetterModel runs; without
+ * it the lead stays a plain figure and the rest of the cast stays away.
+ * <p>
+ * A scene every viewer has watched before may be skipped: holding sneak asks for it, and it ends for all of them once
+ * they all hold it for {@link #SKIP_HOLD_TICKS}. A scene someone has not seen yet plays to its end.
  */
-public final class Cutscenes implements AutoCloseable {
+public final class Cutscenes implements Listener, AutoCloseable {
 
     private static final int RISE = 6;
+    private static final int SKIP_HOLD_TICKS = 10;
+    /** How long a skippable scene says so at its start, before only a held sneak brings the hint back. */
+    private static final int SKIP_HINT_TICKS = 80;
     /** A display's moves glide over this many ticks, the longest a teleport may glide being 59. */
     private static final int CRAFT_STEP = 10;
     private static final Display.Brightness LIT = new Display.Brightness(15, 15);
@@ -59,21 +73,26 @@ public final class Cutscenes implements AutoCloseable {
     private final Messages messages;
     private final Voices voices;
     private final Scenes scenes;
+    private final SeenScenes seen;
     private final DialogueHud.Typing typing;
     private final int fadeTicks;
     private final Set<Showing> showing = new HashSet<>();
+    private final Set<UUID> holding = new HashSet<>();
 
-    public Cutscenes(Plugin plugin, Messages messages, Voices voices, DialogueHud.Typing typing, int fadeTicks) {
+    public Cutscenes(Plugin plugin, Messages messages, Voices voices, SeenScenes seen, DialogueHud.Typing typing, int fadeTicks) {
         this.plugin = plugin;
         this.messages = messages;
         this.voices = voices;
-        this.scenes = new Scenes(plugin);
+        this.seen = seen;
+        this.scenes = new Scenes(plugin, false);
         this.typing = typing;
         this.fadeTicks = Math.max(1, fadeTicks);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     public void play(Cutscene cutscene, List<Player> viewers, Optional<LivingEntity> lead, Runnable done) {
-        var show = new Showing(cutscene, lead, viewers.size(), done);
+        boolean skippable = !viewers.isEmpty() && viewers.stream().allMatch(viewer -> seen.seen(viewer, cutscene.name()));
+        var show = new Showing(cutscene, lead, viewers, skippable, done);
         showing.add(show);
         if (viewers.isEmpty()) {
             show.end();
@@ -82,6 +101,7 @@ public final class Cutscenes implements AutoCloseable {
         for (var viewer : viewers) {
             var scope = new PresentationScope(plugin);
             var heard = new int[] {-1};
+            var hinted = new boolean[1];
             scope.own(() -> {
                 viewer.sendActionBar(Component.empty());
                 viewer.stopSound(SoundStop.source(Sound.Source.VOICE));
@@ -93,10 +113,28 @@ public final class Cutscenes implements AutoCloseable {
                         ScreenEffects.frame(scope, player, Math.clamp(fade, 0, 1), true);
                         show.reach(tick);
                         while (heard[0] < tick) hear(cutscene, player, ++heard[0]);
-                        subtitle(cutscene, player, tick);
+                        hinted[0] = subtitle(cutscene, player, tick, show.skipHint(tick), hinted[0]);
                     });
-            if (!scenes.play(viewer, timeline, scope, ignored -> show.ended())) show.ended();
+            boolean started = scenes.play(viewer, timeline, scope, end -> {
+                if (end == Scenes.End.COMPLETED || end == Scenes.End.SKIPPED) seen.record(viewer, cutscene.name());
+                show.ended(viewer);
+            });
+            if (!started) show.ended(viewer);
         }
+    }
+
+    @EventHandler
+    public void onInput(PlayerInputEvent event) {
+        if (event.getInput().isSneak()) {
+            holding.add(event.getPlayer().getUniqueId());
+        } else {
+            holding.remove(event.getPlayer().getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        holding.remove(event.getPlayer().getUniqueId());
     }
 
     public boolean playing(Player player) {
@@ -123,17 +161,27 @@ public final class Cutscenes implements AutoCloseable {
         }
     }
 
-    /** The line in the dialogue panel, typing out as a conversation's does. */
-    private void subtitle(Cutscene cutscene, Player viewer, int tick) {
-        cutscene.lineAt(tick).ifPresentOrElse(line -> {
+    /**
+     * The line in the dialogue panel, typing out as a conversation's does, with {@code hint} in its corner; between
+     * lines the hint stands alone. Returns whether a lone hint is showing, so it is cleared once it goes.
+     */
+    private boolean subtitle(Cutscene cutscene, Player viewer, int tick, String hint, boolean hinted) {
+        var spoken = cutscene.lineAt(tick);
+        if (spoken.isPresent()) {
+            var line = spoken.get();
             var page = DialoguePanel.pages(plain(messages.get(line.text()))).getFirst();
             int age = tick - line.tick();
             viewer.sendActionBar(DialoguePanel.render(new DialoguePanel.View(plain(messages.get("cutscene.speaker." + line.speaker())),
-                    DialoguePanel.revealed(page, (int) ((age + 1) * typing.rate(DialoguePanel.length(page)))), false, List.of(), 0, "",
-                    Math.max(0, RISE - age * 2), false), new DialoguePanel.Size(page.size(), 0, false)));
-        }, () -> {
-            if (cutscene.lines().stream().anyMatch(line -> line.tick() + line.ticks() == tick)) viewer.sendActionBar(Component.empty());
-        });
+                    DialoguePanel.revealed(page, (int) ((age + 1) * typing.rate(DialoguePanel.length(page)))), false, List.of(), 0, hint,
+                    Math.max(0, RISE - age * 2), false), new DialoguePanel.Size(page.size(), 0, !hint.isEmpty())));
+            return false;
+        }
+        if (!hint.isEmpty()) {
+            viewer.sendActionBar(Component.text(hint, NamedTextColor.GRAY));
+            return true;
+        }
+        if (hinted || cutscene.lines().stream().anyMatch(line -> line.tick() + line.ticks() == tick)) viewer.sendActionBar(Component.empty());
+        return false;
     }
 
     private static String plain(Component text) {
@@ -147,6 +195,8 @@ public final class Cutscenes implements AutoCloseable {
     private final class Showing {
         private final Cutscene cutscene;
         private final Optional<LivingEntity> lead;
+        private final Set<Player> watching;
+        private final boolean skippable;
         private final Runnable done;
         private final Map<String, LivingEntity> cast = new HashMap<>();
         private final Map<String, EntityTracker> bodies = new HashMap<>();
@@ -154,15 +204,40 @@ public final class Cutscenes implements AutoCloseable {
         private final Map<String, Set<String>> playing = new HashMap<>();
         private final List<Entity> spawned = new ArrayList<>();
         private final Map<Cutscene.Craft, ItemDisplay> flying = new HashMap<>();
-        private int open;
         private int reached = -1;
+        private int held;
+        private boolean skipping;
         private boolean finished;
 
-        Showing(Cutscene cutscene, Optional<LivingEntity> lead, int viewers, Runnable done) {
+        Showing(Cutscene cutscene, Optional<LivingEntity> lead, List<Player> viewers, boolean skippable, Runnable done) {
             this.cutscene = cutscene;
             this.lead = lead;
-            this.open = viewers;
+            this.watching = new HashSet<>(viewers);
+            this.skippable = skippable;
             this.done = done;
+        }
+
+        private long holdingCount() {
+            return watching.stream().filter(viewer -> holding.contains(viewer.getUniqueId())).count();
+        }
+
+        /** Whether and how far the party is asking to skip, for the corner of the subtitle; empty when it may not. */
+        String skipHint(int tick) {
+            if (!skippable || skipping) return "";
+            long holders = holdingCount();
+            if (holders > 0 && watching.size() > 1) {
+                return plain(messages.get("cutscene.skip.holding", Formatter.number("holding", holders), Formatter.number("viewers", watching.size())));
+            }
+            return holders > 0 || tick < SKIP_HINT_TICKS ? plain(messages.get("cutscene.skip.hint")) : "";
+        }
+
+        /** Once everyone still watching has held sneak long enough, every scene ends; a step later, outside the camera's own tick. */
+        private void considerSkipping() {
+            if (!skippable || skipping || watching.isEmpty()) return;
+            held = holdingCount() == watching.size() ? held + 1 : 0;
+            if (held < SKIP_HOLD_TICKS) return;
+            skipping = true;
+            Bukkit.getScheduler().runTask(plugin, () -> List.copyOf(watching).forEach(scenes::skip));
         }
 
         void reach(int tick) {
@@ -174,6 +249,7 @@ public final class Cutscenes implements AutoCloseable {
 
         private void act(int tick) {
             if (tick == 0) cast();
+            considerSkipping();
             cutscene.actors().forEach((name, actor) -> {
                 var entity = cast.get(name);
                 if (entity == null || !entity.isValid()) return;
@@ -314,8 +390,9 @@ public final class Cutscenes implements AutoCloseable {
             }
         }
 
-        void ended() {
-            if (--open <= 0) end();
+        void ended(Player viewer) {
+            watching.remove(viewer);
+            if (watching.isEmpty()) end();
         }
 
         void end() {
@@ -344,5 +421,6 @@ public final class Cutscenes implements AutoCloseable {
     public void close() {
         scenes.close();
         List.copyOf(showing).forEach(Showing::end);
+        HandlerList.unregisterAll(this);
     }
 }

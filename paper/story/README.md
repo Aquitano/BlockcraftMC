@@ -89,5 +89,9 @@ no audio. `--model <path to de_DE-thorsten-high.onnx>` synthesizes placeholders 
 `cutscenes.scenes` in `config.yml` holds each cutscene, timed in ticks: camera shots that may follow an actor, the cast
 with their walks, gestures and idle animations, subtitles with their voices, craft flying past, particle emitters,
 sounds and effects. Gestures are animations of the BetterModel bodies that `resourcepack/RigModels.py` writes: talk,
-point, beckon, nod, rest and look. Between cutscenes Vela turns towards the nearest member and gestures while she speaks. They play on the shared camera in `paper/api`'s scene package. Each member watches through their own camera and
-may skip alone with sneak; the story goes on once every member's scene has ended.
+point, beckon, nod, rest and look. Between cutscenes Vela turns towards the nearest member and gestures while she speaks. They play on the shared camera in `paper/api`'s scene package. Each member watches through their own camera,
+and the story goes on once every member's scene has ended.
+
+A cutscene every member has already seen may be skipped: holding sneak asks for it, the subtitle's corner counts who
+holds, and it ends for everyone once they all hold together for half a second. A cutscene someone has not seen yet plays
+to its end. Each member's finished cutscenes are kept in `bc_story_seen_scenes` as `<mission>.<scene>`.

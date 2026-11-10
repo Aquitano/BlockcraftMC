@@ -85,6 +85,9 @@ ending:
     summary: "<prefix><muted>Die Gefangenen sind frei. Die Fabrik produziert weiter, und die Separatisten wissen jetzt, wer kommt."
 
 cutscene:
+  skip:
+    hint: "Shift halten: überspringen"
+    holding: "Überspringen: <holding> von <viewers> halten Shift"
   speaker:
     vela: "Kommandantin Vela"
     funk: "Funk"
