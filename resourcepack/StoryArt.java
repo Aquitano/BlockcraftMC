@@ -10,7 +10,8 @@ import java.util.function.IntBinaryOperator;
  * The story dialogue's panel in {@code blockcraft:story}: caps and body slices, each as a left and a right half, that
  * stack to any height in steps of eight, the bar behind a highlighted answer, the badge behind an answer's number, the speaker's mark and the arrow
  * that says a line goes on. Every glyph has an ascent of seven, so it starts on its line's top like a letter does,
- * and the server's {@code DialoguePanel} counts the widths written here.
+ * and the server's {@code DialoguePanel} counts the widths written here. Beside them, the empty skin the cast's
+ * Mannequins wear under their BetterModel bodies.
  */
 public final class StoryArt {
 
@@ -49,6 +50,9 @@ public final class StoryArt {
                     .formatted(glyph.file(), glyph.image().getHeight(), (int) glyph.character()));
         }
         Files.writeString(root.resolve("font/story.json"), "{\n  \"providers\": [\n" + String.join(",\n", providers) + "\n  ]\n}\n");
+        var blank = root.resolve("textures/entity/story/blank.png");
+        Files.createDirectories(blank.getParent());
+        ImageIO.write(image(64, 64, (x, y) -> 0), "png", blank.toFile());
     }
 
     /** {@code image} as its left and right halves, since the client's font atlas holds no glyph wider than 256 pixels. */

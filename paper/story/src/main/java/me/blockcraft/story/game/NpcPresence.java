@@ -1,11 +1,8 @@
 package me.blockcraft.story.game;
 
-import kr.toxicity.model.api.BetterModel;
 import kr.toxicity.model.api.animation.AnimationModifier;
-import kr.toxicity.model.api.bukkit.platform.BukkitAdapter;
 import kr.toxicity.model.api.tracker.EntityTracker;
 import me.blockcraft.story.dialogue.DialogueHud;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -42,8 +39,7 @@ final class NpcPresence {
     }
 
     void dress(String model) {
-        if (model.isBlank() || !Bukkit.getPluginManager().isPluginEnabled("BetterModel")) return;
-        body = BetterModel.model(model).map(blueprint -> blueprint.getOrCreate(BukkitAdapter.adapt(npc)));
+        body = Bodies.dress(npc, model);
     }
 
     /** A cutscene moves her while it plays, so she leaves her bearing to it. */

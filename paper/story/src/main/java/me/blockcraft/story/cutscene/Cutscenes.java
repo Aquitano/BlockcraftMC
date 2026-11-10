@@ -1,8 +1,6 @@
 package me.blockcraft.story.cutscene;
 
-import kr.toxicity.model.api.BetterModel;
 import kr.toxicity.model.api.animation.AnimationModifier;
-import kr.toxicity.model.api.bukkit.platform.BukkitAdapter;
 import kr.toxicity.model.api.tracker.EntityTracker;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.presentation.PresentationScope;
@@ -13,6 +11,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.story.dialogue.DialogueHud;
 import me.blockcraft.story.dialogue.DialoguePanel;
 import me.blockcraft.story.dialogue.Voices;
+import me.blockcraft.story.game.Bodies;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.SoundStop;
@@ -190,10 +189,6 @@ public final class Cutscenes implements Listener, AutoCloseable {
         return PlainTextComponentSerializer.plainText().serialize(text);
     }
 
-    private static boolean modelled() {
-        return Bukkit.getPluginManager().isPluginEnabled("BetterModel");
-    }
-
     private final class Showing {
         private final Cutscene cutscene;
         private final Optional<LivingEntity> lead;
@@ -298,7 +293,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
                     });
                     return;
                 }
-                if (!modelled() || actor.model().isBlank()) return;
+                if (!Bodies.available() || actor.model().isBlank()) return;
                 actor.at(0).ifPresent(at -> {
                     var extra = at.getWorld().spawn(at, Mannequin.class, mannequin -> {
                         mannequin.setPersistent(false);
@@ -314,9 +309,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
         }
 
         private void dress(String name, LivingEntity entity, Cutscene.Actor actor) {
-            if (!modelled() || actor.model().isBlank()) return;
-            BetterModel.model(actor.model()).ifPresent(model -> {
-                var body = model.getOrCreate(BukkitAdapter.adapt(entity));
+            Bodies.dress(entity, actor.model()).ifPresent(body -> {
                 bodies.put(name, body);
                 if (!actor.idle().isBlank()) {
                     body.animate(actor.idle(), AnimationModifier.DEFAULT);
