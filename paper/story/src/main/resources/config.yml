@@ -60,7 +60,8 @@ mission:
 # play the `gestures` of their model (talk, point, beckon, nod, rest, look), `idle` for the whole scene; `vela` is the
 # NPC herself and every other actor is spawned for the scene. `lines` are subtitles from messages.yml with the voice
 # of the same key, typing out at the dialogue's pace. `craft` flies a ship's model past, `emitters` keep particles
-# going, `sounds` play to each viewer, at `at` when it is given, and `effects` are EXPLOSION or FLARE.
+# going, `sounds` play to each viewer, at `at` when it is given, and `effects` are EXPLOSION or FLARE; an EXPLOSION
+# with a `radius` breaks the blocks around it, throws debris and leaves fire and smoke until the round ends.
 cutscenes:
   fade-ticks: 12
   scenes:
@@ -135,9 +136,9 @@ cutscenes:
       shots:
         - {tick: 0, at: "-78.6 66.75 -1.9", follow: vela}
         - {tick: 85, at: "-78.3 66.7 -1.2", follow: vela}
-        - {tick: 86, at: "14 96 36", look: "82 70 0", cut: true}
-        - {tick: 150, at: "26 92 30", look: "82 70 0"}
-        - {tick: 215, at: "36 88 24", look: "82 70 0"}
+        - {tick: 86, at: "44 88 36", look: "82 72 2", cut: true}
+        - {tick: 150, at: "53 84 27", look: "82 73 2"}
+        - {tick: 215, at: "62 80 18", look: "82 73 2"}
         - {tick: 216, at: "-78.8 66.8 -2.2", follow: vela, cut: true}
         - {tick: 310, at: "-78.2 66.7 -1.0", follow: vela}
       actors:
@@ -177,11 +178,14 @@ cutscenes:
         - {type: SMOKE, at: "82 72 -4", every: 2}
         - {type: SMOKE, at: "86 74 6", every: 2}
         - {type: EMBERS, at: "80 71 0", every: 3}
+      # The Separatist hall at x 70 to 92 serves as the factory; each blast tears out the blocks within its radius.
       effects:
-        - {tick: 120, type: EXPLOSION, at: "80 72 -6"}
-        - {tick: 136, type: EXPLOSION, at: "86 76 4"}
-        - {tick: 150, type: EXPLOSION, at: "78 70 1"}
-        - {tick: 172, type: EXPLOSION, at: "88 73 -2"}
+        - {tick: 112, type: EXPLOSION, at: "74 72 10", radius: 3.5}
+        - {tick: 124, type: EXPLOSION, at: "82 77 4", radius: 4.5}
+        - {tick: 138, type: EXPLOSION, at: "72 70 -6", radius: 3.5}
+        - {tick: 150, type: EXPLOSION, at: "86 76 12", radius: 4}
+        - {tick: 166, type: EXPLOSION, at: "80 73 18", radius: 3.5}
+        - {tick: 182, type: EXPLOSION, at: "84 77 -8", radius: 4.5}
       sounds:
         - {tick: 0, sound: "blockcraft:story.ambience.base", volume: 0.5}
         - {tick: 86, sound: "blockcraft:story.ambience.wind", volume: 0.6}

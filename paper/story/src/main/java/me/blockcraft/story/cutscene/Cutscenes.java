@@ -74,6 +74,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
     private final Voices voices;
     private final Scenes scenes;
     private final SeenScenes seen;
+    private final Demolition demolition;
     private final DialogueHud.Typing typing;
     private final int fadeTicks;
     private final Set<Showing> showing = new HashSet<>();
@@ -85,6 +86,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
         this.voices = voices;
         this.seen = seen;
         this.scenes = new Scenes(plugin, false);
+        this.demolition = new Demolition(plugin);
         this.typing = typing;
         this.fadeTicks = Math.max(1, fadeTicks);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -327,6 +329,7 @@ public final class Cutscenes implements Listener, AutoCloseable {
             var at = effect.at();
             switch (effect.type()) {
                 case EXPLOSION -> {
+                    if (effect.radius() > 0) demolition.blast(at, effect.radius());
                     at.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, at, 2, 0, 0, 0, 0, null, true);
                     at.getWorld().spawnParticle(Particle.LARGE_SMOKE, at, 40, 2, 2, 2, 0.05, null, true);
                     at.getWorld().playSound(at, org.bukkit.Sound.ENTITY_GENERIC_EXPLODE, 6, 0.7f);
@@ -417,10 +420,16 @@ public final class Cutscenes implements Listener, AutoCloseable {
         }
     }
 
+    /** Puts back whatever the cutscenes' explosions tore down, for the next round. */
+    public void restore() {
+        demolition.restore();
+    }
+
     @Override
     public void close() {
         scenes.close();
         List.copyOf(showing).forEach(Showing::end);
+        demolition.close();
         HandlerList.unregisterAll(this);
     }
 }

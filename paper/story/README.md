@@ -95,3 +95,8 @@ and the story goes on once every member's scene has ended.
 A cutscene every member has already seen may be skipped: holding sneak asks for it, the subtitle's corner counts who
 holds, and it ends for everyone once they all hold together for half a second. A cutscene someone has not seen yet plays
 to its end. Each member's finished cutscenes are kept in `bc_story_seen_scenes` as `<mission>.<scene>`.
+
+In the factory ending six blasts tear the Separatist hall apart (x 70 to 92, z -24 to 24 on Tessar, which stands in for
+the droid factory): each `EXPLOSION` with a `radius` removes the blocks around it, throws some of them as tumbling
+block displays that come to rest on the ground, and leaves fire and smoke. The blocks are set directly, so each blast
+fires `BlocksChangedEvent` for replays, and the hall is put back when the round ends.

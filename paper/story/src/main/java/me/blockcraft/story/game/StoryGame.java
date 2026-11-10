@@ -411,7 +411,10 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
             summary.awardWin(member);
         }
         Bukkit.broadcast(messages.get("ending." + choice.key() + ".summary"));
-        Tasks.later(plugin, ENDING_TITLE_TICKS, round::end);
+        Tasks.later(plugin, ENDING_TITLE_TICKS, () -> {
+            scenes.restore();
+            round.end();
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

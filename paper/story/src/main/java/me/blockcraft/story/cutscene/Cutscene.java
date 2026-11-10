@@ -65,7 +65,8 @@ public record Cutscene(String name, CameraPath camera, Map<String, Actor> actors
 
     public enum EffectType { EXPLOSION, FLARE }
 
-    public record Effect(int tick, EffectType type, Location at) { }
+    /** An effect at {@code at}; an explosion with a {@code radius} tears the blocks around it out. */
+    public record Effect(int tick, EffectType type, Location at, double radius) { }
 
     /** A ship's model flown from {@code from} to {@code to}, nose first, over {@code ticks}. */
     public record Craft(int tick, int ticks, String model, float scale, Location from, Location to) { }
@@ -110,7 +111,8 @@ public record Cutscene(String name, CameraPath camera, Map<String, Actor> actors
         var lines = section.getMapList("lines").stream()
                 .map(line -> new Line(number(line, "tick"), number(line, "ticks"), text(line, "speaker"), text(line, "text"))).toList();
         var effects = section.getMapList("effects").stream()
-                .map(effect -> new Effect(number(effect, "tick"), EffectType.valueOf(text(effect, "type")), Spots.parse(world, text(effect, "at")))).toList();
+                .map(effect -> new Effect(number(effect, "tick"), EffectType.valueOf(text(effect, "type")), Spots.parse(world, text(effect, "at")),
+                        effect.get("radius") instanceof Number radius ? radius.doubleValue() : 0)).toList();
         var craft = section.getMapList("craft").stream()
                 .map(ship -> new Craft(number(ship, "tick"), number(ship, "ticks"), text(ship, "model"),
                         ship.get("scale") instanceof Number scale ? scale.floatValue() : 1,
