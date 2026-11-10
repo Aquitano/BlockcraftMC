@@ -1,0 +1,261 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:sternenfront/twin_pistol",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/twin_pistol_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/twin_pistol",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/twin_pistol",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/twin_pistol_firing",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/twin_pistol_firing_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/twin_pistol_firing",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/twin_pistol_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/twin_pistol_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/twin_pistol_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/westar_pistols",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/westar_pistols_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/westar_pistols",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/westar_pistols",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/westar_pistols_firing",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/westar_pistols_firing_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/westar_pistols_firing",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/westar_pistols_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/westar_pistols_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/westar_pistols_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:zombies/flamethrower",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/flamethrower"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/golden_hoe"
+    }
+  },
+  "hand_animation_on_swap": false
+}

@@ -1,0 +1,11 @@
+# Operator overrides for BetterModel. The pack is merged by hand into the network's, so nothing else may take it over,
+# and only bodies are used, so the player animation and armor modules would add 2,300 unused files to it.
+module:
+  model: true
+  player-animation: false
+  player-armor: false
+pack:
+  use-obfuscation: false
+merge-with-external-resources: false
+metrics: false
+version-check: false

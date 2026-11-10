@@ -1,0 +1,12 @@
+name: Pyramids
+origin: Blockcraft 2015–16
+category: BedWars
+description: Eine BedWars-Karte von Blockcraft mit vier kleinen Sandsteinpyramiden
+  um eine größere Mittelpyramide.
+icon: sandstone
+arrival:
+  x: 0.5
+  y: 84.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0

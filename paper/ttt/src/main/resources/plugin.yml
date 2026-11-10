@@ -1,0 +1,6 @@
+name: TTT
+version: '${version}'
+main: me.blockcraft.ttt.TttPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI]

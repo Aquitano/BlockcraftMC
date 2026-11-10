@@ -1,0 +1,75 @@
+# How each rigged body's parts hang together. RigBody poses the plain displays from this file and
+# resourcepack/RigModels.py the BetterModel bones, so both draw a body alike; resourcepack/SternenfrontArt.java shapes
+# the parts around these points. Not an operator setting: the pack's models are built to fit it.
+#
+# Joints are in blocks above the feet before the body's scale, facing +z with the body's left at +x. Bodies built
+# alike share a set. torso.lean hunches the torso forward from the waist; arm-lift raises both aiming arms from
+# hanging straight down; grip-turn turns the left arm in to the weapon's fore-end. All three are in radians.
+# weapon-scale sizes the held item, whatever the body's scale. left-arm-drop lowers the supporting arm below the aiming
+# one, in radians.
+weapon-scale: 0.65
+left-arm-drop: 0.05
+joints:
+  b1-droid:
+    shoulder: {x: 0.25, y: 1.47, z: 0}
+    hip: {x: 0.085, y: 0.96}
+    torso: {y: 0.98, lean: 0}
+    head: {y: 1.64, z: 0}
+    weapon: {x: -0.22, y: 1.3, z: 0.53}
+  b2-droid:
+    shoulder: {x: 0.47, y: 1.46, z: 0.14}
+    hip: {x: 0.22, y: 0.78}
+    torso: {y: 0.8, lean: 0.26}
+    head: {y: 1.32, z: 0.3}
+    weapon: {x: 0, y: 0, z: 0}
+  droid-medic:
+    shoulder: {x: 0.2, y: 1.44, z: 0}
+    hip: {x: 0.09, y: 0.96}
+    torso: {y: 0.98, lean: 0}
+    head: {y: 1.58, z: 0}
+    weapon: {x: -0.17, y: 1.3, z: 0.55}
+  commando-droid:
+    shoulder: {x: 0.25, y: 1.44, z: 0}
+    hip: {x: 0.09, y: 0.96}
+    torso: {y: 0.98, lean: 0}
+    head: {y: 1.55, z: 0}
+    weapon: {x: -0.22, y: 1.3, z: 0.53}
+  clone:
+    shoulder: {x: 0.3, y: 1.4, z: 0}
+    hip: {x: 0.105, y: 0.95}
+    torso: {y: 0.97, lean: 0}
+    head: {y: 1.5, z: 0}
+    weapon: {x: -0.26, y: 1.27, z: 0.53}
+  clone-scout:
+    shoulder: {x: 0.24, y: 1.38, z: 0}
+    hip: {x: 0.085, y: 0.95}
+    torso: {y: 0.97, lean: 0}
+    head: {y: 1.51, z: 0}
+    weapon: {x: -0.2, y: 1.25, z: 0.55}
+  clone-medic:
+    shoulder: {x: 0.28, y: 1.4, z: 0}
+    hip: {x: 0.1, y: 0.95}
+    torso: {y: 0.97, lean: 0}
+    head: {y: 1.5, z: 0}
+    weapon: {x: -0.24, y: 1.27, z: 0.53}
+  robed:
+    shoulder: {x: 0.28, y: 1.4, z: 0}
+    hip: {x: 0.1, y: 0.95}
+    torso: {y: 0.97, lean: 0}
+    head: {y: 1.5, z: 0}
+    weapon: {x: -0.25, y: 1.12, z: 0.35}
+bodies:
+  hegemonie_soldier: {joints: b1-droid, arm-lift: -1.1, grip-turn: 0.45}
+  hegemonie_heavy: {joints: b2-droid, scale: 1.25, arm-lift: -1.45, grip-turn: 0}
+  hegemonie_scout: {joints: b1-droid, arm-lift: -1.1, grip-turn: 0.45}
+  hegemonie_medic: {joints: droid-medic, arm-lift: -1.15, grip-turn: 0}
+  kolonien_soldier: {joints: clone, arm-lift: -1.1, grip-turn: 0.55}
+  kolonien_heavy: {joints: clone, arm-lift: -1.1, grip-turn: 0.55}
+  kolonien_scout: {joints: clone-scout, arm-lift: -1.15, grip-turn: 0.5}
+  kolonien_medic: {joints: clone-medic, arm-lift: -1.15, grip-turn: 0}
+  reinforcement_arc_trooper: {joints: clone, arm-lift: -1.1, grip-turn: 0.55}
+  reinforcement_commando_droid: {joints: commando-droid, arm-lift: -1.1, grip-turn: 0.45}
+  hero_jedi: {joints: robed, arm-lift: -0.5, grip-turn: 0}
+  hero_commander: {joints: clone, arm-lift: -1.1, grip-turn: 0}
+  hero_sith: {joints: robed, arm-lift: -0.5, grip-turn: 0}
+  hero_bounty_hunter: {joints: clone, arm-lift: -1.1, grip-turn: 0}

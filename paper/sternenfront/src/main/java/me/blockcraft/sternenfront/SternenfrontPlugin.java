@@ -1,0 +1,145 @@
+package me.blockcraft.sternenfront;
+
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.config.BundledDefaults;
+import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.GameConfig;
+import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.GameServices;
+import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.StartCommand;
+import me.blockcraft.api.world.WaitingLobby;
+import me.blockcraft.api.world.WorldProtection;
+import me.blockcraft.api.world.Worlds;
+import me.blockcraft.sternenfront.arena.FrontMap;
+import me.blockcraft.sternenfront.arena.ArenaFile;
+import me.blockcraft.sternenfront.appearance.BodyRigs;
+import me.blockcraft.sternenfront.appearance.TargetOutlines;
+import me.blockcraft.sternenfront.config.FeelConfig;
+import me.blockcraft.sternenfront.config.SternenfrontConfig;
+import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.SternenfrontGame;
+import me.blockcraft.sternenfront.debug.BotDebug;
+import me.blockcraft.sternenfront.hero.HeroConfig;
+import me.blockcraft.sternenfront.listener.ArenaListener;
+import me.blockcraft.sternenfront.listener.ChatListener;
+import me.blockcraft.sternenfront.listener.CombatListener;
+import me.blockcraft.sternenfront.secret.Secrets;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Difficulty;
+import org.bukkit.GameRules;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.EnumSet;
+import java.util.Optional;
+
+public final class SternenfrontPlugin extends JavaPlugin {
+
+    private SternenfrontGame game;
+    private BodyRigs bodyRigs;
+    private TargetOutlines targetOutlines;
+    private BotDebug botDebug;
+    private Secrets secrets;
+
+    @Override
+    public void onEnable() {
+        BundledDefaults.apply(this);
+        var gameConfig = GameConfig.from(getConfig(), getConfig().getBoolean("bots.enabled", true) ? 1 : 2);
+        var config = SternenfrontConfig.from(getConfig());
+        var api = BlockcraftApi.get();
+        var services = GameServices.load(this, gameConfig, "bc_sternenfront_stats");
+        var messages = services.messages();
+        var world = Bukkit.getWorlds().getFirst();
+        Worlds.settle(world);
+        // Hurt players heal through the round's own regeneration and the medics, not through hunger.
+        world.setDifficulty(Difficulty.NORMAL);
+        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
+        var map = ArenaFile.load(world, api.map().file(this, ArenaFile.FILE));
+        if (map.rain()) {
+            world.setStorm(true);
+            world.setWeatherDuration(Integer.MAX_VALUE);
+        }
+        map.time().ifPresent(ticks -> Worlds.setTime(world, ticks));
+        keepLoaded(map);
+        border(map);
+        var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(map.lobbySpawn());
+        lobby.getWorld().setSpawnLocation(lobby);
+        game = new SternenfrontGame(this, gameConfig, config, HeroConfig.from(getConfig()), FeelConfig.from(getConfig()),
+                messages, map, lobby, services.stats(), services.menus());
+        api.presence().maxPlayers(config.capacity());
+        var riggedSides = EnumSet.noneOf(Faction.class);
+        if (getConfig().getBoolean("appearance.droids", true)) {
+            riggedSides.add(Faction.HEGEMONIE);
+        }
+        if (getConfig().getBoolean("appearance.infantry", true)) {
+            riggedSides.add(Faction.KOLONIEN);
+        }
+        if (!riggedSides.isEmpty()) {
+            bodyRigs = BodyRigs.start(this, game, riggedSides);
+            game.rigs(bodyRigs);
+        }
+        secrets = Secrets.start(this, game, messages);
+        if (getConfig().getBoolean("outlines.enabled", true)) {
+            targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs));
+        }
+        botDebug = new BotDebug(game, bodyRigs);
+
+        services.listen(
+                game.hotbar(),
+                new RoundConnections(game),
+                WorldProtection.during(() -> game.phase() != GamePhase.INGAME, api.buildMode())
+                        .rescue(() -> Optional.of(lobby)),
+                new ArenaProtection(() -> false),
+                new ArenaListener(game, api.buildMode()),
+                new CombatListener(game, api.buildMode(), botDebug, secrets),
+                new ChatListener(game, messages));
+
+        services.commands(commands -> {
+            commands.register(StartCommand.of(game.countdown()).build());
+            commands.register(botDebug.command());
+            commands.register(game.intro().command());
+        });
+
+        Bukkit.getOnlinePlayers().forEach(game::join);
+    }
+
+    /** The whole basin stays in memory: bots walk it and posts recolour it wherever the players are. */
+    private void keepLoaded(FrontMap map) {
+        var area = map.playArea();
+        for (int x = (int) area.getMinX() >> 4; x <= (int) area.getMaxX() >> 4; x++) {
+            for (int z = (int) area.getMinZ() >> 4; z <= (int) area.getMaxZ() >> 4; z++) {
+                map.world().addPluginChunkTicket(x, z, this);
+            }
+        }
+    }
+
+    /** The border can include distant scenery; the map's own cliffs are the playable edge. */
+    private static void border(FrontMap map) {
+        var area = map.playArea();
+        var border = map.world().getWorldBorder();
+        border.setCenter(area.getCenterX(), area.getCenterZ());
+        border.setSize(map.worldBorderSize());
+    }
+
+    @Override
+    public void onDisable() {
+        if (secrets != null) {
+            secrets.close();
+        }
+        if (targetOutlines != null) {
+            targetOutlines.close();
+        }
+        if (botDebug != null) {
+            botDebug.close();
+        }
+        if (bodyRigs != null) {
+            bodyRigs.close();
+        }
+        if (game != null) {
+            game.stop();
+        }
+        Bukkit.getOnlinePlayers().forEach(player -> player.kick(Component.empty()));
+        Bukkit.getScheduler().cancelTasks(this);
+    }
+}

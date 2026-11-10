@@ -1,0 +1,18 @@
+# The dev proxy without Mojang authentication, for the verify client's offline account. Only reachable inside the verify network.
+config-version = "2.7"
+bind = "0.0.0.0:25565"
+motd = "<gold>Blockcraft dev proxy"
+online-mode = false
+player-info-forwarding-mode = "modern"
+forwarding-secret-file = "forwarding.secret"
+enable-player-address-logging = false
+
+# Backends register themselves through the database (see README); nothing is listed here.
+[servers]
+try = []
+
+[forced-hosts]
+
+[advanced]
+kick-after-rate-limited-commands = 10
+kick-after-rate-limited-tab-completes = 10

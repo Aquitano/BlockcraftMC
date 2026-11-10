@@ -1,0 +1,198 @@
+spawn:
+  ==: org.bukkit.Location
+  world: world
+  x: -1275.6941204899279
+  y: 114.0
+  z: 1.5362276067003404
+  pitch: 1.4684618
+  yaw: 356.00735
+vs:
+  '1':
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: 133.078853962518
+      y: 91.0
+      z: 730.5811882045875
+      pitch: 4.0142574
+      yaw: -88.30008
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: 199.39378448078773
+      y: 91.0
+      z: 730.6199241302272
+      pitch: -0.18147911
+      yaw: -267.19754
+  '2':
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: 304.07208634939377
+      y: 108.0
+      z: 748.806069381503
+      pitch: 0.20811233
+      yaw: -179.08093
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: 326.823907773082
+      y: 108.0
+      z: 693.632368986448
+      pitch: -0.2114801
+      yaw: -0.12658691
+  '3':
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: 474.52983158389975
+      y: 106.0
+      z: 866.5692045672583
+      pitch: -0.42123157
+      yaw: -268.8706
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: 400.7578781443076
+      y: 106.0
+      z: 866.5476750705228
+      pitch: 3.1451347
+      yaw: -90.75574
+  '4':
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: 313.43301733264525
+      y: 76.0
+      z: 959.4024362094194
+      pitch: 1.0472707
+      yaw: -1.5956421
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: 313.3870045406469
+      y: 76.0
+      z: 1019.6540972621456
+      pitch: 1.2570527
+      yaw: -177.61237
+sg:
+  '1':
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: -14.491018148266066
+      y: 65.0
+      z: 310.50952626129816
+      pitch: -4.498896
+      yaw: -270.2988
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: 48.564511436366146
+      y: 74.0
+      z: 278.5264821739906
+      pitch: 3.4511034
+      yaw: -60.898743
+  '2':
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: 206.42000596098822
+      y: 93.0
+      z: 821.4612906727838
+      pitch: 4.533385
+      yaw: 89.74912
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: 140.61430740676596
+      y: 93.0
+      z: 821.4675908463073
+      pitch: -2.5166216
+      yaw: 90.19917
+superjump:
+  '1':
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: 6.325312113457109
+      y: 132.0
+      z: 767.591619043469
+      pitch: -3.035174
+      yaw: 89.862785
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: -163.43969847053995
+      y: 132.0
+      z: 767.5178667217832
+      pitch: -0.50707227
+      yaw: -90.735634
+  '2':
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: -57.507459846004075
+      y: 106.0
+      z: 719.4355363182922
+      pitch: -2.7000613
+      yaw: -0.43329042
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: -51.54760708940243
+      y: 106.0
+      z: 719.6087390671332
+      pitch: -0.15006828
+      yaw: 0.6167195
+  '3':
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: -16.511886598557936
+      y: 112.0
+      z: 842.4841203843158
+      pitch: -4.957462
+      yaw: -0.39770508
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: -16.43313184325096
+      y: 112.0
+      z: 894.6341337484756
+      pitch: -3.1574647
+      yaw: -180.69788
+  '4':
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: -45.576719295782176
+      y: 89.5
+      z: 610.5187362976118
+      pitch: 3.5262015
+      yaw: -90.56976
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: -45.45677296520025
+      y: 89.5
+      z: 632.4658094590478
+      pitch: -0.63604945
+      yaw: -90.47974
+  '5':
+    p2:
+      ==: org.bukkit.Location
+      world: world
+      x: 24.443516843868814
+      y: 116.0
+      z: 1061.460484763395
+      pitch: 0.7008679
+      yaw: -180.9018
+    p1:
+      ==: org.bukkit.Location
+      world: world
+      x: 24.507450522648284
+      y: 116.0
+      z: 991.5132448830616
+      pitch: -0.4991409
+      yaw: -0.7519531

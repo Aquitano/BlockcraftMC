@@ -1,0 +1,25 @@
+willkommen:
+  location: Lobby3, -66.885, 25.453, 2.280
+  lines:
+  - '&8● &bWILLKOMMEN &8●'
+  - '&7Herzlich Willkommen auf Vanade!'
+  - '&7Der Server befindet sich in der &cBETA &7Phase'
+  - '&7Bugs können also gerne auf unserem TS reportet werden'
+  - '&7Teamspeak IP &8» &ets.vanade.eu'
+  - '&bVIEL SPASS!'
+shop:
+  location: Lobby3, -57.638, 22.700, 35.596
+  lines:
+  - '&8● &6PREMIUM &8●'
+  - '&7Schalte mit &6Premium &7alle features frei!'
+  - '&8» &e3 Monate &8- &710 Euro'
+  - '&8» &eLifetime &8- &730 Euro'
+  - '&7Mehr Informationen mit &b/Premium'
+premium:
+  location: Neue_Lobby, -963.672, 31.999, 1634.598
+  lines:
+  - '&8● &6PREMIUM &8●'
+  - '&7Mit Premium mehr Features freischalten!'
+  - '&8● &e3 Monate &8» &710 Euro'
+  - '&8● &eLifetime &8» &730 Euro'
+  - '&7Mehr Informationen &b/Premium'

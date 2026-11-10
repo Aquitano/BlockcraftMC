@@ -1,0 +1,567 @@
+# Two factions of players-per-team each. Whoever picks none is seated on the smaller one.
+teams:
+  players-per-team: 6
+
+# The lobby counts down once players.min are there. A full lobby jumps to countdown.full seconds, /start to
+# countdown.start. After countdown.round seconds the faction with more reinforcements wins, and the server restarts
+# countdown.restart seconds after the round.
+players:
+  min: 1
+debug:
+  history-ticks: 100
+  capture-ticks: 200
+  cooldown-ticks: 200
+bots:
+  enabled: true
+  # Bots fill each side up to fill-per-team fighters, players included, so a full side of players plays without them.
+  fill-per-team: 6
+  difficulty: normal
+  # A bot's aim scatters aim-settle-spread times aim-spread on a fresh target and settles over aim-settle-ticks. Like a
+  # player's, it opens up by combat.handling's moving and hot while the bot walks and its blaster heats. On top of that
+  # its first shots go to one side, as far off as that fresh scatter, and close in over the same aim-settle-ticks.
+  profiles:
+    easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.13, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false, aim-settle-ticks: 40, aim-settle-spread: 3}
+    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.07, burst-shots: 4, burst-pause-ticks: 20, tracking-degrees: 45, damage-scale: 0.7, headshots: false, aim-settle-ticks: 30, aim-settle-spread: 2.5}
+    veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true, aim-settle-ticks: 16, aim-settle-spread: 1.6}
+  medic: {heal-ticks: 60, heal-amount: 3, pursuit-ticks: 80, retry-ticks: 100}
+  sight-range: 32
+  vision-angle: 120
+  memory-ticks: 40
+  # A bot turns toward enemy gunfire within hearing-range blocks, and a fireteam that loses a member treats where the
+  # killer stood as contact, for alarm-ticks each.
+  hearing-range: 16
+  alarm-ticks: 100
+  idle-turn-degrees: 12
+  step-height: 1
+  boundary-grace-ticks: 40
+  kill-points: 25
+  cover: {search-radius: 10, hold-ticks: 30, peek-ticks: 40}
+  voice: {enabled: true, range: 18, volume: 0.65, soldier-cooldown-ticks: 360, global-cooldown-ticks: 100}
+  # A hit bot clanks (droids) or grunts (clones), at most once per cooldown-ticks so a burst sounds once.
+  hurt-sound: {volume: 0.8, cooldown-ticks: 6}
+  # Bots fight in fireteams of up to fireteam-size that share one objective. A team keeps its objective until another
+  # post is switch-margin blocks of walking cheaper, and leaves one guard at a post it takes while three are left. On the move
+  # the others walk spacing blocks apart in the leader's steps, each stepping stagger blocks to alternate sides where the
+  # ground allows. The leader slows for up to five seconds for anyone between regroup-distance and catch-up-distance
+  # behind, anyone further runs the route alone, and anyone ahead waits for the column. walk-speed and
+  # sprint-speed scale the pathfinder's pace for travelling and for running under fire. Under fire the team bounds by
+  # pairs: one runs bound-distance blocks along the route, or for bound-ticks at most, while the other covers it and
+  # fires at where the enemy was last seen, then they swap. A team held up for flank-after-ticks sends one member
+  # round by another route. A team whose leader is within follow-range blocks of a player of its faction takes that
+  # player's order from the order bar as its objective. A held post with enemies in it counts reinforce-pull blocks
+  # nearer. A team whose leader has twice as many enemies as friends within fall-back-range blocks, and at least two,
+  # runs back to its route's retreat points. It pushes again once back there with the odds even, and holds there for
+  # fall-back-ticks at most; odds still bad then, or bad again within fall-back-ticks of pushing, make it pick another
+  # objective. A team cut down to its leader in a fight falls back once the same way to wait for the others. A guard
+  # whose post is that outnumbered rejoins its team. A bot that stands within 1.5 blocks of one spot for stand-ticks
+  # while it knows where an enemy is within sight-range (seen, remembered, or its team's contact under fire) runs there,
+  # unless it is wounded, treating a patient, falling back, in siege mode, or a guard at its post's lookout.
+  squad: {fireteam-size: 3, switch-margin: 25, spacing: 3, stagger: 2, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
+          sprint-speed: 1.25, bound-distance: 8, bound-ticks: 80, flank-after-ticks: 160, follow-range: 12,
+          reinforce-pull: 80, fall-back-range: 16, fall-back-ticks: 160, stand-ticks: 200}
+appearance:
+  body-turn-degrees: 12
+  motion:
+    soldier: {stride-blocks: 1.8, cycle-ticks: 16, leg-degrees: 32, bob-height: 0.03, lean-degrees: 4, sway-degrees: 3, recoil-degrees: 9, recoil-blocks: 0.06, recoil-ticks: 4}
+    heavy: {stride-blocks: 1.3, cycle-ticks: 22, leg-degrees: 22, bob-height: 0.015, lean-degrees: 2, sway-degrees: 5, recoil-degrees: 5, recoil-blocks: 0.035, recoil-ticks: 6}
+    scout: {stride-blocks: 2.2, cycle-ticks: 12, leg-degrees: 38, bob-height: 0.04, lean-degrees: 11, sway-degrees: 2, recoil-degrees: 14, recoil-blocks: 0.09, recoil-ticks: 7}
+    medic: {stride-blocks: 1.7, cycle-ticks: 14, leg-degrees: 28, bob-height: 0.025, lean-degrees: 6, sway-degrees: 4, recoil-degrees: 4, recoil-blocks: 0.025, recoil-ticks: 3}
+  droids: true
+  infantry: true
+  # Bot bodies the BetterModel plugin draws and animates, by family. Without the plugin they stay plain rigs.
+  animated-bodies: [hegemonie_soldier, hegemonie_heavy, hegemonie_scout, hegemonie_medic, kolonien_soldier, kolonien_heavy, kolonien_scout, kolonien_medic]
+  # A hit body flashes this colour for half a second, multiplied into its texture.
+  hurt-tint: "FF5050"
+  # Marking colours by fireteam, first fireteam first; players wear their side's first. A side with more fireteams
+  # starts over. The pack shows the first colour wherever a display sets none.
+  unit-colours:
+    kolonien: ["30487A", "C07818"]
+    hegemonie: ["E0B818", "7C3420"]
+music:
+  enabled: true
+  volume: 0.35
+  pressure-tickets: 35
+# The look of the round and how much of it clients get. live-effects is the hard cap on short-lived models alive at
+# once; every scorch.every-th wall hit leaves a mark, under their own cap, oldest first. A lit blade that reaches a
+# solid block leaves a saber-mark under that same cap, one per player every cooldown-ticks: its glow thins away over
+# glow-ticks, its scar stays ticks and fades over fade-ticks, tilted up to tilt-degrees off the cut's direction, scale
+# blocks long. A bolt's trail drops a dot
+# every trail-step blocks, and every far-every-th dot reaches players beyond 32 blocks and on reduced particle
+# settings. storm.density is the
+# sand grains per player every interval-ticks, storm.haze the dust specks of each of the storm's two layers every
+# haze-ticks; both grow by gust-boost at the height of a gust.
+presentation:
+  effects: true
+  gameplay:
+    siege-mode-ticks: 20
+    force-push-ticks: 12
+  deployment: {fade-ticks: 6, briefing: true, banner-ticks: 25}
+  # Deploying at headquarters or a post lands the player from their side's craft: it comes down height blocks and glide
+  # blocks along its nose over descent-ticks (at most 59), opens its doors over the last door-ticks of that, sets them
+  # down settle-ticks after touching down and climbs away over lift-ticks. Over stalls and walls up to six blocks high it
+  # hovers and drops them. Teammates who deploy at the same spawn within share-ticks ride along. Under a roof the craft
+  # comes straight down from just below it; a spawn without room for that, and the assault's dropship, keep the fade alone.
+  landing: {enabled: true, height: 16, glide: 4, descent-ticks: 30, door-ticks: 20, settle-ticks: 4, lift-ticks: 20, share-ticks: 10}
+  capture: {ticks: 24, radius: 6, points: 40}
+  holographic-posts: true
+  live-effects: 64
+  scorch: {marks: 32, every: 3, ticks: 300, fade-ticks: 40, scale: 0.7}
+  saber-mark: {cooldown-ticks: 8, glow-ticks: 30, ticks: 300, fade-ticks: 40, scale: 1.5, tilt-degrees: 20}
+  saber-trail-ticks: 3
+  muzzle-flash: {ticks: 2, scale: 0.3, heavy-scale: 0.5}
+  # A hit shows a flash impact-flash blocks across for impact-ticks and sparks of impact-dust size, small enough to leave
+  # a fighter at the crosshair in sight. A shooter sees their own bolt appear with a glow own-flash across and its trail at
+  # own-trail-size, smaller than the trail-size others see, because from behind the whole trail lines up on the crosshair.
+  bolt: {width: 1.8, length: 1.6, trail-size: 1.1, trail-step: 0.9, far-every: 3, impact-flash: 0.15, impact-ticks: 1, impact-dust: 0.5,
+         own-trail-size: 0.35, own-flash: 0.7}
+  # A repeater's bolt, from the Z-6 or a blaster built on it, bursts where it lands into impact-sparks sparks and
+  # impact-smoke puffs of smoke with a blast at impact-volume. Each of its shots thumps at thump-volume of the shot's own
+  # volume and kicks the shooter's view up kick-degrees for a tick.
+  heavy-blaster: {impact-sparks: 10, impact-smoke: 2, thump-volume: 0.9, impact-volume: 0.8, kick-degrees: 0.7}
+  explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 12}
+  damaged: {below: 0.35, interval-ticks: 12}
+  ambient: {interval-ticks: 10, range: 72}
+  shipyard:
+    enabled: true
+    range: 40
+    props-range: 96
+    steam-interval-ticks: 12
+    spark-interval-ticks: 30
+    steam-particles: 5
+    spark-particles: 7
+    volume: 0.22
+    crane-period-ticks: 600
+    crane-step-ticks: 4
+    crane-cable-length: 4
+  sea:
+    enabled: true
+    range: 72
+    interval-ticks: 4
+    max-sites: 3
+    wave: {period-ticks: 140, break-ticks: 24, reach: 12, width: 9, particles: 6, far-every: 3, foam-size: 0.65, color: "ddebf1"}
+    spray: {particles: 5, speed: 0.24}
+    wind: {yaw: 315, speed: 0.18, volume: 0.1, pitch: 0.6, interval-ticks: 200}
+    surf: {volume: 0.34, interval-ticks: 160}
+  assault: {ticks: 100, distance: 90, height: 45, scale: 7, clearance: 0}
+  storm: {density: 5, haze: 3, interval-ticks: 2, haze-ticks: 6, radius: 14, wind-speed: 0.8, gust-seconds: 7, gust-ticks: 40, gust-boost: 1.2}
+  # A player looking through a long rifle's scope glints at the scope every interval-ticks, flaring and fading over
+  # ticks, for each enemy player within range blocks who is in front of the scope, sees it within view-degrees of their
+  # look and has no wall in between. The glint grows by size blocks per block of distance, so it stays a few pixels
+  # across. bots: a bot with a long rifle glints the same way while it has an enemy in its sights.
+  scope-glint: {enabled: true, range: 96, interval-ticks: 24, ticks: 6, view-degrees: 50, size: 0.06, bots: true}
+  # On a map with rain, a harmless strike this many blocks from a random fighter every so often; a last stand halves the wait.
+  lightning: {min-seconds: 20, max-seconds: 55, distance: 50}
+combat:
+  precision-hitscan: true
+  damage-indicator-ticks: 30
+  guard:
+    capacity: 100
+    recovery-per-tick: 1
+    recovery-delay-ticks: 20
+    break-ticks: 30
+    parry-ticks: 5
+    cost-per-damage: 2
+  melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
+  # Spread multiplies while moving, aiming (holding right click) and off the ground, and grows by hot times the
+  # barrel's heat. In a long rifle's scope it then shrinks to nothing over settle-ticks. A sprint lowers the gun, which
+  # cannot fire until sprint-recovery-ticks after the sprint ends. Damage holds to falloff-from of a weapon's range, then
+  # thins to falloff-minimum of itself at the end of it. blasters overrides the factors per blaster; a Separatist blaster
+  # or hero gun without its own takes its Republic profile's.
+  handling:
+    moving: 1.4
+    aiming: 0.5
+    airborne: 1.8
+    hot: 0.5
+    settle-ticks: 12
+    sprint-recovery-ticks: 5
+    falloff-from: 0.5
+    falloff-minimum: 0.6
+    blasters:
+      pistol: {moving: 1.25, sprint-recovery-ticks: 3}
+      twin-pistol: {moving: 1.25, sprint-recovery-ticks: 3}
+      heavy-rifle: {sprint-recovery-ticks: 6}
+      long-rifle: {sprint-recovery-ticks: 8}
+      repeater: {moving: 1.7, aiming: 0.4, airborne: 2.2, sprint-recovery-ticks: 10}
+  # A player's bolts and long-rifle shots meet enemies where that player's screen showed them: their ping plus
+  # interpolation-ms, the client's smoothing of other fighters, in the past, but never more than max-ms. A high-ping shooter
+  # can then hit an enemy who has just stepped behind cover on their own screen; max-ms bounds how far behind that can be.
+  # Walls, shields, guard and parry are judged in the present, and bots' shots entirely so.
+  lag-compensation: {enabled: true, max-ms: 200, interpolation-ms: 100}
+  # A bolt pushes whoever it hits, bots included, along its flight: per-damage blocks a tick for each point of damage, at
+  # most max. Ground friction stops it within about 2.2 times that in blocks, so 0.2 carries about 0.45 blocks. Only
+  # someone standing on the ground is pushed, and only where ground goes on under the spot the push carries them to,
+  # so it never takes anyone over an edge. A headshot throws a bot's aim off as a fresh target does.
+  hit-push: {per-damage: 0.025, max: 0.2}
+speeders:
+  enabled: true
+  health: 60
+  respawn-seconds: 45
+  idle-return-seconds: 45
+  # Pads at each headquarters, one to three; each pad holds one single-seat craft.
+  per-faction: 2
+  # Blocks per tick. S brakes at braking down to a stop, then reverses at speed times reverse-share.
+  speed: 0.65
+  acceleration: 0.035
+  braking: 0.07
+  reverse-share: 0.35
+  # Full turn rate from full-turn-speed upwards, standstill-turn-share of it when stopped.
+  turn-degrees: 4
+  standstill-turn-share: 0.15
+  full-turn-speed: 0.35
+  # Below this share of its health a craft shows the damaged model and trails smoke.
+  damaged-share: 0.5
+  # Held sprint: burns for ticks, refills in recharge-ticks, and after running dry restarts at restart-share.
+  boost: {speed: 0.95, ticks: 60, recharge-ticks: 200, restart-share: 0.25}
+  # Shares the rider's blaster heat. Muzzle offsets are blocks from the craft's feet along its nose and upwards.
+  cannon: {damage: 4, heat: 7, cooldown-ticks: 4, speed: 4.5, range: 90, muzzle-ahead: 1.6, muzzle-height: 0.6}
+  # Damage scales with speed; craft-damage is paid per target hit, each target once per cooldown.
+  ram: {minimum-speed: 0.4, damage-at-top-speed: 12, craft-damage: 3, knockback: 0.9, cooldown-ticks: 20}
+  explosion: {radius: 5, damage: 16}
+  # Model only: pivot-height is what it banks around, tail where the wake starts behind the craft's centre.
+  presentation:
+    model-height: 0.15
+    pivot-height: 0.4
+    tail: 1.2
+    bank-degrees: 18
+    surge-pitch-degrees: 5
+    climb-pitch-degrees: 14
+    bob-height: 0.04
+    bob-period-ticks: 50
+    smoothing: 0.25
+    teleport-ticks: 1
+battlefield:
+  vent: {warning-seconds: 1, seconds: 6, cooldown-seconds: 20, damage: 2}
+  bulkhead: {seconds: 8, cooldown-seconds: 20}
+  shutters: {seconds: 8, cooldown-seconds: 20}
+countdown:
+  lobby: 60
+  start: 10
+  full: 20
+  round: 1200
+  restart: 30
+idle-restart-minutes: 50
+# ObjectiveHud shows the time left.
+timer-bar: false
+global-stats-head: Kevos
+# How long a running round keeps the place of a player who dropped out; 0 turns it off.
+rejoin-seconds: 120
+
+# What a kill, a bot, a captured post (to every capturer in the zone), a killed champion, an award and a win pay in coins.
+rewards:
+  kill: 5
+  bot-kill: 1
+  capture: 4
+  champion: 10
+  award: 10
+  hero: 15
+  win: 25
+
+# Every death costs its faction one ticket. Every bleed-seconds the faction holding more posts drains the other by
+# the difference.
+tickets:
+  start: 150
+  bleed-seconds: 5
+
+# A round runs through three acts, which only move forward. The assault starts when the lower faction's reinforcements
+# fall to assault-share of tickets.start or after assault-seconds; the last stand likewise. In the assault one post
+# counts priority-bleed times when bleeding, draws the bots with priority-pull (blocks of walking they accept for it),
+# and the trailing faction may land dropship-distance blocks beside it, also in the last stand. In the last stand every
+# post counts last-stand-bleed times, the trailing faction's heroes cost comeback-hero-share of heroes.cost, it fields
+# one more of them, and the storm shortens bots.sight-range to storm-sight-share.
+acts:
+  assault-share: 0.65
+  assault-seconds: 360
+  last-stand-share: 0.30
+  last-stand-seconds: 780
+  priority-bleed: 2
+  priority-pull: 60
+  dropship-distance: 22
+  last-stand-bleed: 2
+  comeback-hero-share: 0.5
+  storm-sight-share: 0.6
+
+# One player alone takes a neutral post in capture-seconds; a lead of two or three is two or three times as fast.
+posts:
+  capture-seconds: 12
+  radio-cooldown-seconds: 15
+
+# Radio calls wait for speech to finish. Each faction keeps its latest post call; calls during its cooldown are discarded.
+# Timing floors cover the checked-in recordings: 80 ticks for radio, 50 for infantry.
+radio:
+  enabled: true
+  speech: true
+  captions: true
+  volume: 0.8
+  call-ticks: 80
+  infantry-ticks: 50
+  post-cooldown-ticks: 400
+  events: {assault: true, last-stand: true, captured: true, lost: true}
+
+# Tessar's secrets (EASTER_EGGS.md, "Sternenfront"). The first find of each pays coins. Brummi panics at the hits-th
+# hit from one player in a round and stays away for hide-seconds. The sand beast rumbles under a player who stood
+# still on its dune for rumble-seconds and breaks out after still-seconds, at scale times the model's size; then the
+# dune rests for rest-seconds. A Kessel-Lauf under par-seconds finds its secret; a run ends after limit-seconds. On
+# 4 May every round pays coin-factor times its coins. The inspection course rewards any valid completion; its par is a goal.
+secrets:
+  coins: 50
+  brummi: {hits: 3, hide-seconds: 30}
+  sand-beast: {still-seconds: 10, rumble-seconds: 4, rest-seconds: 60, scale: 5}
+  kessel: {par-seconds: 10, limit-seconds: 60}
+  inspection-course: {par-seconds: 25, limit-seconds: 90}
+  may-the-fourth: {coin-factor: 2}
+
+# A dead player may confirm deployment after seconds. Auto-deployment uses a safe recommendation and the free class.
+# A deployed player cannot be hurt for protection-seconds or until they fire.
+respawn:
+  seconds: 5
+  auto-seconds: 15
+  protection-seconds: 3
+  enemy-clearance: 12
+  # How long a spawn locking, opening or becoming the recommendation must hold before the open deploy screen redraws
+  # its window; its marker shows the change at once.
+  screen-settle-ticks: 50
+
+# What an enemy inside a faction's headquarters takes every second.
+headquarters:
+  enemy-damage: 4
+
+# A player or bot that took no damage for delay-seconds heals per-second health every second.
+regen:
+  delay-seconds: 6
+  per-second: 1
+
+# Modern combat, so that the relic blade swings with its cooldown.
+pvp:
+  legacy-combat: false
+
+# Every pull of the trigger adds the blaster's heat; full is 100. After cool-delay-ticks without a shot the gun loses
+# cool-per-tick a tick. A gun at full heat vents for vent-ticks before it fires again. The vents on the gun glow warm
+# from glow.warm of full heat and hot from warning-level, and pulse every glow.pulse-ticks while venting.
+# A vent marks window-share of the heat meter, somewhere in its lower half. The first fresh pull of the trigger while the
+# cooling heat is inside it ends the vent; one outside it adds miss-penalty-share of vent-ticks to the vent. Bots never try.
+heat:
+  warning-level: 0.8
+  cool-delay-ticks: 8
+  cool-per-tick: 3
+  vent-ticks: 40
+  window-share: 0.2
+  miss-penalty-share: 0.25
+  glow: {warm: 0.45, pulse-ticks: 4}
+
+# Each class's body per faction, for players and bots: health (20 is ten hearts), speed times normal movement, scale
+# times normal size. A player is 1.8 blocks tall, so 1.1 still walks the wreck's two-high corridors; a bot's body is
+# 1.99 already and never grows past it, so the pathfinder keeps them too. Heroes and champions keep normal size.
+classes:
+  kolonien:
+    soldier: {health: 20, speed: 1, scale: 1}
+    heavy: {health: 30, speed: 1, scale: 1}
+    scout: {health: 16, speed: 1, scale: 1}
+    medic: {health: 20, speed: 1, scale: 1}
+  hegemonie:
+    soldier: {health: 18, speed: 1, scale: 1}
+    heavy: {health: 36, speed: 0.88, scale: 1.1}
+    scout: {health: 16, speed: 1, scale: 1}
+    medic: {health: 18, speed: 1, scale: 1}
+
+# Holding right click pulls the trigger every 4 ticks, so cooldown-ticks below 4 only help fast clickers. A pull fires
+# bolts, burst-ticks apart; heat is per pull. speed is blocks per tick, range in blocks, spread the largest sideways
+# deviation per block. A hit above the shoulders multiplies damage by headshot. Both gun heroes use the
+# twin-pistol profile.
+blasters:
+  carbine: {damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 4.5, range: 90}
+  repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 7, range: 60}
+  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 7, range: 75}
+  commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 4.5, range: 28}
+  long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0.025, speed: 6, range: 160}
+  pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 4.5, range: 70}
+  twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 5, range: 80}
+  # Separatist weapons inherit their matching Republic profile unless overridden here.
+  e5: {}
+  wrist-blaster: {}
+  e5s: {}
+  se14: {}
+  westar-pistols: {}
+  heavy-rifle: {damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 5, range: 100}
+
+# These slots are independent of named heroes. A purchase lasts one life; limit: 0 disables a unit.
+reinforcement-units:
+  arc-trooper: {cost: 250, limit: 2, health: 32, speed: 1}
+  commando-droid: {cost: 300, limit: 2, health: 26, speed: 1.12}
+
+# Each ability's cooldown and what it does. A grenade or mining charge explodes fuse-ticks after the throw and hurts enemies
+# and its thrower in sight within radius, damage at its centre and a third of it at the edge. A player holds charges
+# throws of it, full on each deployment, and each comes back cooldown-seconds after the one before; bots keep a plain cooldown. The shield wall stands
+# width by height panes, distance blocks ahead, for seconds. The med station heals allies within radius for seconds.
+# Siege mode roots the unit for seconds; its repeater then pulls every cooldown-ticks with bolts bolts and heat-scale of
+# the heat. Two bolts every 4 ticks is a third more bolts than the normal repeater: holding right click pulls no
+# faster than every 4 ticks, and three bolts would double the damage of a heavy that also has the most health.
+abilities:
+  grenade: {cooldown-seconds: 15, charges: 2, fuse-ticks: 50, radius: 5, damage: 16, throw-speed: 1.1}
+  adrenaline: {cooldown-seconds: 30, seconds: 5}
+  shield-wall: {cooldown-seconds: 25, seconds: 8, width: 5, height: 3, distance: 2}
+  jump-pack: {cooldown-seconds: 10, forward: 1.3, up: 0.9}
+  med-station: {cooldown-seconds: 25, seconds: 10, radius: 4, heal-per-second: 2}
+  mining-charge: {cooldown-seconds: 25, fuse-ticks: 60, radius: 6, damage: 20, throw-speed: 0.9}
+  siege-mode: {cooldown-seconds: 30, seconds: 6, cooldown-ticks: 4, bolts: 2, heat-scale: 0.5}
+
+# The relic blade appears first-seconds into the round and again respawn-seconds after its champion falls. The
+# champion has health, the blade hits for damage, and a second jump in the air or F leaps forward and up every
+# leap-cooldown-seconds, with the blade in hand. Right click raises the guard.
+relic:
+  first-seconds: 120
+  respawn-seconds: 60
+  health: 40
+  damage: 9
+  leap-cooldown-seconds: 6
+  leap-forward: 1.5
+  leap-up: 0.7
+
+# Battle points buy a hero in the deploy menu: points for a kill, for each player on a post their faction captures, and
+# for each on a post that turns neutral. A hero costs cost points; each faction fields at most per-faction heroes at
+# once, and each hero only once. Heroes do not heal, neither out of combat nor at a med station.
+heroes:
+  cost: 600
+  per-faction: 1
+  points:
+    kill: 100
+    # Added to a kill, in proportion to what it pays: a headshot, and each kill after the first in a row (up to three).
+    headshot: 25
+    multikill: 25
+    capture: 100
+    neutralise: 50
+    assist: 40
+    defence: 25
+    healing-per-health: 2
+    healing-limit-per-life: 40
+    assist-window-seconds: 10
+    healing-window-seconds: 20
+  health:
+    jedi: 60
+    bounty-hunter: 50
+    sith: 60
+    commander: 50
+  # A saber hits for damage with the sword's cooldown. Its blade grows by one of its ignition lengths per tick and is
+  # whole ignite-ticks after it is drawn. A saber hero whose guard is up (hand raised by holding right click) takes
+  # blocked-share of a blade's hit. Colours are RGB hex; white is for whoever found every kyber crystal, relic is the
+  # marks of the relic blade.
+  saber:
+    damage: 8
+    blocked-share: 0.3
+    ignite-ticks: 6
+    hum-ticks: 40
+    leap-cooldown-seconds: 5
+    leap-forward: 1.4
+    leap-up: 0.7
+    colors: {jedi: "3D8BFF", sith: "FF2A2A", white: "F4F8FF", relic: "F4F8FF"}
+  # range in blocks. force-push hits enemies within angle degrees ahead, wind-up-ticks after the hero draws the off hand
+  # back. The thrown saber flies range blocks out at speed blocks per tick and back. force-grip holds for seconds and
+  # deals damage over that time, a share every pulse-ticks. The jetpack thrusts for seconds. The orbital strike falls
+  # delay-ticks after the beacon lands, blasts times within radius.
+  abilities:
+    force-push: {cooldown-seconds: 8, range: 7, angle: 70, strength: 1.7, up: 0.5, damage: 2, wind-up-ticks: 5}
+    saber-throw: {cooldown-seconds: 10, range: 14, speed: 1.2, damage: 9}
+    force-grip: {cooldown-seconds: 14, range: 14, seconds: 2, damage: 7, pulse-ticks: 10}
+    jetpack: {cooldown-seconds: 12, seconds: 4, thrust: 0.4}
+    # Speed is blocks per tick. A rocket explodes on impact or at the end of its range, hurting enemies and the owner.
+    wrist-rocket: {cooldown-seconds: 16, range: 64, speed: 1.6, radius: 3.5, damage: 18}
+    # Total damage per target over ticks, with one pulse every pulse-ticks. Walls and saber guards stop it.
+    force-lightning: {cooldown-seconds: 14, range: 10, angle: 50, ticks: 30, pulse-ticks: 5, targets: 3, damage: 12}
+    grapple: {cooldown-seconds: 8, range: 30, speed: 2.2}
+    orbital-strike: {cooldown-seconds: 30, delay-ticks: 60, radius: 5, blasts: 6, damage: 24}
+    rally: {cooldown-seconds: 25, radius: 12, seconds: 6}
+
+# A killed player watches their killer for ticks before the deploy menu opens; the wait to deploy counts meanwhile.
+killcam:
+  ticks: 50
+
+# Kills in one life that earn a one-use orbital strike, and how many bots count as one kill.
+streaks:
+  orbital-strike: 5
+  bots-per-kill: 3
+
+# The battle points ever earned that each rank needs, lowest first; career.rank.<index> in messages.yml names them.
+career:
+  ranks: [0, 1500, 4000, 8000, 15000, 25000, 40000, 60000, 90000, 130000]
+
+# Holding right click with a blaster aims it: the gun comes up to the sights and combat.handling's aiming tightens its
+# spread. The client narrows the view only from a slower walking speed and only with FOV effects on, so the walk slows
+# to 2 * zoom - 1 of its normal pace while the view narrows to zoom of its width. A long rifle aims through its scope:
+# the reticle covers the screen, the walk slows to scoped-walk of its normal pace, and the view narrows to scope-zoom
+# of its width at full FOV effects, from 0.1 to 0.45. Lower FOV effects zoom proportionally less.
+aim:
+  zoom: 0.92
+  scope-zoom: 0.25
+  scoped-walk: 0.3
+
+outlines: {enabled: true, range: 64, allies: false}
+
+# The map in the top-left corner while deployed, north up around the player: radius blocks reach its rim. It redraws every
+# update-ticks and sends nothing while nothing on it moved. An enemy shows for enemy-ticks after each shot it fires.
+minimap: {radius: 48, update-ticks: 4, enemy-ticks: 60}
+
+# The top-right lines about a player's own kills, assists and death last this long, the last second greyed out.
+kill-feed:
+  seconds: 5
+
+combat-feedback:
+  marker-ticks: 8
+  reward-ticks: 30
+  hero-ready-ticks: 60
+  elite-ready-ticks: 60
+  # How long the line beside the heat meter says why a key did nothing, such as an ability still recharging.
+  notice-ticks: 30
+  # A sprint lowers the gun, which a mark under the crosshair shows in place of the spread until it can fire again; then
+  # another mark shows for raised-ticks.
+  raised-ticks: 8
+  multikill-seconds: 4
+  sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
+  # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples
+  # of its own base spread. Aiming is 0.5 and shows the tightest step, standing still and cold is 1 and shows the next;
+  # combat.handling sets how far walking, jumping and heat open it.
+  spread-steps: [0.8, 1.0, 1.25, 1.55]
+  # An enemy bolt, a bot's too, that passes within radius blocks of a player's eyes without hitting them whizzes past at
+  # up to volume, louder and higher the nearer it came. Each pass also darkens the edges of their screen in coarse grey
+  # pixels by up to suppression of the darkest step, by how near it came, to at most max-suppression; it fades from the
+  # darkest over fade-ticks. The middle of the screen stays clear.
+  near-miss: {radius: 3.0, volume: 0.8, suppression: 0.35, max-suppression: 0.75, fade-ticks: 20}
+  # A headshot rings the victim's helmet at volume, tilts their view back from the hit's own tilt and shakes the picture
+  # for ticks. Their aim stays where it was.
+  headshot-rattle: {ticks: 8, volume: 0.8}
+
+intro:
+  enabled: true
+  duration-ticks: 180
+  fade-ticks: 15
+  audio:
+    enabled: true
+    briefing: true
+    voice-volume: 0.8
+    effects-volume: 0.35
+    captions: true
+    briefing-ticks: 48
+  focus:
+    enabled: true
+    from: 0.75
+    until: 0.95
+  shots:
+    - at: 0.0
+      anchor: overview
+      offset: [0, 0, 0]
+      look-at: 'post:1'
+    - at: 0.40
+      anchor: 'post:1'
+      offset: [12, 10, 14]
+      look-at: 'post:1'
+    - at: 0.72
+      anchor: 'post:1'
+      offset: [8, 8, 10]
+      look-at: 'post:1'
+    - at: 0.75
+      anchor: headquarters
+      offset: [4, 2, 5]
+      look-at: headquarters
+      cut: true
+    - at: 1.0
+      anchor: headquarters
+      offset: [2, 1.7, 3]
+      look-at: headquarters

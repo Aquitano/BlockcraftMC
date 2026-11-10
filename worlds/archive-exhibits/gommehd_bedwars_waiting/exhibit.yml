@@ -1,0 +1,10 @@
+name: BedWars-Wartelobby
+origin: GommeHD.net
+category: Wartelobbys
+description: Die gesicherte BedWars-Wartelobby mit ihren Schildern, Bannern und Figuren.
+icon: red_bed
+arrival:
+  x: 46.5
+  y: 131.0
+  z: -135.5
+  yaw: 0.0

@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/kolonien_medic","particle":"blockcraft:block/sternenfront/rig/kolonien_medic"},
+  "elements":[
+    {"from":[6.696,-2.08,6.576],"to":[9.304,-0.96,9.424],"faces":{"north":{"uv":[10.3125,10.125,10.9375,10.375],"texture":"#rig","tintindex":0},"south":{"uv":[10.3125,10.125,10.9375,10.375],"texture":"#rig","tintindex":0},"east":{"uv":[9.375,10.125,10.0625,10.375],"texture":"#rig","tintindex":0},"west":{"uv":[9.375,10.125,10.0625,10.375],"texture":"#rig","tintindex":0},"up":{"uv":[9.5625,7.625,10.1875,8.3125],"texture":"#rig","tintindex":0},"down":{"uv":[8.6875,7.625,9.3125,8.3125],"texture":"#rig","tintindex":0}}}
+  ]
+}

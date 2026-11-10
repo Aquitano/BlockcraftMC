@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/carbine",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        5.744,
+        0.528
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        5.744,
+        0.528
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/premium_area",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/premium_area"
+        }
+      },
+      {
+        "when": "blockcraft:icon/win_effects",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/win_effects"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/firework_rocket"
+    }
+  }
+}

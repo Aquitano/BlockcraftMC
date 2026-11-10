@@ -1,0 +1,261 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:sternenfront/pistol",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/pistol_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/pistol",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/pistol",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/pistol_firing",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/pistol_firing_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/pistol_firing",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/pistol_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/pistol_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/pistol_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/se14",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/se14_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/se14",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/se14",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/se14_firing",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/se14_firing_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/se14_firing",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/se14_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/se14_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/se14_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:zombies/shotgun",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/shotgun"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/stone_hoe"
+    }
+  },
+  "hand_animation_on_swap": false
+}

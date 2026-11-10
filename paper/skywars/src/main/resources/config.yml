@@ -1,0 +1,129 @@
+players:
+  min: 4
+  max: 12
+global-stats-head: Kevos
+
+# The lobby counts down once players.min are there; a full lobby jumps to countdown.full seconds, /start to
+# countdown.start. In the round the players wait countdown.freeze seconds in their cages. refill-after seconds later
+# every chest fills once more, from border-after seconds the border closes on the middle, and countdown.round seconds
+# after the start the round ends in a draw.
+countdown:
+  lobby: 60
+  start: 10
+  full: 15
+  freeze: 5
+  round: 900
+  refill-after: 300
+  border-after: 600
+  restart: 15
+idle-restart-minutes: 50
+timer-bar: true
+
+# Below void-height a player dies, credited to whoever hit them last; nobody builds above build-height. The border
+# closes to final-radius blocks round the middle. The islands' top is at y 80.
+arena:
+  void-height: 40
+  build-height: 125
+  final-radius: 12
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+# What a kill and a win pay in coins.
+rewards:
+  kill: 5
+  win: 20
+
+# A kit's price in coins, 0 is free for everyone; a kit left out costs its default.
+kits:
+  standard: 0
+  bauarbeiter: 300
+  bogenschuetze: 400
+  ritter: 500
+  enderman: 500
+  bomber: 400
+  fischer: 300
+  heiler: 500
+
+# What the chests hold. Each spawn island has one chest of armour, one of weapons and tools and one of blocks, food
+# and the rest, so nobody starts without a sword or without blocks; the semi-middles' and the middle's chests hold
+# better loot. Each chest rolls between min-items and max-items of its loot, at the start and again at the refill.
+# Potions heal.
+chests:
+  armour:
+    min-items: 2
+    max-items: 3
+    loot:
+      - {item: LEATHER_HELMET, weight: 4}
+      - {item: LEATHER_LEGGINGS, weight: 4}
+      - {item: CHAINMAIL_HELMET, weight: 3}
+      - {item: CHAINMAIL_CHESTPLATE, weight: 3}
+      - {item: CHAINMAIL_BOOTS, weight: 3}
+      - {item: IRON_HELMET, weight: 3}
+      - {item: IRON_CHESTPLATE, weight: 2}
+      - {item: IRON_LEGGINGS, weight: 2}
+      - {item: IRON_BOOTS, weight: 3}
+      - {item: GOLDEN_CHESTPLATE, weight: 2}
+  weapons:
+    min-items: 2
+    max-items: 3
+    loot:
+      - {item: STONE_SWORD, weight: 6}
+      - {item: IRON_SWORD, weight: 3}
+      - {item: STONE_AXE, weight: 3}
+      - {item: STONE_PICKAXE, weight: 4}
+      - {item: IRON_PICKAXE, weight: 2}
+      - {item: BOW, weight: 3}
+      - {item: ARROW, amount: 8, weight: 4}
+      - {item: FISHING_ROD, weight: 2}
+  utility:
+    min-items: 3
+    max-items: 5
+    loot:
+      - {item: COBBLESTONE, amount: 32, weight: 6}
+      - {item: OAK_PLANKS, amount: 24, weight: 6}
+      - {item: SANDSTONE, amount: 16, weight: 3}
+      - {item: COOKED_BEEF, amount: 6, weight: 5}
+      - {item: BREAD, amount: 4, weight: 3}
+      - {item: SNOWBALL, amount: 16, weight: 3}
+      - {item: EGG, amount: 16, weight: 2}
+      - {item: WATER_BUCKET, weight: 2}
+      - {item: LAVA_BUCKET, weight: 1}
+      - {item: EXPERIENCE_BOTTLE, amount: 8, weight: 3}
+  semi-middle:
+    min-items: 4
+    max-items: 6
+    loot:
+      - {item: IRON_SWORD, weight: 5}
+      - {item: IRON_CHESTPLATE, weight: 4}
+      - {item: IRON_LEGGINGS, weight: 4}
+      - {item: DIAMOND_HELMET, weight: 2}
+      - {item: DIAMOND_BOOTS, weight: 2}
+      - {item: BOW, weight: 3}
+      - {item: ARROW, amount: 16, weight: 4}
+      - {item: ENDER_PEARL, weight: 3}
+      - {item: GOLDEN_APPLE, weight: 3}
+      - {item: SPLASH_POTION, weight: 3}
+      - {item: TNT, amount: 2, weight: 2}
+      - {item: FLINT_AND_STEEL, weight: 2}
+      - {item: COBBLESTONE, amount: 32, weight: 4}
+      - {item: EXPERIENCE_BOTTLE, amount: 16, weight: 4}
+  middle:
+    min-items: 5
+    max-items: 7
+    loot:
+      - {item: DIAMOND_SWORD, weight: 4}
+      - {item: DIAMOND_CHESTPLATE, weight: 3}
+      - {item: DIAMOND_LEGGINGS, weight: 3}
+      - {item: DIAMOND_HELMET, weight: 3}
+      - {item: DIAMOND_BOOTS, weight: 3}
+      - {item: IRON_AXE, weight: 3}
+      - {item: BOW, weight: 3}
+      - {item: ARROW, amount: 24, weight: 4}
+      - {item: ENDER_PEARL, amount: 2, weight: 3}
+      - {item: GOLDEN_APPLE, amount: 2, weight: 4}
+      - {item: SPLASH_POTION, amount: 2, weight: 3}
+      - {item: EXPERIENCE_BOTTLE, amount: 32, weight: 4}
+      - {item: TNT, amount: 4, weight: 2}
+      - {item: LAVA_BUCKET, weight: 1}

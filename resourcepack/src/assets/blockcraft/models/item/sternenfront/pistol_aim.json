@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/pistol",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        6.276,
+        2.09
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        6.276,
+        2.09
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    }
+  }
+}

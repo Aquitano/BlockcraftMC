@@ -1,0 +1,12 @@
+name: BlockcraftReplay
+version: '${version}'
+main: me.blockcraft.replay.ReplayPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI]
+softdepend: [BetterModel]
+permissions:
+  blockcraft.replay.use:
+    default: true
+  blockcraft.replay.staff:
+    default: op

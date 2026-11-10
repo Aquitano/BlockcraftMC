@@ -1,0 +1,76 @@
+players:
+  min: 2
+  # The map has six deathmatch spawns; more players would share them.
+  max: 6
+global-stats-head: Kevos
+emeralds-per-ore: 12
+ore-respawn-seconds: 12
+# Every round places count emerald ores at random into blocks of hosts that border the open space players reach from
+# the search spot within radius blocks, so the mine's walls hold them wherever they were mined out before.
+ores:
+  count: 40
+  radius: 30
+  hosts: [stone, andesite, cobblestone]
+countdown:
+  lobby: 30
+  start: 5
+  search: 300
+  shopping: 90
+  deathmatch: 1200
+  deathmatch-tracker-after: 300
+  restart: 10
+idle-restart-minutes: 50
+timer-bar: true
+
+# Deathmatch lives per player and the coins a kill and a win are worth.
+lives: 3
+rewards:
+  kill: 5
+  win: 15
+
+# Coins that unlock a perk for good, by perk.
+perk-prices:
+  angel: 200
+  lucky-potion: 300
+  strength: 500
+
+# Emeralds each item of the round shop costs, by the item's key in messages.yml (shop.item).
+shop-prices:
+  chain-helmet: 50
+  chain-chestplate: 50
+  chain-leggings: 50
+  chain-boots: 50
+  iron-helmet: 80
+  iron-chestplate: 80
+  iron-leggings: 80
+  iron-boots: 80
+  stone-sword: 30
+  iron-sword: 45
+  diamond-sword: 60
+  bow: 40
+  arrows: 20
+  jump: 100
+  heal-1: 100
+  heal-2: 200
+  fire-resistance: 100
+  speed: 100
+  extra-heart: 40
+  golden-apple: 35
+  level: 30
+  lapis: 20
+  angel: 100
+  lucky-potion: 400
+  strength: 500
+
+# A winner who never spent an Emerald earns Dagobert with at least this many.
+moments:
+  dagobert-emeralds: 100
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+tracker:
+  range-horizontal: 100.0
+  range-vertical: 25.0
+  cooldown-ticks: 20

@@ -1,0 +1,10 @@
+name: Thoom
+origin: Blockcraft 2015–16
+category: BedWars
+description: Zwei Inseln mit Bäumen und Hütten, für zwei Teams.
+icon: oak_sapling
+arrival:
+  x: 7.5
+  y: 66.0
+  z: -1.5
+  yaw: -271.4

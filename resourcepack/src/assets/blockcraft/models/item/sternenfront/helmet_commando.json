@@ -1,0 +1,15 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/equipment_helmet_commando","particle":"blockcraft:block/sternenfront/rig/equipment_helmet_commando"},
+  "elements":[
+    {"from":[6.848,3.104,6.848],"to":[9.152,5.408,9.152],"faces":{"north":{"uv":[10.0,4.0,11.125,5.125],"texture":"#rig"},"south":{"uv":[10.0,4.0,11.125,5.125],"texture":"#rig"},"east":{"uv":[10.0,4.0,11.125,5.125],"texture":"#rig"},"west":{"uv":[10.0,4.0,11.125,5.125],"texture":"#rig"},"up":{"uv":[11.625,4.0,12.75,5.125],"texture":"#rig"},"down":{"uv":[8.375,4.0,9.5,5.125],"texture":"#rig"}}},
+    {"from":[4.688,4.976,5.12],"to":[11.312,11.6,11.744],"faces":{"north":{"uv":[4.0,0.25,7.25,3.5],"texture":"#rig"},"south":{"uv":[4.0,0.25,7.25,3.5],"texture":"#rig"},"east":{"uv":[4.0,0.25,7.25,3.5],"texture":"#rig"},"west":{"uv":[4.0,0.25,7.25,3.5],"texture":"#rig"},"up":{"uv":[7.75,0.25,11.0,3.5],"texture":"#rig"},"down":{"uv":[0.25,0.25,3.5,3.5],"texture":"#rig"}}},
+    {"from":[5.408,10.304,5.264],"to":[10.592,12.032,10.448],"faces":{"north":{"uv":[1.875,7.125,4.5,8.0],"texture":"#rig"},"south":{"uv":[1.875,7.125,4.5,8.0],"texture":"#rig"},"east":{"uv":[1.875,7.125,4.5,8.0],"texture":"#rig"},"west":{"uv":[1.875,7.125,4.5,8.0],"texture":"#rig"},"up":{"uv":[0.25,4.0,2.875,6.625],"texture":"#rig"},"down":{"uv":[11.5,0.25,14.125,2.875],"texture":"#rig"}}},
+    {"from":[5.264,7.928,11.6144],"to":[10.736,9.224,12.3344],"light_emission":15,"shade":false,"faces":{"north":{"uv":[5.0,7.125,7.75,7.75],"texture":"#rig"},"south":{"uv":[5.0,7.125,7.75,7.75],"texture":"#rig"},"east":{"uv":[8.25,7.125,8.625,7.75],"texture":"#rig"},"west":{"uv":[8.25,7.125,8.625,7.75],"texture":"#rig"},"up":{"uv":[12.375,7.125,15.125,7.5],"texture":"#rig"},"down":{"uv":[9.125,7.125,11.875,7.5],"texture":"#rig"}}},
+    {"from":[5.984,4.832,10.88],"to":[10.016,6.848,13.184],"faces":{"north":{"uv":[13.25,4.0,15.25,5.0],"texture":"#rig"},"south":{"uv":[13.25,4.0,15.25,5.0],"texture":"#rig"},"east":{"uv":[0.25,7.125,1.375,8.125],"texture":"#rig"},"west":{"uv":[0.25,7.125,1.375,8.125],"texture":"#rig"},"up":{"uv":[5.875,4.0,7.875,5.125],"texture":"#rig"},"down":{"uv":[3.375,4.0,5.375,5.125],"texture":"#rig"}}},
+    {"from":[6.92,5.336,13.0976],"to":[9.08,6.056,13.4432],"faces":{"north":{"uv":[0.25,8.625,1.375,9.0],"texture":"#rig"},"south":{"uv":[0.25,8.625,1.375,9.0],"texture":"#rig"},"east":{"uv":[1.875,8.625,2.0,9.0],"texture":"#rig"},"west":{"uv":[1.875,8.625,2.0,9.0],"texture":"#rig"},"up":{"uv":[4.125,8.625,5.25,8.75],"texture":"#rig"},"down":{"uv":[2.5,8.625,3.625,8.75],"texture":"#rig"}}}
+  ],"display":{
+  "head":{"rotation":[0,180,0],"translation":[0,0,0],"scale":[1,1,1]},
+  "gui":{"rotation":[20,150,0],"scale":[0.7,0.7,0.7]},
+  "ground":{"translation":[0,3,0],"scale":[0.4,0.4,0.4]}}
+
+}

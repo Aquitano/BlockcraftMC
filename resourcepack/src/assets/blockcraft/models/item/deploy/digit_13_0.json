@@ -1,0 +1,6 @@
+{
+  "gui_light": "front",
+  "textures": {"digits": "blockcraft:item/deploy/countdown_digits"},
+  "elements": [{"from": [13, 5, 8], "to": [16, 10, 8], "shade": false,
+    "faces": {"south": {"uv": [0.0, 0, 1.5, 10], "texture": "#digits"}}}]
+}

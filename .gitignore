@@ -65,3 +65,17 @@ gradle-app.setting
 *.nar
 hs_err_pid*
 replay_pid*
+
+##############################
+## Project
+##############################
+run/
+.kotlin/
+
+.env
+.cloudflare/
+/local-notes/
+worlds/*/.staging/
+worlds/*/.replaced/
+worlds/**/.publish-ready
+worlds/**/.template.lock

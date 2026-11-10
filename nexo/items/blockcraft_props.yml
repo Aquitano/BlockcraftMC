@@ -1,0 +1,283 @@
+blockcraft_windmill_lantern:
+  itemname: '<white>Mühlenlaterne'
+  material: LANTERN
+  Components:
+    item_model: blockcraft:props/windmill_lantern
+  Pack:
+    model: blockcraft:item/props/windmill_lantern
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1.25
+
+blockcraft_flour_sacks:
+  itemname: '<white>Mehlsäcke'
+  material: WHEAT
+  Components:
+    item_model: blockcraft:props/flour_sacks
+  Pack:
+    model: blockcraft:item/props/flour_sacks
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.75
+
+blockcraft_grain_cart:
+  itemname: '<white>Getreidekarren'
+  material: MINECART
+  Components:
+    item_model: blockcraft:props/grain_cart
+  Pack:
+    model: blockcraft:item/props/grain_cart
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1
+
+blockcraft_merchant_stall:
+  itemname: '<white>Marktstand'
+  material: BARREL
+  Components:
+    item_model: blockcraft:props/merchant_stall
+  Pack:
+    model: blockcraft:item/props/merchant_stall
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1.875
+        barriers:
+          - 0,0,0
+
+blockcraft_timber_bench:
+  itemname: '<white>Holzbank'
+  material: OAK_STAIRS
+  Components:
+    item_model: blockcraft:props/timber_bench
+  Pack:
+    model: blockcraft:item/props/timber_bench
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1.25
+      seats:
+        - -0.4,0.0625,0
+        - 0.4,0.0625,0
+
+blockcraft_winter_bench:
+  itemname: '<white>Verschneite Holzbank'
+  material: OAK_STAIRS
+  Components:
+    item_model: blockcraft:props/winter_bench
+  Pack:
+    model: blockcraft:item/props/winter_bench
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1.3125
+      seats:
+        - -0.4,0.0625,0
+        - 0.4,0.125,0
+
+blockcraft_departure_clock:
+  itemname: '<white>Abreiseuhr'
+  material: CLOCK
+  Components:
+    item_model: blockcraft:props/departure_clock
+  Pack:
+    model: blockcraft:item/props/departure_clock
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,2
+
+blockcraft_cocoa_tray:
+  itemname: '<white>Kakao und Kekse'
+  material: COOKIE
+  Components:
+    item_model: blockcraft:props/cocoa_tray
+  Pack:
+    model: blockcraft:item/props/cocoa_tray
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.3125
+
+blockcraft_spring_basket:
+  itemname: '<white>Frühlingskorb'
+  material: FLOWER_POT
+  Components:
+    item_model: blockcraft:props/spring_basket
+  Pack:
+    model: blockcraft:item/props/spring_basket
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.875
+
+blockcraft_harvest_basket:
+  itemname: '<white>Erntekorb'
+  material: CARVED_PUMPKIN
+  Components:
+    item_model: blockcraft:props/harvest_basket
+  Pack:
+    model: blockcraft:item/props/harvest_basket
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.8125
+
+blockcraft_garland:
+  itemname: '<white>Tannengirlande'
+  material: SPRUCE_LEAVES
+  Components:
+    item_model: blockcraft:props/garland
+  Pack:
+    model: blockcraft:item/props/garland
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.625
+
+blockcraft_wreath:
+  itemname: '<white>Türkranz'
+  material: SPRUCE_LEAVES
+  Components:
+    item_model: blockcraft:props/wreath
+  Pack:
+    model: blockcraft:item/props/wreath
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.9375
+
+blockcraft_icicles:
+  itemname: '<white>Eiszapfen'
+  material: PACKED_ICE
+  Components:
+    item_model: blockcraft:props/icicles
+  Pack:
+    model: blockcraft:item/props/icicles
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.9375
+
+blockcraft_presents:
+  itemname: '<white>Geschenke'
+  material: CHEST
+  Components:
+    item_model: blockcraft:props/presents
+  Pack:
+    model: blockcraft:item/props/presents
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,0.81875
+
+blockcraft_christmas_tree:
+  itemname: '<white>Weihnachtsbaum'
+  material: SPRUCE_SAPLING
+  Components:
+    item_model: blockcraft:props/christmas_tree
+  Pack:
+    model: blockcraft:item/props/christmas_tree
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,2
+        barriers:
+          - 0,0,0
+          - 0,1,0
+
+blockcraft_skate_rack:
+  itemname: '<white>Schlittschuhe und Schneeschaufel'
+  material: LEATHER_BOOTS
+  Components:
+    item_model: blockcraft:props/skate_rack
+  Pack:
+    model: blockcraft:item/props/skate_rack
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1.4375
+
+blockcraft_luggage:
+  itemname: '<white>Reisegepäck'
+  material: CHEST
+  Components:
+    item_model: blockcraft:props/luggage
+  Pack:
+    model: blockcraft:item/props/luggage
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1
+

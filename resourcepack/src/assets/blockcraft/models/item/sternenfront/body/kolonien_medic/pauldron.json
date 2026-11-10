@@ -1,0 +1,8 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/kolonien_medic","particle":"blockcraft:block/sternenfront/rig/kolonien_medic"},
+  "elements":[
+    {"from":[6.36,8.88,6.28],"to":[9.64,9.36,9.72],"faces":{"north":{"uv":[7.5625,11.125,8.375,11.25],"texture":"#rig","tintindex":0},"south":{"uv":[7.5625,11.125,8.375,11.25],"texture":"#rig","tintindex":0},"east":{"uv":[6.4375,11.125,7.3125,11.25],"texture":"#rig","tintindex":0},"west":{"uv":[6.4375,11.125,7.3125,11.25],"texture":"#rig","tintindex":0},"up":{"uv":[13.4375,5.3125,14.25,6.1875],"texture":"#rig","tintindex":0},"down":{"uv":[12.375,5.3125,13.1875,6.1875],"texture":"#rig","tintindex":0}}},
+    {"from":[9.44,7.12,6.28],"to":[9.76,9.04,9.72],"faces":{"north":{"uv":[12.9375,8.6875,13.0,9.1875],"texture":"#rig","tintindex":0},"south":{"uv":[12.9375,8.6875,13.0,9.1875],"texture":"#rig","tintindex":0},"east":{"uv":[6.6875,8.6875,7.5625,9.1875],"texture":"#rig","tintindex":0},"west":{"uv":[6.6875,8.6875,7.5625,9.1875],"texture":"#rig","tintindex":0},"up":{"uv":[0.4375,6.5,0.5,7.375],"texture":"#rig","tintindex":0},"down":{"uv":[0.125,6.5,0.1875,7.375],"texture":"#rig","tintindex":0}}},
+    {"from":[6.24,7.12,6.28],"to":[6.56,9.04,9.72],"faces":{"north":{"uv":[12.9375,8.6875,13.0,9.1875],"texture":"#rig","tintindex":0},"south":{"uv":[12.9375,8.6875,13.0,9.1875],"texture":"#rig","tintindex":0},"east":{"uv":[6.6875,8.6875,7.5625,9.1875],"texture":"#rig","tintindex":0},"west":{"uv":[6.6875,8.6875,7.5625,9.1875],"texture":"#rig","tintindex":0},"up":{"uv":[0.4375,6.5,0.5,7.375],"texture":"#rig","tintindex":0},"down":{"uv":[0.125,6.5,0.1875,7.375],"texture":"#rig","tintindex":0}}}
+  ]
+}

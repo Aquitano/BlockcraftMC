@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/westar_pistols",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        5.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -7.04,
+        6.541,
+        2.4810000000000003
+      ],
+      "scale": [
+        0.62,
+        0.62,
+        0.62
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        5.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -7.04,
+        6.541,
+        2.4810000000000003
+      ],
+      "scale": [
+        0.62,
+        0.62,
+        0.62
+      ]
+    }
+  }
+}

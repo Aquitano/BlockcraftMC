@@ -1,0 +1,2 @@
+# Region files of the map templates are binary and large; git-lfs keeps the repository small.
+worlds/**/*.mca filter=lfs diff=lfs merge=lfs -text

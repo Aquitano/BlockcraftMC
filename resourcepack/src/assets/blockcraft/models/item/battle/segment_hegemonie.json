@@ -1,0 +1,75 @@
+{
+  "textures": {
+    "image": "blockcraft:item/battle/glow_hegemonie"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        7.6,
+        7.3
+      ],
+      "to": [
+        11,
+        8.4,
+        8.7
+      ],
+      "faces": {
+        "north": {
+          "texture": "#image",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#image",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#image",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#image",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#image",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "down": {
+          "texture": "#image",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

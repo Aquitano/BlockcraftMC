@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/kolonien_heavy","particle":"blockcraft:block/sternenfront/rig/kolonien_heavy"},
+  "elements":[
+    {"from":[4.416,7.408,5.856],"to":[11.584,8.432,10.144],"faces":{"north":{"uv":[11.1875,9.4375,13.0,9.6875],"texture":"#rig","tintindex":0},"south":{"uv":[11.1875,9.4375,13.0,9.6875],"texture":"#rig","tintindex":0},"east":{"uv":[4.4375,10.125,5.5,10.375],"texture":"#rig","tintindex":0},"west":{"uv":[4.4375,10.125,5.5,10.375],"texture":"#rig","tintindex":0},"up":{"uv":[12.5,0.125,14.3125,1.1875],"texture":"#rig","tintindex":0},"down":{"uv":[10.4375,0.125,12.25,1.1875],"texture":"#rig","tintindex":0}}}
+  ]
+}

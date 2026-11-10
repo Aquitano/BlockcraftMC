@@ -1,0 +1,20 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/tool_shop",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/tool_shop"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/gold_ingot"
+    }
+  }
+}

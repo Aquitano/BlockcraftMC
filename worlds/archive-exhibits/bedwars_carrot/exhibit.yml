@@ -1,0 +1,10 @@
+name: Carrot
+origin: Blockcraft 2015–16
+category: BedWars
+description: BedWars für acht Teams auf schwebenden Karotten-Inseln.
+icon: carrot
+arrival:
+  x: -91.7
+  y: 95.0
+  z: 16.4
+  yaw: -107.6

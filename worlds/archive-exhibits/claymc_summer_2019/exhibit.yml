@@ -1,0 +1,16 @@
+name: Sommerlobby
+origin: ClayMC
+year: 2019
+category: Lobbys
+description: Die als Sommer-2019 gesicherte ClayMC-Lobby mit verbundenen Inseln, einer separaten Inselkopie und einem kleinen Baufragment.
+icon: jungle_sapling
+arrival: {x: -133.5, y: 66.0, z: 113.5, yaw: 0.0}
+checkpoints:
+  - name: Nördliche Insel
+    at: {x: 0.5, y: 68.0, z: -159.5, yaw: 0.0}
+  - name: Östliche Insel
+    at: {x: 125.5, y: 68.0, z: 0.5, yaw: 90.0}
+  - name: Separate Inselkopie
+    at: {x: 400.5, y: 103.0, z: 0.5, yaw: 90.0}
+  - name: Baufragment
+    at: {x: 175.5, y: 94.0, z: 275.5, yaw: 180.0}

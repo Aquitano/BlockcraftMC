@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/close",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/close"
+        }
+      },
+      {
+        "when": "blockcraft:icon/tool_close",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/tool_close"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/barrier"
+    }
+  }
+}

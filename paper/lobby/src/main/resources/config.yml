@@ -1,0 +1,662 @@
+max-players: 100
+prices:
+  premium: 15000
+  head: 300
+  shirt: 500
+  hat: 800
+secrets:
+  reward: 50
+  # Once a player found this many secrets, the achievements menu shows a riddle on each one still missing.
+  riddles-after: 3
+shop-npc:
+  respawn-seconds: 500
+# /setholo accepts these names; every one needs a holo.<name> block in messages.yml. Placing a name again replaces
+# its hologram, and the lines are re-read from messages.yml on every start.
+holograms:
+  - quicksg
+  - emeraldrush
+  - duell
+# /setholo accepts these names too. Each one is a hologram that shows the top ten of stat (kills, deaths, wins,
+# loses, points) in a game's stats table, under the game's name and icon, redrawn every refresh-seconds.
+leaderboards:
+  refresh-seconds: 300
+  # Within own-radius blocks of a board a player sees a line only they see: their own place on it.
+  own-radius: 10
+  holograms:
+    quicksg-kills:
+      game: quicksg
+      table: qsg_stats
+      stat: kills
+    quicksg-wins:
+      game: quicksg
+      table: qsg_stats
+      stat: wins
+    emeraldrush-kills:
+      game: emeraldrush
+      table: em_stats
+      stat: kills
+    emeraldrush-wins:
+      game: emeraldrush
+      table: em_stats
+      stat: wins
+    duell-kills:
+      game: duell
+      table: duell_stats
+      stat: kills
+    duell-wins:
+      game: duell
+      table: duell_stats
+      stat: wins
+fireworks:
+  - { x: -65, y: 22.5, z: 56 }
+  - { x: -69, y: 22.5, z: 56 }
+double-jump:
+  height: 0.6
+  multiply: 1.0
+jump-pad:
+  y: 0.18
+  multiply: 5.0
+  max-length: 6.0
+player-hider:
+  cooldown-millis: 3000
+effects:
+  kill-price: 500
+  win-price: 500
+  trail-interval-ticks: 2
+  trail-view-distance: 32
+  preview-ticks: 60
+gadgets:
+  cooldown-seconds: 5
+hud:
+  refresh-seconds: 5
+# The last round remains available in the profile; automatic dialogs require the player's auto-recap setting.
+recap:
+  max-age-minutes: 10
+# Navigator entry -> server group to join; stale-seconds matches the proxy's discovery setting.
+navigator:
+  groups:
+    qsg: quicksg
+    rush: emeraldrush
+    duell: duell
+    bedwars: bedwars
+    mlgrush: mlgrush
+    knockbackffa: knockbackffa
+    zombies: zombies
+    cores: cores
+    sternenfront: sternenfront
+    endergames: endergames
+    ttt: ttt
+    ttt2: ttt2
+    skywars: skywars
+    archive: archive
+  stale-seconds: 20
+
+friends:
+  timeout-ticks: 200
+
+cookies:
+  max-cookies: 1000000
+  clicks-per-second: 5
+  save-seconds: 30
+  shutdown-save-seconds: 5
+  upgrades:
+    - {cost: 50, per-click: 2}
+    - {cost: 200, per-click: 5}
+    - {cost: 1000, per-click: 10}
+
+activities:
+  konami-gap-seconds: 3
+  firework-cooldown-seconds: 30
+  sleep-after-seconds: 600
+  sleep-warning-seconds: 1200
+  sleep-duration-hours: 1
+  chicken-interval-seconds: 180
+  golden-egg-odds: 200
+  egg-lifetime-seconds: 20
+  pond-radius: 20
+  golden-carp-odds: 500
+  parkour-checkpoints: 7
+  parkour-fall-below: 4
+  perseverance-falls: 100
+  easter-spots: 20
+  easter-eggs: 10
+  advent-coins: 25
+  halloween-coins: 5
+  halloween-phrase: "Süßes oder Saures"
+  pumpkin-seconds: 300
+  christmas-coins: 100
+  place-radius: 4
+
+shooting-stars:
+  enabled: true
+  from-hour: 22
+  until-hour: 2
+  check-seconds: 60
+  odds: 30
+  cooldown-seconds: 1800
+  wish-seconds: 15
+  animation-ticks: 40
+  height: 24
+  length: 60
+  wish-prefixes: ["ich wünsche mir", "ich wuensche mir", "i wish"]
+
+# How the lobby looks and sounds while the network calendar celebrates; one section per occasion (halloween, winter,
+# christmas, ...), and every active one applies. The swaps happen only on the players' screens, so the map keeps its
+# blocks. blocks turns every block of a type (or of a #tag) into one of its list, drawn by position so it stays put;
+# keep the shapes alike, or players walk into blocks they do not see. cover lays one of its blocks on top of the
+# highest block of each column when that block is in on (any full block or leaves when on is empty), at chance;
+# snow on top also whitens the grass below. particle falls around every player, and one of sounds plays near them
+# about every every-seconds; both follow the player's effect and sound settings. snowfall-radius turns the lobby within
+# that many blocks of its spawn into a snowy biome while the season lasts and lets real snow fall for every player
+# with effects on; the map keeps its own biomes.
+seasons:
+  halloween:
+    blocks:
+      oak_leaves: [pale_oak_leaves, pale_oak_leaves, oak_leaves]
+      birch_leaves: [pale_oak_leaves]
+      dark_oak_leaves: [pale_oak_leaves]
+      spruce_leaves: [pale_oak_leaves, spruce_leaves]
+      grass_block: [grass_block, grass_block, grass_block, podzol]
+      short_grass: [short_grass, short_dry_grass, dead_bush]
+      "#small_flowers": [wither_rose, dead_bush]
+      torch: [soul_torch]
+      wall_torch: [soul_wall_torch]
+      lantern: [soul_lantern]
+      campfire: [soul_campfire]
+      glowstone: [jack_o_lantern]
+    cover:
+      on: [grass_block]
+      blocks:
+        - "leaf_litter[segment_amount=2,facing=north]"
+        - "leaf_litter[segment_amount=3,facing=east]"
+        - "leaf_litter[segment_amount=4,facing=south]"
+        - "leaf_litter[segment_amount=1,facing=west]"
+      chance: 0.2
+    particle:
+      type: ash
+      count: 6
+    sounds:
+      every-seconds: 45
+      list:
+        - {sound: ambient.cave, volume: 0.6, pitch: 1.0}
+        - {sound: entity.ghast.ambient, volume: 0.25, pitch: 0.6}
+        - {sound: entity.witch.celebrate, volume: 0.35, pitch: 0.8}
+        - {sound: entity.bat.ambient, volume: 0.5, pitch: 0.9}
+        - {sound: entity.creaking.ambient, volume: 0.5, pitch: 0.8}
+        - {sound: ambient.soul_sand_valley.mood, volume: 0.7, pitch: 1.0}
+        - {sound: block.wooden_door.close, volume: 0.4, pitch: 0.6}
+  winter:
+    snowfall-radius: 384
+    particle:
+      type: snowflake
+      count: 6
+    sounds:
+      every-seconds: 60
+      list:
+        - {sound: item.elytra.flying, volume: 0.12, pitch: 0.5}
+        - {sound: block.campfire.crackle, volume: 0.8, pitch: 1.0}
+        - {sound: block.powder_snow.step, volume: 0.5, pitch: 0.8}
+  christmas:
+    sounds:
+      every-seconds: 90
+      list:
+        - {sound: block.note_block.chime, volume: 0.4, pitch: 1.5}
+        - {sound: block.bell.resonate, volume: 0.3, pitch: 2.0}
+  birthday:
+    blocks:
+      torch: [torch, "red_candle[candles=3,lit=true]", "yellow_candle[candles=2,lit=true]", "light_blue_candle[candles=3,lit=true]", "magenta_candle[candles=4,lit=true]"]
+    cover:
+      on: [grass_block, moss_block, podzol, snow]
+      blocks:
+        - cake
+        - "red_candle_cake[lit=true]"
+        - "lime_candle_cake[lit=true]"
+        - "light_blue_candle_cake[lit=true]"
+        - "pink_candle[candles=3,lit=true]"
+        - "yellow_candle[candles=4,lit=true]"
+        - "orange_candle[candles=2,lit=true]"
+      chance: 0.025
+    sounds:
+      every-seconds: 45
+      list:
+        - {sound: entity.firework_rocket.blast_far, volume: 0.5, pitch: 1.0}
+        - {sound: entity.firework_rocket.twinkle_far, volume: 0.5, pitch: 1.0}
+        - {sound: entity.villager.celebrate, volume: 0.4, pitch: 1.2}
+        - {sound: block.note_block.bell, volume: 0.4, pitch: 1.3}
+
+# Set pieces staff place with /setprop <name>; the spots are kept with the map (props.yml, /map save). A piece is a
+# group of parts round its spot that turns once every spin-seconds and rises and sinks by bob blocks every
+# bob-seconds; a still part, such as a pedestal, stays put. A part is a block, or an item that may ask for one of the
+# pack's models (model, a PackModel path) and is its vanilla self without the pack; glint: true gives the item the
+# enchantment glint. A part is centred at blocks from the spot, size blocks large, turned by yaw degrees and tilted by
+# roll degrees round its own z axis (a sword at roll -135 stands on its point).
+# Displays are drawn up to view-range times the vanilla distance and move one smoothed keyframe every
+# keyframe-ticks, which is one update per moving part and keyframe. A piece turns round axis, upright unless given
+# ([1, 0, 0] turns a windmill's sails facing west or east) through pivot, blocks from the spot (the spot unless given,
+# a windmill's hub), and a part may be tipped by pitch degrees round its own x axis, which lays a sail along its arm.
+props:
+  view-range: 0.5
+  keyframe-ticks: 20
+  pieces:
+    trophy:
+      spin-seconds: 16
+      bob: 0.08
+      bob-seconds: 5
+      parts:
+        - {block: POLISHED_BLACKSTONE_BRICKS, at: [0, 0.3, 0], size: [1.6, 0.6, 1.6], still: true}
+        - {block: SMOOTH_QUARTZ, at: [0, 0.7, 0], size: [1.2, 0.2, 1.2], still: true}
+        - {block: GOLD_BLOCK, at: [0, 0.88, 0], size: [0.7, 0.16, 0.7]}
+        - {block: GOLD_BLOCK, at: [0, 1.2, 0], size: [0.18, 0.5, 0.18]}
+        - {block: GOLD_BLOCK, at: [0, 1.7, 0], size: [0.85, 0.55, 0.85]}
+        - {block: GOLD_BLOCK, at: [0.55, 1.75, 0], size: [0.12, 0.35, 0.12]}
+        - {block: GOLD_BLOCK, at: [-0.55, 1.75, 0], size: [0.12, 0.35, 0.12]}
+        - {model: props/star, at: [0, 2.45, 0], size: 0.55}
+
+    scarecrow:
+      parts:
+        - {block: DARK_OAK_PLANKS, at: [0.12, 1.1, 0], size: [0.1875, 2.2, 0.1875], yaw: 90, still: true}
+        - {block: STRIPPED_SPRUCE_LOG, at: [0.08, 1.85, 0], size: [0.1875, 2.25, 0.1875], yaw: 90, roll: 90, still: true}
+        - {block: GREEN_WOOL, at: [0, 1.5, 0], size: [0.6875, 0.875, 0.4375], yaw: 90, still: true}
+        - {block: GREEN_WOOL, at: [0, 0.8125, 0.1875], size: [0.3125, 0.625, 0.4375], yaw: 90, still: true}
+        - {block: GREEN_WOOL, at: [0, 0.75, -0.1875], size: [0.3125, 0.75, 0.4375], yaw: 90, still: true}
+        - {block: GREEN_WOOL, at: [0, 1.8, 0.46875], size: [0.25, 0.3125, 0.4375], yaw: 90, still: true}
+        - {block: GREEN_WOOL, at: [0, 1.8, -0.46875], size: [0.25, 0.3125, 0.4375], yaw: 90, still: true}
+        - {block: BROWN_WOOL, at: [-0.234375, 1.125, 0.15625], size: [0.1875, 0.1875, 0.03125], yaw: 90, still: true}
+        - {block: BROWN_WOOL, at: [-0.234375, 0.6875, -0.1875], size: [0.125, 0.1875, 0.03125], yaw: 90, still: true}
+        - {block: STRIPPED_OAK_LOG, at: [0, 1.984375, 0], size: [0.1875, 0.15625, 0.1875], yaw: 90, still: true}
+        - {block: BLUE_WOOL, at: [0, 1.921875, 0], size: [0.5, 0.15625, 0.5], yaw: 90, still: true}
+        - {block: BLUE_WOOL, at: [-0.265625, 1.625, 0.15625], size: [0.15625, 0.5, 0.09375], yaw: 90, still: true}
+        - {block: BLUE_WOOL, at: [-0.265625, 1.53125, -0.125], size: [0.125, 0.6875, 0.09375], yaw: 90, still: true}
+        - {block: CARVED_PUMPKIN, at: [0, 2.40625, 0], size: [0.8125, 0.8125, 0.8125], yaw: 90, still: true}
+        - {block: BIRCH_PLANKS, at: [0, 2.828125, 0], size: [1.1875, 0.09375, 1.0625], yaw: 90, still: true}
+        - {block: SANDSTONE, at: [0, 3.03125, 0], size: [0.8125, 0.3125, 0.6875], yaw: 90, still: true}
+        - {block: BLUE_WOOL, at: [0, 2.921875, 0], size: [0.84375, 0.09375, 0.71875], yaw: 90, still: true}
+        - {block: BIRCH_PLANKS, at: [0.0625, 3.21875, 0.25], size: [0.0625, 0.1875, 0.0625], yaw: 90, roll: -22.5, still: true}
+        - {block: BIRCH_PLANKS, at: [0.09375, 3.25, 0.09375], size: [0.0625, 0.25, 0.0625], yaw: 90, still: true}
+        - {block: BIRCH_PLANKS, at: [0.0625, 3.21875, -0.09375], size: [0.0625, 0.1875, 0.0625], yaw: 90, roll: 22.5, still: true}
+
+    haystack:
+      parts:
+        - {block: HAY_BLOCK, at: [-0.21875, 0.25, 0], size: [0.4375, 0.5, 0.75], still: true}
+        - {block: HAY_BLOCK, at: [0.21875, 0.25, 0], size: [0.4375, 0.5, 0.75], still: true}
+        - {block: HAY_BLOCK, at: [0, 0.71875, 0], size: [0.4375, 0.4375, 0.625], yaw: 90, still: true}
+
+    wheelbarrow:
+      parts:
+        - {block: DARK_OAK_WOOD, at: [0.625, 0.25, 0], size: [0.1875, 0.5, 0.5], yaw: 90, still: true}
+        - {block: POLISHED_BLACKSTONE, at: [0.625, 0.25, 0], size: [0.3125, 0.1875, 0.1875], yaw: 90, still: true}
+        - {block: SPRUCE_PLANKS, at: [0, 0.5, 0], size: [0.875, 0.125, 1.125], yaw: 90, still: true}
+        - {block: SPRUCE_PLANKS, at: [0, 0.75, 0.4375], size: [0.125, 0.375, 1.125], yaw: 90, still: true}
+        - {block: DARK_OAK_PLANKS, at: [-0.8125, 0.5, 0.3125], size: [0.125, 0.125, 0.625], yaw: 90, still: true}
+        - {block: DARK_OAK_PLANKS, at: [-0.375, 0.21875, 0.3125], size: [0.125, 0.4375, 0.125], yaw: 90, still: true}
+        - {block: SPRUCE_PLANKS, at: [0, 0.75, -0.4375], size: [0.125, 0.375, 1.125], yaw: 90, still: true}
+        - {block: DARK_OAK_PLANKS, at: [-0.8125, 0.5, -0.3125], size: [0.125, 0.125, 0.625], yaw: 90, still: true}
+        - {block: DARK_OAK_PLANKS, at: [-0.375, 0.21875, -0.3125], size: [0.125, 0.4375, 0.125], yaw: 90, still: true}
+        - {block: SPRUCE_PLANKS, at: [-0.5, 0.75, 0], size: [0.75, 0.375, 0.125], yaw: 90, still: true}
+        - {block: SPRUCE_PLANKS, at: [0.5, 0.75, 0], size: [0.75, 0.375, 0.125], yaw: 90, still: true}
+        - {block: HAY_BLOCK, at: [0, 0.8125, 0], size: [0.625, 0.5, 0.75], yaw: 90, still: true}
+
+    fishing-stool:
+      parts:
+        - {block: DARK_OAK_PLANKS, at: [-0.21875, 0.25, -0.21875], size: [0.125, 0.5, 0.125], still: true}
+        - {block: DARK_OAK_PLANKS, at: [-0.21875, 0.25, 0.21875], size: [0.125, 0.5, 0.125], still: true}
+        - {block: DARK_OAK_PLANKS, at: [0.21875, 0.25, -0.21875], size: [0.125, 0.5, 0.125], still: true}
+        - {block: DARK_OAK_PLANKS, at: [0.21875, 0.25, 0.21875], size: [0.125, 0.5, 0.125], still: true}
+        - {block: SPRUCE_PLANKS, at: [0, 0.5625, 0], size: [0.6875, 0.125, 0.6875], still: true}
+        - {block: STRIPPED_SPRUCE_LOG, at: [0.34375, 1.0625, -0.3125], size: [0.0625, 2, 0.0625], pitch: -25, still: true}
+        - {block: WHITE_WOOL, at: [0.34375, 1.03125, -0.734375], size: [0.015625, 1.875, 0.015625], still: true}
+        - {block: RED_WOOL, at: [0.34375, 0.09375, -0.734375], size: [0.09375, 0.125, 0.09375], still: true}
+        - {block: CAULDRON, at: [-0.75, 0.25, 0], size: [0.5, 0.5, 0.5], still: true}
+
+    flower-barrel:
+      parts:
+        - {block: BARREL, at: [0, 0.375, 0], size: [0.75, 0.75, 0.75], pitch: 90, still: true}
+        - {block: DIRT, at: [0, 0.75, 0], size: [0.5625, 0.0625, 0.5625], still: true}
+        - {block: POPPY, at: [-0.15625, 1.03125, 0.125], size: [0.5, 0.5, 0.5], still: true}
+        - {block: OXEYE_DAISY, at: [0.15625, 1.03125, 0.125], size: [0.5, 0.5, 0.5], still: true}
+        - {block: CORNFLOWER, at: [0, 1.0625, -0.15625], size: [0.5625, 0.5625, 0.5625], still: true}
+
+    beehive:
+      parts:
+        - {block: DARK_OAK_PLANKS, at: [-0.4375, 0.25, -0.25], size: [0.125, 0.5, 0.125], still: true}
+        - {block: DARK_OAK_PLANKS, at: [-0.4375, 0.25, 0.25], size: [0.125, 0.5, 0.125], still: true}
+        - {block: DARK_OAK_PLANKS, at: [0.6875, 0.25, -0.25], size: [0.125, 0.5, 0.125], still: true}
+        - {block: DARK_OAK_PLANKS, at: [0.6875, 0.25, 0.25], size: [0.125, 0.5, 0.125], still: true}
+        - {block: SPRUCE_PLANKS, at: [0.125, 0.5, 0], size: [1.5, 0.125, 0.875], still: true}
+        - {block: BEEHIVE, at: [-0.25, 0.9375, 0], size: [0.75, 0.75, 0.75], still: true}
+        - {block: SPRUCE_PLANKS, at: [-0.25, 1.375, 0], size: [0.875, 0.125, 0.875], still: true}
+        - {block: SPRUCE_PLANKS, at: [-0.25, 0.625, -0.5], size: [0.75, 0.125, 0.25], still: true}
+        - {block: HONEY_BLOCK, at: [0.4375, 0.75, -0.1875], size: [0.1875, 0.375, 0.1875], still: true}
+        - {block: BIRCH_PLANKS, at: [0.4375, 0.96875, -0.1875], size: [0.21875, 0.0625, 0.21875], still: true}
+        - {block: HONEY_BLOCK, at: [0.6875, 0.6875, 0.15625], size: [0.1875, 0.25, 0.1875], still: true}
+        - {block: BIRCH_PLANKS, at: [0.6875, 0.84375, 0.15625], size: [0.21875, 0.0625, 0.21875], still: true}
+
+    woodpile:
+      parts:
+        - {block: SPRUCE_LOG, at: [-0.21875, 0.21875, 0], size: [0.4375, 0.875, 0.4375], pitch: 90, still: true}
+        - {block: SPRUCE_LOG, at: [0.21875, 0.21875, 0], size: [0.4375, 0.875, 0.4375], pitch: 90, still: true}
+        - {block: SPRUCE_LOG, at: [0, 0.625, 0], size: [0.375, 0.8125, 0.375], pitch: 90, still: true}
+        - {block: SPRUCE_LOG, at: [0.875, 0.28125, 0], size: [0.5625, 0.5625, 0.5625], still: true}
+        - {block: STRIPPED_OAK_LOG, at: [0.875, 0.92, 0], size: [0.0625, 0.875, 0.0625], roll: -22.5, still: true}
+        - {block: IRON_BLOCK, at: [0.98, 0.64, 0], size: [0.3125, 0.25, 0.0625], roll: -22.5, still: true}
+
+    waterwheel:
+      spin-seconds: 48
+      axis: [0, 0, -1]
+      parts:
+        - {block: DARK_OAK_PLANKS, at: [1, -0.8125, -2], size: [0.25, 1.625, 0.25], still: true}
+        - {block: DARK_OAK_PLANKS, at: [0.5, 0.0625, -2], size: [1.5, 0.25, 0.375], still: true}
+        - {block: STRIPPED_SPRUCE_LOG, at: [0, 0, -0.875], size: [0.25, 2.5, 0.25], pitch: 90, still: true}
+        - {block: STRIPPED_SPRUCE_LOG, at: [0, 0, 0], size: [0.5, 0.75, 0.5], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, 0, 0], size: [0.1875, 2.75, 0.25], roll: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 0, 0], size: [0.1875, 2.75, 0.25], roll: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.25, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.25, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 0}
+        - {block: SPRUCE_PLANKS, at: [0, 1.4, 0], size: [0.625, 0.1875, 0.75], roll: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.883883, 0.883883, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 45}
+        - {block: DARK_OAK_PLANKS, at: [-0.883883, 0.883883, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 45}
+        - {block: SPRUCE_PLANKS, at: [-0.989949, 0.989949, 0], size: [0.625, 0.1875, 0.75], roll: 45}
+        - {block: DARK_OAK_PLANKS, at: [-1.25, 0, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 90}
+        - {block: DARK_OAK_PLANKS, at: [-1.25, 0, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 90}
+        - {block: SPRUCE_PLANKS, at: [-1.4, 0, 0], size: [0.625, 0.1875, 0.75], roll: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.883883, -0.883883, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 135}
+        - {block: DARK_OAK_PLANKS, at: [-0.883883, -0.883883, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 135}
+        - {block: SPRUCE_PLANKS, at: [-0.989949, -0.989949, 0], size: [0.625, 0.1875, 0.75], roll: 135}
+        - {block: DARK_OAK_PLANKS, at: [0, -1.25, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -1.25, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 180}
+        - {block: SPRUCE_PLANKS, at: [0, -1.4, 0], size: [0.625, 0.1875, 0.75], roll: 180}
+        - {block: DARK_OAK_PLANKS, at: [0.883883, -0.883883, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 225}
+        - {block: DARK_OAK_PLANKS, at: [0.883883, -0.883883, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 225}
+        - {block: SPRUCE_PLANKS, at: [0.989949, -0.989949, 0], size: [0.625, 0.1875, 0.75], roll: 225}
+        - {block: DARK_OAK_PLANKS, at: [1.25, 0, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 270}
+        - {block: DARK_OAK_PLANKS, at: [1.25, 0, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 270}
+        - {block: SPRUCE_PLANKS, at: [1.4, 0, 0], size: [0.625, 0.1875, 0.75], roll: 270}
+        - {block: DARK_OAK_PLANKS, at: [0.883883, 0.883883, -0.3125], size: [1.0625, 0.1875, 0.125], roll: 315}
+        - {block: DARK_OAK_PLANKS, at: [0.883883, 0.883883, 0.3125], size: [1.0625, 0.1875, 0.125], roll: 315}
+        - {block: SPRUCE_PLANKS, at: [0.989949, 0.989949, 0], size: [0.625, 0.1875, 0.75], roll: 315}
+
+    windmill:
+      spin-seconds: 48
+      axis: [1, 0, 0]
+      pivot: [0, 0.5, 0]
+      parts:
+        - {block: DARK_OAK_LOG, at: [0.05, 0.5, 0], size: [1.5, 0.75, 1.5], roll: 90}
+        - {block: POLISHED_DEEPSLATE, at: [0.5, 0.5, 0], size: [0.25, 1, 1]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0.7, 0.5, 0], size: [0.75, 0.25, 0.75], roll: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.5, 0], size: [0.375, 20, 0.375]}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.5, 0], size: [0.375, 20, 0.375], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, 4.25, 0.9375], size: [0.125, 2, 1.5], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.125, 6.5, 0.9375], size: [0.125, 2, 1.5], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.125, 8.75, 0.9375], size: [0.125, 2, 1.5], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 6.5, 1.8125], size: [0.3125, 7.5, 0.25], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 3.125, 0.90625], size: [0.3125, 0.25, 2.0625], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 5.375, 0.90625], size: [0.3125, 0.25, 2.0625], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 7.625, 0.90625], size: [0.3125, 0.25, 2.0625], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 9.875, 0.90625], size: [0.3125, 0.25, 2.0625], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.125, -0.4375, 3.75], size: [0.125, 2, 1.5], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, -0.4375, 6], size: [0.125, 2, 1.5], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, -0.4375, 8.25], size: [0.125, 2, 1.5], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -1.3125, 6], size: [0.3125, 7.5, 0.25], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.40625, 2.625], size: [0.3125, 0.25, 2.0625], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.40625, 4.875], size: [0.3125, 0.25, 2.0625], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.40625, 7.125], size: [0.3125, 0.25, 2.0625], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.40625, 9.375], size: [0.3125, 0.25, 2.0625], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, -3.25, -0.9375], size: [0.125, 2, 1.5], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.125, -5.5, -0.9375], size: [0.125, 2, 1.5], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.125, -7.75, -0.9375], size: [0.125, 2, 1.5], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -5.5, -1.8125], size: [0.3125, 7.5, 0.25], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -2.125, -0.90625], size: [0.3125, 0.25, 2.0625], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -4.375, -0.90625], size: [0.3125, 0.25, 2.0625], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -6.625, -0.90625], size: [0.3125, 0.25, 2.0625], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -8.875, -0.90625], size: [0.3125, 0.25, 2.0625], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.125, 1.4375, -3.75], size: [0.125, 2, 1.5], pitch: 270}
+        - {block: WHITE_WOOL, at: [-0.125, 1.4375, -6], size: [0.125, 2, 1.5], pitch: 270}
+        - {block: WHITE_WOOL, at: [-0.125, 1.4375, -8.25], size: [0.125, 2, 1.5], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 2.3125, -6], size: [0.3125, 7.5, 0.25], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.40625, -2.625], size: [0.3125, 0.25, 2.0625], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.40625, -4.875], size: [0.3125, 0.25, 2.0625], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.40625, -7.125], size: [0.3125, 0.25, 2.0625], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.40625, -9.375], size: [0.3125, 0.25, 2.0625], pitch: 270}
+    windmill-large:
+      spin-seconds: 56
+      axis: [1, 0, 0]
+      pivot: [0, 0.5, 0]
+      parts:
+        - {block: DARK_OAK_LOG, at: [0.05, 0.5, 0], size: [1.5, 0.75, 1.5], roll: 90}
+        - {block: POLISHED_DEEPSLATE, at: [0.5, 0.5, 0], size: [0.25, 1, 1]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0.7, 0.5, 0], size: [0.75, 0.25, 0.75], roll: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.5, 0], size: [0.375, 23, 0.375]}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.5, 0], size: [0.375, 23, 0.375], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, 4.9375, 1.125], size: [0.125, 2.375, 1.875], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.125, 7.5625, 1.125], size: [0.125, 2.375, 1.875], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.125, 10.1875, 1.125], size: [0.125, 2.375, 1.875], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 7.5625, 2.1875], size: [0.3125, 8.5, 0.25], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 3.625, 1.09375], size: [0.3125, 0.25, 2.4375], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 6.25, 1.09375], size: [0.3125, 0.25, 2.4375], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 8.875, 1.09375], size: [0.3125, 0.25, 2.4375], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [0, 11.5, 1.09375], size: [0.3125, 0.25, 2.4375], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.125, -0.625, 4.4375], size: [0.125, 2.375, 1.875], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, -0.625, 7.0625], size: [0.125, 2.375, 1.875], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, -0.625, 9.6875], size: [0.125, 2.375, 1.875], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -1.6875, 7.0625], size: [0.3125, 8.5, 0.25], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.59375, 3.125], size: [0.3125, 0.25, 2.4375], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.59375, 5.75], size: [0.3125, 0.25, 2.4375], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.59375, 8.375], size: [0.3125, 0.25, 2.4375], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [0, -0.59375, 11], size: [0.3125, 0.25, 2.4375], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.125, -3.9375, -1.125], size: [0.125, 2.375, 1.875], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.125, -6.5625, -1.125], size: [0.125, 2.375, 1.875], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.125, -9.1875, -1.125], size: [0.125, 2.375, 1.875], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -6.5625, -2.1875], size: [0.3125, 8.5, 0.25], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -2.625, -1.09375], size: [0.3125, 0.25, 2.4375], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -5.25, -1.09375], size: [0.3125, 0.25, 2.4375], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -7.875, -1.09375], size: [0.3125, 0.25, 2.4375], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [0, -10.5, -1.09375], size: [0.3125, 0.25, 2.4375], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.125, 1.625, -4.4375], size: [0.125, 2.375, 1.875], pitch: 270}
+        - {block: WHITE_WOOL, at: [-0.125, 1.625, -7.0625], size: [0.125, 2.375, 1.875], pitch: 270}
+        - {block: WHITE_WOOL, at: [-0.125, 1.625, -9.6875], size: [0.125, 2.375, 1.875], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 2.6875, -7.0625], size: [0.3125, 8.5, 0.25], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.59375, -3.125], size: [0.3125, 0.25, 2.4375], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.59375, -5.75], size: [0.3125, 0.25, 2.4375], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.59375, -8.375], size: [0.3125, 0.25, 2.4375], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.59375, -11], size: [0.3125, 0.25, 2.4375], pitch: 270}
+    # Flights: models fly with their front along +z.
+    airship:
+      parts:
+        - {block: WHITE_WOOL, at: [0, 4.2, 0], size: [3.4, 3.2, 8]}
+        - {block: WHITE_WOOL, at: [0, 4.2, 4.6], size: [2.6, 2.4, 1.4]}
+        - {block: WHITE_WOOL, at: [0, 4.2, -4.6], size: [2.6, 2.4, 1.4]}
+        - {block: RED_WOOL, at: [0, 4.2, 0], size: [3.45, 0.5, 8.05]}
+        - {block: DARK_OAK_PLANKS, at: [0, 5.9, -5.2], size: [0.15, 1.6, 1.5]}
+        - {block: DARK_OAK_PLANKS, at: [0, 4.2, -5.2], size: [4.2, 0.15, 1.3]}
+        - {block: DARK_OAK_PLANKS, at: [0.8, 2.0, 1.6], size: [0.07, 1.6, 0.07]}
+        - {block: DARK_OAK_PLANKS, at: [-0.8, 2.0, 1.6], size: [0.07, 1.6, 0.07]}
+        - {block: DARK_OAK_PLANKS, at: [0.8, 2.0, -1.6], size: [0.07, 1.6, 0.07]}
+        - {block: DARK_OAK_PLANKS, at: [-0.8, 2.0, -1.6], size: [0.07, 1.6, 0.07]}
+        - {block: SPRUCE_PLANKS, at: [0, 0.85, 0], size: [1.8, 0.7, 3.6]}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.25, 0], size: [1.9, 0.12, 3.7]}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.85, -2.05], size: [0.15, 1.6, 0.15]}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.85, -2.05], size: [1.6, 0.15, 0.15]}
+        - {item: LANTERN, at: [0, 1.55, 1.3], size: 0.5}
+    birds:
+      parts:
+        - {block: BLACK_CONCRETE, at: [0, 0.1, 0], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [0, 0.18, -0.05], size: [1.3, 0.05, 0.3], roll: -12}
+        - {block: BLACK_CONCRETE, at: [-1.6, 0.35, -1.7], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [-1.6, 0.43, -1.75], size: [1.3, 0.05, 0.3], roll: 12}
+        - {block: BLACK_CONCRETE, at: [1.6, 0.6, -1.7], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [1.6, 0.68, -1.75], size: [1.3, 0.05, 0.3], roll: -12}
+        - {block: BLACK_CONCRETE, at: [-3.2, 0.1, -3.4], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [-3.2, 0.18, -3.45], size: [1.3, 0.05, 0.3], roll: 12}
+        - {block: BLACK_CONCRETE, at: [3.2, 0.35, -3.4], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [3.2, 0.43, -3.45], size: [1.3, 0.05, 0.3], roll: -12}
+        - {block: BLACK_CONCRETE, at: [-4.8, 0.6, -5.1], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [-4.8, 0.68, -5.15], size: [1.3, 0.05, 0.3], roll: 12}
+        - {block: BLACK_CONCRETE, at: [4.8, 0.1, -5.1], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [4.8, 0.18, -5.15], size: [1.3, 0.05, 0.3], roll: -12}
+
+# Santa's sleigh crosses the sky above a lobby player every interval-seconds while one of during is celebrated, height
+# blocks up, length blocks long and flight-ticks long. It drops presents, each worth present-coins to the first to catch
+# it, one per player and flight; uncaught presents vanish after present-seconds. Staff send it with /schlitten.
+sleigh:
+  enabled: true
+  during: [christmas]
+  interval-seconds: 600
+  height: 18
+  length: 80
+  flight-ticks: 240
+  presents: 4
+  present-coins: 15
+  present-seconds: 30
+
+# Now and then one of models, props pieces with their front along +z, crosses the sky height blocks above the spawn,
+# length blocks from end to end in flight-ticks, every interval-seconds while anyone is about. Staff send one with
+# /ueberflug.
+flights:
+  enabled: true
+  interval-seconds: 240
+  height: 40
+  length: 200
+  flight-ticks: 1000
+  models: [airship, birds]
+
+# Small effects at the map's ambient-<effect>-<n> spots (/lobbyset, up to spots of each), seen by players within radius
+# who have effects on: count particles of particle, spread blocks round the spot at speed, every ticks.
+ambient:
+  enabled: true
+  radius: 40
+  effects:
+    fireflies: {particle: FIREFLY, count: 2, spread: 3, speed: 0, ticks: 10, spots: 4}
+    mist: {particle: SPLASH, count: 8, spread: 1.2, speed: 0.1, ticks: 5, spots: 2}
+    motes: {particle: SPORE_BLOSSOM_AIR, count: 3, spread: 4, speed: 0, ticks: 10, spots: 2}
+
+# Seasonal scenes at the map's spots (/lobbyset). In winter snowfight-figures figures stand at each of snowfight-a-<n>
+# and snowfight-b-<n> behind a snow wall, wearing the skin textures in snowfight-skins in turn (the value of a head's
+# textures property, as NameMC's /give commands carry it; the default look while it is empty); one throws every
+# throw-ticks, and one a player hits throws back after answer-ticks. At Halloween a witch stirs the cauldron one block
+# ahead of halloween-witch, bats circle bat-radius blocks round halloween-bats once every bat-lap-seconds, and a ghost
+# drifts ghost-speed blocks a tick along halloween-ghost-1 to ghost-spots and back.
+scenes:
+  snowfight-figures: 3
+  snowfight-skins:
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODk5MzZiYTExN2JhOWE4M2NjNzAwMzg5OTFjMTIzYjM5NzJhZWJlMDQxYmVmZDA0YzhmNTk4ZGU0ZWM3ZWQyMCJ9fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU2YzJiNjBmNDlkZTYwMjY3NWM3YzY2OGFiMjViMmE0MDBkNzY2YzA1NzU4YmNlODZlM2YwODczMGZiNGMyMCJ9fX0=
+    - eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDUxYjc4ODU0MzljZjM5MDQwZjkxODkwYjVlMjllZDE2NDFkOWMzZDdjYTJiMTZjMTFhZmRhZjM1OTgyNGZjIiwibWV0YWRhdGEiOnsibW9kZWwiOiJzbGltIn19fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGM1NjQxZjY5YTlkMGY5NWJkMGQ5MzhjMjIxZDI3MjIxMDRmZTk2MDAyMjlmZGExNGRjN2ExMTU5MWI1ZDJiNSJ9fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDNiZGExNmNlOGJiNzlkNTRjODgxOTg3ZDg2M2M4MDc2YzU3Y2I4N2ZkMmY3YWIxMmVmOGZhNWM0MTI4ZCJ9fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDAyZWMyZTA5MWQ0YmNhZDllYzhmYTRjZDE5YTMyMDVmNDVkNTBmOTRhMDliM2U4OTQ4YTE2ZmZiMTQyNTZkYyJ9fX0=
+  throw-ticks: 25
+  answer-ticks: 12
+  bats: 6
+  bat-radius: 4
+  bat-lap-seconds: 8
+  ghost-spots: 5
+  ghost-speed: 0.12
+
+# Between from-hour and until-hour in the network calendar zone, each check has a one-in-odds chance that Herobrine
+# stands about distance blocks ahead of one active player, visible only to them, for at most seconds. Coming within
+# vanish-distance makes him vanish and finds the Herobrine bonus secret. After an appearance he waits
+# cooldown-seconds.
+herobrine:
+  enabled: true
+  from-hour: 22
+  until-hour: 4
+  check-seconds: 60
+  odds: 120
+  cooldown-seconds: 3600
+  distance: 32
+  vanish-distance: 16
+  seconds: 30
+
+# During these occasions everyone holds the season's throwable in the fourth slot (snowballs, pumpkins at Halloween,
+# eggs at Easter) and pushes whoever they hit by knockback; cooldown-ticks pass between two throws.
+throw-fight:
+  during: [winter, halloween, easter]
+  knockback: 0.5
+  cooldown-ticks: 10
+
+
+# A figure in front of each game's area, at the map's npc-<area> spot (/lobbyset npc-<area>, where you stand and
+# look). It turns to the nearest player within look-radius and one of them moves every idle-seconds. skins names
+# the player whose skin each figure wears; empty wears the game host's skin.
+game-npcs:
+  look-radius: 8
+  idle-seconds: 6
+  skins:
+    qsg: ""
+    rush: ""
+    duell: ""
+    bedwars: ""
+    mlgrush: ""
+    zombies: ""
+    cores: ""
+    endergames: ""
+    ttt: ""
+    skywars: ""
+
+# Notes and books lying in the lobby, at the map's note-<key> spots (/lobbyset note-<key>, looking at the block they
+# lie on), each as the item named here; their text is lore.<key> in messages.yml. The first read pays reward coins.
+lore-notes:
+  reward: 15
+  notes:
+    gruendung: WRITTEN_BOOK
+    baumeister: BOOK
+    zettel: PAPER
+    bahnhof: MAP
+    tagebuch: WRITABLE_BOOK
+
+# The boards at spawn, at board-changelog and board-rules (/lobbyset, looking at the block). The changelog opens once
+# for everyone who returns after version changes; the rules board runs the proxy's rules command.
+notice-boards:
+  changelog-version: "2026-10"
+  rules-command: regeln
+
+# The boss bar of news over the lobby: the next line of news.lines every seconds.
+news:
+  enabled: true
+  seconds: 12
+  color: purple
+
+# Particles round each game's figure, seen by players within radius who have effects on, every ticks.
+ambience:
+  enabled: true
+  radius: 32
+  ticks: 15
+  particles:
+    endergames: PORTAL
+    bedwars: SMALL_FLAME
+    ttt: CRIMSON_SPORE
+    skywars: CLOUD
+    zombies: SCULK_SOUL
+    cores: END_ROD
+    qsg: ENCHANT
+    rush: HAPPY_VILLAGER
+    duell: CRIT
+    mlgrush: SCRAPE
+    knockbackffa: POOF
+    archive: WHITE_ASH
+
+# One-off quests from figures at the map's quest-<key> spots (/lobbyset quest-<key>, where you stand). A task is
+# notes (find count lore notes), parkour (finish it once) or play (a row in the game's stats table). The reward is
+# paid once, with the unlock lobby.quest.<key>.
+quests:
+  archivarin:
+    skin: ""
+    reward: 50
+    task: {type: notes, count: 3}
+  laeuferin:
+    skin: ""
+    reward: 50
+    task: {type: parkour}
+  kundschafter:
+    skin: ""
+    reward: 50
+    task: {type: play, table: bc_skywars_stats}
+
+# The daily login reward (/daily, a chat line on arrival, and a figure at the optional /lobbyset daily spot). One claim
+# per day in the network's calendar zone; consecutive days raise the streak, a missed day starts it again at day 1.
+# coins pays day 1, 2, ... of a streak, the last value every day after. preview-days is how many coming days the
+# dialog lists (0 to 7); skin is the figure's player name, empty for the default look.
+daily-rewards:
+  coins: [10, 15, 20, 25, 30, 40, 60]
+  preview-days: 3
+  skin: ""
