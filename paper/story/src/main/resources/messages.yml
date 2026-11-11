@@ -1,0 +1,66 @@
+prefix: "<sternenfront>Einsatz <dark>» <reset>"
+game-name: "<sternenfront>Einsatz"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Ein Einsatz für bis zu vier Spieler."
+
+lobby:
+  previous: "<prefix><muted>Eure letzte Entscheidung: <accent><choice>"
+  resume: "<prefix><muted>Dein letzter Einsatz ist noch offen: <white><stage>"
+
+campaign:
+  resumed: "<prefix><muted>Der Einsatz geht weiter, beim letzten Abschnitt, den ihr erreicht habt."
+  unsaved: "<prefix><error>Der Abschluss des Einsatzes konnte nicht gespeichert werden."
+  unreadable: "<prefix><error>Euer Einsatz konnte nicht geladen werden. <muted>Der Countdown beginnt von vorn."
+
+item:
+  blaster: "<arrow><primary>DC-15-Karabiner"
+
+menu:
+  stats:
+    title: "<arrow><sternenfront>Einsatz <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Einsätze geschafft<dark>: <muted><wins>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><sternenfront>Einsatz <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Einsätze geschafft"
+
+dialogue:
+  hint:
+    advance: "Shift: weiter"
+    close: "Shift: schließen"
+    choose: "Zahl oder Mausrad wählen, Shift bestätigt"
+    watching: "<player> antwortet"
+
+stage:
+  done: "<sternenfront>Einsatz <dark>● <white>Abgeschlossen"
+
+defense:
+  droid: "<red>B1-Kampfdroide"
+  started: "<prefix><muted>Der Upload läuft, solange jemand an der Konsole steht."
+  held: "<prefix><success>Die Droiden ziehen sich zurück."
+  down: "<prefix><error>Du bist gefallen. <muted>Ein Sanitäter hat dich zum Hauptquartier gebracht."
+
+vote:
+  cast: "<prefix><accent><player> <muted>stimmt für <white><choice> <dark>(<votes>/<members>)"
+  decided: "<prefix><muted>Der Trupp hat entschieden: <accent><choice>"
+
+rejoin:
+  stage: "<prefix><muted>Willkommen zurück. Euer Trupp ist hier: <white><stage>"
+  choice: "<prefix><muted>Während du weg warst, hat der Trupp entschieden: <accent><choice>"
+
+cutscene:
+  loading: "<muted>Die Szene lädt …"
+  skip:
+    hint: "Shift halten: überspringen"
+    holding: "Überspringen: <holding> von <viewers> halten Shift"

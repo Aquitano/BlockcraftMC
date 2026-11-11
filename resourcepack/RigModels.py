@@ -2,7 +2,8 @@
 
 Geometry and textures still come from SternenfrontArt.java, so a body changes in one place: run that first, then this.
 The joints come from rig-bodies.yml, which RigBody reads for the plain displays too. Animations are written here as keyframes: BetterModel plays idle, walk, death and damage by itself,
-and the plugin asks for shoot. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
+Sternenfront asks for shoot, and the story's cutscenes for the gestures: talk, point, beckon, nod and the background's
+rest and look. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
 takes a model's north, -z, as the entity's front, so every position and rotation is written turned half round. BetterModel
 turns bones tagged h_ with where the entity looks, and hi_ with their children too, which is how the head, the arms, the
 gun and their markings follow a bot's aim. A part's markings and a leader's pauldrons are child bones of their own, so the
@@ -171,6 +172,34 @@ def animations(family, grip_degrees, inward_degrees):
                                           recovery: (across, inward_degrees, 0)},
                            "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
             "torso": {"rotation": {0: (0, 0, 0), 0.05: (-kick / 3, 0, 0), recovery: (0, 0, 0)}},
+        }),
+        animation(family, "talk", "loop", 2.4, {
+            "hi_left_arm": {"rotation": {0: (-35, 0, -12), 0.6: (-52, 6, -18), 1.2: (-30, 0, -10), 1.8: (-46, -4, -16),
+                                         2.4: (-35, 0, -12)}},
+            "hi_right_arm": {"rotation": still(x=round(grip_degrees * 0.55))},
+            "hi_head": {"rotation": {0: (0, 0, 0), 0.6: (4, 3, 0), 1.2: (-2, 0, 0), 1.8: (3, -3, 0), 2.4: (0, 0, 0)}},
+            "torso": {"rotation": {0: (0, 0, 0), 1.2: (2, 2, 0), 2.4: (0, 0, 0)}},
+        }),
+        animation(family, "point", "once", 1.6, {
+            "hi_left_arm": {"rotation": {0: (across, inward_degrees, 0), 0.35: (-88, -8, 0), 1.1: (-86, -8, 0),
+                                         1.6: (across, inward_degrees, 0)}},
+            "hi_head": {"rotation": {0: (0, 0, 0), 0.3: (-4, -6, 0), 1.1: (-4, -6, 0), 1.6: (0, 0, 0)}},
+        }),
+        animation(family, "beckon", "once", 1.2, {
+            "hi_left_arm": {"rotation": {0: (across, inward_degrees, 0), 0.25: (-82, 0, -6), 0.5: (-42, 0, -6),
+                                         0.75: (-82, 0, -6), 1.2: (across, inward_degrees, 0)}},
+        }),
+        animation(family, "nod", "once", 0.7, {
+            "hi_head": {"rotation": {0: (0, 0, 0), 0.2: (12, 0, 0), 0.45: (-2, 0, 0), 0.7: (0, 0, 0)}},
+        }),
+        animation(family, "rest", "loop", 3.2, {
+            "hi_right_arm": {"rotation": still(x=round(grip_degrees * 0.4))},
+            "hi_left_arm": {"rotation": still(x=round(across * 0.4), y=round(inward_degrees * 0.6))},
+            "torso": {"position": {0: (0, 0, 0), 1.6: (0, -0.25, 0), 3.2: (0, 0, 0)}},
+        }),
+        animation(family, "look", "loop", 6, {
+            "hi_head": {"rotation": {0: (0, 0, 0), 1.2: (2, 24, 0), 2.6: (2, 24, 0), 3.4: (0, 0, 0), 4.4: (-3, -18, 0),
+                                     5.4: (-3, -18, 0), 6: (0, 0, 0)}},
         }),
         animation(family, "damage", "once", 0.3, {
             "root": {"rotation": {0: (0, 0, 0), 0.05: (-6, 0, 2), 0.3: (0, 0, 0)}},
