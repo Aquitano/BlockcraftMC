@@ -27,7 +27,7 @@ services:
     memswap_limit: 900m
     environment:
       BLOCKCRAFT_ON_DEMAND_GROUPS: ""
-      BLOCKCRAFT_RESOURCE_PACK_URL: http://velocity:8080/blockcraft.zip
+      BLOCKCRAFT_RESOURCE_PACK_URL: ${VERIFY_PACK_URL:-http://velocity:8080/blockcraft.zip}
     volumes:
       - ./dev/verify/velocity.toml:/config/velocity.toml:ro
 
@@ -55,6 +55,16 @@ services:
     volumes:
       - ./dev/verify/${VERIFY_OVERRIDES:-sternenfront-overrides.yml}:/data/plugins/Sternenfront/config.yml:ro
       - ./worlds/sturmwerft:/worlds/sturmwerft
+
+  # Instead of sternenfront with VERIFY_GAME=story: the story prototype, also on the proxy's first-join route.
+  story:
+    extends: {file: docker-compose.yml, service: story}
+    <<: *low-priority
+    cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    mem_limit: 2500m
+    memswap_limit: 2500m
+    environment:
+      BLOCKCRAFT_SERVER_GROUP: lobby
 
   # Only for the replay scenario: it plays recordings, as the network's replay server does.
   replay:
@@ -132,6 +142,7 @@ volumes:
   mariadb:
   velocity:
   sternenfront:
+  story:
   replay:
   replays:
   gradle:
