@@ -3,6 +3,7 @@ import json
 import math
 import re
 import unittest
+from itertools import product
 from pathlib import Path
 
 PACK = Path(__file__).parent / "src/assets"
@@ -63,6 +64,24 @@ def blocking_view(pose, pixel):
 
 def sight(model):
     """The rear of the top of the gun's centre line, as SternenfrontArt's Sight finds it."""
+    if any("x" in element.get("rotation", {}) for element in model["elements"]):
+        centre = []
+        for element in model['elements']:
+            if any('tintindex' in face for face in element['faces'].values()):
+                continue
+            rotation = element['rotation']
+            points = []
+            for point in product(*zip(element['from'], element['to'])):
+                x, y, z = [p - o for p, o in zip(point, rotation['origin'])]
+                rx, ry, rz = [math.radians(rotation[axis]) for axis in 'xyz']
+                y, z = y * math.cos(rx) - z * math.sin(rx), y * math.sin(rx) + z * math.cos(rx)
+                x, z = x * math.cos(ry) + z * math.sin(ry), -x * math.sin(ry) + z * math.cos(ry)
+                x, y = x * math.cos(rz) - y * math.sin(rz), x * math.sin(rz) + y * math.cos(rz)
+                points.append([p + o for p, o in zip((x, y, z), rotation['origin'])])
+            if min(p[0] for p in points) <= 8 <= max(p[0] for p in points):
+                centre.extend(points)
+        top = max(p[1] for p in centre)
+        return [8, top, min(p[2] for p in centre if abs(p[1] - top) < .0001)]
     centre = [element for element in model["elements"]
               if "rotation" not in element and element["from"][0] <= 8 <= element["to"][0]]
     top = max(element["to"][1] for element in centre)
@@ -70,6 +89,12 @@ def sight(model):
 
 
 class WeaponPoses(unittest.TestCase):
+    def test_imported_weapon_rigs_include_disabled_faces_for_bettermodel(self):
+        for family in ('kolonien_soldier', 'kolonien_medic'):
+            rig = json.loads((PACK.parent.parent / 'bettermodel' / f'{family}.bbmodel').read_text())
+            for element in rig['elements']:
+                self.assertEqual(set(element['faces']), {'north', 'south', 'east', 'west', 'up', 'down'})
+
     def test_registered_pose_models_and_item_routes(self):
         weapons = re.findall(r'Material\.(\w+), "(sternenfront/\w+)_firing"', REGISTRY)
         generated = re.findall(r'gun\("(\w+)", .+, GunPose\.\w+\)', GENERATOR)
@@ -150,7 +175,7 @@ class WeaponPoses(unittest.TestCase):
         rotary_kick = barrel_elevation(pose("repeater", True)) - barrel_elevation(pose("repeater"))
         self.assertGreater(pistol_kick, rotary_kick)
         self.assertLess(pose("repeater")["translation"][1], pose("carbine")["translation"][1])
-        self.assertGreater(pose("repeater")["scale"][0], pose("carbine")["scale"][0])
+        self.assertGreater(pose("repeater")["scale"][0], pose("heavy_rifle")["scale"][0])
 
     def test_aim_puts_the_sights_under_the_crosshair(self):
         for path in re.findall(r'"(sternenfront/\w+)", true, Stance\.AIM\)', REGISTRY):

@@ -433,7 +433,7 @@ public final class Deployment {
                     Placeholder.unparsed("player", player.getName())));
             Bukkit.getOnlinePlayers().forEach(Sounds.NOTIFY::play);
         }, () -> unit.ifPresentOrElse(chosen -> game.reinforcementUnits().equip(player, chosen),
-                () -> game.loadouts().equip(player, faction, fighter.combatClass())));
+                () -> game.loadouts().equip(player, faction, fighter.combatClass(), fighter.classBlaster(faction, fighter.combatClass()))));
         player.getInventory().setHeldItemSlot(0);
         player.setFoodLevel(20);
         player.setSaturation(20);

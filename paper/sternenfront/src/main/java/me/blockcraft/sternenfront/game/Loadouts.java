@@ -61,10 +61,10 @@ public final class Loadouts {
         this.config = config;
     }
 
-    public void equip(Player player, Faction faction, CombatClass combatClass) {
+    public void equip(Player player, Faction faction, CombatClass combatClass, Blaster weapon) {
         var inventory = player.getInventory();
         inventory.clear();
-        inventory.setItem(0, blaster(combatClass.blaster(faction)));
+        inventory.setItem(0, blaster(weapon));
         combatClass.abilities(faction).forEach(ability -> player.setCooldown(ability.material(), 0));
         dress(player, faction, Optional.empty());
         var body = config.stats(faction, combatClass);
@@ -170,13 +170,17 @@ public final class Loadouts {
     }
 
     /** The class's numbers as the class menu's read-out shows them. */
-    public ItemStack statsCard(Faction faction, CombatClass combatClass) {
-        return MenuIcon.GLOBAL_STATS.item().name(messages.get("class.stats")).lore(statLines(faction, combatClass)).build();
+    public ItemStack statsCard(Faction faction, CombatClass combatClass, Blaster weapon) {
+        return MenuIcon.GLOBAL_STATS.item().name(messages.get("class.stats")).lore(statLines(faction, combatClass, weapon)).build();
     }
 
     private List<Component> statLines(Faction faction, CombatClass combatClass) {
+        return statLines(faction, combatClass, combatClass.blaster(faction));
+    }
+
+    private List<Component> statLines(Faction faction, CombatClass combatClass, Blaster weapon) {
         var body = config.stats(faction, combatClass);
-        var lines = new ArrayList<>(blasterStats(combatClass.blaster(faction)));
+        var lines = new ArrayList<>(blasterStats(weapon));
         lines.add(messages.get("class.health", StatIcon.TAG, Formatter.number("hearts", body.health() / TO_HEARTS)));
         if (body.speed() != 1) {
             lines.add(messages.get("class.speed", StatIcon.TAG, Formatter.number("percent", Math.round(body.speed() * 100))));

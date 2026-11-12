@@ -23,6 +23,9 @@ network:
 world:
   template: ""
 
+resource-pack:
+  profile-timeout-seconds: 125
+
 # Shared source copied into each round server's own waiting dimension. BLOCKCRAFT_WAITING_TEMPLATE overrides it.
 waiting-lobby:
   template: ""

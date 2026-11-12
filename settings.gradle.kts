@@ -23,6 +23,7 @@ include(
     "paper:skywars",
     "paper:statussigns",
     "paper:sternenfront",
+    "paper:starwars",
     "paper:story",
     "paper:ttt",
     "paper:zombies",

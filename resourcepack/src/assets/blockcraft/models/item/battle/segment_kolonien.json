@@ -1,6 +1,7 @@
 {
   "textures": {
-    "image": "blockcraft:item/battle/glow_kolonien"
+    "image": "blockcraft:item/battle/glow_kolonien",
+    "particle": "blockcraft:item/battle/glow_kolonien"
   },
   "elements": [
     {

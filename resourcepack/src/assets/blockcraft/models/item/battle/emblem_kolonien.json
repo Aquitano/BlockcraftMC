@@ -1,6 +1,7 @@
 {
   "textures": {
-    "image": "blockcraft:item/battle/emblem_kolonien"
+    "image": "blockcraft:item/battle/emblem_kolonien",
+    "particle": "blockcraft:item/battle/emblem_kolonien"
   },
   "elements": [
     {

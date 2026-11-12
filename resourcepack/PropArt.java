@@ -330,6 +330,17 @@ public final class PropArt {
             case "winter_bench" -> "      seats:\n        - -0.4,0.0625,0\n        - 0.4,0.125,0\n";
             default -> "";
         };
+        String lights = prop.boxes.stream().anyMatch(box -> box.surface.equals("glow"))
+                ? "      lights:\n        lights: [\"0," + (prop.id.equals("christmas_tree") ? 2 : 0) + ",0 13\"]\n" : "";
+        String collision = switch (prop.id) {
+            case "grain_cart" -> "[\"-0.1875,0.0625,0.03125 0.875\",\"0.1875,0.0625,0.03125 0.875\"]";
+            case "timber_bench", "winter_bench" -> "[\"-0.40625,-0.25,0.03125 0.8125\",\"0.40625,-0.25,0.03125 0.8125\",\"-0.5,0.75,0.375 0.5\",\"0,0.75,0.375 0.5\",\"0.5,0.75,0.375 0.5\"]";
+            case "departure_clock" -> "[\"0,0,0 0.625\",\"0,0.458333,0 0.625\",\"0,0.916667,0 0.625\",\"0,1.375,0 0.625\"]";
+            case "presents" -> "[\"0,0.0625,0.03125 0.75\"]";
+            case "skate_rack" -> "[\"0,0,0 0.75\",\"0,0.6875,0 0.75\"]";
+            default -> "";
+        };
+        if (!collision.isEmpty()) collision = "      blockcraft_collision:\n        cubes: " + collision + "\n";
         return """
                 blockcraft_%s:
                   itemname: '<white>%s'
@@ -346,8 +357,8 @@ public final class PropArt {
                       restricted_rotation: VERY_STRICT
                       hitbox:
                         interaction: 0,0,0 1,%s
-                %s%s
-                """.formatted(prop.id, prop.name, material, prop.id, prop.id, num(height), barriers, seats);
+                %s%s%s%s
+                """.formatted(prop.id, prop.name, material, prop.id, prop.id, num(height), barriers, seats, lights, collision);
     }
 
     private static String num(double n) { return n == (int) n ? Integer.toString((int) n) : Double.toString(n); }

@@ -3,12 +3,12 @@ placements:
     item: blockcraft_grain_cart
     at: {x: -944, y: 25, z: 1621}
     yaw: 180
-  mill-sacks:
-    item: blockcraft_flour_sacks
+  mill-bread:
+    item: blockcraft_market_bread_table
     at: {x: -937, y: 24, z: 1619}
     yaw: 0
   market-stall:
-    item: blockcraft_merchant_stall
+    item: blockcraft_market_market_stall
     at: {x: -948, y: 23, z: 1603}
     yaw: 180
     fallback-block: oak_planks
@@ -37,16 +37,9 @@ placements:
     - advent
     - christmas
   market-stock:
-    item: blockcraft_harvest_basket
+    item: blockcraft_market_carrot_table
     at: {x: -940, y: 24, z: 1620}
     yaw: 180
-    during:
-    - winter
-    - easter
-    - halloween
-    variants:
-      easter: blockcraft_spring_basket
-      winter: blockcraft_cocoa_tray
   pond-lantern:
     item: blockcraft_windmill_lantern
     at: {x: -957, y: 29, z: 1649}
@@ -75,3 +68,82 @@ placements:
     yaw: 180
     during:
     - winter
+  attic-bedside-candle:
+    item: blockcraft_interior_candle
+    at: {x: -987.5, y: 54, z: 1634.5}
+    yaw: 0
+  halloween-market-pumpkins:
+    item: blockcraft_halloween_pumpkin_candles
+    at: {x: -950.5, y: 24, z: 1599.5}
+    yaw: 180
+    during: [halloween]
+  halloween-shop-lantern:
+    item: blockcraft_halloween_hanging_lantern
+    at: {x: -945.5, y: 26, z: 1589.5}
+    yaw: 180
+    during: [halloween]
+  halloween-plaza-lamp:
+    item: blockcraft_halloween_lamp
+    at: {x: -956.5, y: 25, z: 1600.5}
+    yaw: 0
+    during: [halloween]
+  halloween-crypt-lamp:
+    item: blockcraft_halloween_decorated_lamp
+    at: {x: -992.5, y: 28, z: 1567.5}
+    yaw: 0
+    during: [halloween]
+  halloween-hut-brew:
+    item: blockcraft_halloween_cauldron_broom
+    at: {x: -983.5, y: 30, z: 1574.5}
+    yaw: 90
+    during: [halloween]
+  halloween-hut-pumpkin:
+    item: blockcraft_halloween_leafy_pumpkin
+    at: {x: -978.5, y: 30, z: 1575.5}
+    yaw: 180
+    during: [halloween]
+  halloween-grave-cross:
+    item: blockcraft_halloween_grave_cross
+    at: {x: -985.5, y: 30, z: 1572.5}
+    yaw: 0
+    during: [halloween]
+  halloween-grave-stone:
+    item: blockcraft_halloween_gravestone
+    at: {x: -985.5, y: 30, z: 1574.5}
+    yaw: 0
+    during: [halloween]
+  halloween-grave-fence-front:
+    item: blockcraft_halloween_fence
+    at: {x: -985.5, y: 31, z: 1567.5}
+    yaw: 0
+    during: [halloween]
+  halloween-grave-fence-back:
+    item: blockcraft_halloween_fence_reverse
+    at: {x: -984.5, y: 30, z: 1573.5}
+    yaw: 0
+    during: [halloween]
+  halloween-grave-fence-side:
+    item: blockcraft_halloween_fence_long
+    at: {x: -983.5, y: 30, z: 1569.5}
+    yaw: 0
+    during: [halloween]
+  halloween-grave-candle-cluster:
+    item: blockcraft_halloween_candle_cluster
+    at: {x: -986.5, y: 30, z: 1570.5}
+    yaw: 0
+    during: [halloween]
+  halloween-grave-candle-stand:
+    item: blockcraft_halloween_candle_short
+    at: {x: -983.5, y: 30, z: 1572.5}
+    yaw: 0
+    during: [halloween]
+  halloween-crypt-ghost:
+    item: blockcraft_halloween_ghost
+    at: {x: -989.5, y: 32, z: 1572.5}
+    yaw: 0
+    during: [halloween]
+  halloween-pond-pumpkin:
+    item: blockcraft_halloween_leafy_pumpkin
+    at: {x: -955.5, y: 29, z: 1652.5}
+    yaw: 0
+    during: [halloween]

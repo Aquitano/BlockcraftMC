@@ -1,0 +1,2395 @@
+{
+  "pack_layer": "starwars",
+  "front": "+Z",
+  "model_ground_origin": [
+    8,
+    0,
+    8
+  ],
+  "units_per_block": 16,
+  "snap_grid_units": 16,
+  "structural_span_units": 32,
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "raw_display_position_above_ground_blocks": 0.5,
+  "nexo_translation": [
+    0,
+    0,
+    0
+  ],
+  "collision": "Authored blockcraft_collision recipes provide native backing, glazing and bounded smaller colliders through FurnitureSolids.",
+  "objects": {
+    "kamino/window_mullion": {
+      "family": "ocean_windows",
+      "name_de": "Ozeanfenster · Mittelsteg",
+      "item_model": "blockcraft:sternenfront/kits/kamino/window_mullion",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -4.0
+        ],
+        [
+          16.0,
+          32.0,
+          5.0
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        9
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        9.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": [
+        -14,
+        2,
+        14,
+        30
+      ],
+      "support": "Native sill and outer wall blocks only; keep glazing opening air.",
+      "elements": 47,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:light_blue_stained_glass",
+          "-1,1,-1 minecraft:light_blue_stained_glass",
+          "0,0,-1 minecraft:light_blue_stained_glass",
+          "0,1,-1 minecraft:light_blue_stained_glass"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "kamino/window_rib": {
+      "family": "ocean_windows",
+      "name_de": "Ozeanfenster · Stützrippe",
+      "item_model": "blockcraft:sternenfront/kits/kamino/window_rib",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -5.0
+        ],
+        [
+          16.0,
+          32.0,
+          6.25
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        11.25
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        11.25
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": [
+        -12,
+        2,
+        14,
+        30
+      ],
+      "support": "Native sill and outer wall blocks only.",
+      "elements": 60,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:light_blue_stained_glass",
+          "-1,1,-1 minecraft:light_blue_stained_glass",
+          "0,0,-1 minecraft:light_blue_stained_glass",
+          "0,1,-1 minecraft:light_blue_stained_glass"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "kamino/window_corner": {
+      "family": "ocean_windows",
+      "name_de": "Ozeanfenster · Ecke",
+      "item_model": "blockcraft:sternenfront/kits/kamino/window_corner",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -4.0
+        ],
+        [
+          16.0,
+          32.0,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        20
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        20.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16,
+          0,
+          0
+        ],
+        "return": [
+          14,
+          0,
+          16
+        ]
+      },
+      "opening_xy_units": [
+        -14,
+        2,
+        12,
+        30
+      ],
+      "support": "Native supporting corners only; open return bay.",
+      "elements": 65,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:light_blue_stained_glass",
+          "-1,1,-1 minecraft:light_blue_stained_glass",
+          "0,0,-1 minecraft:light_blue_stained_glass",
+          "0,1,-1 minecraft:light_blue_stained_glass"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "kamino/platform_rim": {
+      "family": "platform_edges",
+      "name_de": "Plattform · Rand",
+      "item_model": "blockcraft:sternenfront/kits/kamino/platform_rim",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -3.0
+        ],
+        [
+          16.0,
+          6.0,
+          3.0
+        ]
+      ],
+      "span_units": [
+        32,
+        6,
+        6
+      ],
+      "extents_units": [
+        32.0,
+        6.0,
+        6.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Native platform backing supports the rim; rails and curbs use the authored collision recipe.",
+      "elements": 6,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_quartz",
+          "0,-1,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [
+          "-0.687500,-0.375000,0.000000 0.625000",
+          "-0.229167,-0.375000,0.000000 0.625000",
+          "0.229167,-0.375000,0.000000 0.625000",
+          "0.687500,-0.375000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "kamino/platform_corner": {
+      "family": "platform_edges",
+      "name_de": "Plattform · Ecke",
+      "item_model": "blockcraft:sternenfront/kits/kamino/platform_corner",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -3.0
+        ],
+        [
+          16.0,
+          6.0,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        6,
+        19
+      ],
+      "extents_units": [
+        32.0,
+        6.0,
+        19.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16,
+          0,
+          0
+        ],
+        "return": [
+          14,
+          0,
+          16
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Native platform backing supports the rim; rails and curbs use the authored collision recipe.",
+      "elements": 12,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_quartz",
+          "0,-1,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [
+          "-0.687500,-0.375000,0.000000 0.625000",
+          "-0.229167,-0.375000,0.000000 0.625000",
+          "0.229167,-0.375000,0.000000 0.625000",
+          "0.687500,-0.375000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "kamino/platform_rail": {
+      "family": "platform_edges",
+      "name_de": "Plattform · Geländer",
+      "item_model": "blockcraft:sternenfront/kits/kamino/platform_rail",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -3.0
+        ],
+        [
+          16.0,
+          23.0,
+          3.0
+        ]
+      ],
+      "span_units": [
+        32,
+        23,
+        6
+      ],
+      "extents_units": [
+        32.0,
+        23.0,
+        6.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Native platform backing supports the rim; rails and curbs use the authored collision recipe.",
+      "elements": 52,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_quartz",
+          "0,-1,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [
+          "-0.500000,0.375000,0.000000 1.000000",
+          "0.500000,0.375000,0.000000 1.000000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "kamino/platform_light": {
+      "family": "platform_edges",
+      "name_de": "Plattform · Randlicht",
+      "item_model": "blockcraft:sternenfront/kits/kamino/platform_light",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -3.0
+        ],
+        [
+          16.0,
+          6.0,
+          3.25
+        ]
+      ],
+      "span_units": [
+        32,
+        6,
+        6.25
+      ],
+      "extents_units": [
+        32.0,
+        6.0,
+        6.25
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Native platform backing supports the rim; rails and curbs use the authored collision recipe.",
+      "elements": 16,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_quartz",
+          "0,-1,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [
+          "-0.687500,-0.375000,0.000000 0.625000",
+          "-0.229167,-0.375000,0.000000 0.625000",
+          "0.229167,-0.375000,0.000000 0.625000",
+          "0.687500,-0.375000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "kamino/storm_drain": {
+      "family": "storm_wear",
+      "name_de": "Regenablauf",
+      "item_model": "blockcraft:sternenfront/kits/kamino/storm_drain",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -1.0
+        ],
+        [
+          8.0,
+          16.0,
+          4.4
+        ]
+      ],
+      "span_units": [
+        16,
+        16,
+        6
+      ],
+      "extents_units": [
+        16.0,
+        16.0,
+        5.4
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -8.0,
+          0,
+          0
+        ],
+        "right": [
+          8.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Mount against a native wall; animated water is decorative and does not place liquid blocks.",
+      "elements": 69,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "wall-detail",
+        "blocks": [
+          "0,0,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [],
+        "model_shift": "0,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0.001,-0.499"
+      }
+    },
+    "kamino/storm_streak": {
+      "family": "storm_wear",
+      "name_de": "Regenstreifen",
+      "item_model": "blockcraft:sternenfront/kits/kamino/storm_streak",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -1.0
+        ],
+        [
+          8.0,
+          16.0,
+          1.3000000000000007
+        ]
+      ],
+      "span_units": [
+        16,
+        16,
+        6
+      ],
+      "extents_units": [
+        16.0,
+        16.0,
+        2.3000000000000007
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -8.0,
+          0,
+          0
+        ],
+        "right": [
+          8.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Mount against a native wall; animated water is decorative and does not place liquid blocks.",
+      "elements": 30,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "wall-detail",
+        "blocks": [
+          "0,0,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [],
+        "model_shift": "0,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0.001,-0.499"
+      }
+    },
+    "kamino/storm_seam": {
+      "family": "storm_wear",
+      "name_de": "Undichte Fuge",
+      "item_model": "blockcraft:sternenfront/kits/kamino/storm_seam",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -1.0
+        ],
+        [
+          8.0,
+          16.0,
+          3.5
+        ]
+      ],
+      "span_units": [
+        16,
+        16,
+        6
+      ],
+      "extents_units": [
+        16.0,
+        16.0,
+        4.5
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -8.0,
+          0,
+          0
+        ],
+        "right": [
+          8.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Mount against a native wall; animated water is decorative and does not place liquid blocks.",
+      "elements": 39,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "wall-detail",
+        "blocks": [
+          "0,0,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [],
+        "model_shift": "0,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0.001,-0.499"
+      }
+    },
+    "kamino/storm_panel": {
+      "family": "storm_wear",
+      "name_de": "Abgenutzte Verkleidung",
+      "item_model": "blockcraft:sternenfront/kits/kamino/storm_panel",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -1.0
+        ],
+        [
+          8.0,
+          16.0,
+          1.5
+        ]
+      ],
+      "span_units": [
+        16,
+        16,
+        6
+      ],
+      "extents_units": [
+        16.0,
+        16.0,
+        2.5
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -8.0,
+          0,
+          0
+        ],
+        "right": [
+          8.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Mount against a native wall; animated water is decorative and does not place liquid blocks.",
+      "elements": 8,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "wall-detail",
+        "blocks": [
+          "0,0,-1 minecraft:smooth_quartz"
+        ],
+        "cubes": [],
+        "model_shift": "0,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0.001,-0.499"
+      }
+    },
+    "desert/roof_rim": {
+      "family": "roof_dome",
+      "name_de": "Dach · Traufe",
+      "item_model": "blockcraft:sternenfront/kits/desert/roof_rim",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -3.0
+        ],
+        [
+          16.0,
+          4.0,
+          3.0
+        ]
+      ],
+      "span_units": [
+        32,
+        4,
+        6
+      ],
+      "extents_units": [
+        32.0,
+        4.0,
+        6.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Seat on native roof blocks; stepped dome is a two-block accent, repeat rims on 32 units.",
+      "elements": 3,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_sandstone",
+          "-1,-1,0 minecraft:smooth_sandstone",
+          "0,-1,-1 minecraft:smooth_sandstone",
+          "0,-1,0 minecraft:smooth_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/roof_corner": {
+      "family": "roof_dome",
+      "name_de": "Dach · Ecke",
+      "item_model": "blockcraft:sternenfront/kits/desert/roof_corner",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -3.0
+        ],
+        [
+          16.0,
+          4.0,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        4,
+        19
+      ],
+      "extents_units": [
+        32.0,
+        4.0,
+        19.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16,
+          0,
+          0
+        ],
+        "return": [
+          14,
+          0,
+          16
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Seat on native roof blocks; stepped dome is a two-block accent, repeat rims on 32 units.",
+      "elements": 7,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_sandstone",
+          "-1,-1,0 minecraft:smooth_sandstone",
+          "0,-1,-1 minecraft:smooth_sandstone",
+          "0,-1,0 minecraft:smooth_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/roof_step": {
+      "family": "roof_dome",
+      "name_de": "Dach · Stufe",
+      "item_model": "blockcraft:sternenfront/kits/desert/roof_step",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -16.0
+        ],
+        [
+          16.0,
+          14.0,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        14,
+        32
+      ],
+      "extents_units": [
+        32.0,
+        14.0,
+        32.0
+      ],
+      "connectors_from_ground_units": {
+        "west": [
+          -16,
+          0,
+          0
+        ],
+        "east": [
+          16,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -16
+        ],
+        "south": [
+          0,
+          0,
+          16
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Seat on native roof blocks; stepped dome is a two-block accent, repeat rims on 32 units.",
+      "elements": 6,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_sandstone",
+          "-1,-1,0 minecraft:smooth_sandstone",
+          "0,-1,-1 minecraft:smooth_sandstone",
+          "0,-1,0 minecraft:smooth_sandstone"
+        ],
+        "cubes": [
+          "-0.500000,-0.500000,-0.500000 1.000000",
+          "0.500000,-0.500000,-0.500000 1.000000",
+          "-0.500000,-0.125000,0.500000 1.000000",
+          "0.500000,-0.125000,0.500000 1.000000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/roof_dome": {
+      "family": "roof_dome",
+      "name_de": "Dach · Kuppel",
+      "item_model": "blockcraft:sternenfront/kits/desert/roof_dome",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -16.0
+        ],
+        [
+          16.0,
+          16.0,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        16,
+        32
+      ],
+      "extents_units": [
+        32.0,
+        16.0,
+        32.0
+      ],
+      "connectors_from_ground_units": {
+        "west": [
+          -16,
+          0,
+          0
+        ],
+        "east": [
+          16,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -16
+        ],
+        "south": [
+          0,
+          0,
+          16
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Seat on native roof blocks; stepped dome is a two-block accent, repeat rims on 32 units.",
+      "elements": 74,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_sandstone",
+          "-1,-1,0 minecraft:smooth_sandstone",
+          "0,-1,-1 minecraft:smooth_sandstone",
+          "0,-1,0 minecraft:smooth_sandstone"
+        ],
+        "cubes": [
+          "0.000000,0.000000,0.000000 1.000000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/wall_straight": {
+      "family": "weathered_plaster",
+      "name_de": "Putzwand · Gerade",
+      "item_model": "blockcraft:sternenfront/kits/desert/wall_straight",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -2.5
+        ],
+        [
+          16.0,
+          32.0,
+          2.75
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        5.5
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        5.25
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Use native wall blocks behind facing for physical walls.",
+      "elements": 30,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:smooth_sandstone",
+          "-1,1,-1 minecraft:smooth_sandstone",
+          "0,0,-1 minecraft:smooth_sandstone",
+          "0,1,-1 minecraft:smooth_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/wall_corner": {
+      "family": "weathered_plaster",
+      "name_de": "Putzwand · Ecke",
+      "item_model": "blockcraft:sternenfront/kits/desert/wall_corner",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -2.5
+        ],
+        [
+          16.0,
+          32.0,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        18.5
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        18.5
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16,
+          0,
+          0
+        ],
+        "return": [
+          14,
+          0,
+          16
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Use native wall blocks behind facing for physical walls.",
+      "elements": 44,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:smooth_sandstone",
+          "-1,1,-1 minecraft:smooth_sandstone",
+          "0,0,-1 minecraft:smooth_sandstone",
+          "0,1,-1 minecraft:smooth_sandstone",
+          "0,0,0 minecraft:smooth_sandstone",
+          "0,1,0 minecraft:smooth_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/wall_patch": {
+      "family": "weathered_plaster",
+      "name_de": "Putzwand · Reparatur",
+      "item_model": "blockcraft:sternenfront/kits/desert/wall_patch",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -2.5
+        ],
+        [
+          16.0,
+          32.0,
+          2.75
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        5.5
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        5.25
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Use native wall blocks behind facing for physical walls.",
+      "elements": 67,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:smooth_sandstone",
+          "-1,1,-1 minecraft:smooth_sandstone",
+          "0,0,-1 minecraft:smooth_sandstone",
+          "0,1,-1 minecraft:smooth_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/entrance_recess": {
+      "family": "recessed_entrances",
+      "name_de": "Eingang · Tiefer Rahmen",
+      "item_model": "blockcraft:sternenfront/kits/desert/entrance_recess",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -6.0
+        ],
+        [
+          16.0,
+          32.0,
+          6.5
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        12.5
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        12.5
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": [
+        -11,
+        0,
+        11,
+        30
+      ],
+      "support": "Native blocks only outside clear opening. No threshold block or Nexo barriers.",
+      "elements": 16,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,2,-1 minecraft:smooth_sandstone",
+          "0,2,-1 minecraft:smooth_sandstone"
+        ],
+        "cubes": [
+          "-0.843750,0.000000,0.000000 0.625000",
+          "-0.843750,0.625000,0.000000 0.625000",
+          "-0.843750,1.250000,0.000000 0.625000",
+          "0.843750,0.000000,0.000000 0.625000",
+          "0.843750,0.625000,0.000000 0.625000",
+          "0.843750,1.250000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/entrance_frame": {
+      "family": "recessed_entrances",
+      "name_de": "Eingang · Außenrahmen",
+      "item_model": "blockcraft:sternenfront/kits/desert/entrance_frame",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -2.0
+        ],
+        [
+          16.0,
+          32.0,
+          2.5
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        4.5
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        4.5
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": [
+        -11,
+        0,
+        11,
+        30
+      ],
+      "support": "Native blocks only outside clear opening. No threshold block or Nexo barriers.",
+      "elements": 16,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,2,-1 minecraft:smooth_sandstone",
+          "0,2,-1 minecraft:smooth_sandstone"
+        ],
+        "cubes": [
+          "-0.843750,0.000000,0.000000 0.625000",
+          "-0.843750,0.625000,0.000000 0.625000",
+          "-0.843750,1.250000,0.000000 0.625000",
+          "0.843750,0.000000,0.000000 0.625000",
+          "0.843750,0.625000,0.000000 0.625000",
+          "0.843750,1.250000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/entrance_shutter": {
+      "family": "recessed_entrances",
+      "name_de": "Eingang · Seitenladen",
+      "item_model": "blockcraft:sternenfront/kits/desert/entrance_shutter",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -2.0
+        ],
+        [
+          16.0,
+          30.0,
+          2.25
+        ]
+      ],
+      "span_units": [
+        32,
+        30,
+        4.5
+      ],
+      "extents_units": [
+        32.0,
+        30.0,
+        4.25
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": [
+        -10,
+        0,
+        10,
+        28
+      ],
+      "support": "Native blocks only outside clear opening. No threshold block or Nexo barriers.",
+      "elements": 22,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,2,-1 minecraft:smooth_sandstone",
+          "0,2,-1 minecraft:smooth_sandstone"
+        ],
+        "cubes": [
+          "-0.843750,0.000000,0.000000 0.625000",
+          "-0.843750,0.625000,0.000000 0.625000",
+          "-0.843750,1.250000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/shade_awning": {
+      "family": "shade_market",
+      "name_de": "Markt · Sonnensegel",
+      "item_model": "blockcraft:sternenfront/kits/desert/shade_awning",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          23.0,
+          -16.0
+        ],
+        [
+          16.0,
+          30.5,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        31,
+        32
+      ],
+      "extents_units": [
+        32.0,
+        7.5,
+        32.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16,
+          28,
+          0
+        ],
+        "right": [
+          16,
+          28,
+          0
+        ],
+        "rear": [
+          0,
+          28,
+          -16
+        ],
+        "front": [
+          0,
+          28,
+          16
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Cloth has no collision; use pole modules or native wall anchors.",
+      "elements": 31,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "canopy",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_sandstone",
+          "-1,-1,0 minecraft:smooth_sandstone",
+          "0,-1,-1 minecraft:smooth_sandstone",
+          "0,-1,0 minecraft:smooth_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/shade_pole": {
+      "family": "shade_market",
+      "name_de": "Markt · Stütze",
+      "item_model": "blockcraft:sternenfront/kits/desert/shade_pole",
+      "bounds_from_ground_units": [
+        [
+          -4.0,
+          0.0,
+          -2.0
+        ],
+        [
+          4.0,
+          30.0,
+          2.0
+        ]
+      ],
+      "span_units": [
+        8,
+        30,
+        4
+      ],
+      "extents_units": [
+        8.0,
+        30.0,
+        4.0
+      ],
+      "connectors_from_ground_units": {
+        "top": [
+          0,
+          28,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Cloth has no collision; use pole modules or native wall anchors.",
+      "elements": 23,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "post",
+        "blocks": [],
+        "cubes": [
+          "0.000000,0.000000,0.000000 0.625000",
+          "0.000000,0.458333,0.000000 0.625000",
+          "0.000000,0.916667,0.000000 0.625000",
+          "0.000000,1.375000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/shade_canopy": {
+      "family": "shade_market",
+      "name_de": "Markt · Baldachin",
+      "item_model": "blockcraft:sternenfront/kits/desert/shade_canopy",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          25.75,
+          -16.0
+        ],
+        [
+          16.0,
+          30.0,
+          16.0
+        ]
+      ],
+      "span_units": [
+        32,
+        31,
+        32
+      ],
+      "extents_units": [
+        32.0,
+        4.25,
+        32.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16,
+          28,
+          0
+        ],
+        "right": [
+          16,
+          28,
+          0
+        ],
+        "rear": [
+          0,
+          28,
+          -16
+        ],
+        "front": [
+          0,
+          28,
+          16
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Cloth has no collision; use pole modules or native wall anchors.",
+      "elements": 29,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "canopy",
+        "blocks": [
+          "-1,-1,-1 minecraft:smooth_sandstone",
+          "-1,-1,0 minecraft:smooth_sandstone",
+          "0,-1,-1 minecraft:smooth_sandstone",
+          "0,-1,0 minecraft:smooth_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/water_vaporator": {
+      "family": "water_infrastructure",
+      "name_de": "Feuchtigkeitsverdampfer",
+      "item_model": "blockcraft:sternenfront/kits/desert/water_vaporator",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -7.0
+        ],
+        [
+          8.0,
+          31.0,
+          7.0
+        ]
+      ],
+      "span_units": [
+        16,
+        31,
+        14
+      ],
+      "extents_units": [
+        16.0,
+        31.0,
+        14.0
+      ],
+      "connectors_from_ground_units": {
+        "service": [
+          8,
+          4,
+          0
+        ],
+        "inlet": [
+          -8,
+          4,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Place on a native foundation. FurnitureSolids supplies the authored housing collision.",
+      "elements": 129,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [],
+        "cubes": [
+          "0.000000,0.000000,0.000000 0.625000"
+        ]
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0,0"
+      }
+    },
+    "desert/water_cistern": {
+      "family": "water_infrastructure",
+      "name_de": "Wasserzisterne",
+      "item_model": "blockcraft:sternenfront/kits/desert/water_cistern",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -7.0
+        ],
+        [
+          8.0,
+          22.0,
+          7.0
+        ]
+      ],
+      "span_units": [
+        16,
+        22,
+        14
+      ],
+      "extents_units": [
+        16.0,
+        22.0,
+        14.0
+      ],
+      "connectors_from_ground_units": {
+        "service": [
+          8,
+          4,
+          0
+        ],
+        "inlet": [
+          -8,
+          4,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Place on a native foundation. FurnitureSolids supplies the authored housing collision.",
+      "elements": 67,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [],
+        "cubes": [
+          "0.000000,0.000000,0.000000 0.750000",
+          "0.000000,0.625000,0.000000 0.750000"
+        ]
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0,0"
+      }
+    },
+    "desert/water_pump": {
+      "family": "water_infrastructure",
+      "name_de": "Wasserpumpe mit Anschluss",
+      "item_model": "blockcraft:sternenfront/kits/desert/water_pump",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -7.0
+        ],
+        [
+          8.0,
+          15.0,
+          7.0
+        ]
+      ],
+      "span_units": [
+        16,
+        15,
+        14
+      ],
+      "extents_units": [
+        16.0,
+        15.0,
+        14.0
+      ],
+      "connectors_from_ground_units": {
+        "service": [
+          8,
+          4,
+          0
+        ],
+        "inlet": [
+          -8,
+          4,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Place on a native foundation. FurnitureSolids supplies the authored housing collision.",
+      "elements": 43,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [],
+        "cubes": [
+          "0.000000,0.000000,0.000000 0.625000",
+          "0.000000,0.250000,0.000000 0.625000"
+        ]
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0,0"
+      }
+    },
+    "desert/power_generator": {
+      "family": "power_infrastructure",
+      "name_de": "Lokaler Generator",
+      "item_model": "blockcraft:sternenfront/kits/desert/power_generator",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -7.0
+        ],
+        [
+          8.0,
+          20.0,
+          7.0
+        ]
+      ],
+      "span_units": [
+        16,
+        20,
+        14
+      ],
+      "extents_units": [
+        16.0,
+        20.0,
+        14.0
+      ],
+      "connectors_from_ground_units": {
+        "service": [
+          8,
+          4,
+          0
+        ],
+        "inlet": [
+          -8,
+          4,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Place on a native foundation. FurnitureSolids supplies the authored housing collision.",
+      "elements": 69,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [],
+        "cubes": [
+          "-0.062500,0.000000,0.000000 0.750000",
+          "-0.062500,0.125000,0.000000 0.750000",
+          "0.062500,0.000000,0.000000 0.750000",
+          "0.062500,0.125000,0.000000 0.750000"
+        ]
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0,0"
+      }
+    },
+    "desert/power_distribution": {
+      "family": "power_infrastructure",
+      "name_de": "Stromverteiler",
+      "item_model": "blockcraft:sternenfront/kits/desert/power_distribution",
+      "bounds_from_ground_units": [
+        [
+          -8.0,
+          0.0,
+          -7.0
+        ],
+        [
+          8.0,
+          20.0,
+          7.0
+        ]
+      ],
+      "span_units": [
+        16,
+        20,
+        14
+      ],
+      "extents_units": [
+        16.0,
+        20.0,
+        14.0
+      ],
+      "connectors_from_ground_units": {
+        "service": [
+          8,
+          4,
+          0
+        ],
+        "inlet": [
+          -8,
+          4,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Place on a native foundation. FurnitureSolids supplies the authored housing collision.",
+      "elements": 38,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [],
+        "cubes": [
+          "0.000000,0.000000,0.000000 0.625000",
+          "0.000000,0.625000,0.000000 0.625000"
+        ]
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "0,0,0"
+      }
+    },
+    "desert/canyon_strata": {
+      "family": "canyon_rock",
+      "name_de": "Canyon · Gesteinsschicht",
+      "item_model": "blockcraft:sternenfront/kits/desert/canyon_strata",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -3.0
+        ],
+        [
+          16.0,
+          16.0,
+          3.0
+        ]
+      ],
+      "span_units": [
+        32,
+        16,
+        6
+      ],
+      "extents_units": [
+        32.0,
+        16.0,
+        6.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Block-backed terrain trim; cave aperture remains clear.",
+      "elements": 10,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:red_sandstone",
+          "0,0,-1 minecraft:red_sandstone"
+        ],
+        "cubes": [],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/canyon_ledge": {
+      "family": "canyon_rock",
+      "name_de": "Canyon · Felsvorsprung",
+      "item_model": "blockcraft:sternenfront/kits/desert/canyon_ledge",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -4.0
+        ],
+        [
+          16.0,
+          11.0,
+          8.0
+        ]
+      ],
+      "span_units": [
+        32,
+        11,
+        12
+      ],
+      "extents_units": [
+        32.0,
+        11.0,
+        12.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": null,
+      "support": "Block-backed terrain trim; cave aperture remains clear.",
+      "elements": 10,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,-1 minecraft:red_sandstone",
+          "0,0,-1 minecraft:red_sandstone"
+        ],
+        "cubes": [
+          "-0.437500,-0.125000,0.250000 0.625000",
+          "0.000000,-0.125000,0.250000 0.625000",
+          "0.437500,-0.125000,0.250000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    },
+    "desert/canyon_cave": {
+      "family": "canyon_rock",
+      "name_de": "Canyon · Höhlenrand",
+      "item_model": "blockcraft:sternenfront/kits/desert/canyon_cave",
+      "bounds_from_ground_units": [
+        [
+          -16.0,
+          0.0,
+          -4.0
+        ],
+        [
+          16.0,
+          32.0,
+          5.0
+        ]
+      ],
+      "span_units": [
+        32,
+        32,
+        9
+      ],
+      "extents_units": [
+        32.0,
+        32.0,
+        9.0
+      ],
+      "connectors_from_ground_units": {
+        "left": [
+          -16.0,
+          0,
+          0
+        ],
+        "right": [
+          16.0,
+          0,
+          0
+        ]
+      },
+      "opening_xy_units": [
+        -11,
+        0,
+        11,
+        30
+      ],
+      "support": "Block-backed terrain trim; cave aperture remains clear.",
+      "elements": 13,
+      "barriers": [],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,2,-1 minecraft:smooth_sandstone",
+          "0,2,-1 minecraft:smooth_sandstone"
+        ],
+        "cubes": [
+          "-0.843750,0.000000,0.000000 0.625000",
+          "-0.843750,0.625000,0.000000 0.625000",
+          "-0.843750,1.250000,0.000000 0.625000",
+          "0.843750,0.000000,0.000000 0.625000",
+          "0.843750,0.625000,0.000000 0.625000",
+          "0.843750,1.250000,0.000000 0.625000"
+        ],
+        "grid": true,
+        "model_shift": "-0.499,0.001,-0.499",
+        "keep_existing": true
+      },
+      "nexo_properties": {
+        "display_transform": "NONE",
+        "cullable": false,
+        "translation": "-0.499,0.001,-0.499"
+      }
+    }
+  },
+  "assemblies": {
+    "kamino_assembly": [
+      {
+        "module": "kamino/window_mullion",
+        "ground_offset_units": [
+          -32,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/window_rib",
+        "ground_offset_units": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/window_corner",
+        "ground_offset_units": [
+          32,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/platform_rail",
+        "ground_offset_units": [
+          -32,
+          0,
+          16
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/platform_light",
+        "ground_offset_units": [
+          0,
+          0,
+          16
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/platform_corner",
+        "ground_offset_units": [
+          32,
+          0,
+          16
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/storm_drain",
+        "ground_offset_units": [
+          -32,
+          0,
+          -4
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/storm_streak",
+        "ground_offset_units": [
+          0,
+          0,
+          -4
+        ],
+        "yaw_degrees": 0
+      }
+    ],
+    "desert_assembly": [
+      {
+        "module": "desert/entrance_recess",
+        "ground_offset_units": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/wall_patch",
+        "ground_offset_units": [
+          -32,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/wall_corner",
+        "ground_offset_units": [
+          32,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/roof_dome",
+        "ground_offset_units": [
+          -32,
+          32,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/roof_rim",
+        "ground_offset_units": [
+          0,
+          32,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/roof_corner",
+        "ground_offset_units": [
+          32,
+          32,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/shade_awning",
+        "ground_offset_units": [
+          0,
+          0,
+          22
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/shade_pole",
+        "ground_offset_units": [
+          -16,
+          0,
+          38
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/shade_pole",
+        "ground_offset_units": [
+          16,
+          0,
+          38
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/water_cistern",
+        "ground_offset_units": [
+          40,
+          0,
+          28
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/water_pump",
+        "ground_offset_units": [
+          24,
+          0,
+          28
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/water_vaporator",
+        "ground_offset_units": [
+          -40,
+          0,
+          28
+        ],
+        "yaw_degrees": 0
+      }
+    ],
+    "storm_assembly": [
+      {
+        "module": "kamino/storm_drain",
+        "ground_offset_units": [
+          -20,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/storm_seam",
+        "ground_offset_units": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/storm_streak",
+        "ground_offset_units": [
+          20,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "kamino/storm_panel",
+        "ground_offset_units": [
+          40,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ],
+    "water_assembly": [
+      {
+        "module": "desert/water_vaporator",
+        "ground_offset_units": [
+          -32,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/water_pump",
+        "ground_offset_units": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "desert/water_cistern",
+        "ground_offset_units": [
+          16,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "verified_assembly_connections": [
+    [
+      "kamino_assembly",
+      0,
+      "right",
+      1,
+      "left"
+    ],
+    [
+      "kamino_assembly",
+      1,
+      "right",
+      2,
+      "left"
+    ],
+    [
+      "kamino_assembly",
+      3,
+      "right",
+      4,
+      "left"
+    ],
+    [
+      "kamino_assembly",
+      4,
+      "right",
+      5,
+      "left"
+    ],
+    [
+      "desert_assembly",
+      10,
+      "service",
+      9,
+      "inlet"
+    ],
+    [
+      "water_assembly",
+      1,
+      "service",
+      2,
+      "inlet"
+    ]
+  ],
+  "materials": {
+    "uv_origin": "top-left",
+    "atlas_size": [
+      128,
+      512
+    ],
+    "animation_frame_size": [
+      128,
+      128
+    ],
+    "animation_frames": 4,
+    "frame_ticks": 4,
+    "tile_size_pixels": 32,
+    "texels_per_model_unit": 1,
+    "tile_order": [
+      "body",
+      "trim",
+      "dark",
+      "metal",
+      "wear",
+      "seam",
+      "cloth",
+      "light",
+      "rock",
+      "strata",
+      "patch",
+      "vent",
+      "pipe",
+      "wet",
+      "edge",
+      "cap"
+    ],
+    "alpha": "RGB fully opaque; window openings are empty geometry, no glass stacks.",
+    "water": "Animated decorative runoff and level gauges; no world liquid simulation."
+  },
+  "validation": {
+    "module_count": 32,
+    "families": [
+      "canyon_rock",
+      "ocean_windows",
+      "platform_edges",
+      "power_infrastructure",
+      "recessed_entrances",
+      "roof_dome",
+      "shade_market",
+      "storm_wear",
+      "water_infrastructure",
+      "weathered_plaster"
+    ],
+    "native_bounds": "Every exported cuboid in [-16,32]",
+    "uv": "Face UVs retain texel density inside their material tile. Top origin.",
+    "apertures": "No elements overlap declared XY opening, except the named window central mullion.",
+    "routes": "Every item resolves to exported model and palette atlas."
+  }
+}

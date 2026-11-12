@@ -1,0 +1,420 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/desert/atlas",
+    "particle": "blockcraft:item/sternenfront/kits/desert/atlas"
+  },
+  "elements": [
+    {
+      "name": "left rock jamb",
+      "from": [
+        -8,
+        0,
+        4
+      ],
+      "to": [
+        -3,
+        30,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.6875,
+            8.125,
+            2.3125,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            1.6875,
+            8.125,
+            2.3125,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.5,
+            8.125,
+            2.5,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.5,
+            8.125,
+            2.5,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            1.6875,
+            9.5,
+            2.3125,
+            10.5
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "right rock jamb",
+      "from": [
+        19,
+        0,
+        4
+      ],
+      "to": [
+        24,
+        30,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            5.6875,
+            8.125,
+            6.3125,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            5.6875,
+            8.125,
+            6.3125,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            5.5,
+            8.125,
+            6.5,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            5.5,
+            8.125,
+            6.5,
+            11.875
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            5.6875,
+            9.5,
+            6.3125,
+            10.5
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "cave brow",
+      "from": [
+        -8,
+        30,
+        4
+      ],
+      "to": [
+        24,
+        32,
+        13
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            9.875,
+            4.0,
+            10.125
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.4375,
+            9.875,
+            2.5625,
+            10.125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.4375,
+            9.875,
+            2.5625,
+            10.125
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            9.4375,
+            4.0,
+            10.5625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "cave brow",
+      "from": [
+        -8,
+        30,
+        4
+      ],
+      "to": [
+        -4,
+        32,
+        13
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.0,
+            9.875,
+            0.5,
+            10.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "cave brow",
+      "from": [
+        20,
+        30,
+        4
+      ],
+      "to": [
+        24,
+        32,
+        13
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            3.5,
+            9.875,
+            4.0,
+            10.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "cave brow",
+      "from": [
+        -4,
+        31,
+        4
+      ],
+      "to": [
+        20,
+        32,
+        13
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.5,
+            9.875,
+            3.5,
+            10.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "cave brow",
+      "from": [
+        -3,
+        30,
+        4
+      ],
+      "to": [
+        19,
+        32,
+        8
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0.625,
+            9.4375,
+            3.375,
+            9.9375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "cave brow",
+      "from": [
+        20,
+        30,
+        12
+      ],
+      "to": [
+        24,
+        32,
+        13
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            3.5,
+            10.4375,
+            4.0,
+            10.5625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "cave brow",
+      "from": [
+        -8,
+        30,
+        12
+      ],
+      "to": [
+        -4,
+        32,
+        13
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0.0,
+            10.4375,
+            0.5,
+            10.5625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "brow ledge",
+      "from": [
+        -4,
+        30,
+        8
+      ],
+      "to": [
+        20,
+        31,
+        13
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.5,
+            9.9375,
+            7.5,
+            10.0625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "brow ledge",
+      "from": [
+        -3,
+        30,
+        8
+      ],
+      "to": [
+        19,
+        31,
+        13
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            4.625,
+            9.6875,
+            7.375,
+            10.3125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "brow ledge",
+      "from": [
+        19,
+        30,
+        12
+      ],
+      "to": [
+        20,
+        31,
+        13
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            7.375,
+            10.1875,
+            7.5,
+            10.3125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "brow ledge",
+      "from": [
+        -4,
+        30,
+        12
+      ],
+      "to": [
+        -3,
+        31,
+        13
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            4.5,
+            10.1875,
+            4.625,
+            10.3125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    }
+  ]
+}

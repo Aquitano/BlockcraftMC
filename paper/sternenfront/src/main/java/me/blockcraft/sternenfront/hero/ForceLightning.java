@@ -1,12 +1,12 @@
 package me.blockcraft.sternenfront.hero;
 
+import me.blockcraft.api.scenery.FurnitureSolids;
 import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.combat.Guard;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.World;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.LivingEntity;
@@ -78,7 +78,7 @@ final class ForceLightning {
         if (ends.isEmpty()) {
             var eye = player.getEyeLocation();
             var facing = eye.getDirection();
-            var wall = cast.world().rayTraceBlocks(eye, facing, rules.range(), FluidCollisionMode.NEVER, true);
+            var wall = FurnitureSolids.rayTrace(eye, facing, rules.range());
             ends = List.of(wall == null ? eye.clone().add(facing.multiply(rules.range())) : wall.getHitPosition().toLocation(cast.world()));
         }
         long shape = player.getUniqueId().getLeastSignificantBits() * 31 + tick / RESHAPE_TICKS;

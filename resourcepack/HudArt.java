@@ -708,7 +708,7 @@ public final class HudArt {
             Files.writeString(models.resolve(overlay.getKey() + ".json"), """
                     {
                       "gui_light": "front",
-                      "textures": {"overlay": "blockcraft:item/sternenfront/%s"},
+                      "textures": {"overlay": "blockcraft:item/sternenfront/%s", "particle": "#overlay"},
                       "elements": [{"from": [-1, -1, 16], "to": [17, 17, 16], "shade": false,
                         "faces": {"south": {"uv": [0, 0, 9, 9], "texture": "#overlay"}}}]
                     }
@@ -721,7 +721,7 @@ public final class HudArt {
                 Files.writeString(models.resolve(name + ".json"), String.format(Locale.ROOT, """
                         {
                           "gui_light": "front",
-                          "textures": {"marker": "blockcraft:item/sternenfront/objective_pips"},
+                          "textures": {"marker": "blockcraft:item/sternenfront/objective_pips", "particle": "#marker"},
                           "elements": [{"from": [1, 1, 8], "to": [15, 15, 8], "shade": false,
                             "faces": {"south": {"uv": [%.1f, 0, %.1f, 16], "texture": "#marker", "tintindex": 0}}}]
                         }

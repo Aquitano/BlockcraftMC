@@ -1,11 +1,11 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.scenery.FurnitureSolids;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.combat.Guard;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
@@ -170,7 +170,7 @@ public final class Bolts {
         var world = bolt.position.getWorld();
         double step = Math.min(bolt.shot.speed(), bolt.left);
         var start = bolt.position.toVector();
-        var wall = world.rayTraceBlocks(bolt.position, bolt.direction, step, FluidCollisionMode.NEVER, true);
+        var wall = FurnitureSolids.rayTrace(bolt.position, bolt.direction, step);
         double reach = wall == null ? step : wall.getHitPosition().distance(start);
         var struck = reach <= 0 ? Struck.NOTHING : struck(bolt, start, reach);
         var mark = struck.mark();
@@ -197,9 +197,10 @@ public final class Bolts {
         if (wall != null || bolt.left - step <= 0) {
             var at = bolt.position.clone().add(bolt.direction.clone().multiply(travelled));
             if (wall != null) {
-                boolean shield = game.gadgets().impact(wall.getHitBlock(), at, bolt.direction);
                 var face = wall.getHitBlockFace();
                 var normal = face == null ? bolt.direction.clone().multiply(-1) : face.getDirection();
+                boolean shield = game.gadgets().impact(wall.getHitBlock(), at, bolt.direction)
+                        || game.fieldObjectives().impact(wall.getHitBlock(), at, normal);
                 game.effects().boltOnWall(at, normal, wall.getHitBlock(), shield, bolt.shot.faction());
                 impact(bolt, at.clone().add(normal.clone().multiply(HEAVY_IMPACT_LIFT)));
             } else {

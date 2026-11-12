@@ -1,0 +1,22 @@
+circuits:
+  landing:
+    owner: kolonien
+    doors: [landing-airlock]
+    lights: [landing-lamp]
+devices:
+  landing-relay:
+    kind: power_relay
+    circuit: landing
+    at: "0 100 0 180"
+  landing-console:
+    kind: communications_console
+    circuit: landing
+    at: "3 100 0 180"
+  landing-shield:
+    kind: shield_generator
+    circuit: landing
+    at: "6 100 0 180"
+    shield:
+      - "8 100 2"
+      - "8 101 2"
+      - "8 102 2"

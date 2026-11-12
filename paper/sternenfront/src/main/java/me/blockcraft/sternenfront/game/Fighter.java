@@ -71,6 +71,8 @@ public final class Fighter {
     }
 
     private CombatClass combatClass = CombatClass.SOLDIER;
+    private Blaster soldierWeapon = Blaster.CARBINE;
+    private Reinforcement republicReinforcement = Reinforcement.ARC_TROOPER;
     private Optional<Choosing> choosing = Optional.empty();
     private Heat heat;
     private long protectedUntil;
@@ -286,6 +288,28 @@ public final class Fighter {
         }
     }
 
+    public Blaster classBlaster(Faction faction, CombatClass role) {
+        return role.weapons(faction).contains(soldierWeapon) ? soldierWeapon : role.blaster(faction);
+    }
+
+    public void cycleWeapon(Faction faction) {
+        var weapons = combatClass.weapons(faction);
+        if (weapons.size() > 1) {
+            soldierWeapon = weapons.get((weapons.indexOf(soldierWeapon) + 1) % weapons.size());
+        }
+    }
+
+    public Reinforcement reinforcementChoice(Faction faction) {
+        return faction == Faction.KOLONIEN ? republicReinforcement : Reinforcement.COMMANDO_DROID;
+    }
+
+    public void cycleReinforcement(Faction faction) {
+        if (faction == Faction.KOLONIEN) {
+            republicReinforcement = republicReinforcement == Reinforcement.ARC_TROOPER
+                    ? Reinforcement.CLONE_COMMANDO : Reinforcement.ARC_TROOPER;
+        }
+    }
+
     public List<Ability> abilities(Faction faction) {
         return hero.isPresent() ? List.of() : reinforcement.map(Reinforcement::abilities).orElseGet(() -> combatClass.abilities(faction));
     }
@@ -295,6 +319,6 @@ public final class Fighter {
         if (hero.isPresent()) {
             return hero.map(Hero::weapon).filter(Hero.Weapon.Gun.class::isInstance).map(Hero.Weapon.Gun.class::cast).map(Hero.Weapon.Gun::blaster);
         }
-        return reinforcement.map(Reinforcement::blaster).or(() -> Optional.of(combatClass.blaster(faction)));
+        return reinforcement.map(Reinforcement::blaster).or(() -> Optional.of(classBlaster(faction, combatClass)));
     }
 }

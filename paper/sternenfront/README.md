@@ -45,19 +45,44 @@ Its board shows the five fastest times in the current round and never reads or w
 Mounting, teleporting, death, leaving the lane or falling below `pit-y` interrupts an attempt.
 Round end and plugin disable remove secret displays and stop playback and tasks.
 
+## Field objectives
+
+A map can declare circuits in `blockcraft/Sternenfront/field-objectives.yml`. The [example](field-objectives.example.yml) shows a shield generator, power relay, and communications console linked to one circuit. Maps without this file keep their existing rules.
+
+Each circuit has an owning faction and lists of door and light placement IDs from the map's scenery files. Devices name their circuit and position. Shield generators also list the exact air cells used for their native glass shield. Keep these cells clear of structures and door passages.
+
+Sneak and right-click a device to begin an interaction. Hold sneak within four blocks until the channel completes. Damage, leaving the field, moving out of range, or releasing sneak cancels it. `field-objectives.channel-seconds` controls the duration.
+
+- An owner repairs a relay. An enemy disables it. Loss of power switches linked lights off, opens linked doors, and removes the circuit's shields.
+- An enemy console interaction overrides security for `field-objectives.override-seconds`. Doors open and shields turn off while the lights retain power. An owner clears the override.
+- An owner restores a shield generator. An enemy disables it. A restored generator still requires a powered circuit without an active override.
+
+The models show active and disabled states. Interaction progress stays in the combat HUD, so starting or cancelling a channel keeps the furniture in place. Damaged variants remain separate assets for authored damage states. These interactions award no points. Native shield cells block movement and shots. A door refuses to close while a living entity occupies its passage.
+
+`FieldObjectives` owns match behavior and restores its devices, shields, and linked fixture states at cleanup. The shared `FurnitureSolids` service owns physical collision and world illumination. The lobby uses the same models without match controllers.
+
 ## Compatibility
 
 `kolonien` identifies the Republic and `hegemonie` the Separatists in arena metadata, configuration, and player
 settings. The hero keys `jedi`, `commander`, `sith`, and `bounty-hunter` identify Obi-Wan, Rex, Dooku, and Jango.
 Changing display names does not rename those persisted keys.
 
+## Soldier weapons and reference models
+
+Republic soldiers can choose the EE-3, A280, or E-11D. Click the weapon in the waiting-lobby class menu, or right-click the soldier card when redeploying. The choice lasts for the round and survives class changes. Droid loadouts retain their weapons.
+
+The A280 fires three bolts per click; the E-11D fires automatically. Their damage, heat, range, and timing live in `blasters.a280` and `blasters.e11d`. All three use the existing aim, recoil, heat, and replay handling.
+
+`SternenfrontArt.java` authors the reference rifles, Katarn commando armor, updated 181st clone markings, B2 plates, and Dooku cape. `SternenfrontGallery.py` generates 69 exhibition entries, including 15 complete characters rendered with one item display each. Run `:resourcepack:generateSternenfrontGallery` to regenerate them.
+
 ## Reinforcement units
 
-The deploy menu offers one reinforcement per faction, bought with the same battle points as heroes for one life.
+The deploy menu offers reinforcements bought with battle points for one life. Right-click the Republic reinforcement card to switch between ARC trooper and clone commando, then left-click to select it.
 The Republic's ARC trooper costs 250 points, has 32 health, and carries a cooler-firing support repeater with shield wall and adrenaline.
 The Separatists' BX commando droid costs 300 points, has 26 health and 112% movement speed, and carries a short-range carbine with jump pack and grenade.
-Each faction can field two reinforcements alongside its named hero slots. `reinforcement-units` configures each unit's cost, limit, health, and speed.
-`blasters.arc-repeater` and `blasters.commando-carbine` configure their weapons. The abilities use the existing `abilities` settings.
+The clone commando costs 300 points, has 32 health, and carries a DC-17m with shield wall and grenade.
+Each reinforcement type has two slots alongside the named heroes. `reinforcement-units` configures each unit's cost, limit, health, and speed.
+`blasters.arc-repeater`, `blasters.commando-carbine`, and `blasters.dc17m` configure their weapons. The abilities use the existing `abilities` settings.
 
 Selection reserves nothing. Choosing a spawn confirms the purchase; changing the paid role requires confirmation again.
 Automatic deployment without confirmation uses the free class. Deployment checks the balance and capacity again, and a failed deployment restores the points and slot.
@@ -474,8 +499,8 @@ The fallback advances its cycle by distance, capped at the configured cadence, a
 fallback displays; changes to BetterModel profiles require regenerating the clips with `python3 resourcepack/RigModels.py`
 (requires PyYAML). Animation-only changes leave the geometry intact and need no BetterModel resource-pack export.
 
-BetterModel builds the pack from those files on the game server, and that output is committed in
-`resourcepack/src/assets/bettermodel`. A tracker has one glow for all viewers, so each body is two trackers on a plain and
+The native bone routes already live in `resourcepack/src/assets/bettermodel`. `verifyBetterModel` checks that every
+renderable rig bone has a route before packaging. A tracker has one glow for all viewers, so each body is two trackers on a plain and
 an outlined copy of its model, each shown to the right viewers by the same rules as `TargetOutlines`. BetterModel loads its
 models only once the server has loaded, so an animated body without one is logged then and stays a `BodyRig`.
 
@@ -486,10 +511,10 @@ models only once the server has loaded, so an animated body without one is logge
    its model, so `GUNS` in `resourcepack/RigModels.py` names it, and it must stay the class's blaster.
 2. Run `./gradlew :resourcepack:generateRigModels`. It runs `SternenfrontArt.java`, then `RigModels.py` (requires PyYAML),
    which writes `resourcepack/bettermodel`.
-3. With the verify network running, run `dev/verify/verify.py models`. It lets BetterModel build the pack on the game
-   server, copies it into `resourcepack/src/assets/bettermodel` and serves it. An animation-only change leaves that pack
-   as it is, but the server still needs the new `.bbmodel` files.
-4. `./gradlew build` checks that every bundled animated body still has its plain and outlined model.
+3. An animation-only change needs the new `.bbmodel` files, with no texture export. For body geometry changes that the
+   generator does not export, use `dev/verify/verify.py models` to refresh the native meshes from BetterModel.
+4. `./gradlew build` validates every native bone route and packages the source assets. `stagePlugins` stages the packs
+   and matching rig files without a runtime export merge.
 
 ## Unit colours
 

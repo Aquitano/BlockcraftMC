@@ -1,16 +1,12 @@
 """Builds command-post projectors, Republic and Separatist holograms, shield grids and the guns' firing and lowered poses."""
 import json
+from AssetFiles import write_json as write
 import math
 import struct
 import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).parent / "src/assets/blockcraft"
-
-
-def write(path, value):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes((json.dumps(value, indent=2) + "\n").encode())
 
 
 def png(path, pixels, size=32):
@@ -28,6 +24,7 @@ def box(start, end, texture):
 
 
 def model(name, elements, textures):
+    textures = dict(textures, particle=next(iter(textures.values())))
     write(ROOT / f"models/item/battle/{name}.json", {"textures": textures, "elements": elements})
     write(ROOT / f"items/battle/{name}.json", {"model": {"type": "minecraft:model", "model": f"blockcraft:item/battle/{name}"}})
 

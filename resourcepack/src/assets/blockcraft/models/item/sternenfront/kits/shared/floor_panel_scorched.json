@@ -1,0 +1,6 @@
+{
+  "parent": "blockcraft:item/sternenfront/kits/shared/floor_panel",
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/shared/scorched"
+  }
+}

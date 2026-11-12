@@ -1,12 +1,12 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.scenery.FurnitureSolids;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.hero.Sabers;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.damage.DamageType;
@@ -261,7 +261,7 @@ public final class Combat {
     }
 
     private RayTraceResult wallAhead(Location origin, Vector direction) {
-        return origin.getWorld().rayTraceBlocks(origin, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
+        return FurnitureSolids.rayTrace(origin, direction, config.meleeRange());
     }
 
     private SaberCrescent.Sample bladeSample(Location origin, Vector direction, RayTraceResult wall) {

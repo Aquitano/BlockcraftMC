@@ -808,6 +808,8 @@ news:
 
 # The quest givers (quests in config.yml): their name, the dialog's title, what they say and what they ask.
 quests:
+  board-title: "<arrow><primary>Auftragstafel"
+  board-description: "<muted>Wähle einen Auftrag, um deinen Fortschritt zu sehen und deine Belohnung abzuholen."
   claim: "<success>Belohnung abholen <dark>(<accent><coins> Coins<dark>)"
   status-open: "<muted>Fortschritt<dark>: <white><have><dark>/<white><need>"
   status-done: "<success>Erledigt! Hol dir deine <accent><coins> Coins<success>."

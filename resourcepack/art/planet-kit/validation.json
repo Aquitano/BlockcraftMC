@@ -1,0 +1,22 @@
+{
+  "module_count": 32,
+  "asset_files": 68,
+  "nexo_entries": 32,
+  "verified_assembly_connector_pairs": 6,
+  "animation_frames": 4,
+  "animation_frame_ticks": 4,
+  "animation_changes_only_water_tile": true,
+  "deterministic": true,
+  "identical_hashed_files": 111,
+  "split_check": "passed",
+  "full_build": "passed without compiler warnings",
+  "runtime": "Minecraft Java 26.3 loaded polished models and texture animations; screenshots in run/imported-hub/client-run/screenshots/polish",
+  "limits": [
+    "Decorative leaks and gauges do not simulate liquid or water supply",
+    "Animated actor navigation and complete assembled maps need gameplay testing",
+    "The gallery ocean is a contained basin"
+  ],
+  "native_collision": "FurnitureSolids supplies structural backing, glass and small anchored native colliders",
+  "client_collision": "Vaporator, cistern, solid wall, glazing and rail blocked movement; recessed entrance and adjacent lane remained clear",
+  "vanilla_dependencies_verified": 303
+}

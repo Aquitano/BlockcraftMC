@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/dc17m",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        2.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        4.6770000000000005,
+        2.2279999999999998
+      ],
+      "scale": [
+        0.74,
+        0.74,
+        0.74
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        2.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        4.6770000000000005,
+        2.2279999999999998
+      ],
+      "scale": [
+        0.74,
+        0.74,
+        0.74
+      ]
+    }
+  }
+}

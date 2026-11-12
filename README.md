@@ -150,6 +150,10 @@ mc.example.net {
 }
 ```
 
+The split-pack production overrides are in [prod/resource-pack.yml](prod/resource-pack.yml).
+The [pack rollout guide](resourcepack/SPLIT_PACK.md#production-rollout) describes staging a complete candidate with
+`-PstageDirectory` before replacing deployed files. The lobby uses its ordinary pack; Sternenfront uses its own.
+
 ### Updating
 
 ```sh
@@ -478,10 +482,13 @@ The Discord bot lives outside this repository and shares the table `bc_discord_l
 
 ## Resource pack
 
-`resourcepack/src` is the pack the proxy offers at login, zipped by `./gradlew :resourcepack:pack` and staged next to the
-proxy plugin by `stagePlugins`. The proxy hashes `plugins/blockcraft-system/blockcraft.zip` at startup, serves it on
-`resource-pack.port` and offers `resource-pack.url` to every client. A redrawn pack needs `stagePlugins` and a proxy
-restart, and the client re-downloads it because the hash changed.
+`resourcepack/src` holds the accepted client assets. `stagePlugins` packages the combined archive and the four
+[pack layers](resourcepack/SPLIT_PACK.md) next to the proxy plugin. Production enables the layers through
+[prod/resource-pack.yml](prod/resource-pack.yml). The lobby receives base and lobby, ordinary games receive base and
+modes, and Sternenfront receives base and Star Wars. Replays receive their recorded game's layers.
+The proxy hashes and serves each configured ZIP at startup. Changed layers need staging and a proxy restart.
+The client downloads a layer again when its hash changes. The combined `blockcraft.zip` remains the default when
+profile delivery is disabled.
 
 The pack is required. A client whose server list entry turns packs off would decline an optional pack without asking,
 while a required one is prompted for and declining it kicks. A proxy whose `config.yml` still says `required: false`

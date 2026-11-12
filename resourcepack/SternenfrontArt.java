@@ -819,7 +819,9 @@ public final class SternenfrontArt {
                 .both(box(.45, .72, -.01, .32, .2, .42, GUNMETAL).spinZ(-22.5))
                 .add(box(0, .66, -.22, .7, .3, .14, GUNMETAL).spinX(-22.5))
                 .both(box(.16, .53, .214, .05, .44, .012, SILVER).spinZ(-45))
-                .add(box(.31, .71, .215, .04, .04, .012, RED));
+                .add(box(.31, .71, .215, .04, .04, .012, RED))
+                .both(box(.19, .68, .235, .22, .24, .04, OILED).spinZ(-22.5))
+                .add(box(0, .36, .17, .29, .09, .04, FRAME));
         var head = new Shape()
                 .add(box(0, .07, .07, .2, .3, .16, GUNMETAL).spinX(22.5))
                 .add(box(0, .14, .155, .05, .12, .012, MARKING).spinX(22.5).about(0, .07, .07))
@@ -828,7 +830,10 @@ public final class SternenfrontArt {
                 .add(box(0, -.11, .171, .08, .03, .004, FRAME));
         var arm = new Shape()
                 .add(box(0, -.02, 0, .18, .18, .18, FRAME))
-                .add(box(0, -.17, 0, .12, .24, .12, FRAME))
+                .add(box(0, -.17, 0, .17, .24, .16, GUNMETAL))
+                .add(box(0, -.17, .085, .075, .2, .015, FRAME))
+                .add(drumX(0, -.02, 0, .25, .23, GUNMETAL))
+                .add(drumX(0, -.3, 0, .19, .19, STEEL))
                 .add(box(0, -.3, 0, .16, .16, .16, FRAME))
                 .add(box(0, -.52, 0, .26, .4, .28, GUNMETAL))
                 .add(box(0, -.41, 0, .268, .04, .288, MARKING))
@@ -840,7 +845,8 @@ public final class SternenfrontArt {
                 .add(box(0, -.04, 0, .18, .18, .18, FRAME))
                 .add(box(0, -.2, 0, .24, .26, .24, GUNMETAL))
                 .add(box(0, -.36, 0, .19, .1, .2, FRAME))
-                .add(box(0, -.36, .115, .12, .08, .05, MARKING))
+                .add(drumX(0, -.36, 0, .16, .22, STEEL))
+                .add(box(0, -.36, .115, .12, .08, .05, GUNMETAL))
                 .add(box(0, -.55, 0, .27, .3, .27, GUNMETAL))
                 .add(box(0, -.735, .06, .31, .09, .41, GUNMETAL))
                 .add(box(0, -.735, .265, .312, .092, .01, FRAME));
@@ -866,7 +872,10 @@ public final class SternenfrontArt {
                 .add(box(0, .06, -.145, .25, .06, .025, ARMOUR).spinX(22.5))
                 .both(box(.145, .16, -.005, .035, .13, .16, ARMOUR))
                 .both(box(.151, .12, .03, .027, .04, .075, FRAME))
-                .add(box(0, .285, .142, .045, .065, .012, MARKING));
+                .add(box(0, .285, .142, .045, .065, .012, MARKING))
+                .both(box(.165, .215, -.025, .018, .065, .065, TRIM))
+                .both(box(.17, .215, -.025, .008, .033, .033, FRAME))
+                .both(box(.128, .112, .093, .013, .05, .055, TRIM));
         if (role == CloneRole.REX || role == CloneRole.ARC || role == CloneRole.SCOUT) {
             head.add(box(-.18, .3, -.01, .015, .26, .015, FRAME))
                     .add(box(-.15, .435, .02, .09, .035, .09, STEEL));
@@ -937,7 +946,10 @@ public final class SternenfrontArt {
             arm.add(box(0, -.44, .08, .08, .12, .025, MARKING));
         }
         if (role == CloneRole.SOLDIER) {
-            torso.add(box(0, .32, -.18, .26, .24, .05, ARMOUR));
+            torso.add(box(0, .32, -.18, .26, .24, .05, ARMOUR))
+                    .add(box(0, .36, .148, .055, .2, .008, MARKING))
+                    .both(box(.105, .28, .15, .23, .045, .009, MARKING).spinZ(-22.5));
+            arm.add(box(0, -.025, .102, .07, .16, .009, MARKING));
         }
         if (role == CloneRole.SCOUT) {
             torso.add(jumpPack());
@@ -947,7 +959,7 @@ public final class SternenfrontArt {
                     .add(box(0, .3, -.37, .18, .055, .025, MAROON))
                     .add(box(0, .3, -.37, .055, .18, .026, MAROON));
         }
-        return body(name, REPUBLIC_UNIT, torso, cloneHelmet(role), arm, leg, rightLeg, pauldron);
+        return body(name, role == CloneRole.SOLDIER ? 0x405748 : REPUBLIC_UNIT, torso, cloneHelmet(role), arm, leg, rightLeg, pauldron);
     }
 
     /** Two fuel tanks either side of a cell, strapped over the chest, with a blue thruster ring under each nozzle. */
@@ -978,6 +990,63 @@ public final class SternenfrontArt {
                 .both(box(.25, -.14, -.05, .02, .2, .17, KAMA).spinZ(22.5).about(.25, -.04, -.05))
                 .both(box(.252, -.225, -.05, .024, .03, .172, MARKING).spinZ(22.5).about(.25, -.04, -.05));
         return flaps.boxes;
+    }
+
+    private static Shape commandoRifle() {
+        return new Shape()
+                .add(box(0, .035, .18, .2, .23, .65, FRAME))
+                .both(box(.11, .055, .12, .035, .16, .43, STEEL))
+                .add(box(0, -.18, -.08, .12, .24, .15, RUBBER).spinX(-22.5))
+                .add(box(0, -.11, .37, .18, .13, .23, GUNMETAL))
+                .add(box(0, .055, -.28, .16, .19, .3, GUNMETAL))
+                .add(box(0, .04, -.45, .19, .25, .06, RUBBER))
+                .add(drumZ(0, .06, .66, .13, .3, STEEL))
+                .add(drumZ(0, .06, .82, .17, .08, FRAME))
+                .add(drumZ(0, .06, .864, .09, .008, LENS))
+                .add(box(0, .19, .06, .045, .08, .4, STEEL))
+                .add(box(0, .24, -.12, .07, .04, .05, FRAME))
+                .add(box(0, .24, .27, .025, .04, .035, FRAME))
+                .add(box(.133, .05, .13, .008, .06, .13, CYAN))
+                .add(vents(0, .06, .56, .14, .07));
+    }
+
+    private static Family cloneCommando() {
+        var torso = new Shape()
+                .add(box(0, .2, 0, .42, .43, .24, SUIT))
+                .both(box(.13, .37, .055, .26, .23, .23, ARMOUR).spinZ(-22.5))
+                .add(box(0, .17, .12, .37, .12, .06, ARMOUR))
+                .add(box(0, .04, 0, .47, .07, .29, ARMOUR))
+                .both(box(.16, .01, .17, .1, .11, .08, TRIM))
+                .add(box(0, .3, -.24, .44, .45, .24, ARMOUR))
+                .add(box(0, .32, -.37, .29, .29, .025, TRIM))
+                .add(box(0, .32, -.389, .22, .2, .014, ARMOUR))
+                .both(box(.17, .32, -.38, .035, .34, .018, FRAME))
+                .add(box(0, .52, 0, .15, .08, .15, SUIT));
+        var head = new Shape()
+                .add(box(0, .17, 0, .3, .3, .28, ARMOUR))
+                .add(box(0, .34, -.015, .24, .055, .23, ARMOUR))
+                .add(box(0, .23, .149, .26, .045, .018, FRAME))
+                .add(box(0, .235, .161, .235, .023, .008, CYAN))
+                .add(box(0, .163, .154, .033, .12, .023, FRAME))
+                .add(box(0, .193, .169, .02, .055, .006, CYAN))
+                .both(box(.082, .11, .154, .105, .13, .034, ARMOUR).spinZ(22.5))
+                .both(box(.025, .065, .18, .035, .035, .04, FRAME))
+                .both(box(.154, .14, -.01, .025, .18, .18, TRIM));
+        var arm = new Shape()
+                .add(box(0, -.035, 0, .25, .22, .25, ARMOUR))
+                .add(box(0, -.24, 0, .17, .16, .18, ARMOUR))
+                .add(box(0, -.34, 0, .13, .07, .13, SUIT))
+                .add(box(0, -.46, 0, .19, .19, .2, ARMOUR))
+                .add(box(0, -.46, .11, .1, .13, .025, TRIM))
+                .add(box(0, -.585, 0, .12, .08, .13, SUIT));
+        var leg = new Shape()
+                .add(box(0, -.47, 0, .13, .89, .13, SUIT))
+                .add(box(0, -.2, 0, .21, .35, .24, ARMOUR))
+                .add(box(0, -.43, .055, .18, .12, .19, TRIM))
+                .add(box(0, -.66, 0, .19, .31, .21, ARMOUR))
+                .add(box(0, -.88, .05, .21, .12, .29, ARMOUR))
+                .add(box(0, -.945, .04, .22, .025, .3, FRAME));
+        return body("reinforcement_clone_commando", UNTINTED, torso, head, arm, leg);
     }
 
     private static Family commandoDroid() {
@@ -1043,9 +1112,13 @@ public final class SternenfrontArt {
                 .add(box(0, -.69, 0, .17, .37, .18, LEATHER))
                 .add(box(0, -.91, .035, .18, .08, .26, LEATHER));
         if (dooku) {
-            torso.add(box(0, -.06, -.19, .58, 1.05, .045, LEATHER))
+            torso.add(box(0, -.17, -.25, .58, 1.3, .035, LEATHER).spinX(22.5).about(0, .45, -.2))
+                    .both(box(.3, -.15, -.19, .025, 1.25, .2, LEATHER).spinZ(22.5).about(.25, .45, -.1))
                     .both(box(.22, .42, -.1, .16, .17, .2, LEATHER))
-                    .add(box(0, .43, .14, .3, .02, .02, STEEL));
+                    .add(box(0, .49, 0, .18, .12, .17, FRAME))
+                    .both(box(.13, .43, .145, .04, .04, .018, SILVER))
+                    .add(box(0, .405, .145, .23, .012, .015, SILVER))
+                    .add(box(0, -.09, .035, .43, .2, .23, FRAME));
         } else {
             torso.both(box(.2, -.17, 0, .025, .32, .28, WRAP));
         }
@@ -1297,6 +1370,7 @@ public final class SternenfrontArt {
     }
 
     private enum GunPose {
+        REFERENCE_RIFLE(-1, 2, 0, -1, 3.4, -1, .74, 4, .15, .85),
         CARBINE(-2, -4, 0, .7, 1.25, -.4, .55, 4, .15, .85),
         HEAVY_RIFLE(-1, -3, 0, .4, .8, -.8, .57, 5, .1, 1.05),
         LONG_RIFLE(0, -2, 0, .2, 1.4, -1.8, .52, 2, .05, 1.3),
@@ -1483,6 +1557,61 @@ public final class SternenfrontArt {
     }
 
     /** Short and boxy: a stepped shroud, a power cell standing out on the left and the stock folded over the top. */
+    private static Shape referenceRifle(boolean a280) {
+        var gun = new Shape()
+                .add(drumZ(0, .08, .22, .14, .78, OILED))
+                .add(box(0, .015, .02, .17, .21, .42, GUNMETAL))
+                .both(box(.092, .045, .01, .025, .13, .3, STEEL))
+                .add(box(0, -.205, -.08, .115, .3, .13, RUBBER).spinX(-22.5))
+                .add(box(0, -.355, -.14, .125, .035, .15, FRAME))
+                .add(box(0, -.155, .09, .04, .16, .025, FRAME).spinX(-22.5))
+                .add(box(0, -.245, .07, .045, .025, .2, STEEL))
+                .add(box(0, -.15, .18, .045, .18, .025, STEEL).spinX(22.5))
+                .add(box(.105, .08, -.1, .04, .055, .055, SILVER))
+                .add(box(-.115, .015, .13, .05, .085, .11, FRAME))
+                .add(vents(0, .08, .38, .155, .09));
+        if (a280) {
+            gun.add(box(0, .065, -.4, .075, .075, .4, STEEL))
+                    .add(box(0, .015, -.64, .13, .34, .075, RUBBER))
+                    .add(box(0, .075, .48, .2, .22, .34, FRAME))
+                    .add(drumZ(0, .08, .91, .07, .54, STEEL))
+                    .add(drumZ(0, .08, 1.19, .095, .09, FRAME))
+                    .add(drumZ(0, .08, 1.237, .055, .006, LENS))
+                    .add(box(0, .19, 1.12, .025, .22, .045, STEEL))
+                    .add(box(0, .31, 1.12, .075, .025, .045, FRAME))
+                    .add(box(0, .24, .07, .05, .13, .05, STEEL))
+                    .add(box(0, .24, .39, .05, .13, .05, STEEL))
+                    .add(drumZ(0, .34, .24, .105, .47, FRAME))
+                    .add(drumZ(0, .34, -.025, .16, .14, STEEL))
+                    .add(drumZ(0, .34, .49, .15, .14, STEEL))
+                    .add(drumZ(0, .34, -.099, .115, .006, LENS))
+                    .add(drumZ(0, .34, .564, .105, .006, LENS))
+                    .add(drumY(0, .422, .2, .085, .06, FRAME))
+                    .add(drumZ(.1, .19, -.12, .075, .19, STEEL));
+            for (int i = 0; i < 7; i++) {
+                gun.both(box(.106, .07, .34 + i * .045, .018, .175, .018, STEEL));
+            }
+        } else {
+            gun.add(drumZ(0, .08, .76, .175, .65, GUNMETAL))
+                    .add(drumZ(0, .08, 1.095, .18, .025, SILVER))
+                    .add(drumZ(0, .08, 1.11, .105, .008, LENS))
+                    .add(drumZ(0, .08, -.3, .15, .22, FRAME))
+                    .add(drumZ(0, .08, -.425, .19, .045, STEEL))
+                    .add(drumZ(0, .08, -.45, .13, .008, FRAME))
+                    .add(box(-.16, .075, .2, .17, .13, .2, FRAME))
+                    .add(box(-.25, .075, .2, .025, .1, .16, STEEL))
+                    .add(box(0, -.085, -.15, .1, .03, .47, STEEL))
+                    .add(box(0, .205, -.12, .06, .065, .05, FRAME))
+                    .add(box(0, .205, .66, .04, .065, .05, FRAME))
+                    .add(box(0, .245, -.12, .085, .02, .04, STEEL))
+                    .add(box(0, .245, .66, .025, .025, .025, STEEL));
+            for (int i = 0; i < 6; i++) {
+                gun.both(box(.089, .075, .51 + i * .09, .006, .035, .055, FRAME));
+            }
+        }
+        return gun;
+    }
+
     private static Shape carbine() {
         return new Shape()
                 .add(box(0, .03, -.13, .18, .2, .5, FRAME))
@@ -1724,7 +1853,10 @@ public final class SternenfrontArt {
                 .add(box(0, -.09, -.55, .24, .23, .42, DROID))
                 .add(box(0, -.09, -.79, .29, .28, .08, FRAME))
                 .add(box(0, -.18, .08, .23, .16, .22, DROID));
-        return List.of(gun("carbine", carbine(), GunPose.CARBINE),
+        return List.of(gun("a280", referenceRifle(true), GunPose.REFERENCE_RIFLE),
+                gun("e11d", referenceRifle(false), GunPose.REFERENCE_RIFLE),
+                gun("dc17m", commandoRifle(), GunPose.REFERENCE_RIFLE),
+                gun("carbine", carbine(), GunPose.CARBINE),
                 gun("heavy_rifle", heavyRifle(), GunPose.HEAVY_RIFLE),
                 gun("repeater", rotaryBlaster(), GunPose.ROTARY),
                 gun("long_rifle", marksmanRifle(), GunPose.LONG_RIFLE),
@@ -1739,6 +1871,7 @@ public final class SternenfrontArt {
                 equipment("helmet_kolonien", republicHelmet(CloneRole.SOLDIER), HELMET_DISPLAY),
                 equipment("helmet_hegemonie", battleDroid("soldier").whole("head").shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_arc", republicHelmet(CloneRole.ARC), HELMET_DISPLAY),
+                equipment("helmet_clone_commando", cloneCommando().whole("head").shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_commando", commandoDroid().whole("head").shifted(0, -.15, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("cap_commander", republicHelmet(CloneRole.REX), HELMET_DISPLAY),
                 equipment("helmet_bounty_hunter", mandoHelmet().shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
@@ -1747,7 +1880,7 @@ public final class SternenfrontArt {
     }
 
     private static Shape republicHelmet(CloneRole role) {
-        return cloneHelmet(role).replaced(MARKING, MARKING.times(REPUBLIC_UNIT)).shifted(0, -.19, 0).scaled(1.8);
+        return cloneHelmet(role).replaced(MARKING, MARKING.times(role == CloneRole.SOLDIER ? 0x405748 : REPUBLIC_UNIT)).shifted(0, -.19, 0).scaled(1.8);
     }
 
     private static int argb(int alpha, int colour) {
@@ -2029,7 +2162,7 @@ public final class SternenfrontArt {
         return List.of(battleDroid("soldier"), superBattleDroid(), battleDroid("scout"), battleDroid("medic"),
                 cloneTrooper("kolonien_soldier", CloneRole.SOLDIER), cloneTrooper("kolonien_heavy", CloneRole.HEAVY),
                 cloneTrooper("kolonien_scout", CloneRole.SCOUT), cloneTrooper("kolonien_medic", CloneRole.MEDIC),
-                cloneTrooper("reinforcement_arc_trooper", CloneRole.ARC), commandoDroid(),
+                cloneTrooper("reinforcement_arc_trooper", CloneRole.ARC), cloneCommando(), commandoDroid(),
                 cloneTrooper("hero_commander", CloneRole.REX), forceHero(false), forceHero(true), jangoFett(),
                 speeders("kolonien", barcSpeeder(false), barcSpeeder(true)),
                 speeders("hegemonie", stap(false), stap(true)), republicGunship(), separatistTransport(), republicLander(), separatistLander(), wristRocket(), effects(), saberSweep());
@@ -2166,7 +2299,7 @@ public final class SternenfrontArt {
             ImageIO.write(portrait(family, 50, 22), "png", directory.resolve(family.name + "_large.png").toFile());
             ImageIO.write(portrait(family, 23, 14), "png", directory.resolve(family.name + "_wide.png").toFile());
         }
-        boolean republic = family.name.startsWith("kolonien_") || family.name.equals("reinforcement_arc_trooper")
+        boolean republic = family.name.startsWith("kolonien_") || family.name.equals("reinforcement_arc_trooper") || family.name.equals("reinforcement_clone_commando")
                 || family.name.equals("hero_commander") || family.name.equals("hero_jedi");
         int top = republic ? 0x24456E : 0x5A2A2E;
         int bottom = republic ? 0x0E1726 : 0x1E1013;
@@ -2221,7 +2354,7 @@ public final class SternenfrontArt {
         return y + shelf;
     }
 
-    private static void write(Path root, Family family) throws IOException {
+    private static void write(Path root, Family family, Set<String> finished) throws IOException {
         var tiles = new LinkedHashMap<String, Tile>();
         for (var model : family.models) {
             for (var each : model.shape.boxes) {
@@ -2265,6 +2398,12 @@ public final class SternenfrontArt {
         Files.createDirectories(texture.getParent());
         ImageIO.write(atlas, "png", texture.toFile());
         for (var model : family.models) {
+            if (finished.contains(model.path)) {
+                if (!Files.isRegularFile(root.resolve("models/item/" + model.path + ".json"))) {
+                    throw new IOException("Missing authoritative native model: " + model.path);
+                }
+                continue;
+            }
             writeModel(root, family, model, placed, size);
         }
         System.out.printf("%-22s atlas %4d, %d tiles, %d boxes%n", family.name, size, ordered.size(),
@@ -2355,18 +2494,19 @@ public final class SternenfrontArt {
 
     public static void main(String[] args) throws IOException {
         var root = Path.of(args.length == 0 ? "src" : args[0]).resolve("assets/blockcraft");
+        var finished = Set.copyOf(Files.readAllLines(Path.of("finished-weapons.txt")));
         for (var family : families()) {
-            write(root, family);
+            write(root, family, finished);
             if (portrayed(family)) {
                 portraits(Path.of(args.length == 0 ? "src" : args[0]).resolveSibling("art/sternenfront"), family);
             }
         }
         var equipment = equipment();
         for (var family : equipment) {
-            write(root, family);
+            write(root, family, finished);
         }
         var holds = equipment.stream().flatMap(family -> family.models.stream())
-                .filter(model -> model.gunPose != null)
+                .filter(model -> model.gunPose != null && !finished.contains(model.path))
                 .map(model -> "\"" + model.path + "\": {" + Stream.of(Hold.FIRING, Hold.LOWERED, Hold.AIM, Hold.FIRING_AIM)
                         .map(hold -> "\"" + hold.name().toLowerCase(Locale.ROOT) + "\": {"
                                 + model.gunPose.hands(hold, Sight.of(model.shape)) + "}")

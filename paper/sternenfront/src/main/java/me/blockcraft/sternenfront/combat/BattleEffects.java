@@ -1,11 +1,11 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.scenery.FurnitureSolids;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Color;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -177,7 +177,7 @@ public final class BattleEffects {
         }
         var offset = direction.clone().multiply(.8).add(side).add(new Vector(0, -.2, 0));
         double distance = offset.length();
-        var wall = eye.getWorld().rayTraceBlocks(eye, offset.clone().normalize(), distance, FluidCollisionMode.NEVER, true);
+        var wall = FurnitureSolids.rayTrace(eye, offset.clone().normalize(), distance);
         return wall == null ? eye.clone().add(offset)
                 : wall.getHitPosition().subtract(offset.normalize().multiply(.04)).toLocation(eye.getWorld());
     }
@@ -219,7 +219,7 @@ public final class BattleEffects {
             return;
         }
         var normal = facing.clone().normalize();
-        var wall = origin.getWorld().rayTraceBlocks(origin, normal, range, FluidCollisionMode.NEVER, true);
+        var wall = FurnitureSolids.rayTrace(origin, normal, range);
         double reach = wall == null ? range : wall.getHitPosition().distance(origin.toVector());
         float diameter = (float) (2 * reach * Math.tan(Math.toRadians(angle / 2)));
         flares.ring(RING, origin.clone().add(normal.clone().multiply(0.6)), normal, normal.clone().multiply(reach),
@@ -589,7 +589,7 @@ public final class BattleEffects {
             var line = tether.anchor().toVector().subtract(from.toVector());
             double length = line.length();
             var direction = line.normalize();
-            var hit = from.getWorld().rayTraceBlocks(from, direction, length, FluidCollisionMode.NEVER, true);
+            var hit = FurnitureSolids.rayTrace(from, direction, length);
             double reach = hit == null ? length : Math.min(length, hit.getHitPosition().distance(from.toVector()));
             var dust = new Particle.DustOptions(TETHER_COLOUR, 0.9f);
             for (double along = 0; along < reach; along += .6) {

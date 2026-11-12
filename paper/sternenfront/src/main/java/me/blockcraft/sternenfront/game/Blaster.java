@@ -17,6 +17,12 @@ import java.util.Locale;
  * stats come from {@code speeders.cannon}.
  */
 public enum Blaster implements HotbarItem {
+    A280(PackModel.STERNENFRONT_A280, PackModel.STERNENFRONT_A280_FIRING, PackModel.STERNENFRONT_A280_LOWERED,
+            SoundCue.BLASTER_CARBINE),
+    E11D(PackModel.STERNENFRONT_E11D, PackModel.STERNENFRONT_E11D_FIRING, PackModel.STERNENFRONT_E11D_LOWERED,
+            SoundCue.BLASTER_CARBINE),
+    DC17M(PackModel.STERNENFRONT_DC17M, PackModel.STERNENFRONT_DC17M_FIRING, PackModel.STERNENFRONT_DC17M_LOWERED,
+            SoundCue.BLASTER_CARBINE),
     CARBINE(PackModel.STERNENFRONT_CARBINE, PackModel.STERNENFRONT_CARBINE_FIRING, PackModel.STERNENFRONT_CARBINE_LOWERED,
             SoundCue.BLASTER_CARBINE),
     REPEATER(PackModel.STERNENFRONT_REPEATER, PackModel.STERNENFRONT_REPEATER_FIRING, PackModel.STERNENFRONT_REPEATER_LOWERED,
@@ -99,7 +105,7 @@ public enum Blaster implements HotbarItem {
 
     public Blaster profile() {
         return switch (this) {
-            case E5, COMMANDO_CARBINE -> CARBINE;
+            case E5, COMMANDO_CARBINE, A280, E11D, DC17M -> CARBINE;
             case WRIST_BLASTER, ARC_REPEATER -> REPEATER;
             case E5S -> LONG_RIFLE;
             case SE14 -> PISTOL;

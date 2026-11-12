@@ -82,7 +82,7 @@ public final class DeployArt {
     /** The portraits in one sheet each, in this order; the server picks a cell by its index. */
     static final List<String> UNITS = List.of("kolonien_soldier", "kolonien_heavy", "kolonien_scout", "kolonien_medic",
             "hegemonie_soldier", "hegemonie_heavy", "hegemonie_scout", "hegemonie_medic",
-            "reinforcement_arc_trooper", "reinforcement_commando_droid", "hero_jedi", "hero_commander", "hero_sith", "hero_bounty_hunter");
+            "reinforcement_arc_trooper", "reinforcement_commando_droid", "hero_jedi", "hero_commander", "hero_sith", "hero_bounty_hunter", "reinforcement_clone_commando");
 
     static final String LABELS = PackArt.TileArt.LETTERS + "%,()·";
     /** Letters the menu tiles lack, and a 1 with its stem in the middle, since theirs reads as a ] beside KP. */
@@ -234,7 +234,7 @@ public final class DeployArt {
                 Files.writeString(models.resolve(name + ".json"), String.format(Locale.ROOT, """
                         {
                           "gui_light": "front",
-                          "textures": {"digits": "blockcraft:item/deploy/countdown_digits"},
+                          "textures": {"digits": "blockcraft:item/deploy/countdown_digits", "particle": "#digits"},
                           "elements": [{"from": [%d, %d, 8], "to": [%d, %d, 8], "shade": false,
                             "faces": {"south": {"uv": [%.1f, 0, %.1f, 10], "texture": "#digits"}}}]
                         }

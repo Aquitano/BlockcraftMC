@@ -1,0 +1,2732 @@
+{
+  "units_per_block": 16,
+  "ground_anchor_model_units": [
+    8,
+    8,
+    8
+  ],
+  "front": "+Z",
+  "snap_grid_blocks": 0.125,
+  "yaw_degrees": [
+    0,
+    90,
+    180,
+    270
+  ],
+  "runtime_yaw": "Cancel the vanilla item display half-turn once, as yard props do.",
+  "display_transform": "NONE",
+  "collision": "FurnitureSolids supplies native world cores and bounded smaller colliders",
+  "objects": {
+    "floor_panel": {
+      "item_model": "blockcraft:sternenfront/kits/shared/floor_panel",
+      "nexo_id": "blockcraft_shared_floor_panel",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.0,
+        0.007812,
+        1.0
+      ],
+      "bounds_model_units": {
+        "min": [
+          0.0,
+          8.0,
+          0.0
+        ],
+        "max": [
+          16.0,
+          8.125,
+          16.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -0.5
+        ],
+        "south": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Overlay on supporting vanilla full blocks. No barrier.",
+      "interaction": "Static state",
+      "elements": 10,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.0,
+        0.007812
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,-1,0 minecraft:smooth_stone"
+        ],
+        "cubes": [],
+        "keep_existing": true
+      }
+    },
+    "floor_panel_worn": {
+      "item_model": "blockcraft:sternenfront/kits/shared/floor_panel_worn",
+      "nexo_id": "blockcraft_shared_floor_panel_worn",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.0,
+        0.007812,
+        1.0
+      ],
+      "bounds_model_units": {
+        "min": [
+          0.0,
+          8.0,
+          0.0
+        ],
+        "max": [
+          16.0,
+          8.125,
+          16.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -0.5
+        ],
+        "south": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "worn",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Overlay on supporting vanilla full blocks. No barrier.",
+      "interaction": "Static state",
+      "elements": 10,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.0,
+        0.007812
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,-1,0 minecraft:smooth_stone"
+        ],
+        "cubes": [],
+        "keep_existing": true
+      }
+    },
+    "floor_panel_scorched": {
+      "item_model": "blockcraft:sternenfront/kits/shared/floor_panel_scorched",
+      "nexo_id": "blockcraft_shared_floor_panel_scorched",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.0,
+        0.007812,
+        1.0
+      ],
+      "bounds_model_units": {
+        "min": [
+          0.0,
+          8.0,
+          0.0
+        ],
+        "max": [
+          16.0,
+          8.125,
+          16.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -0.5
+        ],
+        "south": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "scorched",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Overlay on supporting vanilla full blocks. No barrier.",
+      "interaction": "Static state",
+      "elements": 10,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.0,
+        0.007812
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,-1,0 minecraft:smooth_stone"
+        ],
+        "cubes": [],
+        "keep_existing": true
+      }
+    },
+    "floor_grate": {
+      "item_model": "blockcraft:sternenfront/kits/shared/floor_grate",
+      "nexo_id": "blockcraft_shared_floor_grate",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.0,
+        0.007812,
+        1.0
+      ],
+      "bounds_model_units": {
+        "min": [
+          0.0,
+          8.0,
+          0.0
+        ],
+        "max": [
+          16.0,
+          8.125,
+          16.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -0.5
+        ],
+        "south": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Overlay on supporting vanilla full blocks. No barrier.",
+      "interaction": "Static state",
+      "elements": 33,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.0,
+        0.007812
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,-1,0 minecraft:smooth_stone"
+        ],
+        "cubes": [],
+        "keep_existing": true
+      }
+    },
+    "service_strip": {
+      "item_model": "blockcraft:sternenfront/kits/shared/service_strip",
+      "nexo_id": "blockcraft_shared_service_strip",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.0,
+        0.011719,
+        1.0
+      ],
+      "bounds_model_units": {
+        "min": [
+          0.0,
+          8.0,
+          0.0
+        ],
+        "max": [
+          16.0,
+          8.1875,
+          16.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -0.5
+        ],
+        "south": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Overlay on supporting vanilla full blocks. No barrier.",
+      "interaction": "Static state",
+      "elements": 15,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.0,
+        0.011719
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,-1,0 minecraft:smooth_stone"
+        ],
+        "cubes": [],
+        "keep_existing": true
+      }
+    },
+    "damaged_tile": {
+      "item_model": "blockcraft:sternenfront/kits/shared/damaged_tile",
+      "nexo_id": "blockcraft_shared_damaged_tile",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.0,
+        0.011719,
+        1.0
+      ],
+      "bounds_model_units": {
+        "min": [
+          0.0,
+          8.0,
+          0.0
+        ],
+        "max": [
+          16.0,
+          8.1875,
+          16.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ],
+        "north": [
+          0,
+          0,
+          -0.5
+        ],
+        "south": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Overlay on supporting vanilla full blocks. No barrier.",
+      "interaction": "Static state",
+      "elements": 15,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.0,
+        0.011719
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,-1,0 minecraft:smooth_stone"
+        ],
+        "cubes": [],
+        "keep_existing": true
+      }
+    },
+    "blast_frame": {
+      "item_model": "blockcraft:sternenfront/kits/shared/blast_frame",
+      "nexo_id": "blockcraft_shared_blast_frame",
+      "scale": [
+        2,
+        2,
+        2
+      ],
+      "dimensions_blocks": [
+        3.0,
+        3.0,
+        1.09375
+      ],
+      "bounds_model_units": {
+        "min": [
+          -4.0,
+          8.0,
+          4.0
+        ],
+        "max": [
+          20.0,
+          32.0,
+          12.75
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "panel_anchor": [
+          0,
+          0,
+          0
+        ],
+        "wall_west": [
+          -1.5,
+          0,
+          0
+        ],
+        "wall_east": [
+          1.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          -1,
+          0,
+          0
+        ],
+        [
+          -1,
+          1,
+          0
+        ],
+        [
+          -1,
+          2,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          0,
+          2,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        3,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 28,
+      "interaction_offset_blocks": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.0,
+        3.0
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "-1,0,0 minecraft:barrier",
+          "-1,1,0 minecraft:barrier",
+          "-1,2,0 minecraft:barrier",
+          "1,0,0 minecraft:barrier",
+          "1,1,0 minecraft:barrier",
+          "1,2,0 minecraft:barrier",
+          "0,2,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "door_closed": {
+      "item_model": "blockcraft:sternenfront/kits/shared/door_closed",
+      "nexo_id": "blockcraft_shared_door_closed",
+      "scale": [
+        2,
+        2,
+        2
+      ],
+      "dimensions_blocks": [
+        1.0,
+        2.0,
+        1.046875
+      ],
+      "bounds_model_units": {
+        "min": [
+          4.0,
+          8.0,
+          4.0
+        ],
+        "max": [
+          12.0,
+          24.0,
+          12.375
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "frame_anchor": [
+          0,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Nexo sliding door with FurnitureSolids world collision",
+      "elements": 20,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.125,
+        2.0
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier",
+          "0,1,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "door_open": {
+      "item_model": "blockcraft:sternenfront/kits/shared/door_open",
+      "nexo_id": "blockcraft_shared_door_open",
+      "scale": [
+        2,
+        2,
+        2
+      ],
+      "dimensions_blocks": [
+        1.0,
+        1.0,
+        1.046875
+      ],
+      "bounds_model_units": {
+        "min": [
+          4.0,
+          24.0,
+          4.0
+        ],
+        "max": [
+          12.0,
+          32.0,
+          12.375
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "frame_anchor": [
+          0,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 20,
+      "interaction_offset_blocks": [
+        0.0,
+        2.0,
+        0.023438
+      ],
+      "interaction_width_height": [
+        1.046875,
+        1.0
+      ],
+      "physical_collision": {
+        "mode": "open-door-preview",
+        "blocks": [],
+        "cubes": []
+      }
+    },
+    "door_jammed": {
+      "item_model": "blockcraft:sternenfront/kits/shared/door_jammed",
+      "nexo_id": "blockcraft_shared_door_jammed",
+      "scale": [
+        2,
+        2,
+        2
+      ],
+      "dimensions_blocks": [
+        1.0,
+        2.0,
+        1.046875
+      ],
+      "bounds_model_units": {
+        "min": [
+          4.0,
+          13.0,
+          4.0
+        ],
+        "max": [
+          12.0,
+          29.0,
+          12.375
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "frame_anchor": [
+          0,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 20,
+      "interaction_offset_blocks": [
+        0.0,
+        0.625,
+        0.023438
+      ],
+      "interaction_width_height": [
+        1.046875,
+        2.0
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [],
+        "cubes": [
+          "0.000000,0.875000,0.000000 1.000000"
+        ]
+      }
+    },
+    "cover_low": {
+      "item_model": "blockcraft:sternenfront/kits/shared/cover_low",
+      "nexo_id": "blockcraft_shared_cover_low",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.03125,
+        1.015625,
+        1.046875
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -0.25
+        ],
+        "max": [
+          16.25,
+          24.25,
+          16.5
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 45,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.007812
+      ],
+      "interaction_width_height": [
+        1.046875,
+        1.015625
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "cover_low_worn": {
+      "item_model": "blockcraft:sternenfront/kits/shared/cover_low_worn",
+      "nexo_id": "blockcraft_shared_cover_low_worn",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.03125,
+        1.015625,
+        1.046875
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -0.25
+        ],
+        "max": [
+          16.25,
+          24.25,
+          16.5
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "worn",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 45,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.007812
+      ],
+      "interaction_width_height": [
+        1.046875,
+        1.015625
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "cover_low_scorched": {
+      "item_model": "blockcraft:sternenfront/kits/shared/cover_low_scorched",
+      "nexo_id": "blockcraft_shared_cover_low_scorched",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.03125,
+        1.015625,
+        1.046875
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -0.25
+        ],
+        "max": [
+          16.25,
+          24.25,
+          16.5
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "scorched",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 45,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.007812
+      ],
+      "interaction_width_height": [
+        1.046875,
+        1.015625
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "cover_high": {
+      "item_model": "blockcraft:sternenfront/kits/shared/cover_high",
+      "nexo_id": "blockcraft_shared_cover_high",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.03125,
+        1.5,
+        1.046875
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -0.25
+        ],
+        "max": [
+          16.25,
+          32.0,
+          16.5
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 45,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.007812
+      ],
+      "interaction_width_height": [
+        1.046875,
+        1.5
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "cover_corner": {
+      "item_model": "blockcraft:sternenfront/kits/shared/cover_corner",
+      "nexo_id": "blockcraft_shared_cover_corner",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.03125,
+        1.015625,
+        2.03125
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -16.0
+        ],
+        "max": [
+          16.25,
+          24.25,
+          16.5
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "west": [
+          -0.5,
+          0,
+          0
+        ],
+        "east": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 68,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        -0.484375
+      ],
+      "interaction_width_height": [
+        2.03125,
+        1.015625
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "wall_lamp": {
+      "item_model": "blockcraft:sternenfront/kits/shared/wall_lamp",
+      "nexo_id": "blockcraft_shared_wall_lamp",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        0.875,
+        0.8125,
+        0.4375
+      ],
+      "bounds_model_units": {
+        "min": [
+          1,
+          8,
+          0
+        ],
+        "max": [
+          15,
+          21,
+          7
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "wall_back": [
+          0,
+          0,
+          -0.5
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 36,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        -0.28125
+      ],
+      "interaction_width_height": [
+        0.875,
+        0.8125
+      ],
+      "physical_collision": {
+        "mode": "decoration",
+        "blocks": [],
+        "cubes": []
+      }
+    },
+    "ceiling_lamp": {
+      "item_model": "blockcraft:sternenfront/kits/shared/ceiling_lamp",
+      "nexo_id": "blockcraft_shared_ceiling_lamp",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.015625,
+        0.3125,
+        1.0
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.125,
+          11.0,
+          0.0
+        ],
+        "max": [
+          16.125,
+          16.0,
+          16.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "ceiling_mount": [
+          0,
+          0.5,
+          0
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 26,
+      "interaction_offset_blocks": [
+        0.0,
+        0.1875,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.015625,
+        0.3125
+      ],
+      "physical_collision": {
+        "mode": "decoration",
+        "blocks": [],
+        "cubes": []
+      }
+    },
+    "landing_lamp": {
+      "item_model": "blockcraft:sternenfront/kits/shared/landing_lamp",
+      "nexo_id": "blockcraft_shared_landing_lamp",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        0.75,
+        0.3125,
+        0.75
+      ],
+      "bounds_model_units": {
+        "min": [
+          2,
+          8,
+          2
+        ],
+        "max": [
+          14,
+          13,
+          14
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "service_axis": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 11,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        0.75,
+        0.3125
+      ],
+      "physical_collision": {
+        "mode": "decoration",
+        "blocks": [],
+        "cubes": []
+      }
+    },
+    "warning_beacon": {
+      "item_model": "blockcraft:sternenfront/kits/shared/warning_beacon",
+      "nexo_id": "blockcraft_shared_warning_beacon",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        0.75,
+        0.875,
+        0.75
+      ],
+      "bounds_model_units": {
+        "min": [
+          2,
+          8,
+          2
+        ],
+        "max": [
+          14,
+          22,
+          14
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "service_axis": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 12,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        0.75,
+        0.875
+      ],
+      "physical_collision": {
+        "mode": "decoration",
+        "blocks": [],
+        "cubes": []
+      }
+    },
+    "engine_module": {
+      "item_model": "blockcraft:sternenfront/kits/shared/engine_module",
+      "nexo_id": "blockcraft_shared_engine_module",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        2.015625,
+        1.03125,
+        1.0625
+      ],
+      "bounds_model_units": {
+        "min": [
+          -8.0,
+          8.0,
+          -0.5
+        ],
+        "max": [
+          24.25,
+          24.5,
+          16.5
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "service_axis": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 87,
+      "interaction_offset_blocks": [
+        0.007812,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        2.015625,
+        1.03125
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "service_stand": {
+      "item_model": "blockcraft:sternenfront/kits/shared/service_stand",
+      "nexo_id": "blockcraft_shared_service_stand",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.03125,
+        1.34375,
+        1.03125
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -0.25
+        ],
+        "max": [
+          16.25,
+          29.5,
+          16.25
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "service_axis": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 56,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.03125,
+        1.34375
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "refuelling_hose": {
+      "item_model": "blockcraft:sternenfront/kits/shared/refuelling_hose",
+      "nexo_id": "blockcraft_shared_refuelling_hose",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.453125,
+        1.0,
+        1.140625
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -0.25
+        ],
+        "max": [
+          23.0,
+          24.0,
+          18.0
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "service_axis": [
+          0.5,
+          0,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 63,
+      "interaction_offset_blocks": [
+        0.210938,
+        0.0,
+        0.054688
+      ],
+      "interaction_width_height": [
+        1.453125,
+        1.0
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    },
+    "landing_strut": {
+      "item_model": "blockcraft:sternenfront/kits/shared/landing_strut",
+      "nexo_id": "blockcraft_shared_landing_strut",
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "dimensions_blocks": [
+        1.03125,
+        1.5,
+        1.03125
+      ],
+      "bounds_model_units": {
+        "min": [
+          -0.25,
+          8.0,
+          -0.25
+        ],
+        "max": [
+          16.25,
+          32.0,
+          16.25
+        ]
+      },
+      "connectors_blocks": {
+        "ground": [
+          0,
+          0,
+          0
+        ],
+        "ship_mount": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "barrier_cores": [
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "condition": "clean",
+      "ground_anchor_model_units": [
+        8,
+        8,
+        8
+      ],
+      "yaw_degrees": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "module_pitch_blocks": [
+        1,
+        0,
+        1
+      ],
+      "placement": "Place through Nexo for client hitbox lifecycle; raw displays are non-solid.",
+      "interaction": "Static state",
+      "elements": 32,
+      "interaction_offset_blocks": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "interaction_width_height": [
+        1.03125,
+        1.5
+      ],
+      "physical_collision": {
+        "mode": "solid",
+        "blocks": [
+          "0,0,0 minecraft:barrier"
+        ],
+        "cubes": []
+      }
+    }
+  },
+  "door_mechanic": {
+    "item": "blockcraft_shared_door_closed",
+    "fixed_frame": "blockcraft_shared_blast_frame",
+    "closed_scale": [
+      2,
+      2,
+      2
+    ],
+    "open_scale": [
+      2,
+      1,
+      2
+    ],
+    "open_ground_offset_blocks": [
+      0,
+      2,
+      0
+    ],
+    "closed_barriers": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "open_barriers": [],
+    "client_test": "Pending parent-controlled testing",
+    "jar_classes": [
+      "com.nexomc.nexo.mechanics.furniture.door.FurnitureDoor",
+      "com.nexomc.nexo.mechanics.furniture.door.FurnitureDoorListener"
+    ]
+  },
+  "support_sha256": "bc0869589c9ef9b755f6cbac7eae4e6309ac98fc4567d3f2f49bcf86d4df9e55",
+  "assemblies": {
+    "assembly-airlock": [
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -2,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -2,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -2,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -2,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -1,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -1,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -1,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          -1,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          0,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          0,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          0,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          1,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          1,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          1,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          1,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          2,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          2,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          2,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_panel",
+        "ground_blocks": [
+          2,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "blast_frame",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "door_closed",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "wall_lamp",
+        "ground_blocks": [
+          -1,
+          1.5,
+          0.6
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "warning_beacon",
+        "ground_blocks": [
+          2,
+          0,
+          1
+        ],
+        "yaw": 0
+      }
+    ],
+    "assembly-open-airlock": [
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -2,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -2,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -2,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -2,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -1,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -1,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -1,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          -1,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          0,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          0,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          0,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          1,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          1,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          1,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          1,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          2,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          2,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          2,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "floor_grate",
+        "ground_blocks": [
+          2,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "blast_frame",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "door_open",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "cover_low",
+        "ground_blocks": [
+          -2,
+          0,
+          1.5
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "landing_lamp",
+        "ground_blocks": [
+          2,
+          0,
+          1
+        ],
+        "yaw": 0
+      }
+    ],
+    "assembly-service-bay": [
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -2,
+          0,
+          -2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -2,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -2,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -2,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -2,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -1,
+          0,
+          -2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -1,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -1,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -1,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          -1,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          0,
+          0,
+          -2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          0,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          0,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          0,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          1,
+          0,
+          -2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          1,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          1,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          1,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          1,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          2,
+          0,
+          -2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          2,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          2,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          2,
+          0,
+          1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_strip",
+        "ground_blocks": [
+          2,
+          0,
+          2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "engine_module",
+        "ground_blocks": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "service_stand",
+        "ground_blocks": [
+          0,
+          0,
+          -1.2
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "refuelling_hose",
+        "ground_blocks": [
+          1.4,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "landing_strut",
+        "ground_blocks": [
+          -1.5,
+          0,
+          -1
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "landing_lamp",
+        "ground_blocks": [
+          -2,
+          0,
+          1.5
+        ],
+        "yaw": 0
+      },
+      {
+        "piece": "cover_high",
+        "ground_blocks": [
+          -2,
+          0,
+          -2
+        ],
+        "yaw": 0
+      }
+    ]
+  }
+}

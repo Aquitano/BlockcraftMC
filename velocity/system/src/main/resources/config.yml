@@ -86,6 +86,31 @@ resource-pack:
   port: 8080
   required: true
   wait-seconds: 120
+  download-retries: 1
+  # Opt-in prototype. All selected packs are required, even when required above is false.
+  # The base keeps the existing shared UI identity. Addons have independent UUIDs and hashes.
+  profiles:
+    enabled: false
+    archives:
+      base:
+        file: blockcraft-base.zip
+        url: http://localhost:8080/blockcraft-base.zip
+      lobby:
+        file: blockcraft-lobby.zip
+        url: http://localhost:8080/blockcraft-lobby.zip
+      modes:
+        file: blockcraft-modes.zip
+        url: http://localhost:8080/blockcraft-modes.zip
+      starwars:
+        file: blockcraft-starwars.zip
+        url: http://localhost:8080/blockcraft-starwars.zip
+    default-packs: [modes]
+    # Base is always first. Replays select the profile of their recorded game.
+    groups:
+      lobby: [lobby]
+      sternenfront: [starwars]
+      story: [starwars]
+      replay: []
 
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100

@@ -1,6 +1,7 @@
 {
   "textures": {
-    "image": "blockcraft:item/battle/emblem_neutral"
+    "image": "blockcraft:item/battle/emblem_neutral",
+    "particle": "blockcraft:item/battle/emblem_neutral"
   },
   "elements": [
     {

@@ -40,6 +40,8 @@ blocked-replies:
   version: "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie<muted>. Neueste Version? Für uns schon."
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 resource-pack:
+  retrying: "<muted>Der Download ist fehlgeschlagen. Wir versuchen es erneut."
+  unsupported-profile: "<error>Für dieses Ziel ist noch kein Texturenpaket-Profil verfügbar.<newline><muted>Bitte verbinde dich erneut."
   prompt: "<primary><ip> <muted>braucht unser Texturenpaket für <white>eigene Menüs und Symbole<muted>."
   unavailable: "<error>Unser Texturenpaket ist gerade nicht verfügbar.<newline><muted>Bitte versuche es später erneut."
   declined: "<error>Blockcraft benötigt das Texturenpaket.<newline><muted>Aktiviere Server-Ressourcenpakete für Blockcraft und verbinde dich erneut."

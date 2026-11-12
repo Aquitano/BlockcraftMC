@@ -204,6 +204,13 @@ final class Commands {
         var name = body.get("cmd").getAsString();
         return switch (name) {
             case "status" -> done(status(minecraft));
+            case "packs" -> {
+                var result = new JsonObject();
+                var selected = new JsonArray();
+                minecraft.getResourcePackRepository().getSelectedIds().forEach(selected::add);
+                result.add("selected", selected);
+                yield done(result);
+            }
             case "connect" -> done(connect(minecraft, body.get("host").getAsString()));
             case "disconnect" -> {
                 minecraft.disconnectWithProgressScreen();
@@ -326,6 +333,8 @@ final class Commands {
             value.addProperty("max_health", round(player.getMaxHealth()));
             value.addProperty("gamemode", minecraft.gameMode == null ? "" : minecraft.gameMode.getPlayerMode().getName());
             value.addProperty("in_wall", player.isInWall());
+            value.addProperty("block_light", minecraft.level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, player.blockPosition()));
+            value.addProperty("sky_light", minecraft.level.getBrightness(net.minecraft.world.level.LightLayer.SKY, player.blockPosition()));
             value.addProperty("vehicle", player.getVehicle() == null ? "" : player.getVehicle().getType().toShortString());
             value.addProperty("slot", player.getInventory().getSelectedSlot());
             var hotbar = new JsonArray();

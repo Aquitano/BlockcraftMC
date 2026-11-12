@@ -48,6 +48,9 @@ public final class ProxyMessageCodec {
     private static final int DUEL_ACCEPTED = 22;
     private static final int DUEL_CANCEL = 23;
     private static final int DUEL_CANCELLED = 24;
+    private static final int REPLAY_PLAY = 25;
+    private static final int PROFILE_REQUEST = 26;
+    private static final int PROFILE_READY = 27;
 
     private ProxyMessageCodec() {
     }
@@ -89,6 +92,21 @@ public final class ProxyMessageCodec {
                 case ProxyMessage.Play play -> {
                     out.writeByte(PLAY);
                     out.writeUTF(play.group());
+                }
+                case ProxyMessage.ReplayPlay replay -> {
+                    out.writeByte(REPLAY_PLAY);
+                    out.writeUTF(replay.group());
+                    out.writeUTF(replay.game());
+                }
+                case ProxyMessage.ProfileRequest profile -> {
+                    out.writeByte(PROFILE_REQUEST);
+                    uuid(out, profile.token());
+                    out.writeUTF(profile.game());
+                }
+                case ProxyMessage.ProfileReady profile -> {
+                    out.writeByte(PROFILE_READY);
+                    uuid(out, profile.token());
+                    out.writeBoolean(profile.applied());
                 }
                 case ProxyMessage.Hub _ -> out.writeByte(HUB);
                 case ProxyMessage.Command command -> {
@@ -221,6 +239,9 @@ public final class ProxyMessageCodec {
             case DUEL_CANCELLED -> new ProxyMessage.DuelCancelled(uuid(in));
             case DUEL_CANCEL -> new ProxyMessage.DuelCancel(uuid(in));
             case PLAY -> new ProxyMessage.Play(in.readUTF());
+            case REPLAY_PLAY -> new ProxyMessage.ReplayPlay(in.readUTF(), in.readUTF());
+            case PROFILE_REQUEST -> new ProxyMessage.ProfileRequest(uuid(in), in.readUTF());
+            case PROFILE_READY -> new ProxyMessage.ProfileReady(uuid(in), in.readBoolean());
             case HUB -> new ProxyMessage.Hub();
             case COMMAND -> new ProxyMessage.Command(in.readUTF());
             case NICK -> new ProxyMessage.NickChange(in.readBoolean()

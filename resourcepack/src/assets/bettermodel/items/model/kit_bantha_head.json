@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "blockcraft:item/sternenfront/kits/actors/bantha/rig/head",
+    "tints": [
+      {
+        "type": "minecraft:custom_model_data",
+        "default": 16777215
+      }
+    ]
+  }
+}

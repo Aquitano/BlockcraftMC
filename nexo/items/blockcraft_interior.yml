@@ -1,0 +1,20 @@
+blockcraft_interior_candle:
+  itemname: '<white>Innenraumkerze'
+  material: CANDLE
+  Components:
+    item_model: blockcraft:props/imported/halloween_candle
+  Pack:
+    model: blockcraft:item/props/imported/halloween_candle
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 0.5,0.5,0.5
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 0.15,0.47
+      lights:
+        lights: ['0,0,0 12']

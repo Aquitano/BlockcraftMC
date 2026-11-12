@@ -6,6 +6,7 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.MenuTile;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Loadouts;
@@ -15,7 +16,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -39,10 +42,13 @@ public final class ClassMenu extends Menu {
     private final Loadouts loadouts;
     private final Faction faction;
     private final Supplier<CombatClass> selected;
+    private final Supplier<Blaster> weapon;
+    private final Consumer<Player> cycleWeapon;
     private final BiConsumer<Player, CombatClass> choose;
 
     public ClassMenu(Messages messages, Loadouts loadouts, Faction faction, boolean factionChosen, Supplier<CombatClass> selected,
-                     BiConsumer<Player, CombatClass> choose, Optional<Consumer<Player>> difficulty) {
+                     BiConsumer<Player, CombatClass> choose, Supplier<Blaster> weapon,
+                     Consumer<Player> cycleWeapon, Optional<Consumer<Player>> difficulty) {
         super(ROWS, UiFont.overlaid(difficulty.isPresent() ? UiFont.Overlay.STERNENFRONT_CLASS_WITH_BOTS : UiFont.Overlay.STERNENFRONT_CLASS,
                 messages.get("class.title")));
         this.messages = messages;
@@ -50,6 +56,8 @@ public final class ClassMenu extends Menu {
         this.faction = faction;
         this.selected = selected;
         this.choose = choose;
+        this.weapon = weapon;
+        this.cycleWeapon = cycleWeapon;
         closeButton(ToolbarButton.LEFT);
         var name = Placeholder.component("faction", messages.get("faction." + faction.key() + ".name").colorIfAbsent(faction.text()));
         toolbar(ToolbarButton.MIDDLE, Items.of(Material.valueOf(faction.blocks().name() + "_BANNER")).name(messages.get("class.faction", name))
@@ -75,12 +83,20 @@ public final class ClassMenu extends Menu {
             set(SLOTS.get(index), loadouts.roleCard(faction, classes[index], chosen,
                     List.of(messages.get(chosen ? "class.selected" : "class.select"))));
         }
-        info(BLASTER_SLOT, loadouts.blaster(current.blaster(faction)));
+        var blaster = loadouts.blaster(weapon.get());
+        if (current.weapons(faction).size() > 1) {
+            blaster.editMeta(meta -> {
+                var lore = new ArrayList<>(Objects.requireNonNull(meta.lore()));
+                lore.add(messages.get("class.weapon-cycle"));
+                meta.lore(lore);
+            });
+        }
+        set(BLASTER_SLOT, blaster);
         var abilities = current.abilities(faction);
         for (int key = 0; key < ABILITY_SLOTS.size(); key++) {
             info(ABILITY_SLOTS.get(key), key < abilities.size() ? loadouts.abilityCard(faction, abilities.get(key), key) : null);
         }
-        info(STATS_SLOT, loadouts.statsCard(faction, current));
+        info(STATS_SLOT, loadouts.statsCard(faction, current, weapon.get()));
     }
 
     @Override
@@ -90,6 +106,11 @@ public final class ClassMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+        if (slot == BLASTER_SLOT) {
+            cycleWeapon.accept(player);
+            refresh();
+            return;
+        }
         int index = SLOTS.indexOf(slot);
         if (index >= 0) {
             choose.accept(player, CombatClass.values()[index]);

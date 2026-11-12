@@ -74,6 +74,7 @@ recording there and reports how many animated bodies it drew.
 | Command | Fields | Does |
 |---|---|---|
 | `status` | | window, GUI scale, position, health, hotbar, FPS, dimension, the world border the client holds, the block it looks at and whether it is breaking one |
+| `packs` | | the resource-pack IDs currently selected by the client |
 | `hud` | | action bar, title, subtitle, boss bars, sidebar and chat as text, each with its width |
 | `screen` | | the open screen's title, buttons and container slots |
 | `press`, `click`, `close` | `label`; `slot`, `button` | use a dialog button or a menu slot |

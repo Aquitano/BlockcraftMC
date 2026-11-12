@@ -129,21 +129,20 @@ final class ReplayService implements Listener, AutoCloseable {
         boolean staff = player.hasPermission(ReplayPlugin.STAFF_PERMISSION);
         var current = BlockcraftApi.get().playerTasks().currentScreen(player);
         BlockcraftApi.get().playerTasks().write(player, () -> {
-            if (repository.accessible(replay, player.getUniqueId(), staff).isEmpty()) {
-                return false;
-            }
+            var entry = repository.accessible(replay, player.getUniqueId(), staff);
+            if (entry.isEmpty()) return Optional.<String>empty();
             repository.request(player.getUniqueId(), replay, token, BlockcraftApi.get().server().group());
-            return true;
+            return entry.map(ReplayRepository.Entry::game);
         }, found -> {
             if (loading.get(viewer) != token || !current.getAsBoolean() || !allowed(player)) {
                 loading.remove(viewer, token);
                 Tasks.async(plugin, () -> repository.cancelRequest(viewer, token));
                 return;
             }
-            if (found) {
+            if (found.isPresent()) {
                 Menu.close(player);
                 player.sendMessage(messages.get("playback.connecting"));
-                ProxyMessaging.play(plugin, player, config.playbackGroup());
+                ProxyMessaging.replay(plugin, player, config.playbackGroup(), found.orElseThrow());
             } else {
                 loading.remove(viewer, token);
                 player.sendMessage(messages.get("playback.unavailable"));
@@ -184,19 +183,26 @@ final class ReplayService implements Listener, AutoCloseable {
                     if (loading.get(id) != token) {
                         return;
                     }
-                    loading.remove(id);
                     if (!player.isOnline() || !allowed(player)) {
+                        loading.remove(id);
                         return;
                     }
                     boolean owns = loaded != null && loaded.header().participants().stream().anyMatch(p -> p.id().equals(id));
                     if (loaded == null || loaded.empty() || !owns && !player.hasPermission(ReplayPlugin.STAFF_PERMISSION)) {
+                        loading.remove(id);
                         player.sendMessage(messages.get("playback.unavailable"));
-                    } else if (playback.start(player, loaded)) {
-                        player.sendMessage(messages.get("playback.started",
-                                Placeholder.unparsed("game", loaded.header().game()),
-                                Placeholder.unparsed("map", loaded.header().map())));
                     } else {
-                        player.sendMessage(messages.get("playback.full"));
+                        BlockcraftApi.get().resourcePack().profile(player, loaded.header().game(), applied -> {
+                            if (loading.get(id) != token) return;
+                            loading.remove(id);
+                            if (!player.isOnline() || !allowed(player)) return;
+                            if (!applied) player.sendMessage(messages.get("playback.unavailable"));
+                            else if (playback.start(player, loaded)) {
+                                player.sendMessage(messages.get("playback.started",
+                                        Placeholder.unparsed("game", loaded.header().game()),
+                                        Placeholder.unparsed("map", loaded.header().map())));
+                            } else player.sendMessage(messages.get("playback.full"));
+                        });
                     }
                 });
             });

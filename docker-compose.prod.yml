@@ -54,6 +54,7 @@ services:
   quicksg: *paper
   cores: *paper
   sternenfront: *paper
+  story: *paper
   skywars: *paper
   knockbackffa: *paper
 

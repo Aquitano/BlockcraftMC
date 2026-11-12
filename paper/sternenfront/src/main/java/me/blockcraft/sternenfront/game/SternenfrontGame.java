@@ -164,6 +164,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final BattleIntro intro;
     private final BattlePresentation presentation;
     private final ObjectiveHud objective;
+    private final FieldObjectives fieldObjectives;
     private final Minimap minimap;
     private final KillFeed killFeed;
     private final Battlefield battlefield;
@@ -249,6 +250,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.spawnSpots = new SpawnSpots(this);
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
+        this.fieldObjectives = new FieldObjectives(this, BlockcraftApi.get().map().file(plugin, "field-objectives.yml"));
         this.minimap = new Minimap(this, Minimap.Settings.from(plugin.getConfig()));
         this.killFeed = KillFeed.from(plugin.getConfig());
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
@@ -267,6 +269,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public GamePhase phase() {
         return round.phase();
     }
+
+    public FieldObjectives fieldObjectives() { return fieldObjectives; }
 
     public LobbyCountdown countdown() {
         return countdown;
@@ -697,6 +701,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void openClassMenu(Player player) {
         new ClassMenu(messages, loadouts, factionOrSmallest(player), factionOf(player).isPresent(), () -> fighter(player).combatClass(), this::chooseClass,
+                () -> fighter(player).classBlaster(factionOrSmallest(player), fighter(player).combatClass()), this::cycleWeapon,
                 bots.enabled() ? Optional.of(this::openBotDifficulty) : Optional.empty()).open(player);
     }
 
@@ -739,6 +744,24 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (phase() == GamePhase.LOBBY) {
             refreshAll();
         }
+    }
+
+    public void cycleWeapon(Player player) {
+        if (!round.isPlaying(player) || (phase() != GamePhase.LOBBY && !deployment.deciding(player))) {
+            return;
+        }
+        var fighter = fighter(player);
+        fighter.cycleWeapon(factionOrSmallest(player));
+        Sounds.EQUIP.play(player);
+        deployment.refreshMenu(player);
+    }
+
+    public void cycleReinforcement(Player player) {
+        if (!round.isPlaying(player) || !deployment.deciding(player)) {
+            return;
+        }
+        fighter(player).cycleReinforcement(factionOrSmallest(player));
+        deployment.refreshMenu(player);
     }
 
     /** While choosing, the hero the player deploys as next, if their battle points and their faction's slots allow. */
@@ -820,6 +843,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         front = Optional.empty();
         relic = new Relic(this, map.relic(), config.relic().firstSeconds() * TICKS_PER_SECOND);
         posts.show();
+        fieldObjectives.start();
         posts.holograms(plugin);
         var difficulties = List.of(BotDifficulty.values());
         boolean voted = difficulties.stream().anyMatch(difficulty -> botDifficultyVotes.votes(Optional.of(difficulty)) > 0);
@@ -875,6 +899,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         bolts.tick();
         glint.tick(tick);
         gadgets.tick(tick);
+        fieldObjectives.tick(tick);
         relic.tick(tick);
         heroes.tick(tick);
         speeders.tick(tick);
@@ -1771,6 +1796,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void cleanUp() {
+        fieldObjectives.clear();
         Bukkit.getOnlinePlayers().forEach(BlockcraftApi.get().visuals()::clearAccent);
         intro.clear();
         if (loop != null) {

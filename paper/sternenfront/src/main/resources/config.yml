@@ -87,7 +87,7 @@ appearance:
   # Marking colours by fireteam, first fireteam first; players wear their side's first. A side with more fireteams
   # starts over. The pack shows the first colour wherever a display sets none.
   unit-colours:
-    kolonien: ["30487A", "C07818"]
+    kolonien: ["405748", "C07818"]
     hegemonie: ["E0B818", "7C3420"]
 music:
   enabled: true
@@ -380,6 +380,9 @@ classes:
 # speed is blocks per tick, range in blocks, spread the largest sideways deviation per block. A hit above the shoulders
 # multiplies damage by headshot. Both gun heroes use the twin-pistol profile.
 blasters:
+  a280: {mode: single, damage: 3.5, headshot: 1.5, heat: 18, cooldown-ticks: 12, bolts: 3, burst-ticks: 2, spread: 0.009, speed: 5, range: 95}
+  e11d: {mode: automatic, damage: 4, headshot: 1.5, heat: 9, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 4.5, range: 80}
+  dc17m: {mode: automatic, damage: 4.5, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.014, speed: 5, range: 80}
   carbine: {mode: automatic, damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 4.5, range: 90}
   repeater: {mode: automatic, damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 7, range: 60}
   arc-repeater: {mode: automatic, damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 7, range: 75}
@@ -397,6 +400,7 @@ blasters:
 
 # These slots are independent of named heroes. A purchase lasts one life; limit: 0 disables a unit.
 reinforcement-units:
+  clone-commando: {cost: 300, limit: 2, health: 32, speed: 1}
   arc-trooper: {cost: 250, limit: 2, health: 32, speed: 1}
   commando-droid: {cost: 300, limit: 2, health: 26, speed: 1.12}
 
@@ -577,3 +581,7 @@ intro:
       anchor: headquarters
       offset: [2, 1.7, 3]
       look-at: headquarters
+
+field-objectives:
+  channel-seconds: 4
+  override-seconds: 30

@@ -67,6 +67,7 @@ bodies:
   kolonien_heavy: {joints: clone, arm-lift: -1.1, grip-turn: 0.55}
   kolonien_scout: {joints: clone-scout, arm-lift: -1.15, grip-turn: 0.5}
   kolonien_medic: {joints: clone-medic, arm-lift: -1.15, grip-turn: 0}
+  reinforcement_clone_commando: {joints: clone, arm-lift: -1.1, grip-turn: 0.55}
   reinforcement_arc_trooper: {joints: clone, arm-lift: -1.1, grip-turn: 0.55}
   reinforcement_commando_droid: {joints: commando-droid, arm-lift: -1.1, grip-turn: 0.45}
   hero_jedi: {joints: robed, arm-lift: -0.5, grip-turn: 0}

@@ -94,6 +94,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
                 new ArenaListener(game, api.buildMode()),
                 new CombatListener(game, api.buildMode(), botDebug, secrets),
                 new ChatListener(game, messages));
+        services.listen(game.fieldObjectives());
 
         services.commands(commands -> {
             commands.register(StartCommand.of(game.countdown()).build());

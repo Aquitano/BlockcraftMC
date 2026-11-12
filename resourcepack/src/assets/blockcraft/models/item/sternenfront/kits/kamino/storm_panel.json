@@ -1,0 +1,309 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/kamino/atlas",
+    "particle": "blockcraft:item/sternenfront/kits/kamino/atlas"
+  },
+  "elements": [
+    {
+      "name": "mounting panel",
+      "from": [
+        0,
+        0,
+        7
+      ],
+      "to": [
+        16,
+        16,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1.0,
+            5.0,
+            3.0,
+            7.0
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.875,
+            5.0,
+            2.125,
+            7.0
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.875,
+            5.0,
+            2.125,
+            7.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            1.0,
+            5.875,
+            3.0,
+            6.125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            1.0,
+            5.875,
+            3.0,
+            6.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "mounting panel",
+      "from": [
+        0,
+        0,
+        7
+      ],
+      "to": [
+        2,
+        16,
+        9
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.0,
+            5.0,
+            1.25,
+            7.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "mounting panel",
+      "from": [
+        11,
+        0,
+        7
+      ],
+      "to": [
+        13,
+        16,
+        9
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            2.375,
+            5.0,
+            2.625,
+            7.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "mounting panel",
+      "from": [
+        14,
+        0,
+        7
+      ],
+      "to": [
+        16,
+        16,
+        9
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            2.75,
+            5.0,
+            3.0,
+            7.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "mounting panel",
+      "from": [
+        2,
+        0,
+        7
+      ],
+      "to": [
+        11,
+        4,
+        9
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.25,
+            6.5,
+            2.375,
+            7.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "mounting panel",
+      "from": [
+        2,
+        13,
+        7
+      ],
+      "to": [
+        11,
+        16,
+        9
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.25,
+            5.0,
+            2.375,
+            5.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "repair plate",
+      "from": [
+        2,
+        4,
+        9
+      ],
+      "to": [
+        11,
+        13,
+        9.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            9.4375,
+            9.4375,
+            10.5625,
+            10.5625
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            9.96875,
+            9.4375,
+            10.03125,
+            10.5625
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            9.96875,
+            9.4375,
+            10.03125,
+            10.5625
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            9.4375,
+            9.96875,
+            10.5625,
+            10.03125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            9.4375,
+            9.96875,
+            10.5625,
+            10.03125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "exposed seam",
+      "from": [
+        13,
+        0,
+        9
+      ],
+      "to": [
+        14,
+        16,
+        9.25
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            5.9375,
+            5.0,
+            6.0625,
+            7.0
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            5.984375,
+            5.0,
+            6.015625,
+            7.0
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            5.984375,
+            5.0,
+            6.015625,
+            7.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            5.9375,
+            5.984375,
+            6.0625,
+            6.015625
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            5.9375,
+            5.984375,
+            6.0625,
+            6.015625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    }
+  ]
+}

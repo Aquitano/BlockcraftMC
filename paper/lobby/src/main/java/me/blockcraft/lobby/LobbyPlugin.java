@@ -206,6 +206,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 String.valueOf(boardSettings.getOrDefault("changelog-version", "1")),
                 String.valueOf(boardSettings.getOrDefault("rules-command", "regeln")));
         var quests = new QuestGivers(spotEntities, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
+        me.blockcraft.api.scenery.FurnitureInteractions.register(this, java.util.Map.of("blockcraft_quest_board", quests::openBoard));
         var daily = new DailyCourier(this, spotEntities, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
         closables.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily));
         register(gameNpcs, ownPlacings, loreNotes, noticeBoards, daily);

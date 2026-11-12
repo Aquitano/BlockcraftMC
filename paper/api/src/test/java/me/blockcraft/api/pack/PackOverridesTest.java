@@ -161,7 +161,9 @@ public class PackOverridesTest {
                     continue;
                 }
                 var atlases = textures.entrySet().stream()
-                        .map(texture -> texture.getValue().getAsString().split(":", 2)[1].split("/", 2)[0])
+                        .map(texture -> texture.getValue().getAsString())
+                        .filter(texture -> !texture.startsWith("#"))
+                        .map(texture -> texture.split(":", 2)[1].split("/", 2)[0])
                         .collect(Collectors.toSet());
                 assertEquals(file + " mixes atlases " + atlases, 1, atlases.size());
             }

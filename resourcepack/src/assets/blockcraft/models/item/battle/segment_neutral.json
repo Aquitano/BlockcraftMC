@@ -1,6 +1,7 @@
 {
   "textures": {
-    "image": "blockcraft:item/battle/glow_neutral"
+    "image": "blockcraft:item/battle/glow_neutral",
+    "particle": "blockcraft:item/battle/glow_neutral"
   },
   "elements": [
     {

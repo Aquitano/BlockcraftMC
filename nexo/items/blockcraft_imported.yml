@@ -1,0 +1,1099 @@
+blockcraft_market_notice_board_wide:
+  itemname: "<white>Breites Anschlagbrett"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_notice_board_wide
+  Pack:
+    model: blockcraft:item/props/imported/market_notice_board_wide
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.0005,2.0669
+
+blockcraft_market_notice_board_narrow:
+  itemname: "<white>Schmales Anschlagbrett"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_notice_board_narrow
+  Pack:
+    model: blockcraft:item/props/imported/market_notice_board_narrow
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.0005,2.0669
+
+blockcraft_market_notice_board_wall:
+  itemname: "<white>Wandanschlagbrett"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_notice_board_wall
+  Pack:
+    model: blockcraft:item/props/imported/market_notice_board_wall
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.8745,1.3125
+
+blockcraft_market_menu_sign:
+  itemname: "<white>Speisetafel"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_menu_sign
+  Pack:
+    model: blockcraft:item/props/imported/market_menu_sign
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.1155,1.2609
+
+blockcraft_market_chalkboard:
+  itemname: "<white>Kreidetafel"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_chalkboard
+  Pack:
+    model: blockcraft:item/props/imported/market_chalkboard
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.875,1.3125
+
+blockcraft_market_chest:
+  itemname: "<white>Markttruhe"
+  material: BARREL
+  Components:
+    item_model: blockcraft:props/imported/market_chest
+  Pack:
+    model: blockcraft:item/props/imported/market_chest
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.2501,0.75
+      storage:
+        type: STORAGE
+        rows: 3
+        title: "Markttruhe"
+
+blockcraft_market_treasure_chest:
+  itemname: "<white>Offene Schatztruhe"
+  material: BARREL
+  Components:
+    item_model: blockcraft:props/imported/market_treasure_chest
+  Pack:
+    model: blockcraft:item/props/imported/market_treasure_chest
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.8334,1.3125
+      storage:
+        type: STORAGE
+        rows: 3
+        title: "Offene Schatztruhe"
+
+blockcraft_market_coins_small:
+  itemname: "<white>Kleiner Münzhaufen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_coins_small
+  Pack:
+    model: blockcraft:item/props/imported/market_coins_small
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.5426,0.125
+
+blockcraft_market_coins_medium:
+  itemname: "<white>Mittlerer Münzhaufen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_coins_medium
+  Pack:
+    model: blockcraft:item/props/imported/market_coins_medium
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.7331,0.375
+
+blockcraft_market_coins_large:
+  itemname: "<white>Großer Münzhaufen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_coins_large
+  Pack:
+    model: blockcraft:item/props/imported/market_coins_large
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.1147,0.7632
+
+blockcraft_market_bread_tray:
+  itemname: "<white>Brotkiste"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_bread_tray
+  Pack:
+    model: blockcraft:item/props/imported/market_bread_tray
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.125,0.5192
+
+blockcraft_market_carrot_tray:
+  itemname: "<white>Karottenkiste"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_carrot_tray
+  Pack:
+    model: blockcraft:item/props/imported/market_carrot_tray
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.125,0.6144
+
+blockcraft_market_bread_table:
+  itemname: "<white>Brottisch"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_bread_table
+  Pack:
+    model: blockcraft:item/props/imported/market_bread_table
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.159,0.831
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,-0.125000,0.000000 0.875000"]}
+
+blockcraft_market_carrot_table:
+  itemname: "<white>Karottentisch"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_carrot_table
+  Pack:
+    model: blockcraft:item/props/imported/market_carrot_table
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.159,0.9192
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,-0.125000,0.000000 0.875000"]}
+
+blockcraft_market_empty_table:
+  itemname: "<white>Auslagetisch"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_empty_table
+  Pack:
+    model: blockcraft:item/props/imported/market_empty_table
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.159,0.7363
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,-0.125000,0.000000 0.875000"]}
+
+blockcraft_market_empty_tray:
+  itemname: "<white>Leere Auslage"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_empty_tray
+  Pack:
+    model: blockcraft:item/props/imported/market_empty_tray
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.125,0.3125
+
+blockcraft_market_tray_stack:
+  itemname: "<white>Gestapelte Auslagen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_tray_stack
+  Pack:
+    model: blockcraft:item/props/imported/market_tray_stack
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.446,0.9375
+
+blockcraft_market_notices_large:
+  itemname: "<white>Aushänge groß"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_notices_large
+  Pack:
+    model: blockcraft:item/props/imported/market_notices_large
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.375,0.7656
+
+blockcraft_market_notices_small:
+  itemname: "<white>Aushänge klein"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_notices_small
+  Pack:
+    model: blockcraft:item/props/imported/market_notices_small
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.4844,0.7656
+
+blockcraft_market_notices_medium:
+  itemname: "<white>Aushänge mittel"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_notices_medium
+  Pack:
+    model: blockcraft:item/props/imported/market_notices_medium
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.8125,0.75
+
+blockcraft_market_open_box:
+  itemname: "<white>Offene Schachtel"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_open_box
+  Pack:
+    model: blockcraft:item/props/imported/market_open_box
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.625,0.8125
+
+blockcraft_market_crate_stack:
+  itemname: "<white>Kistenstapel"
+  material: BARREL
+  Components:
+    item_model: blockcraft:props/imported/market_crate_stack
+  Pack:
+    model: blockcraft:item/props/imported/market_crate_stack
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.5615,1.9375
+      storage:
+        type: STORAGE
+        rows: 3
+        title: "Kistenstapel"
+
+blockcraft_market_bunting_posts:
+  itemname: "<white>Wimpel mit Pfosten"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_bunting_posts
+  Pack:
+    model: blockcraft:item/props/imported/market_bunting_posts
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 3.0,3.0
+
+blockcraft_market_bunting:
+  itemname: "<white>Wimpelkette"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_bunting
+  Pack:
+    model: blockcraft:item/props/imported/market_bunting
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.875,0.5157
+
+blockcraft_market_empty_cart:
+  itemname: "<white>Leerer Marktkarren"
+  material: BARREL
+  Components:
+    item_model: blockcraft:props/imported/market_empty_cart
+  Pack:
+    model: blockcraft:item/props/imported/market_empty_cart
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.9888,1.375
+      storage:
+        type: STORAGE
+        rows: 3
+        title: "Leerer Marktkarren"
+
+blockcraft_market_loaded_cart:
+  itemname: "<white>Beladener Marktkarren"
+  material: BARREL
+  Components:
+    item_model: blockcraft:props/imported/market_loaded_cart
+  Pack:
+    model: blockcraft:item/props/imported/market_loaded_cart
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 3.0,1.5
+      storage:
+        type: STORAGE
+        rows: 3
+        title: "Beladener Marktkarren"
+
+blockcraft_market_cloth_tray:
+  itemname: "<white>Stoffauslage"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_cloth_tray
+  Pack:
+    model: blockcraft:item/props/imported/market_cloth_tray
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.0343,0.5436
+
+blockcraft_market_fish_tray:
+  itemname: "<white>Fischauslage"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_fish_tray
+  Pack:
+    model: blockcraft:item/props/imported/market_fish_tray
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.0084,0.6857
+
+blockcraft_market_market_stall:
+  itemname: "<white>Überdachter Marktstand"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/market_market_stall
+  Pack:
+    model: blockcraft:item/props/imported/market_market_stall
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.9888,2.5199
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["-0.800000,-0.125000,0.000000 1.000000","0.000000,-0.125000,0.000000 1.000000","0.800000,-0.125000,0.000000 1.000000"]}
+
+blockcraft_market_crate:
+  itemname: "<white>Marktkiste"
+  material: BARREL
+  Components:
+    item_model: blockcraft:props/imported/market_crate
+  Pack:
+    model: blockcraft:item/props/imported/market_crate
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.3125,0.9688
+      storage:
+        type: STORAGE
+        rows: 3
+        title: "Marktkiste"
+
+blockcraft_halloween_cauldron:
+  itemname: "<white>Hexenkessel"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_cauldron
+  Pack:
+    model: blockcraft:item/props/imported/halloween_cauldron
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.2588,1.7146
+
+blockcraft_halloween_decorated_lamp:
+  itemname: "<white>Geschmückte Kürbislaterne"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_decorated_lamp
+  Pack:
+    model: blockcraft:item/props/imported/halloween_decorated_lamp
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 5,5,5
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.7716,5.0
+      lights:
+        lights: ["0,2,0 12"]
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["-0.315000,0.000000,-0.015000 0.750000"]}
+
+blockcraft_halloween_candle_short:
+  itemname: "<white>Kurzer Kerzenständer"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_candle_short
+  Pack:
+    model: blockcraft:item/props/imported/halloween_candle_short
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.375,1.5
+      lights:
+        lights: ["0,0,0 12"]
+
+blockcraft_halloween_candelabra:
+  itemname: "<white>Kerzenleuchter"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_candelabra
+  Pack:
+    model: blockcraft:item/props/imported/halloween_candelabra
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.9455,1.875
+      lights:
+        lights: ["0,0,0 12"]
+
+blockcraft_halloween_cauldron_broom:
+  itemname: "<white>Hexenkessel mit Besen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_cauldron_broom
+  Pack:
+    model: blockcraft:item/props/imported/halloween_cauldron_broom
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.9156,1.7146
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["-0.060000,-0.035000,-0.479000 0.875000"]}
+
+blockcraft_halloween_lamp:
+  itemname: "<white>Kürbislaterne"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_lamp
+  Pack:
+    model: blockcraft:item/props/imported/halloween_lamp
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 5,5,5
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.0379,5.0
+      lights:
+        lights: ["0,2,0 12"]
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,0.000000,-0.350000 0.750000"]}
+
+blockcraft_halloween_hanging_lantern:
+  itemname: "<white>Hängende Kürbislaterne"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_hanging_lantern
+  Pack:
+    model: blockcraft:item/props/imported/halloween_hanging_lantern
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.5625,1.8688
+      lights:
+        lights: ["0,0,0 12"]
+
+blockcraft_halloween_fence:
+  itemname: "<white>Friedhofszaun"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_fence
+  Pack:
+    model: blockcraft:item/props/imported/halloween_fence
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 3.0,1.0
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["-1.187500,0.375000,0.000000 0.625000","-0.593750,0.375000,0.000000 0.625000","0.000000,0.375000,0.000000 0.625000","0.593750,0.375000,0.000000 0.625000","1.187500,0.375000,0.000000 0.625000"]}
+
+blockcraft_halloween_fence_reverse:
+  itemname: "<white>Friedhofszaun Rückseite"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_fence_reverse
+  Pack:
+    model: blockcraft:item/props/imported/halloween_fence_reverse
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 3.0,1.0
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["-1.187500,0.375000,0.000000 0.625000","-0.593750,0.375000,0.000000 0.625000","0.000000,0.375000,0.000000 0.625000","0.593750,0.375000,0.000000 0.625000","1.187500,0.375000,0.000000 0.625000"]}
+
+blockcraft_halloween_fence_long:
+  itemname: "<white>Langer Friedhofszaun"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_fence_long
+  Pack:
+    model: blockcraft:item/props/imported/halloween_fence_long
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 5,5,5
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 5.0,1.0
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,0.375000,-2.187500 0.625000","0.000000,0.375000,-1.562500 0.625000","0.000000,0.375000,-0.937500 0.625000","0.000000,0.375000,-0.312500 0.625000","0.000000,0.375000,0.312500 0.625000","0.000000,0.375000,0.937500 0.625000","0.000000,0.375000,1.562500 0.625000","0.000000,0.375000,2.187500 0.625000"]}
+
+blockcraft_halloween_leafy_pumpkin:
+  itemname: "<white>Kürbis mit Blättern"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_leafy_pumpkin
+  Pack:
+    model: blockcraft:item/props/imported/halloween_leafy_pumpkin
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.2388,1.1708
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["-0.135000,-0.062500,-0.020000 0.750000"]}
+
+blockcraft_halloween_pumpkin_candles:
+  itemname: "<white>Kürbis mit Kerzen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_pumpkin_candles
+  Pack:
+    model: blockcraft:item/props/imported/halloween_pumpkin_candles
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.8571,1.1708
+      lights:
+        lights: ["0,0,0 12"]
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["-0.150500,-0.187500,0.266500 0.875000"]}
+
+blockcraft_halloween_scarecrow:
+  itemname: "<white>Vogelscheuche"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_scarecrow
+  Pack:
+    model: blockcraft:item/props/imported/halloween_scarecrow
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.1378,2.6312
+
+blockcraft_halloween_grave_cross_decorated:
+  itemname: "<white>Grabkreuz mit Kerzen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_grave_cross_decorated
+  Pack:
+    model: blockcraft:item/props/imported/halloween_grave_cross_decorated
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.4001,1.6255
+      lights:
+        lights: ["0,0,0 12"]
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,0.000000,0.000000 0.625000","0.000000,0.500000,0.000000 0.625000","0.000000,1.000000,0.000000 0.625000"]}
+
+blockcraft_halloween_grave_cross:
+  itemname: "<white>Grabkreuz"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_grave_cross
+  Pack:
+    model: blockcraft:item/props/imported/halloween_grave_cross
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.3481,1.6255
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,0.000000,0.000000 0.625000","0.000000,0.500000,0.000000 0.625000","0.000000,1.000000,0.000000 0.625000"]}
+
+blockcraft_halloween_pumpkin:
+  itemname: "<white>Kürbis"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_pumpkin
+  Pack:
+    model: blockcraft:item/props/imported/halloween_pumpkin
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.9273,1.0271
+
+blockcraft_halloween_gravestone_decorated:
+  itemname: "<white>Grabstein mit Kerzen"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_gravestone_decorated
+  Pack:
+    model: blockcraft:item/props/imported/halloween_gravestone_decorated
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.0509,1.375
+      lights:
+        lights: ["0,0,0 12"]
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,0.000000,0.000000 0.625000","0.000000,0.625000,0.000000 0.625000"]}
+
+blockcraft_halloween_gravestone:
+  itemname: "<white>Grabstein"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_gravestone
+  Pack:
+    model: blockcraft:item/props/imported/halloween_gravestone
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.2811,1.375
+      blockcraft_collision: {"mode":"solid","blocks":[],"cubes":["0.000000,0.000000,0.000000 0.625000","0.000000,0.625000,0.000000 0.625000"]}
+
+blockcraft_halloween_candle_cluster:
+  itemname: "<white>Kerzengruppe"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_candle_cluster
+  Pack:
+    model: blockcraft:item/props/imported/halloween_candle_cluster
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.4638,0.9375
+      lights:
+        lights: ["0,0,0 12"]
+
+blockcraft_halloween_candle:
+  itemname: "<white>Kerzenständer"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_candle
+  Pack:
+    model: blockcraft:item/props/imported/halloween_candle
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.2125,0.9375
+      lights:
+        lights: ["0,0,0 12"]
+
+blockcraft_halloween_ghost:
+  itemname: "<white>Geist"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/halloween_ghost
+  Pack:
+    model: blockcraft:item/props/imported/halloween_ghost
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.6548,1.875
+
+blockcraft_quest_board:
+  itemname: "<white>Auftragstafel"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/imported/quest_board
+  Pack:
+    model: blockcraft:item/props/imported/quest_board
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 0.75
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 3.0,2.2653

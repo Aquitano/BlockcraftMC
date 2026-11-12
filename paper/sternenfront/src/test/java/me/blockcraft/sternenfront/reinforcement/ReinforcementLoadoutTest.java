@@ -37,7 +37,7 @@ public class ReinforcementLoadoutTest {
         assertEquals(250, units.stats(ARC_TROOPER).cost());
         assertEquals(300, units.stats(COMMANDO_DROID).cost());
         for (var unit : Reinforcement.values()) {
-            assertEquals(unit, Reinforcement.of(unit.faction()));
+            assertEquals(unit.faction(), Reinforcement.of(unit.faction()).faction());
             assertTrue(units.stats(unit).cost() < heroes.cost());
             assertTrue(units.stats(unit).health() > combat.stats(unit.faction(), CombatClass.SOLDIER).health());
             assertTrue(units.stats(unit).health() < heroes.health(Hero.JEDI));
@@ -53,6 +53,19 @@ public class ReinforcementLoadoutTest {
         assertEquals(List.of(Ability.JUMP_PACK, Ability.GRENADE), COMMANDO_DROID.abilities());
         assertEquals(SoundCue.BLASTER_REPEATER, ARC_TROOPER.blaster().shotSound());
         assertEquals(SoundCue.BLASTER_CARBINE, COMMANDO_DROID.blaster().shotSound());
+    }
+
+    @Test
+    public void cloneCommandoIsAnAdditionalRepublicChoiceWithItsOwnWeapon() {
+        var fighter = new Fighter(new Heat.Rules(10, 5, 40, 0.2, 0.25), ability -> new Charges(1, 20));
+        assertEquals(ARC_TROOPER, fighter.reinforcementChoice(Faction.KOLONIEN));
+        fighter.cycleReinforcement(Faction.KOLONIEN);
+        assertEquals(Reinforcement.CLONE_COMMANDO, fighter.reinforcementChoice(Faction.KOLONIEN));
+        assertEquals(COMMANDO_DROID, fighter.reinforcementChoice(Faction.HEGEMONIE));
+        fighter.reinforcement(Optional.of(Reinforcement.CLONE_COMMANDO));
+        assertEquals(Optional.of(Blaster.DC17M), fighter.blaster(Faction.KOLONIEN));
+        fighter.cycleReinforcement(Faction.KOLONIEN);
+        assertEquals(ARC_TROOPER, fighter.reinforcementChoice(Faction.KOLONIEN));
     }
 
     @Test

@@ -94,7 +94,9 @@ val nexoJar = providers.gradleProperty("nexoJar").orElse(providers.environmentVa
 val stageNexo = tasks.register<Sync>("stageNexo") {
     from("nexo") { into("Nexo") }
     from("resourcepack/src/assets/blockcraft") {
-        include("models/item/props/**", "items/props/**", "textures/item/props/**")
+        include("models/item/props/**", "items/props/**", "textures/item/props/**",
+            "models/item/sternenfront/objectives/**", "items/sternenfront/objectives/**", "textures/item/sternenfront/objectives/**",
+            "models/item/sternenfront/kits/**", "items/sternenfront/kits/**", "textures/item/sternenfront/kits/**")
         into("Nexo/pack/assets/blockcraft")
     }
     if (nexoJar.isPresent) {
@@ -105,6 +107,9 @@ val stageNexo = tasks.register<Sync>("stageNexo") {
     }
     into(layout.buildDirectory.dir("nexo"))
 }
+
+val stageDirectory = providers.gradleProperty("stageDirectory").map { file(it) }
+    .getOrElse(layout.buildDirectory.dir("docker").get().asFile)
 
 tasks.register<Sync>("stagePlugins") {
     from(stageNexo) { into("paper/nexo") }
@@ -171,9 +176,13 @@ tasks.register<Sync>("stagePlugins") {
     from(project(":resourcepack").tasks.named("pack")) {
         into("velocity/blockcraft-system")
     }
+    from(project(":resourcepack").tasks.named("packSplit")) {
+        include("blockcraft-base.zip", "blockcraft-lobby.zip", "blockcraft-modes.zip", "blockcraft-starwars.zip")
+        into("velocity/blockcraft-system")
+    }
     from(project(":waker").tasks.named("jar")) {
         into("waker")
         rename { "waker.jar" }
     }
-    into(layout.buildDirectory.dir("docker"))
+    into(stageDirectory)
 }

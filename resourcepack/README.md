@@ -2,8 +2,54 @@
 
 How the proxy serves the pack is in the [root README](../README.md#resource-pack). This file is for changing what it draws.
 
+The [split pack prototype](SPLIT_PACK.md) documents the additional archives, client stack order, and rollout limits.
+
 The [presentation test guide](../paper/api/PRESENTATION.md) covers dialogue portraits, animated materials and text,
 screen effects, and the Sternenfront intro.
+
+## Edit and validate assets
+
+Finished imports are authoritative Minecraft files. Edit their models and textures in `src/assets`, their rigs in
+`bettermodel`, and their furniture rules in `../nexo/items`. `catalogs` records their native item and rig identifiers.
+The original GLBs and one-time converters are retired. They are not inputs to generation or packaging.
+The weapons in `finished-weapons.txt` and their pose models are preserved when authored equipment is regenerated.
+
+Render a finished native model without its original import file:
+
+```sh
+uv run --locked python assets.py preview blockcraft:item/props/imported/halloween_candle
+```
+
+`--yaw 217` shows the rear. The preview uses current native geometry, cutout alpha and the first animation frame.
+Vanilla textures referenced from the client require Minecraft verification; they are not bundled for this renderer.
+
+For an authored family, use the locked Python environment from this directory:
+
+```sh
+uv run --locked python assets.py list
+uv run --locked python assets.py generate planet
+```
+
+The second command prints an isolated output directory under `build/assets`. It leaves accepted source files unchanged.
+Inspect its `asset-report.json` and previews, then apply that exact result:
+
+```sh
+uv run --locked python assets.py apply /absolute/path/to/generated-workspace
+uv run --locked python assets.py check
+```
+
+Application revalidates the result and rejects changed source inputs, modified generated files and concurrent edits.
+It copies only changed accepted files and never deletes unrelated output. To generate and apply in one operation,
+pass `--apply`. `--output` selects a new scratch directory. Existing directories are preserved.
+
+Gradle's existing family tasks use this same workflow. `:resourcepack:regenerate` processes all authored visual families
+once in dependency order. It preserves finished imports. Sound generation remains an explicit family selection.
+`./gradlew build` validates and packages accepted assets without regenerating art or deploying. New backend `PackModel` registrations still use `:paper:api:packOverrides`
+with `-PclientJar=/absolute/path/to/the/matching/client.jar`.
+
+Shared model export uses `AssetFiles.py`. `NativeArt.py` supplies cuboid construction and software rendering;
+`KitPixels.py` supplies material pixels. Generation validates geometry and creates previews, but the real client
+must verify changed translucency, item framing and physical behavior. [AGENTS.md](AGENTS.md) gives the completion rules.
 
 ## Constraints from the client
 
@@ -44,7 +90,8 @@ screen effects, and the Sternenfront intro.
 
 ## Making a model
 
-Sternenfront equipment and body models come from `SternenfrontArt.java`. Edit the generator for those assets.
+Authored Sternenfront equipment and body models come from `SternenfrontArt.java`.
+Weapons listed in `finished-weapons.txt` are edited directly, including their pose variants.
 
 The hand-made 3D models live in `assets/blockcraft/models/item/<set>/`, each named by its `PackModel`. They are cuboids
 textured with vanilla block textures, which keeps the pack small and the look vanilla. Made in Blockbench, a model is
@@ -80,7 +127,7 @@ left hand's X translation, yaw and roll, so the authored hand transforms are ide
 Run `:resourcepack:generateBattle` to regenerate the equipment, firing, lowered and aim models. Java writes those transforms to
 `build/sternenfront/gun-poses.json`; `BattleArt.py` consumes that manifest and inherits each gun's geometry and other
 transforms. Running `BattleArt.py` directly requires a fresh Java generation first.
-`:resourcepack:verifyWeaponPoses`, also part of `check`, checks that the guns and guarded blades `PackModel` registers
+`verify_weapon_poses.py`, run by `assets.py check`, checks that the guns and guarded blades `PackModel` registers
 are the ones the generator writes, and their vanilla item routes, texture paths, both hands, firing and lowered
 inheritance, family framing, recoil differences, the lowered muzzle, the sights under the crosshair and wrist bounds.
 
@@ -100,6 +147,48 @@ Twin-pistol models still represent one gun per equipped hand; the pose does not 
 The firing and lowered states are discrete model swaps, with no interpolation, barrel animation or change to shot mechanics.
 Client checks must cover both dominant-hand settings, offhand pairs, firing, lowered and resting at normal and wide FOV,
 and the wrist cuff's overlap with the vanilla hand. Automated model checks cannot establish screen clearance or clipping.
+
+## Model generation and runtime
+
+The art generators run during development. Imported sets are already stored as authoritative native Minecraft models. New building kits are authored as cuboids in Python. `KitPixels.py` paints their material tiles, and the generators assign face UVs at a consistent pixel density. `ModelSurfaces.py` clips hidden and competing face patches without moving their texture coordinates.
+
+The output is ordinary model JSON, item routes, PNG textures, and Nexo definitions. Animated actors also have `.bbmodel` rigs with named bones and animation keyframes. The client pack already contains their native bone meshes. The build checks those meshes and pack dependencies before creating the ZIPs. No model generation runs during a match.
+
+Nexo places and tracks furniture. The API's `FurnitureSolids` adds native backing blocks, coarse collision cubes, and world lights. It restores owned blocks when furniture is removed or a map is saved. BetterModel plays actor animations. Sternenfront owns combat and optional objective circuits. The proxy chooses and removes resource-pack layers during transfers.
+
+`./gradlew :resourcepack:regenerate` explicitly regenerates art. `./gradlew build` validates and packages the current generated source. `stagePlugins` stages the packs, rigs, and plugin configuration. The [pack split guide](SPLIT_PACK.md) describes the client stacks and the [furniture guide](../nexo/README.md) describes physical placement.
+
+## Objective model prototypes
+
+`ObjectiveArt.py` generates the shield generator, power relay, and communications console with active, damaged,
+and disabled states. Run `:resourcepack:generateObjectiveArt` to regenerate their nine native item routes under
+`sternenfront/objectives`. The split builder includes these assets only in the Star Wars archive.
+Generation validates geometry, texture references, UVs, and state differences. It writes a manifest with anchors,
+footprints, interaction dimensions, and software renders to `build/objectives`.
+
+The generated `nexo/items/blockcraft_starwars_objectives.yml` provides placeable versions with a one-block solid
+barrier core in every state. Raw item displays remain non-solid. Place them through Nexo or the existing furniture
+layout so placement and removal also manage collision. The shield generator is one block tall at its core.
+`FurnitureSolids` mirrors these cores into real world blocks and restores the previous blocks on removal.
+Star Wars block raycasts and bot line-of-sight checks include the smaller native colliders used by the building kits.
+Sternenfront can connect these props to map-owned circuits for repair, sabotage, timed console overrides, and native shield fields.
+Maps without [field-objectives.yml](../paper/sternenfront/README.md#field-objectives) retain their existing rules. The production lobby contains only its accepted ordinary scenery.
+Operator instructions are generated in `build/objectives/README.md`.
+
+## Planet building kit
+
+`PlanetKitArt.py` generates 11 Kamino modules and 21 desert modules. Run `:resourcepack:generatePlanetKitArt`
+to regenerate the source assets. The [builder guide](art/planet-kit/README.md) records the snap grid, openings,
+connectors, support requirements and assembled examples. The manifest contains placement coordinates for each piece.
+All kit assets belong to the Star Wars pack. Nexo definitions are in `nexo/items/blockcraft_starwars_planet_kit.yml`.
+Nexo placements receive native structural backing and coarse equipment collision through `FurnitureSolids`. Raw displays remain visual previews.
+
+`MilitaryKitArt.py` adds 23 shared military pieces and surface variants. `KitActors.py` adds six static actors and
+six BetterModel rigs. Their Gradle tasks are `generateMilitaryKitArt` and `generateKitActors`; both belong to
+`regenerate`. The [shared kit guide](art/shared-kit/README.md) covers the sliding door and collision cores.
+The [actor guide](art/kit_actors/README.md) covers bone routes, clips and passive exhibition configuration.
+All three kits belong to the Star Wars pack. The ordinary lobby does not load that pack.
+Production profile delivery must be enabled separately; packaging does not activate it.
 
 ## Sturmwerft shipyard props
 

@@ -1,6 +1,7 @@
 {
   "textures": {
-    "image": "blockcraft:item/battle/glow_hegemonie"
+    "image": "blockcraft:item/battle/glow_hegemonie",
+    "particle": "blockcraft:item/battle/glow_hegemonie"
   },
   "elements": [
     {

@@ -54,6 +54,7 @@ import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.scenery.NexoScenery;
+import me.blockcraft.api.scenery.FurnitureSolids;
 import me.blockcraft.api.scenery.AmbientCreatures;
 import me.blockcraft.api.season.SeasonalBlocks;
 import me.blockcraft.api.xp.Levels;
@@ -117,6 +118,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     }
 
     private void enable() {
+        if (getServer().getPluginManager().isPluginEnabled("Nexo")) scenery.add(new FurnitureSolids(this));
         var resources = ApiResources.load(getDataPath(), this::getResource);
         var config = resources.config();
         var databaseConfig = DatabaseConfig.fromYaml(YamlFile.section(config, "database"));
@@ -201,11 +203,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 calendar, RoundConfig.from(config), dialogues, visuals, discoveries);
         BlockcraftApi.install(api);
-        if (api.isLobby()) {
-            var world = getServer().getWorlds().getFirst();
-            startScenery(world, calendar, self.group(), getServer().getWorldContainer().toPath()
-                    .resolve(world.getName()).resolve("blockcraft/scenery"));
-        }
+        var mainWorld = getServer().getWorlds().getFirst();
+        startScenery(mainWorld, calendar, self.group(), getServer().getWorldContainer().toPath()
+                .resolve(mainWorld.getName()).resolve("blockcraft/scenery"));
         waiting.ifPresent(lobby -> startScenery(lobby.world(), calendar, self.group(), lobby.directory()));
         waiting.ifPresent(lobby -> getServer().getPluginManager().registerEvents(
                 WorldProtection.in(lobby.world(), buildMode).rescue(() -> Optional.of(lobby.spawn())), this));

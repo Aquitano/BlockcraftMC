@@ -50,6 +50,8 @@ faction:
       - "<muted>unabhängiger Systeme rückt vor."
 
 class:
+  weapon-cycle: "<click>EE-3, A280 oder E-11D wählen"
+  weapon-cycle-deploy: "<muted>Republik-Soldat: Rechtsklick wechselt die Waffe."
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Klasse"
   select: "<click>Auswählen"
   selected: "<success>✔ Ausgewählt"
@@ -121,6 +123,15 @@ class:
         - "<muted>Reparaturfeld und Schnellfeuer."
 
 blaster:
+  a280:
+    name: "<white>A280-Blastergewehr"
+    lore: ["<muted>Drei präzise Bolzen pro Abzug.", "<left>Feuern <dark>· <right>Zielen"]
+  e11d:
+    name: "<white>E-11D-Blastergewehr"
+    lore: ["<muted>Präzises Dauerfeuer auf mittlere Entfernung."]
+  dc17m:
+    name: "<white>DC-17m-Kommandoblaster"
+    lore: ["<muted>Automatisches Gewehr der Klon-Kommandos."]
   stats:
     - "<bullet><muted>Schaden <accent><damage> <icon:damage> <muted>pro Schuss"
     - "<bullet><muted>Reichweite <accent><range> <muted>Blöcke <icon:range>"
@@ -129,7 +140,7 @@ blaster:
   vent-hit: "<success>Notkühlung! <muted>Der Blaster ist bereit."
   vent-miss: "<error>Daneben! <muted>Die Kühlung dauert länger."
   carbine:
-    name: "<white>DC-15S-Blasterkarabiner"
+    name: "<white>EE-3-Blasterkarabiner"
     lore:
       - "<muted>Gleichmäßige Bolzen, Schuss um Schuss."
   repeater:
@@ -143,7 +154,7 @@ blaster:
       - "<muted>Kopftreffer zählen fast doppelt."
       - "<muted>Zielfernrohr: Rechtsklick halten, Linksklick schießt."
   pistol:
-    name: "<white>DC-17-Blasterpistole"
+    name: "<white>DL-44-Blasterpistole"
     lore:
       - "<muted>Schnelle, leichte Bolzen."
   twin-pistol:
@@ -506,6 +517,11 @@ scoreboard:
   class: "<muted><icon:kit> KLASSE"
 
 reinforcement:
+  cycle: "<right>ARC-Truppler oder Klon-Kommando anzeigen"
+  clone-commando:
+    name: "<aqua>Klon-Kommando"
+    short: "KOMMANDO"
+    lore: ["<muted>Schwere Katarn-Rüstung und DC-17m.", "<muted>Schild und Thermaldetonator sichern den Vormarsch."]
   arc-trooper:
     name: "<aqua>ARC-Truppler"
     short: "ARC"
@@ -781,3 +797,8 @@ intro:
   lobby-only: '<red>Die Intro-Vorschau ist nur in der Lobby ohne laufende Szene verfügbar.</red>'
   pack-required: '<red>Das Ressourcenpaket muss für die Intro-Vorschau vollständig geladen sein.</red>'
   invalid: '<red>Die Intro-Kamerafahrt ist ungültig. Prüfe die Serverkonsole.</red>'
+
+field-objectives:
+  hint: '<yellow>Schleichen + Rechtsklick. Halte Schleichen, bis der Vorgang abgeschlossen ist.</yellow>'
+  progress: '<aqua>Systemzugriff · <white><progress></white> %</aqua>'
+  complete: '<green>Systemzustand geändert.</green>'

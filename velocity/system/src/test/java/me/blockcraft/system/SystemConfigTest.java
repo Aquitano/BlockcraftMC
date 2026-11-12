@@ -24,6 +24,36 @@ public class SystemConfigTest {
     public final TemporaryFolder folder = new TemporaryFolder();
 
     @Test
+    public void splitPackProfilesAreOptInAndKeepLobbyExhibitionConfigurable() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        var defaults = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"));
+        assertFalse(defaults.resourcePack().profiles().enabled());
+        assertEquals("blockcraft.zip", defaults.resourcePack().file());
+        assertEquals(List.of("lobby"), defaults.resourcePack().profiles().groups().get("lobby"));
+        assertEquals(List.of("starwars"), defaults.resourcePack().profiles().groups().get("story"));
+        Files.writeString(file, """
+                resource-pack:
+                  profiles:
+                    enabled: true
+                    groups:
+                      lobby: [lobby]
+                """);
+        var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"));
+        assertTrue(config.resourcePack().profiles().enabled());
+        assertEquals(List.of("lobby"), config.resourcePack().profiles().groups().get("lobby"));
+        assertEquals("blockcraft-starwars.zip", config.resourcePack().profiles().archives().get("starwars").file());
+    }
+
+    @Test
+    public void productionStoryProfileIncludesItsBodiesWeaponsAndDialogueShader() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        Files.copy(java.nio.file.Path.of("../../prod/resource-pack.yml"), file);
+        var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"));
+        assertTrue(config.resourcePack().profiles().enabled());
+        assertEquals(List.of("starwars"), config.resourcePack().profiles().groups().get("story"));
+    }
+
+    @Test
     public void discoverySnapshotExpiryDefaultsForOlderConfigsAndCanBeConfigured() throws IOException {
         var file = folder.getRoot().toPath().resolve("config.yml");
         Files.writeString(file, "discovery:\n  poll-seconds: 5\n");

@@ -48,6 +48,7 @@ public final class ProxyMessageListener implements PluginMessageListener {
                 case ProxyMessage.DuelAccepted accepted -> new DuelAcceptedEvent(player, accepted.ticket()).callEvent();
                 case ProxyMessage.DuelCancelled cancelled -> new DuelCancelledEvent(player, cancelled.ticket()).callEvent();
                 case ProxyMessage.Pack pack -> resourcePacks.update(player, pack.status());
+                case ProxyMessage.ProfileReady profile -> resourcePacks.profileReady(player, profile.token(), profile.applied());
                 case ProxyMessage.Spectate spectate -> new SpectateRequestEvent(player, spectate.friend()).callEvent();
                 case ProxyMessage.Ignore ignore -> ignores.update(player, ignore.other(), ignore.ignoring());
                 case ProxyMessage.Setting setting -> settings.changedOnProxy(player, setting.setting(), setting.value());

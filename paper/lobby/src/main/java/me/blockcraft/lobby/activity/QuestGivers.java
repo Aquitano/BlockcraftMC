@@ -5,6 +5,8 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.dialog.Dialogs;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.SpotEntities;
@@ -59,6 +61,14 @@ public final class QuestGivers implements AutoCloseable {
                 givers.add(quest, at, Figures.spawn(at, skin, messages.get("quests." + quest.key() + ".name")));
             });
         }
+    }
+
+    public void openBoard(Player player) {
+        var buttons = quests.stream().map(quest -> Dialogs.button(
+                messages.get("quests." + quest.key() + ".title"), viewer -> talk(viewer, quest))).toList();
+        Dialogs.show(player, Dialogs.create(messages.get("quests.board-title"),
+                List.of(DialogBody.plainMessage(messages.get("quests.board-description"))), List.of(),
+                Dialogs.actions(buttons, Dialogs.button(BlockcraftApi.get().messages().get("menu.close")))));
     }
 
     private void talk(Player player, Quest quest) {

@@ -122,7 +122,7 @@ final class DeployScreen {
     enum Portrait {
         KOLONIEN_SOLDIER, KOLONIEN_HEAVY, KOLONIEN_SCOUT, KOLONIEN_MEDIC,
         HEGEMONIE_SOLDIER, HEGEMONIE_HEAVY, HEGEMONIE_SCOUT, HEGEMONIE_MEDIC,
-        ARC_TROOPER, COMMANDO_DROID, JEDI, COMMANDER, SITH, BOUNTY_HUNTER;
+        ARC_TROOPER, COMMANDO_DROID, JEDI, COMMANDER, SITH, BOUNTY_HUNTER, CLONE_COMMANDO;
 
         static Portrait of(Faction faction, CombatClass combatClass) {
             return valueOf(faction.name() + "_" + combatClass.name());

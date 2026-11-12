@@ -1,6 +1,6 @@
 """Turns the generated body and blaster models into animated BetterModel files in bettermodel/.
 
-Geometry and textures still come from SternenfrontArt.java, so a body changes in one place: run that first, then this.
+Geometry and textures come from the generated bodies and authoritative native weapons.
 The joints come from rig-bodies.yml, which RigBody reads for the plain displays too. Animations are written here as keyframes: BetterModel plays idle, walk, death and damage by itself,
 Sternenfront asks for shoot, and the story's cutscenes for the gestures: talk, point, beckon, nod and the background's
 rest and look. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
@@ -16,6 +16,7 @@ import struct
 import uuid
 import yaml
 from pathlib import Path
+from RigExport import export
 
 HERE = Path(__file__).parent
 ASSETS = HERE / "src/assets/blockcraft"
@@ -89,7 +90,7 @@ class Model:
             # A gun's heat vents take their colour from the held item, which a rig has not, so they would glow white.
             if bone == "weapon" and any("tintindex" in face for face in element["faces"].values()):
                 continue
-            faces = {}
+            faces = {side: dict(uv=[0, 0, 0, 0], texture=None) for side in ("north", "south", "east", "west", "up", "down")}
             for side, face in element["faces"].items():
                 reference = textures[face["texture"].lstrip("#")]
                 texture = self.texture(reference)
@@ -102,7 +103,10 @@ class Model:
             spin = element.get("rotation")
             if spin:
                 origin = place(spin["origin"])
-                rotation["xyz".index(spin["axis"])] = spin["angle"]
+                if "axis" in spin:
+                    rotation["xyz".index(spin["axis"])] = spin["angle"]
+                else:
+                    rotation = [spin.get(axis, 0) for axis in "xyz"]
             cube = dict(name=f"{bone}_{index}", box_uv=False, rescale=False, locked=False, render_order="default",
                         allow_mirror_modeling=True, autouv=0, color=0, type="cube",
                         **{"from": list(map(min, *corners)), "to": list(map(max, *corners))}, origin=origin, rotation=turned(*rotation),
@@ -270,7 +274,7 @@ def build(family, gun):
                              visible=True, internal=True, saved=False, uuid=stable(family, "texture", reference),
                              relative_path="", source=f"data:image/png;base64,{source}"))
     size = next(iter(model.textures.values()))
-    return dict(meta=dict(format_version="5.0", model_format="free", box_uv=False), name=family, model_identifier="", visible_box=[1, 1, 0],
+    return dict(meta=dict(format_version="5.0", model_format="free", box_uv=False), blockcraft_native=1, name=family, model_identifier="", visible_box=[1, 1, 0],
                 variable_placeholders="", variable_placeholder_buttons=[], timeline_setups=[], unhandled_root_fields={},
                 resolution=dict(width=size["width"], height=size["height"]), elements=model.elements, groups=model.groups(),
                 outliner=[model.outline(model.bones["root"])], textures=textures, animations=animations(family, grip_degrees, inward_degrees))
@@ -279,9 +283,11 @@ def build(family, gun):
 def main():
     OUT.mkdir(exist_ok=True)
     for family, gun in GUNS.items():
-        model = json.dumps(build(family, gun), separators=(",", ":"))
+        built = build(family, gun)
+        model = json.dumps(built, separators=(",", ":"))
         for name in (family, family + OUTLINED):
             (OUT / f"{name}.bbmodel").write_text(model)
+            export(ASSETS.parent.parent, name, built)
     print(f"Wrote {len(GUNS)} bodies, each plain and outlined")
 
 

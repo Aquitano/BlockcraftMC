@@ -150,9 +150,9 @@ public final class DeployMenu extends Menu {
         for (int index = 0; index < classes.length && index < CLASS_CARDS.size(); index++) {
             boolean selected = view.classes().get(index).selected();
             set(CLASS_CARDS.get(index), game.loadouts().card(faction, classes[index], selected,
-                    List.of(messages.get(selected ? "class.selected" : "class.select"))));
+                    List.of(messages.get(selected ? "class.selected" : "class.select"), messages.get("class.weapon-cycle-deploy"))));
         }
-        set(SPECIALS.getFirst(), game.reinforcementUnits().card(viewer, faction, Reinforcement.of(faction),
+        set(SPECIALS.getFirst(), game.reinforcementUnits().card(viewer, faction, game.fighter(viewer).reinforcementChoice(faction),
                 view.specials().getFirst().selected(), confirmed));
         var heroes = Hero.of(faction);
         for (int index = 0; index < heroes.size() && index + 1 < SPECIALS.size(); index++) {
@@ -224,7 +224,7 @@ public final class DeployMenu extends Menu {
                     combatClass.abilities(side).stream().map(ability -> ability.icon()).toList(),
                     picked.isEmpty() && pickedUnit.isEmpty() && fighter.combatClass() == combatClass));
         }
-        var unit = Reinforcement.of(side);
+        var unit = fighter.reinforcementChoice(side);
         var specials = new ArrayList<>(List.of(new DeployScreen.Special(plain("reinforcement." + unit.key() + ".short"),
                 DeployScreen.Portrait.of(unit), game.reinforcementUnits().cost(unit),
                 game.reinforcementUnits().roster().affordable(viewer.getUniqueId(), side, unit), pickedUnit.filter(unit::equals).isPresent())));
@@ -283,7 +283,7 @@ public final class DeployMenu extends Menu {
 
     private DeployScreen.Role classRole(Faction faction, CombatClass combatClass, int points) {
         var body = game.config().stats(faction, combatClass);
-        var blaster = combatClass.blaster(faction);
+        var blaster = game.fighter(viewer).classBlaster(faction, combatClass);
         var stats = new ArrayList<>(List.of(hearts(StatIcon.HEALTH, body.health()), percent(body.speed())));
         stats.addAll(blasterStats(blaster));
         return new DeployScreen.Role(plain("deploy.screen.kind.class"), plain(combatClass.messageKey(faction) + ".name"),
@@ -501,11 +501,17 @@ public final class DeployMenu extends Menu {
         }
         int classIndex = CLASS_CARDS.indexOf(slot);
         if (classIndex >= 0) {
-            game.chooseClass(player, CombatClass.values()[classIndex]);
+            var selected = CombatClass.values()[classIndex];
+            game.chooseClass(player, selected);
+            if (event.isRightClick()) game.cycleWeapon(player);
             return;
         }
         if (slot == SPECIALS.getFirst()) {
-            game.factionOf(player).ifPresent(faction -> game.chooseReinforcement(player, Reinforcement.of(faction)));
+            if (event.isRightClick()) {
+                game.cycleReinforcement(player);
+            } else {
+                game.factionOf(player).ifPresent(faction -> game.chooseReinforcement(player, game.fighter(viewer).reinforcementChoice(faction)));
+            }
             return;
         }
         int heroIndex = SPECIALS.indexOf(slot) - 1;
