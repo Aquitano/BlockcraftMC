@@ -13,18 +13,24 @@ npc:
     name: "<primary>Funkerin Mara"
     role: "<right>Sprechen"
 
+chapter:
+  signal: "Kapitel 1: Das Signal"
+  relief: "Kapitel 2: Die Ablösung"
+
 stage:
   briefing: "<primary>Ziel <dark>● <white>Sprich mit Funkerin Mara"
   signal: "<primary>Ziel <dark>● <white>Folge dem Peilgerät zur Signalstelle"
   hold: "<primary>Ziel <dark>● <white>Haltet die Signalstelle, bis das Signal steht"
   report: "<primary>Ziel <dark>● <white>Zurück zu Mara und stimmt ab"
   ending: "<primary>Einsatz <dark>● <white>Abschluss"
+  debrief: "<primary>Ziel <dark>● <white>Melde dich bei Funkerin Mara"
 
 stage-start:
   briefing: "<prefix><muted>Funkerin Mara wartet ein paar Schritte vor euch."
   signal: "<prefix><muted>Neues Ziel: die Signalstelle. Euer Peilgerät zeigt die Richtung."
   hold: "<prefix><muted>Das Signal baut sich nur auf, solange jemand von euch an der Stelle steht."
   report: "<prefix><success>Das Signal steht. <muted>Zurück zu Mara."
+  debrief: "<prefix><muted>Die Ablösung ist eingetroffen. Mara wartet auf euch."
 
 choice:
   stay: "Die Stellung halten"
@@ -39,6 +45,10 @@ ending:
     title: "<primary>Abmarsch"
     subtitle: "<muted>Ende B: Der Trupp zieht weiter"
     summary: "<prefix><muted>Das Signal sendet weiter, und ihr seid schon auf dem Weg."
+  relieved:
+    title: "<primary>Abgelöst"
+    subtitle: "<muted>Ende: Die Signalstelle ist übergeben"
+    summary: "<prefix><muted>Die Ablösung übernimmt die Signalstelle."
 
 cutscene:
   speaker:

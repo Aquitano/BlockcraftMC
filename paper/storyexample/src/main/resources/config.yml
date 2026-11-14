@@ -20,6 +20,12 @@ stages:
   hold: {bar: red, progress: 0, spawn: "20.5 -60 8.5 90 0"}
   report: {bar: blue}
   ending: {bar: green, facts: {decision: stay}}
+  debrief: {bar: blue, facts: {decision: stay}}
+
+# Two rounds. The second opens once the first is finished, and Mara then knows what the party decided in it.
+chapters:
+  signal: {from: briefing}
+  relief: {from: debrief, carries: [decision]}
 
 cutscenes:
   scenes:

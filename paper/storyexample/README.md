@@ -1,7 +1,8 @@
 # Story example
 
 The smallest story game on the [story core](../story/README.md): one NPC, one cutscene, a spot to reach, a spot to
-hold, a vote and two endings, on the flat world of the `story` service. It exists to show how a story game is put
+hold, a vote with two endings, and a second chapter that knows how the first one ended, on the flat world of the
+`story` service. It exists to show how a story game is put
 together and to give the core something to run in `dev/verify`. It is not a mission anyone is meant to play.
 
 ```sh
@@ -16,15 +17,16 @@ Join, `/play story`, and `/start` in the waiting lobby. `/story jump <stage>` en
 | File | Shows |
 | --- | --- |
 | [`StoryExamplePlugin`](src/main/java/me/blockcraft/storyexample/StoryExamplePlugin.java) | the whole Java side of a story game: `Story.start`, a loadout, `stop` |
-| [`config.yml`](src/main/resources/config.yml) | a mission: landing and rally points, an NPC, the stages in order, a cutscene, and a key of the game's own |
+| [`config.yml`](src/main/resources/config.yml) | a mission: landing and rally points, an NPC, the stages in order, the two chapters they divide into, a cutscene, and a key of the game's own |
 | [`messages.yml`](src/main/resources/messages.yml) | the texts a mission brings: its NPC, stages, choices, endings and cutscene lines |
 | [`package.yml`](betonquest/QuestPackages/example/package.yml) | the quest package that drives the mission, with every action the core calls by name |
 | [`mara.yml`](betonquest/QuestPackages/example/mara.yml) | a conversation that reads the party's stage and casts each member's vote |
 | [`ExampleMissionTest`](src/test/java/me/blockcraft/storyexample/ExampleMissionTest.java) | a check worth copying: the core's loaders read the mission, and the package names only stages, scenes and texts that exist |
 
-The mission runs `begin`, which plays the cutscene and enters `briefing`. Mara's conversation moves the party on to
-`signal`, BetonQuest's `location` objective to `hold`, the core's `holdspot` to `report`, and the vote to `ending`,
-where `storyend` picks the ending the party chose.
+The first chapter starts with `begin_signal`, which plays the cutscene and enters `briefing`. Mara's conversation moves
+the party on to `signal`, BetonQuest's `location` objective to `hold`, the core's `holdspot` to `report`, and the vote
+to `ending`, where `storyend` picks the ending the party chose. A party that has finished it plays the second chapter
+next: `begin_relief` enters `debrief`, where Mara speaks of the decision the first chapter carried over.
 
 ## Start a game of your own
 

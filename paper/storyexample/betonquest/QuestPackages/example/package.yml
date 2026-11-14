@@ -11,15 +11,18 @@ conditions:
   signal: "storystage signal"
   hold: "storystage hold"
   report: "storystage report"
+  debrief: "storystage debrief"
   voted: "storyvoted decision"
   choseStay: "storyfact decision stay"
   choseLeave: "storyfact decision leave"
 
-# The game runs `begin` once when the mission starts, `enter_<stage>` once when the party enters a stage of
+# The game runs `begin_<chapter>` once when a chapter starts, `enter_<stage>` once when the party enters a stage of
 # config.yml's `stages`, `stage_<stage>` for every member then and for a member who rejoins, and `decided_<topic>` once
 # a vote is decided. `/story jump <stage>` enters a stage without playing what comes before.
 actions:
-  begin: "storyscene arrival then:toBriefing"
+  begin_signal: "storyscene arrival then:toBriefing"
+  begin_relief: "storystage debrief"
+  relieve: "storyend relieved"
   toBriefing: "storystage briefing"
   depart: "storystage signal"
   toHold: "storystage hold"

@@ -1,7 +1,7 @@
 conversations:
   mara:
     quester: "Funkerin Mara"
-    first: "decidedStay,decidedLeave,waiting,report,holding,underway,greeting"
+    first: "relievedStay,relievedLeave,relieved,decidedStay,decidedLeave,waiting,report,holding,underway,greeting"
     NPC_options:
       greeting:
         conditions: "briefing"
@@ -34,6 +34,20 @@ conversations:
       decidedLeave:
         conditions: "choseLeave"
         text: "Dann rückt ihr ab. Guten Weg."
+      # The second chapter: `decision` is the fact the first chapter's vote left, carried over.
+      relievedStay:
+        conditions: "debrief,choseStay"
+        text: "Ihr habt die Stellung gehalten, bis die Ablösung kam. Das vergesse ich euch nicht."
+        pointers: "dismiss"
+      relievedLeave:
+        conditions: "debrief,choseLeave"
+        text: "Ihr seid abgerückt, und das Signal lief trotzdem weiter. Die Ablösung übernimmt ab hier."
+        pointers: "dismiss"
+      # For a party that reached this chapter without the first one's decision, as `/story chapter relief` allows.
+      relieved:
+        conditions: "debrief"
+        text: "Die Ablösung ist da. Sie übernimmt die Signalstelle."
+        pointers: "dismiss"
     player_options:
       askTask:
         text: "Was genau sollen wir tun?"
@@ -49,3 +63,6 @@ conversations:
         text: "Wir rücken ab."
         actions: "voteLeave"
         pointers: "noted"
+      dismiss:
+        text: "Verstanden."
+        actions: "relieve"

@@ -1,6 +1,7 @@
 package me.blockcraft.storyexample;
 
 import me.blockcraft.story.cutscene.Cutscene;
+import me.blockcraft.story.game.Chapters;
 import me.blockcraft.story.game.Stage;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
@@ -22,7 +23,13 @@ public class ExampleMissionTest {
     @Test
     public void theCoreReadsTheMissionsStagesAndScenes() {
         var stages = Stage.load(null, CONFIG.getConfigurationSection("stages"));
-        assertEquals(List.of("briefing", "signal", "hold", "report", "ending"), stages.stream().map(Stage::name).toList());
+        var chapters = Chapters.load(CONFIG.getString("mission.name"), stages.stream().map(Stage::name).toList(), CONFIG.getConfigurationSection("chapters"));
+        assertEquals(List.of("briefing", "signal", "hold", "report", "ending"), chapters.named("signal").orElseThrow().stages());
+        assertEquals(List.of("debrief"), chapters.named("relief").orElseThrow().stages());
+        chapters.all().forEach(chapter -> {
+            assertText("chapter." + chapter.name());
+            assertTrue("no begin_" + chapter.name(), PACKAGE.contains("actions.begin_" + chapter.name()));
+        });
         var scenes = CONFIG.getConfigurationSection("cutscenes.scenes");
         for (var name : scenes.getKeys(false)) {
             var scene = Cutscene.load(name, null, scenes.getConfigurationSection(name));
@@ -41,7 +48,6 @@ public class ExampleMissionTest {
     @Test
     public void thePackageNamesOnlyWhatTheMissionHas() {
         var actions = PACKAGE.getConfigurationSection("actions");
-        assertTrue("the game starts the mission with begin", actions.contains("begin"));
         var stages = CONFIG.getConfigurationSection("stages").getKeys(false);
         named("storystage (\\w+)").forEach(stage -> {
             assertTrue("no stage " + stage, stages.contains(stage));

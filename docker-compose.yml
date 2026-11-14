@@ -261,6 +261,8 @@ services:
       BLOCKCRAFT_SERVER_GROUP: story
       BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: ""
+      # A flat world still gets its structures, and a trial chamber would hang in the air over the example.
+      GENERATE_STRUCTURES: "false"
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/story,/blockcraft/storyexample,/blockcraft/betonquest,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo,/blockcraft/bettermodel
     volumes:
       - ./build/docker/paper:/blockcraft:ro

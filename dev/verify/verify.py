@@ -673,13 +673,33 @@ def story_jump(client, run):
     stages = story_state()["stages"]
     run.report["stages"] = {}
     for stage in stages:
-        rcon(f"story jump {stage}")
+        answer = rcon(f"story jump {stage}")
         settle(client, 40)
         run.shot(client, stage)
-        run.report["stages"][stage] = story_state()
+        run.report["stages"][stage] = {"answer": re.sub(r"\x1b\[[0-9;]*m", "", answer), **story_state()}
     settle(client, 100)
     run.shot(client, "end")
     run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 60").splitlines()]
+
+
+def story_chapters(client, run):
+    """With the example game: ends its first chapter by jumping to the stage that ends it, lets the server restart, and
+    reports the chapter and the facts the next round starts with, which is the second chapter with the first's decision."""
+    rcon("story jump ending")
+    settle(client, 60)
+    run.shot(client, "first_ends")
+    run.report["first"] = story_state()
+    client.until("the server to restart", lambda: not client("status")["in_world"], 180, 2)
+    time.sleep(20)
+    wait_for_server(seconds=420)
+    join(client)
+    client("command", text="start")
+    client.until("the next round", lambda: story_state()["phase"] == "INGAME", 120, 2)
+    settle(client, 60)
+    run.shot(client, "second_starts")
+    run.report["second"] = story_state()
+    run.report["chat"] = client("hud")["chat"]
+    run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 40").splitlines()]
 
 
 HORDE = ("zombie ", "husk ", "wolf ")
@@ -996,7 +1016,7 @@ def database(query):
 SCENARIOS = {"replay": (replay, "joined"), "scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
              "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field"),
              "underfire": (under_fire, "field"), "glint": (glint, "field"), "camera": (camera, "world"),
-             "storyjump": (story_jump, "world"), "survive": (survive, "world"), "stations": (stations, "server"),
+             "storyjump": (story_jump, "world"), "storychapters": (story_chapters, "world"), "survive": (survive, "world"), "stations": (stations, "server"),
              "horde": (horde_of, "server")}
 
 
