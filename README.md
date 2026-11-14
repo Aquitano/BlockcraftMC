@@ -205,6 +205,7 @@ In containers, these replace the config edits.
 | `BLOCKCRAFT_WAITING_TEMPLATE` | `waiting-lobby.template`, the [shared waiting island](worlds/README.md#shared-waiting-island) |
 | `BLOCKCRAFT_REPLAY_DIRECTORY` | Where recordings are stored |
 | `BLOCKCRAFT_TTT_MODE` | `tasks` makes a TTT server play TTT 2 |
+| `BLOCKCRAFT_STORY_WORLDS` | Where a story game finds its [chapter worlds](paper/story/README.md#a-world-for-each-chapter), instead of its map bundle |
 | `BLOCKCRAFT_RESOURCE_PACK_URL` | The proxy's `resource-pack.url` |
 | `BLOCKCRAFT_WAKER_TOKEN` | The proxy's `on-demand.token` |
 | `BLOCKCRAFT_ON_DEMAND_GROUPS` | Names the groups the proxy starts on demand; it has no config key |

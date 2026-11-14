@@ -37,14 +37,22 @@ dialogue:
 stages: {}
 
 # A game may divide its stages into `chapters`, in order, each naming the stage it starts `from` and running up to the
-# next chapter's. A chapter is a round of its own: `storyend` ends it, and finishing it opens the next one to its
-# members. A party plays the earliest chapter any of its members has still to finish, and starts over once all have
-# finished every one. `carries` lists the facts a chapter takes over from the ending of the one before, as the first
-# member who finished that one left them. The package starts a chapter with its action `begin_<chapter>`, or `begin`.
-# Without `chapters` the mission is one chapter.
+# next chapter's. `storyend` ends a chapter, which opens the next one to its members, and the party goes straight on
+# into it; the round ends after the last. A party starting from the waiting lobby resumes a chapter it left open, or
+# plays the earliest one any of its members has still to finish, and starts over once all have finished every one.
+# `carries` lists the facts a chapter takes over from the ending of the one before. The package starts a chapter with
+# its action `begin_<chapter>`, or `begin`. A chapter with a `world` plays in a world of its own and gives its own
+# `landing`, `rally` and `npcs`, as `mission` does for the server's own world. Without `chapters` the mission is one
+# chapter.
 
 # Music and ambience are `story.music.<track>` and `story.ambience.<track>` in the pack; soundtrack.properties has each
 # recording's length, so a track loops, unless it is listed in `once`.
+# Between two chapters the screen fades to black, stays black for at least hold-ticks under the next chapter's name,
+# and fades in once every member's client has loaded the next chapter's world, or after ready-timeout-seconds.
+travel:
+  hold-ticks: 40
+  ready-timeout-seconds: 15
+
 soundtrack:
   music-volume: 0.5
   ambience-volume: 0.6

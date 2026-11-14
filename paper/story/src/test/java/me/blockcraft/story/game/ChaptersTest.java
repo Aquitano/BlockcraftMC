@@ -18,6 +18,7 @@ public class ChaptersTest {
         config.set("signal.from", "briefing");
         config.set("relief.from", reliefFrom);
         config.set("relief.carries", List.of("decision"));
+        config.set("relief.world", "relief");
         return Chapters.load("example", STAGES, config);
     }
 
@@ -28,6 +29,9 @@ public class ChaptersTest {
         assertEquals("example.relief", chapters.of("debrief").orElseThrow().campaignKey());
         assertEquals(List.of("decision"), chapters.named("relief").orElseThrow().carries());
         assertEquals(chapters.named("signal"), chapters.before(chapters.named("relief").orElseThrow()));
+        assertEquals(chapters.named("relief"), chapters.after(chapters.named("signal").orElseThrow()));
+        assertEquals(java.util.Optional.of("relief"), chapters.named("relief").orElseThrow().world());
+        assertEquals(java.util.Optional.empty(), chapters.named("signal").orElseThrow().world());
     }
 
     @Test

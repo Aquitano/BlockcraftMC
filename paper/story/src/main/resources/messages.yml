@@ -26,6 +26,10 @@ campaign:
   resumed: "<prefix><muted>Der Einsatz geht weiter, beim letzten Abschnitt, den ihr erreicht habt."
   unsaved: "<prefix><error>Der Abschluss des Einsatzes konnte nicht gespeichert werden."
   unreadable: "<prefix><error>Euer Einsatz konnte nicht geladen werden. <muted>Der Countdown beginnt von vorn."
+  unreachable: "<prefix><error>Das nächste Kapitel konnte nicht geladen werden."
+
+travel:
+  loading: "<muted>Lädt …"
 
 menu:
   stats:

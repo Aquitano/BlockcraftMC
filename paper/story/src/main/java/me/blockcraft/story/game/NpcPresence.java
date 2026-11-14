@@ -42,6 +42,10 @@ final class NpcPresence {
         return id;
     }
 
+    boolean is(LivingEntity entity) {
+        return npc.equals(entity);
+    }
+
     void dress(String model) {
         body = Bodies.dress(npc, model);
     }

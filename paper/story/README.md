@@ -29,8 +29,8 @@ and `stop()` on what that returns in `onDisable`. Everything else is content:
 The game's `config.yml` and `messages.yml` lie on the core's own, which document every key, and an operator's files
 in the game's data folder lie on both. So a game states only what is its own.
 
-The core has no weapons, no enemies and no map. `loadout` equips a member whenever the mission puts them on their
-feet, and whatever else a game needs it registers with BetonQuest itself, as its own actions and objectives. Those
+The core has no weapons, no enemies and no map. `loadout` equips a member at the start of each chapter and after a
+rejoin, and whatever else a game needs it registers with BetonQuest itself, as its own actions and objectives. Those
 reach the party through `Story.game()`: its members, its facts and its stage. The world is left peaceful, so a game
 with enemies sets the difficulty it needs after `Story.start`. A member who would die stands at the rally point again.
 
@@ -103,23 +103,48 @@ A game may divide its stages into `chapters` in config.yml, in order, each namin
 ```yaml
 chapters:
   signal: {from: briefing}
-  relief: {from: debrief, carries: [decision]}
+  relief:
+    from: debrief
+    carries: [decision]
+    world: relief
+    landing: ["-193.5 47 -317.5 0 0"]
+    rally: "-193.5 47 -317.5 0 0"
+    npcs:
+      mara: {at: "-191.5 47 -313.5 180 0"}
 ```
 
-A chapter is a round of its own. The package starts it with `begin_<chapter>`, or `begin` where it has no such
-action, `storyend` ends it, and its campaign is stored under `<mission>.<chapter>`, so each chapter resumes and counts
-as finished on its own. `storystage` stays within the chapter being played, and its name is the fact `chapter`.
+The package starts a chapter with `begin_<chapter>`, or `begin` where it has no such action, and `storyend` ends it.
+Its campaign is stored under `<mission>.<chapter>`, so each chapter resumes and counts as finished on its own.
+`storystage` stays within the chapter being played, and its name is the fact `chapter`.
 
-Finishing a chapter opens the next one. When the countdown ends, a party with no campaign left open plays the earliest
-chapter any of its members has still to finish, so nobody is taken past a chapter they have not played, and a party
-that has finished every chapter starts over. The waiting lobby tells each player their own next chapter, named by
-`chapter.<chapter>` in messages.yml.
+Ending a chapter opens the next one, and the party goes straight on into it in the same round; the round ends after
+the last chapter. A party that leaves on the way and comes back starts from the waiting lobby: it resumes a chapter it
+left open, or plays the earliest chapter any of its members has still to finish, so nobody is taken past a chapter
+they have not played. A party that has finished every chapter starts over. The waiting lobby tells each player their
+own next chapter, named by `chapter.<chapter>` in messages.yml.
 
-`carries` lists the facts a chapter takes over from the ending of the one before: the values that chapter ended with
-for the first member, in join order, who finished it. They are set before `begin_<chapter>` runs, so its conditions
+`carries` lists the facts a chapter takes over from the ending of the one before. Going on in the same round, those
+are the facts the party has just ended with; starting from the waiting lobby, the ones the first member, in join
+order, who finished the chapter before ended it with. They are set before `begin_<chapter>` runs, so its conditions
 can read them. A `/story jump` clears them like every other fact, so a stage that needs one names it in its `facts`.
 
 A mission without `chapters` is one chapter, stored under the mission's own name.
+
+### A world for each chapter
+
+A chapter without `world` plays in the server's own world, at the `landing`, `rally` and `npcs` of `mission`. A
+chapter with `world: <name>` plays in a world of its own and names its own `landing`, `rally` and `npcs`. That world
+is a copy of the dimension template `<name>`, a folder with its `region/`, among the game's chapter worlds:
+`BLOCKCRAFT_STORY_WORLDS`, or `blockcraft/<game plugin>/worlds/` in the map bundle of the server's own world, where a
+map's other files live too. It loads as `story:<name>`, standing still and peaceful like the server's own world, and
+every stage's `spawn` and every cutscene of the chapter is a position in it. A game with enemies sets the difficulty
+it needs in `WorldLoadEvent`. The server refuses to start a mission whose chapter world has no template.
+
+The next chapter's world is copied and loaded while the party still plays the chapter before, and the last chapter's
+world is unloaded once the party has left it, so at most two of them are loaded at once. Between two chapters the
+screen fades to black under the next chapter's name and `travel.loading`, stays black for at least
+`travel.hold-ticks`, and fades in once every member's client has loaded the new world, or after
+`travel.ready-timeout-seconds`. The fade needs the pack; without it the members only see the title.
 
 ## Debugging
 
@@ -127,11 +152,11 @@ A mission without `chapters` is one chapter, stored under the mission's own name
 
 | Command | Does |
 | --- | --- |
-| `/story` or `/story state [json]` | chapter, stage, facts, the playing scene and its tick, the hold, timers, soundtrack, votes and the campaign with its revision |
+| `/story` or `/story state [json]` | chapter and its world, stage, facts, the playing scene and its tick, the hold, timers, soundtrack, votes and the campaign with its revision |
 | `/story log [count]` | the last story events: facts, stages, actions, lines and answers, scenes, timers, sounds |
 | `/story trace` | streams those events into your chat as they happen |
 | `/story hud` | the state in the sidebar, updated twice a second |
-| `/story jump <stage> [fact=value ...]` | puts the party at a stage with that stage's `facts`; from the waiting lobby it starts that stage's chapter, during a round it stays within the chapter played |
+| `/story jump <stage> [fact=value ...]` | puts the party at a stage with that stage's `facts`; a stage of another chapter, or any stage from the waiting lobby, starts that chapter first, in its world |
 | `/story chapter <chapter>` | in the waiting lobby: the next start plays that chapter afresh, whatever the members finished or left open |
 | `/story fact <name> [value\|+n\|clear]` | reads or changes a fact |
 | `/story run <action> [player]` | runs a package action for the party, or for one member |

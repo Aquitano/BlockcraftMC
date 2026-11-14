@@ -52,7 +52,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -63,7 +62,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -100,14 +98,15 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
 
     private final JavaPlugin plugin;
     private final Messages messages;
-    private final World world;
+    private final ChapterWorlds worlds;
     private final Round round;
     private final RoundSummary summary;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
     private final LobbyEntrance entrance;
-    private final List<Location> landing;
-    private final Location rally;
+    /** The world the party plays in now, with where it lands and rallies and its NPCs. */
+    private Setting setting;
+    private final LoadingScreen loading;
     private final Cutscenes scenes;
     private final StoryNpcs npcs;
     private final Consumer<Player> loadout;
@@ -126,8 +125,6 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private final Set<UUID> party = new LinkedHashSet<>();
     private final Map<String, Map<UUID, String>> votes = new HashMap<>();
     private final String mission;
-    private final Map<String, String> npcModels = new LinkedHashMap<>();
-    private final List<NpcPresence> presences = new ArrayList<>();
     private final BukkitTask presence;
     /** The spots the party has held, by objective, which a member's stale objective must not restart. */
     private final Map<String, HoldObjective> held = new LinkedHashMap<>();
@@ -149,12 +146,12 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
      * {@code campaignsOf} opens the campaigns stored under a chapter's key, and {@code loadout} equips a member
      * whenever the mission puts them on their feet: at its start and after a rejoin.
      */
-    public StoryGame(JavaPlugin plugin, GameConfig gameConfig, Messages messages, World world, StatsRepository stats,
+    public StoryGame(JavaPlugin plugin, GameConfig gameConfig, Messages messages, ChapterWorlds worlds, StatsRepository stats,
                      StatsMenus statsMenus, Function<String, Campaigns> campaignsOf, SeenScenes seen, Consumer<Player> loadout) {
         this.plugin = plugin;
         this.loadout = loadout;
         this.messages = messages;
-        this.world = world;
+        this.worlds = worlds;
         this.campaignsOf = campaignsOf;
         this.trace = new Trace(plugin);
         this.facts = new Facts(trace);
@@ -162,16 +159,18 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         var config = plugin.getConfig();
         var mission = config.getConfigurationSection("mission");
         this.mission = mission.getString("name", "mission");
-        this.landing = Spots.all(world, mission, "landing");
-        this.rally = Spots.at(world, mission, "rally");
-        this.cutscenes = loadCutscenes(world, config.getConfigurationSection("cutscenes.scenes"));
-        this.stages = Stage.load(world, config.getConfigurationSection("stages"));
+        this.cutscenes = loadCutscenes(worlds.main(), config.getConfigurationSection("cutscenes.scenes"));
+        this.stages = Stage.load(worlds.main(), config.getConfigurationSection("stages"));
         divide(chapters(this.mission, stages, config));
+        chapters.all().forEach(each -> {
+            worlds.check(each);
+            Setting.check(positions(config, each));
+        });
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.getInt("rewards.win")), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.getInt("players.max"), gameConfig);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, 1, ignored -> { }, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(), statsMenus, countdown);
-        this.entrance = new LobbyEntrance(round, countdown, hotbar, this::lobbySpawn, () -> Optional.of(rally),
+        this.entrance = new LobbyEntrance(round, countdown, hotbar, this::lobbySpawn, () -> Optional.of(setting.rally()),
                 OptionalInt.empty(), this::greet);
         this.soundtrack = new Soundtrack(plugin, trace, Soundtrack.Settings.from(config.getConfigurationSection("soundtrack")), round::players);
         this.voices = Voices.load(plugin);
@@ -186,21 +185,20 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         this.npcs = new StoryNpcs(plugin);
         this.hold = new Hold(plugin, round::players);
         this.bar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
-        var npcSection = mission.getConfigurationSection("npcs");
-        if (npcSection != null) {
-            for (var id : npcSection.getKeys(false)) {
-                var npc = npcSection.getConfigurationSection(id);
-                var post = Spots.at(world, npc, "at");
-                npcModels.put(id, npc.getString("model", ""));
-                presences.add(new NpcPresence(id, spawnNpc(id, post), post, round::players, dialogue));
-            }
-        }
-        this.presence = Bukkit.getScheduler().runTaskTimer(plugin, () -> presences.forEach(NpcPresence::tick), 1, 1);
+        this.setting = Setting.in(plugin, worlds.main(), mission, npcs, messages, round::players, dialogue);
+        this.loading = new LoadingScreen(plugin, new LoadingScreen.Settings(Math.max(1, config.getInt("cutscenes.fade-ticks")),
+                Math.max(0, config.getInt("travel.hold-ticks")), Math.max(1, config.getInt("travel.ready-timeout-seconds")) * 20));
+        this.presence = Bukkit.getScheduler().runTaskTimer(plugin, () -> setting.tick(), 1, 1);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     private static Chapters chapters(String mission, List<Stage> stages, ConfigurationSection config) {
         return Chapters.load(mission, stages.stream().map(Stage::name).toList(), config.getConfigurationSection("chapters"));
+    }
+
+    /** Where a chapter's party lands, rallies and meets its NPCs: in its own section once it has its own world, else in {@code mission}. */
+    private static ConfigurationSection positions(ConfigurationSection config, Chapters.Chapter chapter) {
+        return config.getConfigurationSection(chapter.world().isPresent() ? "chapters." + chapter.name() : "mission");
     }
 
     private void divide(Chapters divided) {
@@ -223,22 +221,6 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private static Map<String, Cutscene> loadCutscenes(World world, ConfigurationSection section) {
         return section.getKeys(false).stream().collect(Collectors.toMap(Function.identity(),
                 name -> Cutscene.load(name, world, section.getConfigurationSection(name)), (a, b) -> a, LinkedHashMap::new));
-    }
-
-    /** An NPC from {@code mission.npcs}, named by {@code npc.<id>.name} and {@code npc.<id>.role} in messages.yml. */
-    private Mannequin spawnNpc(String id, Location at) {
-        world.addPluginChunkTicket(at.getBlockX() >> 4, at.getBlockZ() >> 4, plugin);
-        var npc = world.spawn(at, Mannequin.class, entity -> {
-            entity.setPersistent(false);
-            entity.setImmovable(true);
-            entity.setInvulnerable(true);
-            entity.setGravity(false);
-            entity.customName(messages.get("npc." + id + ".name"));
-            entity.setCustomNameVisible(true);
-            entity.setDescription(messages.get("npc." + id + ".role"));
-        });
-        npcs.put(id, npc);
-        return npc;
     }
 
     /** The mission's name, which names its quest package and keys what its members have seen and decided. */
@@ -299,6 +281,11 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         return Optional.ofNullable(chapter);
     }
 
+    /** The world the party plays in now, or would land in from the waiting lobby. */
+    public World world() {
+        return setting.world();
+    }
+
     /** {@code /story chapter}: the next start plays {@code name} afresh, whatever the members have finished or left open. */
     public Optional<String> pick(String name) {
         if (phase() != GamePhase.LOBBY) return Optional.of("The round is " + phase() + "; a chapter is picked in the waiting lobby");
@@ -337,7 +324,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     }
 
     public Optional<Location> lobbySpawn() {
-        return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn).or(() -> Optional.of(rally));
+        return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn).or(() -> Optional.of(setting.rally()));
     }
 
     private void greet(Player player) {
@@ -381,7 +368,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
             return null;
         });
         equip(player);
-        player.teleport(rally);
+        player.teleport(setting.rally());
         player.showBossBar(bar);
         soundtrack.restart(player);
         var stage = stage();
@@ -461,46 +448,98 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     /** {@code standings} are the members' in the order they joined, which is whose open campaign and whose ending count first. */
     private void begin(List<Progress> standings) {
         var open = picked.isPresent() ? Optional.<Progress.Open>empty() : standings.stream().map(Progress::open).flatMap(Optional::stream).findFirst();
-        var resumed = open.flatMap(left -> chapters.named(left.chapter()));
-        var at = resumed.flatMap(left -> stage(open.get().campaign().stage()).filter(stage -> left.stages().contains(stage.name())));
-        if (open.isPresent() && at.isEmpty()) {
+        var resumed = open.flatMap(left -> chapters.named(left.chapter()))
+                .filter(left -> left.stages().contains(open.get().campaign().stage()));
+        if (open.isPresent() && resumed.isEmpty()) {
             trace.event("campaign", open.get().campaign().id() + " stopped at " + open.get().campaign().stage() + ", which is no stage of " + open.get().chapter() + " any more");
         }
-        if (at.isPresent()) {
-            assemble(resumed.get(), open.get().campaign());
-            Bukkit.broadcast(messages.get("campaign.resumed"));
-            place(at.get(), open.get().campaign().facts(), "resume");
+        if (resumed.isPresent()) {
+            var left = open.get().campaign();
+            enterChapter(resumed.get(), left, "resume", () -> {
+                Bukkit.broadcast(messages.get("campaign.resumed"));
+                place(stage(left.stage()).orElseThrow(), left.facts(), "resume");
+            });
             return;
         }
         var next = picked.orElseGet(() -> chapters.next(standings.stream().map(standing -> standing.finished().keySet()).toList()));
-        assemble(next, Campaign.fresh());
-        if (chapters.all().size() > 1) Bukkit.broadcast(messages.get("campaign.chapter", Placeholder.component("chapter", chapterName(next))));
-        chapters.before(next).flatMap(before -> standings.stream().map(standing -> standing.finished().get(before.name()))
-                .filter(Objects::nonNull).findFirst()).ifPresent(ended -> next.carries().forEach(fact ->
-                Optional.ofNullable(ended.facts().get(fact)).ifPresent(value -> facts.set(fact, value, "carried into " + next.name()))));
+        var carried = chapters.before(next).flatMap(before -> standings.stream().map(standing -> standing.finished().get(before.name()))
+                .filter(Objects::nonNull).findFirst()).map(ended -> carried(next, ended.facts())).orElse(Map.of());
+        enterChapter(next, Campaign.fresh(), "start", () -> {
+            if (chapters.all().size() > 1) Bukkit.broadcast(messages.get("campaign.chapter", Placeholder.component("chapter", chapterName(next))));
+            open(next, carried);
+        });
+    }
+
+    /** The facts {@code next} takes over from {@code ended}, the facts the chapter before it ended with. */
+    private static Map<String, String> carried(Chapters.Chapter next, Map<String, String> ended) {
+        var carried = new LinkedHashMap<String, String>();
+        next.carries().forEach(fact -> Optional.ofNullable(ended.get(fact)).ifPresent(value -> carried.put(fact, value)));
+        return carried;
+    }
+
+    /** The chapter begins with what it carries over, by the package's {@code begin_<chapter>}, or {@code begin}. */
+    private void open(Chapters.Chapter next, Map<String, String> carried) {
+        carried.forEach((fact, value) -> facts.set(fact, value, "carried into " + next.name()));
         quests.runParty(quests.has("begin_" + next.name()) ? "begin_" + next.name() : "begin", "start of " + next.name());
     }
 
-    /** The members land, equipped, and the chapter begins; the NPCs get their bodies now, as BetterModel loads after the plugins. */
+    /**
+     * Makes {@code next}'s world ready, which may take a moment for a world of its own, then moves the party into it
+     * with {@code campaign} and runs {@code then}. A world that cannot be loaded ends the round, or restarts the
+     * waiting lobby's countdown.
+     */
+    private void enterChapter(Chapters.Chapter next, Campaign campaign, String cause, Runnable then) {
+        trace.event("chapter", next.name() + " is getting ready (" + cause + ")");
+        worlds.prepare(next).whenComplete((world, failure) -> Tasks.sync(plugin, () -> {
+            if (failure != null || world == null) {
+                plugin.getSLF4JLogger().warn("Chapter {} could not be loaded", next.name(), failure);
+                trace.event("chapter", next.name() + " could not be loaded: " + (failure == null ? "no world" : failure.getMessage()));
+                loading.clear(round.players());
+                Bukkit.broadcast(messages.get("campaign.unreachable"));
+                if (phase() == GamePhase.INGAME) round.end(); else countdown.start();
+                return;
+            }
+            if (round.players().isEmpty()) return;
+            var left = setting;
+            if (!world.equals(left.world()) || next.world().isPresent() || chapter != null && chapter.world().isPresent()) {
+                setting = Setting.in(plugin, world, positions(plugin.getConfig(), next), npcs, messages, round::players, dialogue);
+                stages = Stage.load(world, plugin.getConfig().getConfigurationSection("stages"));
+                cutscenes = loadCutscenes(world, plugin.getConfig().getConfigurationSection("cutscenes.scenes"));
+            }
+            assemble(next, campaign);
+            if (left != setting) {
+                round.spectators().forEach(watcher -> watcher.teleport(setting.rally()));
+                left.close();
+                trace.event("world", world.getKey().asString() + " (Bukkit name " + world.getName() + ") for " + next.name());
+                if (!left.world().equals(world)) worlds.release(left.world());
+            }
+            then.run();
+        }));
+    }
+
+    /** The members land, equipped, and the chapter begins, while the next chapter's world gets ready. */
     private void assemble(Chapters.Chapter played, Campaign campaign) {
         if (saves != null) saves.close();
         chapter = played;
         picked = Optional.empty();
+        ended = false;
+        endingSaved = null;
         facts.set(Facts.CHAPTER, played.name(), "start");
         saves = new Saves(campaigns.get(played.name()), campaign, plugin.getSLF4JLogger());
         trace.event("campaign", campaign.id() + (campaign.revision() == 0 ? " begins " + played.name()
                 : " resumes " + played.name() + " from revision " + campaign.revision()));
-        round.enter(GamePhase.INGAME);
-        presences.forEach(npc -> npc.dress(npcModels.getOrDefault(npc.id(), "")));
+        if (phase() == GamePhase.LOBBY) round.enter(GamePhase.INGAME);
+        setting.dress();
         var members = round.players();
         for (int i = 0; i < members.size(); i++) {
             var member = members.get(i);
             party.add(member.getUniqueId());
             equip(member);
-            member.teleport(landing.isEmpty() ? rally : landing.get(i % landing.size()));
+            member.teleport(setting.landing(i));
             member.showBossBar(bar);
         }
-        trace.event("mission", "started with " + members.stream().map(Player::getName).collect(Collectors.joining(", ")));
+        trace.event("mission", played.name() + " with " + members.stream().map(Player::getName).collect(Collectors.joining(", ")));
+        chapters.after(played).ifPresent(worlds::prepare);
     }
 
     private void equip(Player player) {
@@ -576,35 +615,41 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
 
     /**
      * Puts the party at {@code name} as if it had played up to there: whatever runs is stopped, the facts become the
-     * stage's own with {@code overrides} on top, and the members stand at its spawn. From the waiting lobby it starts
-     * the stage's chapter first, without what begins it; during a round it stays within the chapter being played.
+     * stage's own with {@code overrides} on top, and the members stand at its spawn. A stage of another chapter, or any
+     * stage from the waiting lobby, starts that chapter first, in its world, without what begins it.
      */
     public Optional<String> jump(String name, Map<String, String> overrides, String cause) {
-        var target = stage(name);
+        var target = chapters.of(name);
         if (target.isEmpty()) return Optional.of("No stage " + name + "; there are " + stages.stream().map(Stage::name).toList());
         if (phase() == GamePhase.LOBBY) {
             if (round.players().isEmpty()) return Optional.of("Nobody is in the waiting lobby to play it");
             countdown.cancel();
-            assemble(chapters.of(name).orElseThrow(), Campaign.fresh());
         } else if (phase() != GamePhase.INGAME) {
             return Optional.of("The round is " + phase() + ", wait for the next one");
-        } else if (!chapter.stages().contains(name)) {
-            return Optional.of(name + " is a stage of " + chapters.of(name).orElseThrow().name() + ", and the round plays " + chapter.name()
-                    + "; jump there from the waiting lobby");
         }
         trace.event("jump", name + " " + overrides + " by " + cause);
-        var start = new LinkedHashMap<>(target.get().facts());
-        start.putAll(overrides);
-        place(target.get(), start, cause);
+        Runnable land = () -> {
+            var stage = stage(name).orElseThrow();
+            var start = new LinkedHashMap<>(stage.facts());
+            start.putAll(overrides);
+            place(stage, start, cause);
+        };
+        if (phase() == GamePhase.INGAME && target.get().equals(chapter)) {
+            land.run();
+        } else {
+            halt(cause);
+            loading.clear(round.players());
+            enterChapter(target.get(), Campaign.fresh(), cause, land);
+        }
         return Optional.empty();
     }
 
-    /** Stops whatever runs and puts the party at {@code target} with exactly {@code start} as its facts. */
-    private void place(Stage target, Map<String, String> start, String cause) {
+    /** Stops whatever runs: scenes, soundtrack, timers, a hold, votes, conversations and a pending ending. */
+    private void halt(String cause) {
         scenes.cancelAll();
         scenes.restore();
         soundtrack.stopAll();
-        timers.clear("jump");
+        timers.clear(cause);
         hold.close();
         votes.clear();
         held.clear();
@@ -613,9 +658,15 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         endingSaved = null;
         round.players().forEach(dialogue::close);
         hold(false);
+    }
+
+    /** Stops whatever runs and puts the party at {@code target} with exactly {@code start} as its facts. */
+    private void place(Stage target, Map<String, String> start, String cause) {
+        halt(cause);
         facts.clearAll(cause);
+        facts.set(Facts.CHAPTER, chapter.name(), cause);
         start.forEach((fact, value) -> facts.set(fact, value, cause));
-        var spawn = target.spawn().orElse(rally);
+        var spawn = target.spawn().orElse(setting.rally());
         round.players().forEach(member -> {
             member.setGameMode(GameMode.ADVENTURE);
             member.teleport(spawn);
@@ -702,9 +753,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         }
         Consumer<String> run = forParty ? action -> quests.runParty(action, "scene " + cutscene.name())
                 : action -> trace.event("action", action + " skipped in the preview");
-        var cast = new HashMap<String, Cutscenes.Npc>();
-        npcs.all().forEach((id, body) -> cast.put(id, new Cutscenes.Npc(body, npcModels.getOrDefault(id, ""))));
-        scenes.play(cutscene, viewers, forParty, cast, run, () -> {
+        scenes.play(cutscene, viewers, forParty, setting.cast(), run, () -> {
             hold(false);
             if (!forParty) music.ifPresent(sound -> viewers.forEach(viewer -> viewer.stopSound(sound)));
             viewers.forEach(soundtrack::restart);
@@ -721,7 +770,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
 
     /** A cutscene moves the NPCs while it plays, so they leave their bearing to it. */
     private void hold(boolean held) {
-        presences.forEach(npc -> npc.hold(held));
+        setting.hold(held);
     }
 
     /** {@code /story skip}: whatever the party waits on now ends at once, the scene first, then the hold, then a timer. */
@@ -797,16 +846,37 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         var saved = new CompletableFuture<Saves.Outcome>();
         endingSaved = saved;
         save(Optional.of(ending), "ending " + ending, saved::complete);
-        // The round ends once the title has shown and the ending is stored, as the next round's server starts fresh.
+        var next = chapters.after(chapter);
+        next.ifPresent(worlds::prepare);
+        // Once the title has shown and the ending is stored, the party goes on to the next chapter, or the round ends,
+        // as the next round's server starts fresh.
         Tasks.later(plugin, ENDING_TITLE_TICKS, () -> saved.completeOnTimeout(Saves.Outcome.FAILED, ENDING_SAVE_SECONDS, TimeUnit.SECONDS)
                 .thenAccept(outcome -> Tasks.sync(plugin, () -> {
                     // A /story jump in the meantime has started the mission again.
                     if (endingSaved != saved) return;
                     if (outcome != Saves.Outcome.SAVED) Bukkit.broadcast(messages.get("campaign.unsaved"));
+                    if (next.isPresent() && !round.players().isEmpty()) {
+                        travel(next.get());
+                        return;
+                    }
                     scenes.restore();
                     soundtrack.stopAll();
                     round.end();
                 })));
+    }
+
+    /**
+     * The party goes on to {@code next} in the same round: the screen goes black under the chapter's name, the world it
+     * plays in gets ready, the members land there, and the screen comes back once their clients have loaded it.
+     */
+    private void travel(Chapters.Chapter next) {
+        var carried = carried(next, facts.all());
+        trace.event("chapter", chapter.name() + " is over, on to " + next.name());
+        loading.cover(round::players, chapterName(next), messages.get("travel.loading"), () -> {
+            halt("travel");
+            facts.clearAll("travel");
+            enterChapter(next, Campaign.fresh(), "travel", () -> loading.reveal(round::players, () -> open(next, carried)));
+        });
     }
 
     /** Saves the party's facts as they are now, and with {@code ending} once it has one, then hands back how it went. */
@@ -837,8 +907,8 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         Chapters newChapters;
         Soundtrack.Settings newSoundtrack;
         try {
-            newScenes = loadCutscenes(world, config.getConfigurationSection("cutscenes.scenes"));
-            newStages = Stage.load(world, config.getConfigurationSection("stages"));
+            newScenes = loadCutscenes(setting.world(), config.getConfigurationSection("cutscenes.scenes"));
+            newStages = Stage.load(setting.world(), config.getConfigurationSection("stages"));
             newChapters = chapters(mission, newStages, config);
             newSoundtrack = Soundtrack.Settings.from(config.getConfigurationSection("soundtrack"));
         } catch (RuntimeException invalid) {
@@ -874,7 +944,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         if (member.getHealth() - event.getFinalDamage() > 0) return;
         event.setCancelled(true);
         PlayerReset.resetHealth(member);
-        member.teleport(rally);
+        member.teleport(setting.rally());
         member.sendMessage(messages.get("fallen"));
         trace.event("member", member.getName() + " fell and is back at the rally");
     }
@@ -893,7 +963,9 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         timers.clear("shutdown");
         soundtrack.close();
         if (saves != null) saves.close();
-        npcs.all().values().forEach(Mannequin::remove);
+        loading.close();
+        setting.close();
+        worlds.close();
         round.stop();
     }
 }
