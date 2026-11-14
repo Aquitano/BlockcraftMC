@@ -18,7 +18,7 @@ import java.util.Optional;
 
 /** Everything about the party's story at one moment, for {@code /story state}, its JSON and the debug sidebar. */
 public record StoryState(String phase, String stage, int stageNumber, List<String> stages, List<String> members,
-                         Map<String, String> facts, Optional<Cutscenes.Progress> scene, Optional<Double> upload,
+                         Map<String, String> facts, Optional<Cutscenes.Progress> scene, Optional<Double> hold,
                          List<Timer> timers, Optional<String> music, Optional<String> ambience,
                          Map<String, Map<String, String>> votes, Map<String, DialogueHud.Panel> panels,
                          Optional<String> campaign) {
@@ -31,7 +31,7 @@ public record StoryState(String phase, String stage, int stageNumber, List<Strin
         var panels = new LinkedHashMap<String, DialogueHud.Panel>();
         game.members().forEach(member -> game.dialogue().panel(member).ifPresent(panel -> panels.put(member.getName(), panel)));
         return new StoryState(game.phase().name(), game.stage(), stages.indexOf(game.stage()) + 1, stages,
-                game.members().stream().map(Player::getName).toList(), game.facts().ordered(), game.sceneProgress(), game.upload(),
+                game.members().stream().map(Player::getName).toList(), game.facts().ordered(), game.sceneProgress(), game.hold(),
                 game.timers().pending().stream().map((Timers.Pending pending) -> new Timer(pending.label(), pending.due() - now)).toList(),
                 game.music().playing(Soundtrack.Channel.MUSIC), game.music().playing(Soundtrack.Channel.AMBIENCE), game.openVotes(), panels,
                 game.campaign());
@@ -43,7 +43,7 @@ public record StoryState(String phase, String stage, int stageNumber, List<Strin
                 + ", members " + String.join(", ", members));
         lines.add("facts " + (facts.isEmpty() ? "-" : facts.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList()));
         scene.ifPresent(at -> lines.add("scene " + at.scene() + " " + at.tick() + "/" + at.duration() + " for " + at.viewers()));
-        upload.ifPresent(done -> lines.add("upload " + Math.round(done * 100) + "%"));
+        hold.ifPresent(done -> lines.add("hold " + Math.round(done * 100) + "%"));
         timers.forEach(timer -> lines.add("timer in " + timer.inTicks() + " ticks: " + timer.label()));
         lines.add("music " + music.orElse("-") + ", ambience " + ambience.orElse("-"));
         votes.forEach((topic, cast) -> lines.add("vote " + topic + " " + cast));
@@ -57,7 +57,7 @@ public record StoryState(String phase, String stage, int stageNumber, List<Strin
         var json = new LinkedHashMap<String, Object>(Map.of(
                 "phase", phase, "stage", stage, "stages", stages, "members", members, "facts", facts,
                 "scene", scene.map(at -> Map.of("name", at.scene(), "tick", at.tick(), "duration", at.duration())).orElse(Map.of()),
-                "upload", upload.orElse(-1.0),
+                "hold", hold.orElse(-1.0),
                 "timers", timers,
                 "soundtrack", Map.of("music", music.orElse(""), "ambience", ambience.orElse("")),
                 "votes", votes));

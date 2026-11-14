@@ -1,6 +1,7 @@
 package me.blockcraft.story.dialogue;
 
 import net.kyori.adventure.key.Key;
+import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,9 +27,10 @@ public final class Voices {
         this.lengths = lengths;
     }
 
-    public static Voices load() {
+    /** From {@code voices.properties} in the jar of {@code game}, the plugin whose mission speaks these lines. */
+    public static Voices load(Plugin game) {
         var properties = new Properties();
-        try (var input = Voices.class.getResourceAsStream("/voices.properties")) {
+        try (var input = game.getResource("voices.properties")) {
             if (input != null) properties.load(new InputStreamReader(input, StandardCharsets.UTF_8));
         } catch (IOException failure) {
             throw new IllegalStateException("Cannot read voices.properties", failure);

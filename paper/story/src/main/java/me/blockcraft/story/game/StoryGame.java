@@ -1,7 +1,6 @@
 package me.blockcraft.story.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -18,6 +17,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.story.CoreDefaults;
 import me.blockcraft.story.campaign.Campaign;
 import me.blockcraft.story.campaign.Campaigns;
 import me.blockcraft.story.campaign.Saves;
@@ -28,7 +28,7 @@ import me.blockcraft.story.debug.Trace;
 import me.blockcraft.story.dialogue.DialogueHud;
 import me.blockcraft.story.dialogue.StorySound;
 import me.blockcraft.story.dialogue.Voices;
-import me.blockcraft.story.quest.ConsoleObjective;
+import me.blockcraft.story.quest.HoldObjective;
 import me.blockcraft.story.quest.Party;
 import me.blockcraft.story.quest.Quests;
 import me.blockcraft.story.quest.StoryNpcs;
@@ -107,8 +107,8 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private final Location rally;
     private final Cutscenes scenes;
     private final StoryNpcs npcs;
-    private final Blasters blasters;
-    private final ConsoleDefense defense;
+    private final Consumer<Player> loadout;
+    private final Hold hold;
     private final Campaigns campaigns;
     private final SeenScenes seen;
     private final BossBar bar;
@@ -124,8 +124,8 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private final Map<String, String> npcModels = new LinkedHashMap<>();
     private final List<NpcPresence> presences = new ArrayList<>();
     private final BukkitTask presence;
-    /** The consoles the party has held, by objective, which a member's stale objective must not restart. */
-    private final Map<String, ConsoleObjective> heldConsoles = new LinkedHashMap<>();
+    /** The spots the party has held, by objective, which a member's stale objective must not restart. */
+    private final Map<String, HoldObjective> held = new LinkedHashMap<>();
     private Saves saves;
     private Map<String, Cutscene> cutscenes;
     private List<Stage> stages;
@@ -135,9 +135,11 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private CompletableFuture<Saves.Outcome> endingSaved;
     private boolean starting;
 
+    /** {@code loadout} equips a member whenever the mission puts them on their feet: at its start and after a rejoin. */
     public StoryGame(JavaPlugin plugin, GameConfig gameConfig, Messages messages, World world, StatsRepository stats,
-                     StatsMenus statsMenus, Campaigns campaigns, SeenScenes seen) {
+                     StatsMenus statsMenus, Campaigns campaigns, SeenScenes seen, Consumer<Player> loadout) {
         this.plugin = plugin;
+        this.loadout = loadout;
         this.messages = messages;
         this.world = world;
         this.campaigns = campaigns;
@@ -158,7 +160,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         this.entrance = new LobbyEntrance(round, countdown, hotbar, this::lobbySpawn, () -> Optional.of(rally),
                 OptionalInt.empty(), this::greet);
         this.soundtrack = new Soundtrack(plugin, trace, Soundtrack.Settings.from(config.getConfigurationSection("soundtrack")), round::players);
-        this.voices = Voices.load();
+        this.voices = Voices.load(plugin);
         warnLongVoices();
         this.seen = seen;
         var dialogueSettings = DialogueHud.Settings.from(config.getConfigurationSection("dialogue"),
@@ -168,10 +170,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         this.dialogue = new DialogueHud(plugin, dialogueSettings, round::players);
         this.scenes = new Cutscenes(plugin, messages, voices, seen, dialogueSettings.typing(), Cutscenes.Settings.from(config.getConfigurationSection("cutscenes")));
         this.npcs = new StoryNpcs(plugin);
-        this.blasters = new Blasters(plugin, config.getDouble("blaster.damage"), config.getInt("blaster.cooldown-ticks"),
-                config.getDouble("blaster.range"));
-        this.defense = new ConsoleDefense(plugin, ConsoleDefense.Settings.from(config.getConfigurationSection("defense")),
-                Spots.all(world, mission, "droid-spawns"), round::players, blasters, messages.get("defense.droid"));
+        this.hold = new Hold(plugin, round::players);
         this.bar = BossBar.bossBar(Component.empty(), 1, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
         var npcSection = mission.getConfigurationSection("npcs");
         if (npcSection != null) {
@@ -184,7 +183,6 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         }
         this.presence = Bukkit.getScheduler().runTaskTimer(plugin, () -> presences.forEach(NpcPresence::tick), 1, 1);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        plugin.getServer().getPluginManager().registerEvents(blasters, plugin);
     }
 
     /** A recording longer than its subtitle's slot runs into the next line or past the shot; its timing needs moving. */
@@ -285,9 +283,9 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         return scenes.progress();
     }
 
-    /** How far the console's upload has come while the defence runs. */
-    public Optional<Double> upload() {
-        return defense.running() ? Optional.of(defense.progress()) : Optional.empty();
+    /** How far the party has come with the spot it holds. */
+    public Optional<Double> hold() {
+        return hold.running() ? Optional.of(hold.progress()) : Optional.empty();
     }
 
     /** Each open vote's topic with every member's choice so far, by name. */
@@ -337,8 +335,8 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         player.showBossBar(bar);
         soundtrack.restart(player);
         var stage = stage();
-        // A console the party held while this member was away completes for them as well, its party actions acting no more.
-        heldConsoles.values().forEach(console -> console.completeFor(List.of(player)));
+        // A spot the party held while this member was away completes for them as well, its party actions acting no more.
+        held.values().forEach(spot -> spot.completeFor(List.of(player)));
         if (!stage.isEmpty()) quests.runEach(List.of(player), "stage_" + stage, "rejoin");
         trace.event("member", player.getName() + " rejoined at " + stage);
         if (messages.has("stage." + stage)) {
@@ -421,7 +419,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         }
     }
 
-    /** The members land, armed, and the mission begins; the NPCs get their bodies now, as BetterModel loads after the plugins. */
+    /** The members land, equipped, and the mission begins; the NPCs get their bodies now, as BetterModel loads after the plugins. */
     private void assemble(Campaign campaign) {
         if (saves != null) saves.close();
         saves = new Saves(campaigns, campaign, plugin.getSLF4JLogger());
@@ -441,7 +439,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
 
     private void equip(Player player) {
         PlayerReset.reset(player, GameMode.ADVENTURE);
-        player.getInventory().setItem(0, blasters.item(messages.get("item.blaster")));
+        loadout.accept(player);
     }
 
     private Optional<Stage> stage(String name) {
@@ -533,9 +531,9 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         scenes.restore();
         soundtrack.stopAll();
         timers.clear("jump");
-        defense.close();
+        hold.close();
         votes.clear();
-        heldConsoles.clear();
+        held.clear();
         quests.forget();
         ended = false;
         endingSaved = null;
@@ -652,15 +650,15 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         presences.forEach(npc -> npc.hold(held));
     }
 
-    /** {@code /story skip}: whatever the party waits on now ends at once, the scene first, then the upload, then a timer. */
+    /** {@code /story skip}: whatever the party waits on now ends at once, the scene first, then the hold, then a timer. */
     public String skip() {
         if (scenes.progress().isPresent()) {
             scenes.skipAll();
             return "scene";
         }
-        if (defense.running() && !round.players().isEmpty()) {
-            defense.finishNow();
-            return "upload";
+        if (hold.running() && !round.players().isEmpty()) {
+            hold.finishNow();
+            return "hold";
         }
         return timers.fireNext() ? "timer" : "";
     }
@@ -694,16 +692,14 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     }
 
     @Override
-    public void consoleReached(ConsoleObjective console, Player member) {
-        if (phase() != GamePhase.INGAME || ended || defense.running() || !round.isPlaying(member) || heldConsoles.containsKey(console.id())) return;
-        boolean started = defense.start(console, progress -> bar.progress((float) progress), () -> {
-            heldConsoles.put(console.id(), console);
-            trace.event("defense", "held");
-            Bukkit.broadcast(messages.get("defense.held"));
+    public void holdReached(HoldObjective spot, Player member) {
+        if (phase() != GamePhase.INGAME || ended || hold.running() || !round.isPlaying(member) || held.containsKey(spot.id())) return;
+        boolean started = hold.start(spot, progress -> bar.progress((float) progress), () -> {
+            held.put(spot.id(), spot);
+            trace.event("hold", spot.id() + " held");
         });
         if (!started) return;
-        trace.event("defense", "started");
-        Bukkit.broadcast(messages.get("defense.started"));
+        trace.event("hold", spot.id() + " started by " + member.getName());
         round.players().forEach(StorySound.OBJECTIVE_START::play);
     }
 
@@ -760,8 +756,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
      * does not parse changes nothing, and the error names what is wrong.
      */
     public String reload() {
-        plugin.reloadConfig();
-        BundledDefaults.apply(plugin);
+        CoreDefaults.underConfig(plugin);
         var config = plugin.getConfig();
         Map<String, Cutscene> newScenes;
         List<Stage> newStages;
@@ -799,7 +794,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         event.setCancelled(true);
         PlayerReset.resetHealth(member);
         member.teleport(rally);
-        member.sendMessage(messages.get("defense.down"));
+        member.sendMessage(messages.get("fallen"));
         trace.event("member", member.getName() + " fell and is back at the rally");
     }
 
@@ -810,7 +805,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
 
     public void stop() {
         countdown.cancel();
-        defense.close();
+        hold.close();
         presence.cancel();
         scenes.close();
         dialogue.close();

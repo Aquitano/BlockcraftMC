@@ -24,27 +24,12 @@ dialogue:
   # The hotbar slot the panel rests on, whose neighbours are not among the numbered answers 1 to 5.
   resting-slot: 6
 
-blaster:
-  damage: 6
-  cooldown-ticks: 6
-  range: 48
+# These are the core's settings, which a story game's own config.yml lies on. The game adds `mission`: its `name`,
+# which names its quest package in BetonQuest and keys what its members have seen and decided, and its positions as
+# x y z [yaw pitch]: the `landing` spots, the `rally` point and `npcs`, each standing `at` a spot, wearing a BetterModel
+# `model` where it names one, and named by `npc.<id>.name` in messages.yml.
 
-defense:
-  wave-seconds: 15
-  wave-size: 3
-  most-droids: 6
-  droid-health: 12
-  droid-damage: 2
-  # How far a droid's bolt strays from its aim, as a share of its direction.
-  droid-spread: 0.06
-  droid-model: hegemonie_soldier
-
-# A mission adds `mission`: its `name`, which names its quest package in BetonQuest and keys what its members have
-# seen and decided, and its positions as x y z [yaw pitch]: the `landing` spots, the `rally` point, the `droid-spawns`
-# of the console defence and `npcs`, each standing `at` a spot and wearing a BetterModel `model`, named by
-# `npc.<id>.name` in messages.yml. Without `mission` the story stays off.
-
-# The mission's stages in the order the party goes through them; the quest package moves it on. Entering one sets the
+# The game's `stages`, in the order the party goes through them; the quest package moves it on. Entering one sets the
 # boss bar's `bar` colour and `progress`, plays the `cue` from the pack's story sounds and, where given, starts its
 # `music` and `ambience` ("stop" ends them), and saves the party's campaign there. A `/story jump` to a stage, and a
 # party resuming its campaign, also puts the party at its `spawn`, or the rally point; a jump sets the stage's `facts`

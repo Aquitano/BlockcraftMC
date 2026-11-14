@@ -16,33 +16,33 @@ import java.util.Collection;
 import java.util.Optional;
 
 /**
- * {@code holdconsole <location> <radius> <seconds>}: the party holds a console against droids. The first member who
- * stands within the radius starts the defence for the whole party, also one who already stood there when the objective
- * began; the upload only advances while a member stands there, and when it is done the objective completes for every
- * member who has it, its actions acting once for the party.
+ * {@code holdspot <location> <radius> <seconds>}: the party holds a spot together. The first member who stands within
+ * the radius starts the hold for the whole party, also one who already stood there when the objective began; its time
+ * only counts while a member stands there, and when it is through the objective completes for every member who has it,
+ * its actions acting once for the party. Its {@code percent} property is how far the hold has come.
  */
-public final class ConsoleObjective extends DefaultObjective {
+public final class HoldObjective extends DefaultObjective {
 
     private static final long CHECK_TICKS = 10;
 
     private final ProfileProvider profiles;
     private final Fanout fanout;
-    private final Argument<Location> console;
+    private final Argument<Location> spot;
     private final Argument<Number> radius;
     private final Argument<Number> seconds;
     private final BukkitTask check;
     private volatile int percent;
 
-    ConsoleObjective(Plugin plugin, ObjectiveService service, ProfileProvider profiles, Party party, Fanout fanout,
-                     Argument<Location> console, Argument<Number> radius, Argument<Number> seconds) throws QuestException {
+    HoldObjective(Plugin plugin, ObjectiveService service, ProfileProvider profiles, Party party, Fanout fanout,
+                  Argument<Location> spot, Argument<Number> radius, Argument<Number> seconds) throws QuestException {
         super(service);
         this.profiles = profiles;
         this.fanout = fanout;
-        this.console = console;
+        this.spot = spot;
         this.radius = radius;
         this.seconds = seconds;
         service.getProperties().setProperty("percent", profile -> String.valueOf(percent));
-        this.check = Bukkit.getScheduler().runTaskTimer(plugin, () -> holder(party).ifPresent(member -> party.consoleReached(this, member)),
+        this.check = Bukkit.getScheduler().runTaskTimer(plugin, () -> holder(party).ifPresent(member -> party.holdReached(this, member)),
                 CHECK_TICKS, CHECK_TICKS);
     }
 
@@ -57,10 +57,6 @@ public final class ConsoleObjective extends DefaultObjective {
         return String.valueOf(getService().getObjectiveID());
     }
 
-    public Location console() throws QuestException {
-        return console.getValue(null);
-    }
-
     public int seconds() throws QuestException {
         return seconds.getValue(null).intValue();
     }
@@ -72,7 +68,7 @@ public final class ConsoleObjective extends DefaultObjective {
 
     private boolean holding(OnlineProfile profile) throws QuestException {
         var at = profile.getPlayer().getLocation();
-        var target = console.getValue(profile);
+        var target = spot.getValue(profile);
         double range = radius.getValue(profile).doubleValue();
         return at.getWorld().equals(target.getWorld()) && at.distanceSquared(target) <= range * range;
     }
@@ -82,7 +78,7 @@ public final class ConsoleObjective extends DefaultObjective {
     }
 
     public void completeFor(Collection<? extends Player> members) {
-        fanout.acrossLasting("holdconsole " + id(), () -> {
+        fanout.acrossLasting("holdspot " + id(), () -> {
             for (var member : members) {
                 var profile = profiles.getProfile(member);
                 try {

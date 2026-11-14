@@ -22,10 +22,10 @@ public final class GameServices {
     private final TopList topList;
     private final StatsMenus menus;
 
-    private GameServices(JavaPlugin plugin, GameConfig config, String statsTable, boolean ranked) {
+    private GameServices(JavaPlugin plugin, GameConfig config, String statsTable, boolean ranked, Messages messages) {
         var api = BlockcraftApi.get();
         this.plugin = plugin;
-        this.messages = Messages.load(plugin.getDataPath(), () -> plugin.getResource("messages.yml"), api.tags());
+        this.messages = messages;
         this.stats = new StatsRepository(api.database(), statsTable);
         stats.createTable();
         this.topList = new TopList(plugin, stats, messages);
@@ -37,12 +37,21 @@ public final class GameServices {
     }
 
     public static GameServices load(JavaPlugin plugin, GameConfig config, String statsTable) {
-        return new GameServices(plugin, config, statsTable, false);
+        return new GameServices(plugin, config, statsTable, false, bundled(plugin));
+    }
+
+    /** As {@link #load}, for a game whose texts do not all come from its own {@code messages.yml}. */
+    public static GameServices load(JavaPlugin plugin, GameConfig config, String statsTable, Messages messages) {
+        return new GameServices(plugin, config, statsTable, false, messages);
     }
 
     /** As {@link #load}, with stats screens that show each player's rating of the season. */
     public static GameServices ranked(JavaPlugin plugin, GameConfig config, String statsTable) {
-        return new GameServices(plugin, config, statsTable, true);
+        return new GameServices(plugin, config, statsTable, true, bundled(plugin));
+    }
+
+    private static Messages bundled(JavaPlugin plugin) {
+        return Messages.load(plugin.getDataPath(), () -> plugin.getResource("messages.yml"), BlockcraftApi.get().tags());
     }
 
     public Messages messages() {
