@@ -26,7 +26,11 @@ public class ExampleMissionTest {
         var chapters = Chapters.load(CONFIG.getString("mission.name"), stages.stream().map(Stage::name).toList(), CONFIG.getConfigurationSection("chapters"));
         assertEquals(List.of("briefing", "signal", "hold", "report", "ending"), chapters.named("signal").orElseThrow().stages());
         assertEquals(List.of("debrief"), chapters.named("relief").orElseThrow().stages());
+        assertEquals(java.util.Optional.of("relief"), chapters.named("relief").orElseThrow().world());
         chapters.all().forEach(chapter -> {
+            var positions = CONFIG.getConfigurationSection(chapter.world().isPresent() ? "chapters." + chapter.name() : "mission");
+            assertTrue(chapter.name() + " has no rally", positions.isString("rally"));
+            positions.getConfigurationSection("npcs").getKeys(false).forEach(npc -> assertText("npc." + npc + ".name"));
             assertText("chapter." + chapter.name());
             assertTrue("no begin_" + chapter.name(), PACKAGE.contains("actions.begin_" + chapter.name()));
         });

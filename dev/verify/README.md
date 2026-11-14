@@ -50,8 +50,9 @@ first and open a full frame only where it shows something.
   report says how long the client really looked through the camera and how evenly it moved within each shot.
 - `storyjump` (with `VERIFY_GAME=story`) jumps the party to every stage of the mission with `/story jump` and reports
   `/story state json` at each and the story log at the end.
-- `storychapters` (with `VERIFY_GAME=story`) ends the example's first chapter, waits for the server's restart and
-  reports the chapter and the facts the next round starts with.
+- `storychapters` (with `VERIFY_GAME=story`) ends the example's first chapter and photographs the way into the
+  second, which plays in a world of its own: the ending, the loading screen and the arrival. It reports the chapter,
+  world and facts the second one starts with.
 - `camera --command "story scene arrival"` traces a story cutscene. Start a mission first, so the camera need not leave
   the waiting lobby's world.
 

@@ -683,23 +683,27 @@ def story_jump(client, run):
 
 
 def story_chapters(client, run):
-    """With the example game: ends its first chapter by jumping to the stage that ends it, lets the server restart, and
-    reports the chapter and the facts the next round starts with, which is the second chapter with the first's decision."""
+    """With the example game: ends its first chapter by jumping to the stage that ends it, and photographs the way into
+    the second, which plays in a world of its own: the ending, the loading screen and the arrival. It reports the
+    chapter, world and facts the second chapter starts with and the story log of the way there."""
+    if not client("status")["in_world"]:
+        join(client)
     rcon("story jump ending")
-    settle(client, 60)
-    run.shot(client, "first_ends")
+    client.until("the first chapter's ending", lambda: story_state()["stage"] == "done", 60, 0.5)
     run.report["first"] = story_state()
-    client.until("the server to restart", lambda: not client("status")["in_world"], 180, 2)
-    time.sleep(20)
-    wait_for_server(seconds=420)
-    join(client)
-    client("command", text="start")
-    client.until("the next round", lambda: story_state()["phase"] == "INGAME", 120, 2)
-    settle(client, 60)
-    run.shot(client, "second_starts")
+    run.shot(client, "ending")
+    client.until("the loading screen", lambda: client("hud")["title"]["text"] != "" and "Kapitel" in client("hud")["title"]["text"], 30, 0.3)
+    run.report["loading_title"] = [client("hud")["title"]["text"], client("hud")["subtitle"]["text"]]
+    client("capture", name=f"{run.name}/loading", frames=6, every=8)
+    client.until("the second chapter", lambda: story_state()["chapter"] == "relief", 120, 1)
+    client.until("the screen to come back", lambda: client("hud")["title"]["text"] == "", 60, 0.5)
+    settle(client, 40)
+    run.shot(client, "arrived")
     run.report["second"] = story_state()
+    run.report["dimension"] = client("status")["dimension"]
     run.report["chat"] = client("hud")["chat"]
     run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 40").splitlines()]
+
 
 
 HORDE = ("zombie ", "husk ", "wolf ")

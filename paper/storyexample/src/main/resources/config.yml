@@ -22,10 +22,19 @@ stages:
   ending: {bar: green, facts: {decision: stay}}
   debrief: {bar: blue, facts: {decision: stay}}
 
-# Two rounds. The second opens once the first is finished, and Mara then knows what the party decided in it.
+# Two chapters. The party goes from the first into the second, which plays in a world of its own and knows what the
+# party decided in the first. That world is a copy of the shared waiting island, so the example brings no map: the
+# story service mounts its template as the chapter world `relief`.
 chapters:
   signal: {from: briefing}
-  relief: {from: debrief, carries: [decision]}
+  relief:
+    from: debrief
+    carries: [decision]
+    world: relief
+    landing: ["-193.5 47 -317.5 0 0"]
+    rally: "-193.5 47 -317.5 0 0"
+    npcs:
+      mara: {at: "-191.5 47 -313.5 180 0"}
 
 cutscenes:
   scenes:

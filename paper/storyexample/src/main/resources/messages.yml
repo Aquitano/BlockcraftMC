@@ -30,7 +30,7 @@ stage-start:
   signal: "<prefix><muted>Neues Ziel: die Signalstelle. Euer Peilgerät zeigt die Richtung."
   hold: "<prefix><muted>Das Signal baut sich nur auf, solange jemand von euch an der Stelle steht."
   report: "<prefix><success>Das Signal steht. <muted>Zurück zu Mara."
-  debrief: "<prefix><muted>Die Ablösung ist eingetroffen. Mara wartet auf euch."
+  debrief: "<prefix><muted>Ihr seid bei der Ablösung angekommen. Mara wartet auf euch."
 
 choice:
   stay: "Die Stellung halten"
