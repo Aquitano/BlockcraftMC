@@ -26,8 +26,8 @@ interface Ability {
         return false;
     }
 
-    /** The damage a fighter's hit deals to it. */
-    default double shot(Enemies.Enemy enemy, Player shooter, double damage) {
+    /** The damage a fighter's hit deals to it, to the head or to the body. */
+    default double shot(Enemies.Enemy enemy, Player shooter, double damage, boolean head) {
         return damage;
     }
 

@@ -326,16 +326,22 @@ public final class Enemies {
     }
 
     public void hit(Player player, Mob mob, double damage) {
+        hit(player, mob, damage, 0);
+    }
+
+    public void hit(Player player, Mob mob, double bodyDamage, double headDamage) {
         var enemy = enemies.get(mob.getUniqueId());
         if (enemy == null || !game.fighting(player) || mob.isDead()) {
             return;
         }
         enemy.attacker = player.getUniqueId();
         mob.setNoDamageTicks(0);
+        var ability = abilities.of(enemy.kind);
+        double dealt = (bodyDamage > 0 ? ability.shot(enemy, player, bodyDamage, false) : 0)
+                + (headDamage > 0 ? ability.shot(enemy, player, headDamage, true) : 0);
         applyingDamage = true;
         try {
-            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100
-                    : abilities.of(enemy.kind).shot(enemy, player, damage) / enemy.toughness, player);
+            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100 : dealt / enemy.toughness, player);
         } finally {
             applyingDamage = false;
         }

@@ -63,7 +63,7 @@ Neither attempt should spend gold or grant an item.
 Each kind joins the mix at its `first-wave`. To meet one early, set its `first-wave: 1` and a high `weight` in `enemies`.
 
 1. Kriecher (wave 8): half-size zombies come through one window in threes. They are fast and hard to hit, and each counts once in the wave's enemy count.
-2. Schildträger (wave 11): it carries a black shield with a white band in its off hand. Shots from the front deal a quarter of their damage with the shield-block sound. A teammate shooting from its side or back deals full damage.
+2. Schildträger (wave 11): it carries a black shield with a white band in its off hand. Shots from the front deal a quarter of their damage with the shield-block sound. A teammate shooting from its side or back deals full damage, and so does a headshot from the front, without the block sound.
 3. Frost-Zombie (wave 13): standing within three blocks slows you and ices the screen edges. A hit adds more frost and ice shards. Stay in its aura until the overlay is strong. You never take freeze damage, and health only drops from its hits.
 4. Brandstifter (wave 15): it holds a bottle and throws nothing from behind the boards. Inside, it backs away when you close in. About every five seconds it lobs a Molotov at you. The ground burns for four seconds and hurts you each second while you stand in the flames. Step out and the damage stops.
 5. Elektro-Zombie (wave 18): within ten blocks, a crackling spark line runs from its head to you about every four seconds. Stand with two teammates within four blocks of each other. The zap jumps to both, weaker each time. Spread out and it hits only one of you.

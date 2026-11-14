@@ -146,6 +146,7 @@ public final class Weapons {
         var volley = weapon == Weapon.FLAMETHROWER ? spray(eye, stats, multiplier) : fire(eye, stats, multiplier);
         for (var entry : volley.hits().entrySet()) {
             var mob = entry.getKey();
+            var hit = entry.getValue();
             game.addGold(player, game.config().hitGold());
             if (survivor.perks().contains(Perk.FROZEN_BULLETS)) {
                 mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
@@ -153,21 +154,27 @@ public final class Weapons {
             if (stats.burnDamage() > 0) {
                 flames.ignite(player, mob, stats.burnDamage() * multiplier, stats.burnTicks(), tick);
             }
-            game.enemies().hit(player, mob, entry.getValue());
+            game.enemies().hit(player, mob, hit.body(), hit.head());
         }
         if (!volley.hits().isEmpty()) {
-            Sounds.NOTE_PLING.note(player, volley.headshot() ? 20 : 12);
+            Sounds.NOTE_PLING.note(player, volley.hits().values().stream().anyMatch(hit -> hit.head() > 0) ? 20 : 12);
         }
         render(player);
     }
 
-    private record Volley(Map<Mob, Double> hits, boolean headshot) {
+    private record Hit(double body, double head) {
+
+        Hit plus(Hit other) {
+            return new Hit(body + other.body, head + other.head);
+        }
+    }
+
+    private record Volley(Map<Mob, Hit> hits) {
     }
 
     private Volley fire(Location eye, ZombiesConfig.Gun stats, double multiplier) {
         var world = eye.getWorld();
-        var hits = new LinkedHashMap<Mob, Double>();
-        boolean headshot = false;
+        var hits = new LinkedHashMap<Mob, Hit>();
         for (int pellet = 0; pellet < stats.pellets(); pellet++) {
             var random = ThreadLocalRandom.current();
             var direction = eye.getDirection();
@@ -185,11 +192,11 @@ public final class Weapons {
             }
             if (hit != null && hit.getHitEntity() instanceof Mob mob) {
                 boolean head = hit.getHitPosition().getY() > mob.getLocation().getY() + mob.getHeight() * 0.8;
-                headshot |= head;
-                hits.merge(mob, stats.damage() * (head ? game.config().headshotMultiplier() : 1) * multiplier, Double::sum);
+                double damage = stats.damage() * multiplier;
+                hits.merge(mob, head ? new Hit(0, damage * game.config().headshotMultiplier()) : new Hit(damage, 0), Hit::plus);
             }
         }
-        return new Volley(hits, headshot);
+        return new Volley(hits);
     }
 
     /** Every enemy in sight inside a cone whose half-angle is the spread, not only the first one in the flame's way. */
@@ -197,7 +204,7 @@ public final class Weapons {
         var world = eye.getWorld();
         var direction = eye.getDirection();
         flameJet(eye, direction, stats);
-        var hits = new LinkedHashMap<Mob, Double>();
+        var hits = new LinkedHashMap<Mob, Hit>();
         for (var entity : world.getNearbyEntities(eye, stats.range(), stats.range(), stats.range(),
                 entity -> game.enemies().contains(entity) && !entity.isDead())) {
             if (!(entity instanceof Mob mob)) {
@@ -209,9 +216,9 @@ public final class Weapons {
                     || world.rayTraceBlocks(eye, toward.normalize(), distance, FluidCollisionMode.NEVER, true) != null) {
                 continue;
             }
-            hits.put(mob, stats.damage() * multiplier);
+            hits.put(mob, new Hit(stats.damage() * multiplier, 0));
         }
-        return new Volley(hits, false);
+        return new Volley(hits);
     }
 
     /** Flames leave the muzzle at a speed that carries them, slowing, about as far as the gun reaches. */
