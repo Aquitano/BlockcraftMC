@@ -20,7 +20,7 @@ dev/verify/verify.py down        # -v also deletes the database and the download
 After `stagePlugins`, `restart` restarts the game server and `join` reconnects; `restart client` or `restart velocity`
 picks up a changed mod or a new resource pack.
 
-`VERIFY_GAME=story` runs the story prototype (`paper/story`) instead of Sternenfront for every command, and
+`VERIFY_GAME=story` runs the story core's example game (`paper/storyexample`) instead of Sternenfront for every command, and
 `VERIFY_GAME=zombies` runs Zombies; `down` the other one first, since each takes the proxy's first-join route.
 
 `VERIFY_PROJECT` names the Docker project (default `bcverify`), so a second rig can run beside the first with its own
@@ -50,7 +50,7 @@ first and open a full frame only where it shows something.
   report says how long the client really looked through the camera and how evenly it moved within each shot.
 - `storyjump` (with `VERIFY_GAME=story`) jumps the party to every stage of the mission with `/story jump` and reports
   `/story state json` at each and the story log at the end.
-- `camera --command "story scene intro"` traces a story cutscene. Start a mission first, so the camera need not leave
+- `camera --command "story scene arrival"` traces a story cutscene. Start a mission first, so the camera need not leave
   the waiting lobby's world.
 
 `sternenfront-overrides.yml` makes heroes free and brings the relic early on this network only.

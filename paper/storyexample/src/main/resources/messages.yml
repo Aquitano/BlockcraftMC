@@ -1,0 +1,48 @@
+# The example mission's texts. Every key the core says itself, such as the vote's lines, comes from its messages.yml.
+prefix: "<primary>Beispiel <dark>» <reset>"
+game-name: "<primary>Beispiel-Einsatz"
+
+join:
+  introduction: "<prefix><muted>Der Beispiel-Einsatz des Story-Kerns: sprechen, ein Ziel erreichen, eine Stelle halten und abstimmen."
+
+item:
+  compass: "<arrow><primary>Peilgerät"
+
+npc:
+  mara:
+    name: "<primary>Funkerin Mara"
+    role: "<right>Sprechen"
+
+stage:
+  briefing: "<primary>Ziel <dark>● <white>Sprich mit Funkerin Mara"
+  signal: "<primary>Ziel <dark>● <white>Folge dem Peilgerät zur Signalstelle"
+  hold: "<primary>Ziel <dark>● <white>Haltet die Signalstelle, bis das Signal steht"
+  report: "<primary>Ziel <dark>● <white>Zurück zu Mara und stimmt ab"
+  ending: "<primary>Einsatz <dark>● <white>Abschluss"
+
+stage-start:
+  briefing: "<prefix><muted>Funkerin Mara wartet ein paar Schritte vor euch."
+  signal: "<prefix><muted>Neues Ziel: die Signalstelle. Euer Peilgerät zeigt die Richtung."
+  hold: "<prefix><muted>Das Signal baut sich nur auf, solange jemand von euch an der Stelle steht."
+  report: "<prefix><success>Das Signal steht. <muted>Zurück zu Mara."
+
+choice:
+  stay: "Die Stellung halten"
+  leave: "Abrücken"
+
+ending:
+  stay:
+    title: "<primary>Die Stellung hält"
+    subtitle: "<muted>Ende A: Der Trupp bleibt"
+    summary: "<prefix><muted>Ihr bleibt an der Signalstelle, bis die Ablösung kommt."
+  leave:
+    title: "<primary>Abmarsch"
+    subtitle: "<muted>Ende B: Der Trupp zieht weiter"
+    summary: "<prefix><muted>Das Signal sendet weiter, und ihr seid schon auf dem Weg."
+
+cutscene:
+  speaker:
+    mara: "Funkerin Mara"
+  arrival:
+    "1": "Da seid ihr ja. Ich habe schon auf euch gewartet."
+    "2": "Kommt her, dann erkläre ich euch, was zu tun ist."

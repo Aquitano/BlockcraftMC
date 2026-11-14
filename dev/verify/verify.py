@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
-# The game server under test: sternenfront, story for the story prototype, or zombies.
+# The game server under test: sternenfront, story for the story core's example game, or zombies.
 GAME = os.environ.get("VERIFY_GAME", "sternenfront")
 STACK = ("mariadb", "velocity", GAME, "client")
 PLAYER = "Verify"
@@ -669,7 +669,7 @@ def story_state():
 
 def story_jump(client, run):
     """Jumps to every stage of the story in turn, from the waiting lobby, with /story jump, and records each stage's
-    state and a frame; the last stage plays its ending scene to the end."""
+    state and a frame, then a last frame of whatever the last stage ends in."""
     stages = story_state()["stages"]
     run.report["stages"] = {}
     for stage in stages:
@@ -677,8 +677,8 @@ def story_jump(client, run):
         settle(client, 40)
         run.shot(client, stage)
         run.report["stages"][stage] = story_state()
-    client.until("the ending scene", lambda: client("status")["gamemode"] == "spectator", 30)
-    client("capture", name=f"{run.name}/ending", frames=6, every=40)
+    settle(client, 100)
+    run.shot(client, "end")
     run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 60").splitlines()]
 
 
@@ -1163,7 +1163,7 @@ def main():
         keep_running_map()
         compose("up", "-d", "--force-recreate", "--no-deps", *args.services)
     elif args.action == "down":
-        compose("--profile", "replay", "--profile", "mapgen", "down", *(["-v"] if args.v else []))
+        compose("--profile", "replay", "--profile", "mapgen", "--profile", "story", "down", *(["-v"] if args.v else []))
     elif args.action == "logs":
         compose("logs", "--no-log-prefix", "--tail", args.tail, args.service)
     elif args.action == "rcon":

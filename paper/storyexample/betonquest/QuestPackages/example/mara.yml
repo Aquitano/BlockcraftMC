@@ -1,0 +1,51 @@
+conversations:
+  mara:
+    quester: "Funkerin Mara"
+    first: "decidedStay,decidedLeave,waiting,report,holding,underway,greeting"
+    NPC_options:
+      greeting:
+        conditions: "briefing"
+        text: "Gut, dass ihr da seid. Unsere Signalstelle ist ausgefallen, und ohne sie hört uns niemand."
+        pointers: "askTask,ready"
+      task:
+        text: "Geht zur Signalstelle und bleibt dort, bis das Signal steht. Es baut sich nur auf, solange jemand von euch dort ist."
+        pointers: "ready"
+      go:
+        text: "Dann los. Euer Peilgerät zeigt euch den Weg."
+        actions: "depart"
+      underway:
+        conditions: "signal"
+        text: "Die Signalstelle liegt östlich von hier. Folgt dem Peilgerät."
+      holding:
+        conditions: "hold"
+        text: "Was macht ihr hier? Das Signal baut sich nicht von allein auf!"
+      report:
+        conditions: "report,!voted"
+        text: "Das Signal steht, gute Arbeit. Jetzt müsst ihr entscheiden: Haltet ihr die Stellung, oder rückt ihr ab?"
+        pointers: "chooseStay,chooseLeave"
+      noted:
+        text: "Eure Stimme ist notiert. Sobald der ganze Trupp abgestimmt hat, geht es weiter."
+      waiting:
+        conditions: "report,voted"
+        text: "Ich warte, bis der ganze Trupp abgestimmt hat."
+      decidedStay:
+        conditions: "choseStay"
+        text: "Dann bleibt ihr. Ich melde es der Ablösung."
+      decidedLeave:
+        conditions: "choseLeave"
+        text: "Dann rückt ihr ab. Guten Weg."
+    player_options:
+      askTask:
+        text: "Was genau sollen wir tun?"
+        pointers: "task"
+      ready:
+        text: "Wir sind bereit."
+        pointers: "go"
+      chooseStay:
+        text: "Wir halten die Stellung."
+        actions: "voteStay"
+        pointers: "noted"
+      chooseLeave:
+        text: "Wir rücken ab."
+        actions: "voteLeave"
+        pointers: "noted"

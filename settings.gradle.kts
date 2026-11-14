@@ -25,6 +25,7 @@ include(
     "paper:sternenfront",
     "paper:starwars",
     "paper:story",
+    "paper:storyexample",
     "paper:ttt",
     "paper:zombies",
     "velocity:system",
