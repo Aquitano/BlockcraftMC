@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
-# The game server under test: sternenfront, or story for the story prototype.
+# The game server under test: sternenfront, story for the story prototype, or zombies.
 GAME = os.environ.get("VERIFY_GAME", "sternenfront")
 STACK = ("mariadb", "velocity", GAME, "client")
 PLAYER = "Verify"
@@ -528,7 +528,8 @@ def glint(client, run, tries=4, watch_seconds=30):
     run.report["glints_seen"] = seen
 
 
-# Each scenario with the state it needs: "field" means deployed in a running round.
+# Each scenario with the state it needs: "field" means deployed in a running round, and "server" that it restarts the
+# game server itself.
 def replay(client, run, round_seconds=75):
     """Fights through a short round, watches its recording on a replay server and photographs the bots' bodies there."""
     keep_running_map()
@@ -681,6 +682,313 @@ def story_jump(client, run):
     run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 60").splitlines()]
 
 
+HORDE = ("zombie ", "husk ", "wolf ")
+# What `horde --kind` can send alone: the special kinds, and the two that only come in their own waves.
+HORDE_KINDS = ("crawler", "shield_bearer", "frost", "arsonist", "electric", "breeder", "shadow", "hellhound", "inferno")
+WAVE_EVENTS = ("blood_moon", "power_outage", "bounty", "toxic_fog")
+# Gold for every door and station, and no wave while the client shops.
+RICH = {"gold": {"start": 50000}, "countdown": {"intermission": 600}}
+
+
+@functools.cache
+def outpost():
+    return yaml.safe_load((ROOT / running_template().lstrip("/") / "blockcraft/Zombies/arena.yml").read_text())
+
+
+def in_outpost(spot):
+    """A spot of the Zombies arena, which the file gives from the arena's origin, in the world."""
+    origin = outpost()["origin"]
+    return origin["x"] + spot["x"], origin["y"] + spot.get("y", 0), origin["z"] + spot["z"]
+
+
+def fresh_outpost(overrides):
+    """Restarts the Zombies server with these settings on top of the rig's own, and comes back joined."""
+    settings = yaml.safe_load((ROOT / "dev/verify/zombies-overrides.yml").read_text())
+    for section, values in overrides.items():
+        settings.setdefault(section, {}).update(values)
+    written = ROOT / "build/verify/zombies-config.yml"
+    written.parent.mkdir(parents=True, exist_ok=True)
+    written.write_text(yaml.safe_dump(settings))
+    os.environ["VERIFY_ZOMBIES_CONFIG"] = str(written)
+    compose("up", "-d", "--force-recreate", "--no-deps", "zombies")
+    time.sleep(15)
+    wait_for_server(seconds=420)
+    client = wait_for_client()
+    client.until("the proxy to drop the old server", lambda: not client("status")["in_world"], 60, 1)
+    join(client)
+    return client
+
+
+def squad_board(client):
+    """The Zombies sidebar as numbers: the wave, the enemies left and the player's gold. No wave outside a round."""
+    text = "\n".join(client("hud")["sidebar"].get("lines", []))
+
+    def number(pattern):
+        match = re.search(pattern, text)
+        return int(re.sub(r"\D", "", match.group(1))) if match else None
+
+    return {"wave": number(r"Welle (\d+)/"), "enemies": number(r"Gegner ([\d.,]+)"), "gold": number(r"([\d.,]+) Gold")}
+
+
+def start_outpost(client):
+    if not client("status")["in_world"]:
+        join(client)
+    if squad_board(client)["wave"] is None:
+        client("command", text="start")
+    client.until("the Zombies round", lambda: squad_board(client)["wave"] is not None, 90)
+    settle(client, 10)
+
+
+def horde(client, radius=48):
+    """The wave's enemies the client knows of, nearest first; the game names every one of them."""
+    return [each for each in client("entities", radius=radius)["entities"] if each["name"].startswith(HORDE) and each.get("health", 0) > 0]
+
+
+def shoot_horde(client):
+    """Aims at the nearest enemy in sight and pulls the trigger; None when the client sees none."""
+    seen = [each for each in horde(client) if each["in_sight"]]
+    if not seen:
+        return None
+    low = seen[0]["name"].startswith("wolf") or "Kriecher" in seen[0]["name"]
+    client("look_at", x=seen[0]["x"], y=seen[0]["y"] + (0.4 if low else 1.1), z=seen[0]["z"])
+    client("tap", key="use", times=3, every=4)
+    return seen[0]
+
+
+def fall_back(client, threats):
+    """Moves to the yard corner furthest from the enemies. A teleport stands in for running, which a client at a few
+    frames a second cannot steer in time."""
+    yard = outpost()["rooms"]["yard"]["bounds"]
+    corners = [in_outpost({"x": x, "z": z}) for x in (yard["x1"] + 5, yard["x2"] - 5) for z in (yard["z1"] + 5, yard["z2"] - 5)]
+    corners.sort(key=lambda corner: -min(math.hypot(corner[0] - each["x"], corner[2] - each["z"]) for each in threats))
+    for x, y, z in corners:
+        rcon(f"tp {PLAYER} {x + 0.5} {y} {z + 0.5}")
+        settle(client, 3)
+        if not client("status")["in_wall"]:
+            return
+
+
+def feedback(client, since):
+    """What the game told the player since a tick: action bar lines and chat, in order."""
+    return [f"{event['kind']}: {event['value']}" for event in client("events", since=since)["events"]
+            if event["kind"] in ("actionbar", "chat", "title") and event["value"]]
+
+
+def use_block(client, block, stand):
+    """Stands at a spot, looks at a block's middle and right-clicks it; returns what the client then looked at."""
+    rcon(f"tp {PLAYER} {stand[0]} {stand[1]} {stand[2]}")
+    settle(client, 6)
+    status = client("look_at", x=block[0] + 0.5, y=block[1] + 0.5, z=block[2] + 0.5)
+    settle(client, 3)
+    client("tap", key="use")
+    settle(client, 8)
+    return client("status").get("looking_at_block", status.get("looking_at_block", ""))
+
+
+def knock(client, room):
+    """Right-clicks a room's door from the yard's side and reports the gold before and after and what the game said."""
+    door = outpost()["rooms"][room]["door"]
+    x, y, z = in_outpost({"x": (door["x1"] + door["x2"]) // 2, "y": door["y1"] + 1, "z": (door["z1"] + door["z2"]) // 2})
+    spawn = in_outpost(outpost()["spawn"])
+    length = math.hypot(spawn[0] - x - 0.5, spawn[2] - z - 0.5)
+    stand = (round(x + 0.5 + 2.5 * (spawn[0] - x - 0.5) / length, 1), y - 1, round(z + 0.5 + 2.5 * (spawn[2] - z - 0.5) / length, 1))
+    before, since = squad_board(client)["gold"], client("status")["tick"]
+    looked = use_block(client, (x, y, z), stand)
+    settle(client, 10)
+    return {"gold": [before, squad_board(client)["gold"]], "looked_at": looked, "said": feedback(client, since)}
+
+
+def beside(client, block):
+    """Open ground two blocks from a block, on a side from which the client's crosshair reaches it."""
+    for dx, dz in ((0, -2), (0, 2), (-2, 0), (2, 0), (-2, -2), (2, 2), (-2, 2), (2, -2)):
+        stand = (block[0] + 0.5 + dx, block[1], block[2] + 0.5 + dz)
+        rcon(f"tp {PLAYER} {stand[0]} {stand[1]} {stand[2]}")
+        settle(client, 6)
+        if client("status")["in_wall"]:
+            continue
+        looked = client("look_at", x=block[0] + 0.5, y=block[1] + 0.5, z=block[2] + 0.5).get("looking_at_block", "")
+        settle(client, 3)
+        looked = client("status").get("looking_at_block", looked)
+        if looked.endswith(f" {block[0]} {block[1]} {block[2]}"):
+            return stand
+    raise RuntimeError(f"No spot beside {block} looks at it")
+
+
+def open_menu(client, block):
+    client("tap", key="use")
+    try:
+        client.until("the station's menu", lambda: client("status")["screen"] == "ContainerScreen", 15, 0.3)
+    except TimeoutError:
+        return None
+    settle(client, 4)
+    return client("screen")
+
+
+def visit(client, run, name):
+    """Opens a station's menu and clicks each of its offers once: what it offered, what each click said and cost."""
+    station = outpost()["stations"][name]
+    block = tuple(int(math.floor(value)) for value in in_outpost(station["location"]))
+    beside(client, block)
+    client("hotbar", slot=0)
+    menu = open_menu(client, block)
+    if menu is None:
+        return {"menu": None, "said": feedback(client, client("status")["tick"] - 40)}
+    offers = [slot for slot in menu["slots"] if any("Preis" in line for line in slot.get("lore", []))]
+    result = {"title": menu["title"], "offers": [{"name": offer.get("name"), "lore": offer.get("lore")} for offer in offers], "clicks": []}
+    run.shot(client, f"{name}_menu")
+    for offer in offers:
+        if client("status")["screen"] != "ContainerScreen" and open_menu(client, block) is None:
+            break
+        before, since = squad_board(client)["gold"], client("status")["tick"]
+        client("click", slot=offer["slot"])
+        settle(client, 10)
+        click = {"offer": offer.get("name")}
+        if client("status")["screen"] == "MultiButtonDialogScreen":
+            dialog = client("screen")
+            click["dialog"] = {"title": dialog["title"], "buttons": dialog["buttons"]}
+            run.shot(client, f"{name}_replace")
+            client("press", label=dialog["buttons"][0])
+            settle(client, 10)
+        click.update(gold=[before, squad_board(client)["gold"]], said=feedback(client, since))
+        result["clicks"].append(click)
+    if client("status")["screen"]:
+        client("close")
+    settle(client, 4)
+    status = client("status")
+    result["hotbar"] = [item.get("name") for item in status["hotbar"][:3]]
+    result["max_health"] = status["max_health"]
+    return result
+
+
+def take_from_box(client, run, name):
+    """After a purchase at the mystery box: watches the gun rise and roll, then clicks the box for it."""
+    station = outpost()["stations"][name]
+    block = tuple(int(math.floor(value)) for value in in_outpost(station["location"]))
+    since = client("status")["tick"]
+    client.until("the box to stop", lambda: any("Die Kiste zeigt" in line for line in feedback(client, since - 200)), 40, 1)
+    run.shot(client, f"{name}_stopped")
+    client("look_at", x=block[0] + 0.5, y=block[1] + 0.5, z=block[2] + 0.5)
+    client("tap", key="use")
+    settle(client, 10)
+    taken = {}
+    if client("status")["screen"] == "MultiButtonDialogScreen":
+        dialog = client("screen")
+        taken["dialog"] = {"title": dialog["title"], "buttons": dialog["buttons"]}
+        client("press", label=dialog["buttons"][0])
+        settle(client, 10)
+    taken.update(hotbar=[item.get("name") for item in client("status")["hotbar"][:3]], said=feedback(client, since))
+    return taken
+
+
+def stations(client, run):
+    """With gold for everything and no wave coming: opens every door, buys at every station, then again where the
+    first visit was refused for want of power, and takes the gun the mystery box rolls."""
+    client = fresh_outpost(RICH)
+    start_outpost(client)
+    run.report["doors"] = {room: knock(client, room) for room in outpost()["rooms"] if room != "yard"}
+    run.shot(client, "doors")
+    visits = run.report["stations"] = {}
+    for name, station in outpost()["stations"].items():
+        visits[name] = visit(client, run, name)
+        if station["kind"] == "MYSTERY" and any(click["gold"][0] != click["gold"][1] for click in visits[name].get("clicks", [])):
+            visits[name]["taken"] = take_from_box(client, run, name)
+    for name in list(visits):
+        if any(click["gold"][0] == click["gold"][1] for click in visits[name].get("clicks", [])):
+            visits[f"{name} again"] = visit(client, run, name)
+    run.report["board"] = squad_board(client)
+
+
+def hold_out(client, run, seconds, until=lambda board: board["wave"] is None):
+    """Shoots at the horde from where the player stands until the round is over, with a frame at each new wave."""
+    wave, deadline = None, time.monotonic() + seconds
+    kinds = set()
+    while time.monotonic() < deadline:
+        board = squad_board(client)
+        if until(board):
+            return kinds
+        if board["wave"] != wave:
+            wave = board["wave"]
+            settle(client, 30)
+            run.shot(client, f"wave_{wave}")
+        close = horde(client, radius=4)
+        if close:
+            fall_back(client, horde(client, radius=16) or close)
+        target = shoot_horde(client)
+        if target:
+            kinds.add(target["name"])
+        else:
+            time.sleep(0.5)
+    raise TimeoutError(f"The round still ran after {seconds}s, in wave {wave}")
+
+
+def survive(client, run, seconds=900):
+    """Plays a Zombies round with what a new player has: knocks at a door it cannot pay for, then shoots whatever
+    comes through the windows until the round is won or lost."""
+    start_outpost(client)
+    start = client("status")["tick"]
+    run.report["door_without_gold"] = knock(client, "depot")
+    x, y, z = in_outpost(outpost()["spawn"])
+    rcon(f"tp {PLAYER} {x} {y} {z}")
+    run.report["enemies_met"] = sorted(hold_out(client, run, seconds))
+    settle(client, 40)
+    run.shot(client, "end")
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+    chat = " ".join(run.report["chat_lines"])
+    run.report["result"] = "won" if "Alle Wellen überlebt" in chat else "lost" if "Das Team ist gefallen" in chat else "unknown"
+
+
+def horde_of(client, run, kind=None, event=None, seconds=240):
+    """The only wave of a round, of a single kind of enemy or with one wave event forced: what the client met, heard and
+    read, with a frame every few seconds. Every hit lands, on a player with five times the health who is healed after
+    it, to watch the wave to its end. During a power outage the player sneaks at the generator once, to repair it."""
+    overrides = {"waves": {"total": 1, "boss-every": 99}, "countdown": {"intermission": 20}, "gold": {"start": 50000}}
+    if kind == "inferno":
+        overrides["waves"]["boss-every"] = 1
+    elif kind == "hellhound":
+        overrides["waves"]["hounds"] = {"first": 1, "every": 10, "share": 0.75}
+    elif kind:
+        config = yaml.safe_load((ROOT / "paper/zombies/src/main/resources/config.yml").read_text())["enemies"]
+        overrides["enemies"] = {each: {**values, "first-wave": 1, "weight": 1 if each == kind else 0, "late-weight": 1 if each == kind else 0}
+                                for each, values in config.items()}
+    if event:
+        overrides["events"] = {"from-wave": 1, "chance": 1, "earliest-share": 0.1, "latest-share": 0.1,
+                               **{each: {"weight": 1 if each == event else 0} for each in WAVE_EVENTS}}
+    client = fresh_outpost(overrides)
+    start_outpost(client)
+    start = client("status")["tick"]
+    rcon(f"attribute {PLAYER} minecraft:max_health base set 100")
+    if event in ("power_outage", "toxic_fog"):
+        run.report["prepared"] = {"door": knock(client, "power"), "power": visit(client, run, "generator")}
+        x, y, z = in_outpost(outpost()["spawn"])
+        rcon(f"tp {PLAYER} {x} {y} {z}")
+    client.until("the wave", lambda: squad_board(client)["wave"] == 1, 60)
+    met, next_frame, deadline = set(), time.monotonic() + 4, time.monotonic() + seconds
+    repaired = event != "power_outage"
+    while time.monotonic() < deadline and squad_board(client)["wave"] is not None:
+        status = client("status")
+        if status["health"] < status["max_health"]:
+            rcon(f"effect give {PLAYER} minecraft:instant_health 1 10 true")
+        if not repaired and any("Stromausfall" in line for line in client("hud")["sidebar"].get("lines", [])):
+            repaired = True
+            run.shot(client, "outage")
+            generator = tuple(int(math.floor(value)) for value in in_outpost(outpost()["stations"]["generator"]["location"]))
+            beside(client, generator)
+            client("hold", key="sneak", ticks=160)
+            settle(client, 170)
+            run.shot(client, "repaired")
+            x, y, z = in_outpost(outpost()["spawn"])
+            rcon(f"tp {PLAYER} {x} {y} {z}")
+        target = shoot_horde(client)
+        if target:
+            met.add(target["name"])
+        if time.monotonic() >= next_frame and run.frames < 12:
+            run.shot(client)
+            next_frame = time.monotonic() + 6
+    run.report["enemies_met"] = sorted(met)
+    run.report["sidebar"] = client("hud")["sidebar"].get("lines", [])
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+
+
 def database(query):
     return compose("exec", "-T", "mariadb", "mariadb", "-ublockcraft", "-pblockcraft", "blockcraft", "-Nse", query, capture=True).stdout.strip()
 
@@ -688,7 +996,8 @@ def database(query):
 SCENARIOS = {"replay": (replay, "joined"), "scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
              "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field"),
              "underfire": (under_fire, "field"), "glint": (glint, "field"), "camera": (camera, "world"),
-             "storyjump": (story_jump, "world")}
+             "storyjump": (story_jump, "world"), "survive": (survive, "world"), "stations": (stations, "server"),
+             "horde": (horde_of, "server")}
 
 
 def run_scenario(name, faction=None, **options):
@@ -840,6 +1149,8 @@ def main():
     scenario.add_argument("--faction", help="pick this side first, from the waiting lobby: Republik or Separatisten")
     scenario.add_argument("--command", help="camera: the command that starts the cinematic, without its slash")
     scenario.add_argument("--ticks", type=int, help="camera: how many client ticks to trace")
+    scenario.add_argument("--kind", choices=HORDE_KINDS, help="horde: the one kind of enemy the wave sends")
+    scenario.add_argument("--event", choices=WAVE_EVENTS, help="horde: the wave event to force")
     call = commands.add_parser("c", help="one client command, as: c hold key=use ticks=20")
     call.add_argument("cmd")
     call.add_argument("fields", nargs="*")
@@ -866,7 +1177,8 @@ def main():
     elif args.action == "round":
         print(json.dumps(into_round(wait_for_client(), not args.watch_intro), indent=1, ensure_ascii=False))
     elif args.action == "scenario":
-        options = {"full": args.full or None, "hero_name": args.hero, "command": args.command, "ticks": args.ticks}
+        options = {"full": args.full or None, "hero_name": args.hero, "command": args.command, "ticks": args.ticks,
+                   "kind": args.kind, "event": args.event}
         return run_scenario(args.name, faction=args.faction, **{key: value for key, value in options.items() if value is not None})
     elif args.action == "c":
         print(json.dumps(Client()(args.cmd, **dict(map(field, args.fields))), indent=1, ensure_ascii=False))

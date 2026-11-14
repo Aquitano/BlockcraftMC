@@ -20,8 +20,8 @@ dev/verify/verify.py down        # -v also deletes the database and the download
 After `stagePlugins`, `restart` restarts the game server and `join` reconnects; `restart client` or `restart velocity`
 picks up a changed mod or a new resource pack.
 
-`VERIFY_GAME=story` runs the story prototype (`paper/story`) instead of Sternenfront for every command; `down` the other
-one first, since both take the proxy's first-join route.
+`VERIFY_GAME=story` runs the story prototype (`paper/story`) instead of Sternenfront for every command, and
+`VERIFY_GAME=zombies` runs Zombies; `down` the other one first, since each takes the proxy's first-join route.
 
 `VERIFY_PROJECT` names the Docker project (default `bcverify`), so a second rig can run beside the first with its own
 `VERIFY_PORT`. `VERIFY_PACK_URL` overrides the address the proxy offers the resource pack at, for a client outside Docker.
@@ -54,6 +54,21 @@ first and open a full frame only where it shows something.
   the waiting lobby's world.
 
 `sternenfront-overrides.yml` makes heroes free and brings the relic early on this network only.
+
+### Zombies
+
+With `VERIFY_GAME=zombies`. `zombies-overrides.yml` plays three waves that end on a boss one pistol can put down. A
+scenario that needs other settings restarts the server with its own on top, written to `build/verify/zombies-config.yml`.
+The client draws too slowly to walk, so these scenarios move the player with `tp`.
+
+- `survive` plays a round with what a new player has: it knocks at a door it cannot pay for, then shoots what comes
+  through the windows until the round is won or lost, falling back to a yard corner when the horde reaches it.
+- `stations` starts with gold for everything and ten minutes before the first wave: it opens every door, clicks every
+  offer of every station once, visits a second time where the first was refused for want of power, and takes the gun
+  the mystery box rolls. The report has each menu's offers and what each click said and cost.
+- `horde --kind frost` plays a round of one wave of a single kind of enemy, `--kind hellhound` and `--kind inferno`
+  the hound and the boss wave, and `horde --event blood_moon` forces one wave event. Every hit lands, on a player with
+  five times the health who is healed after it, to watch the wave to its end, which wins the round.
 
 ## Maps
 

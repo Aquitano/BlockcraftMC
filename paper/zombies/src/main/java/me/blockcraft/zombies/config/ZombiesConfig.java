@@ -21,6 +21,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
                             double burnDamage, int burnTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
+                            Inferno inferno,
                             Events events, Abilities abilities, Mystery mystery, Armory armory, Presentation presentation) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
@@ -81,6 +82,9 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
      * {@code fuseTicks} it blasts everyone in sight within {@code radius}, harder the closer they stand.
      */
     public record Exploder(double triggerRange, int fuseTicks, double rushSpeed, double radius, double knockback) { }
+
+    /** The boss throws fire for its damage at the nearest fighter it sees within {@code blastRange}. */
+    public record Inferno(double blastRange) { }
 
     /**
      * From {@code fromWave}, a wave that is neither a boss nor a hound wave gets one event with {@code chance}, picked
@@ -221,6 +225,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                 new Exploder(Math.clamp(yaml.getDouble("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
                         Math.clamp(yaml.getDouble("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.getDouble("exploder.radius"), 1, 8),
                         Math.max(0, yaml.getDouble("exploder.knockback"))),
+                new Inferno(Math.clamp(yaml.getDouble("inferno.blast-range"), 4, 64)),
                 events(yaml), abilities(yaml),
                 new Mystery(positive(yaml, "mystery.rise-ticks"), Math.clamp(yaml.getDouble("mystery.rise-height"), 0.2, 2),
                         positive(yaml, "mystery.roll-seconds") * 20, positive(yaml, "mystery.take-seconds") * 20,

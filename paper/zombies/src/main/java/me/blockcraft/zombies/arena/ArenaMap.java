@@ -229,6 +229,9 @@ public final class ArenaMap {
                 });
         world.setDifficulty(org.bukkit.Difficulty.valueOf(yaml.getString("difficulty", "NORMAL")));
         world.setGameRule(org.bukkit.GameRules.NATURAL_HEALTH_REGENERATION, false);
+        world.setGameRule(org.bukkit.GameRules.ADVANCE_TIME, false);
+        world.setGameRule(org.bukkit.GameRules.ADVANCE_WEATHER, false);
+        world.setStorm(false);
         me.blockcraft.api.world.Worlds.setTime(world, yaml.getLong("time", 18000));
         return ready();
     }

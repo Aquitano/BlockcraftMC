@@ -15,7 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.util.Vector;
 
-/** Carries a riot shield that takes most of a hit from the front; the team has to flank it. */
+/** Carries a riot shield that takes most of a hit from the front: flank it, or shoot over the shield at its head. */
 final class ShieldBearer implements Ability {
 
     private final ZombiesConfig.ShieldBearer config;
@@ -39,11 +39,11 @@ final class ShieldBearer implements Ability {
     }
 
     @Override
-    public double shot(Enemies.Enemy enemy, Player shooter, double damage) {
+    public double shot(Enemies.Enemy enemy, Player shooter, double damage, boolean head) {
         var mob = enemy.mob;
         double yaw = Math.toRadians(mob.getBodyYaw());
         var facing = new Vector(-Math.sin(yaw), 0, Math.cos(yaw));
-        if (!blocks(facing, shooter.getLocation().toVector().subtract(mob.getLocation().toVector()), config.frontAngle())) {
+        if (head || !blocks(facing, shooter.getLocation().toVector().subtract(mob.getLocation().toVector()), config.frontAngle())) {
             return damage;
         }
         mob.getWorld().playSound(mob.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1, 1);

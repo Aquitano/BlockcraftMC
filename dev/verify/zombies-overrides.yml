@@ -1,0 +1,11 @@
+# Operator overrides for the verify network only: three waves that end on the boss, a boss one pistol can put down, and
+# time between waves for a client that draws a few frames a second.
+countdown:
+  lobby: 5
+  intermission: 15
+waves:
+  total: 3
+  boss-every: 3
+enemies:
+  inferno:
+    health: 60

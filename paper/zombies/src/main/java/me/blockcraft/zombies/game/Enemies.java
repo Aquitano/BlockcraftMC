@@ -294,11 +294,24 @@ public final class Enemies {
             player.getWorld().spawnParticle(Particle.ITEM_SLIME, player.getLocation().add(0, 1, 0), 16, 0.3, 0.5, 0.3, 0);
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SLIME_SQUISH, 0.8f, 0.7f);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowTicks, 1));
-        } else if (enemy.kind == EnemyKind.INFERNO && enemy.mob.hasLineOfSight(player)) {
+        } else if (enemy.kind == EnemyKind.INFERNO && enemy.mob.hasLineOfSight(player)
+                && enemy.mob.getLocation().distanceSquared(player.getLocation()) <= Math.pow(game.config().inferno().blastRange(), 2)) {
             enemy.specialAt = tick + 80;
-            enemy.mob.getWorld().spawnParticle(Particle.FLAME, enemy.mob.getEyeLocation(), 20, 0.3, 0.3, 0.3, 0.05);
-            player.damage(damage(enemy), enemy.mob);
+            blast(enemy, player);
         }
+    }
+
+    private void blast(Enemy enemy, Player player) {
+        var world = enemy.mob.getWorld();
+        var from = enemy.mob.getEyeLocation();
+        var line = player.getLocation().add(0, player.getHeight() / 2, 0).toVector().subtract(from.toVector());
+        int steps = (int) Math.ceil(line.length() / 0.4);
+        world.spawnParticle(Particle.FLAME, from, 20, 0.3, 0.3, 0.3, 0.05);
+        for (int step = 1; step <= steps; step++) {
+            world.spawnParticle(Particle.FLAME, from.clone().add(line.clone().multiply(step / (double) steps)), 2, 0.05, 0.05, 0.05, 0.01);
+        }
+        world.playSound(from, Sound.ENTITY_BLAZE_SHOOT, 2, 0.6f);
+        player.damage(damage(enemy), enemy.mob);
     }
 
     /** Nobody earns an exploder that blew itself up, even if someone hit it before. */
@@ -326,16 +339,22 @@ public final class Enemies {
     }
 
     public void hit(Player player, Mob mob, double damage) {
+        hit(player, mob, damage, 0);
+    }
+
+    public void hit(Player player, Mob mob, double bodyDamage, double headDamage) {
         var enemy = enemies.get(mob.getUniqueId());
         if (enemy == null || !game.fighting(player) || mob.isDead()) {
             return;
         }
         enemy.attacker = player.getUniqueId();
         mob.setNoDamageTicks(0);
+        var ability = abilities.of(enemy.kind);
+        double dealt = (bodyDamage > 0 ? ability.shot(enemy, player, bodyDamage, false) : 0)
+                + (headDamage > 0 ? ability.shot(enemy, player, headDamage, true) : 0);
         applyingDamage = true;
         try {
-            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100
-                    : abilities.of(enemy.kind).shot(enemy, player, damage) / enemy.toughness, player);
+            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100 : dealt / enemy.toughness, player);
         } finally {
             applyingDamage = false;
         }

@@ -382,6 +382,10 @@ public final class ZombiesGame implements RoundConnections.Seating {
         survivor.down(tick, config.bleedTicks());
         Menu.close(player);
         player.closeDialog();
+        if (fighters().isEmpty()) {
+            finish(false);
+            return;
+        }
         player.setHealth(1);
         player.setCollidable(false);
         var location = player.getLocation();
@@ -394,9 +398,6 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }));
         broadcast("revive.downed", Placeholder.unparsed("player", player.getName()), Formatter.number("seconds", config.bleedTicks() / 20));
         Sounds.NOTIFY.playToAll();
-        if (fighters().isEmpty()) {
-            finish(false);
-        }
     }
 
     private void revives() {
@@ -752,6 +753,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
             }
             removeCorpse(player.getUniqueId());
             PlayerReset.reset(player, GameMode.ADVENTURE);
+            player.setFreezeTicks(0);
             player.teleport(lobbySpawn());
             lobbyHotbar.giveHub(player);
         }

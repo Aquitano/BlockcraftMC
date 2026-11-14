@@ -66,6 +66,28 @@ services:
     environment:
       BLOCKCRAFT_SERVER_GROUP: lobby
 
+  zombies-data:
+    extends: {file: docker-compose.yml, service: replay-storage}
+    command: ["mkdir -p /data/plugins/Zombies && chown 1000:1000 /data /data/plugins /data/plugins/Zombies"]
+    volumes: !override
+      - zombies:/data
+
+  # Instead of sternenfront with VERIFY_GAME=zombies. A scenario that needs other settings writes its own overrides
+  # and names them in VERIFY_ZOMBIES_CONFIG.
+  zombies:
+    extends: {file: docker-compose.yml, service: zombies}
+    <<: *low-priority
+    cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    mem_limit: 2500m
+    memswap_limit: 2500m
+    depends_on:
+      zombies-data:
+        condition: service_completed_successfully
+    environment:
+      BLOCKCRAFT_SERVER_GROUP: lobby
+    volumes:
+      - ${VERIFY_ZOMBIES_CONFIG:-./dev/verify/zombies-overrides.yml}:/data/plugins/Zombies/config.yml:ro
+
   # Only for the replay scenario: it plays recordings, as the network's replay server does.
   replay:
     extends: {file: docker-compose.yml, service: replay}
@@ -143,6 +165,7 @@ volumes:
   velocity:
   sternenfront:
   story:
+  zombies:
   replay:
   replays:
   gradle:

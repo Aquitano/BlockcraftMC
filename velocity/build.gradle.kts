@@ -11,6 +11,8 @@ val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").ma
 tasks.runVelocity {
     velocityVersion(libs.findVersion("velocity-api").get().requiredVersion)
     runDirectory = rootProject.layout.projectDirectory.dir("run/velocity")
+    systemProperty("user.language.format", "de")
+    systemProperty("user.country.format", "DE")
     dependsOn(":packRanks", ":resourcepack:pack")
     doFirst {
         copy {
