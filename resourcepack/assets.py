@@ -41,6 +41,7 @@ FAMILIES = {
     'presentation': Family('PresentationArt.java', arguments=('src',)),
     'sounds': Family('SoundArt.py', visual=False),
     'sternenfront-sounds': Family('SternenfrontSounds.py', visual=False),
+    'story-sounds': Family('StorySounds.py', visual=False),
 }
 CHECKS = (
     ('verify_imported_props.py',),
