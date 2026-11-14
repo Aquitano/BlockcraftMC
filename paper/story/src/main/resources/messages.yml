@@ -1,7 +1,7 @@
 # The core's texts, which a story game's own messages.yml lies on. The game adds what its mission says: `npc.<id>.name`
-# and `.role`, `stage.<stage>` for the boss bar and `stage-start.<stage>` for the chat, `choice.<choice>` for each
-# answer of a vote, `ending.<ending>.title`, `.subtitle` and `.summary`, and `cutscene.<scene>.<n>` with
-# `cutscene.speaker.<actor>` for a cutscene's lines. It usually words `prefix`, `game-name` and `join.introduction` anew.
+# and `.role`, `chapter.<chapter>` for each chapter's name, `stage.<stage>` for the boss bar and `stage-start.<stage>`
+# for the chat, `choice.<choice>` for each answer of a vote, `ending.<ending>.title`, `.subtitle` and `.summary`, and
+# `cutscene.<scene>.<n>` with `cutscene.speaker.<actor>` for a cutscene's lines. It usually words `prefix`, `game-name` and `join.introduction` anew.
 prefix: "<primary>Einsatz <dark>» <reset>"
 game-name: "<primary>Einsatz"
 
@@ -19,8 +19,10 @@ join:
 lobby:
   previous: "<prefix><muted>Eure letzte Entscheidung: <accent><choice>"
   resume: "<prefix><muted>Dein letzter Einsatz ist noch offen: <white><stage>"
+  chapter: "<prefix><muted>Dein nächstes Kapitel: <white><chapter>"
 
 campaign:
+  chapter: "<prefix><muted>Ihr spielt <white><chapter><muted>."
   resumed: "<prefix><muted>Der Einsatz geht weiter, beim letzten Abschnitt, den ihr erreicht habt."
   unsaved: "<prefix><error>Der Abschluss des Einsatzes konnte nicht gespeichert werden."
   unreadable: "<prefix><error>Euer Einsatz konnte nicht geladen werden. <muted>Der Countdown beginnt von vorn."

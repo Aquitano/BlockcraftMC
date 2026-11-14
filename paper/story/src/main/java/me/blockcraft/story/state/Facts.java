@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 public final class Facts {
 
     public static final String STAGE = "stage";
+    public static final String CHAPTER = "chapter";
     /** What a condition expects: a value, or a value after a comparison such as {@code >=3}, or {@code *} for "is set". */
     private static final Pattern EXPECTED = Pattern.compile("(<=|>=|!=|<|>|=)?(.*)");
 

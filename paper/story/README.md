@@ -96,23 +96,49 @@ tried again is recognised as stored, and once another server has saved the campa
 stops saving it. A jump from the waiting lobby starts a new campaign, and a jump during the mission saves its stage and
 facts into the party's campaign like any other stage; `/story` shows the campaign and its revision.
 
+## Chapters
+
+A game may divide its stages into `chapters` in config.yml, in order, each naming the stage it starts `from`:
+
+```yaml
+chapters:
+  signal: {from: briefing}
+  relief: {from: debrief, carries: [decision]}
+```
+
+A chapter is a round of its own. The package starts it with `begin_<chapter>`, or `begin` where it has no such
+action, `storyend` ends it, and its campaign is stored under `<mission>.<chapter>`, so each chapter resumes and counts
+as finished on its own. `storystage` stays within the chapter being played, and its name is the fact `chapter`.
+
+Finishing a chapter opens the next one. When the countdown ends, a party with no campaign left open plays the earliest
+chapter any of its members has still to finish, so nobody is taken past a chapter they have not played, and a party
+that has finished every chapter starts over. The waiting lobby tells each player their own next chapter, named by
+`chapter.<chapter>` in messages.yml.
+
+`carries` lists the facts a chapter takes over from the ending of the one before: the values that chapter ended with
+for the first member, in join order, who finished it. They are set before `begin_<chapter>` runs, so its conditions
+can read them. A `/story jump` clears them like every other fact, so a stage that needs one names it in its `facts`.
+
+A mission without `chapters` is one chapter, stored under the mission's own name.
+
 ## Debugging
 
 `/story` is for operators and works the same from the console, so RCON scripts and `dev/verify` use it too:
 
 | Command | Does |
 | --- | --- |
-| `/story` or `/story state [json]` | stage, facts, the playing scene and its tick, the hold, timers, soundtrack, votes and the campaign with its revision |
+| `/story` or `/story state [json]` | chapter, stage, facts, the playing scene and its tick, the hold, timers, soundtrack, votes and the campaign with its revision |
 | `/story log [count]` | the last story events: facts, stages, actions, lines and answers, scenes, timers, sounds |
 | `/story trace` | streams those events into your chat as they happen |
 | `/story hud` | the state in the sidebar, updated twice a second |
-| `/story jump <stage> [fact=value ...]` | puts the party at a stage with that stage's `facts`, from the waiting lobby too |
+| `/story jump <stage> [fact=value ...]` | puts the party at a stage with that stage's `facts`; from the waiting lobby it starts that stage's chapter, during a round it stays within the chapter played |
+| `/story chapter <chapter>` | in the waiting lobby: the next start plays that chapter afresh, whatever the members finished or left open |
 | `/story fact <name> [value\|+n\|clear]` | reads or changes a fact |
 | `/story run <action> [player]` | runs a package action for the party, or for one member |
 | `/story scene <name> [tick]` | previews a cutscene from any tick, to you alone; it starts no actions, keeps the party's music and does not count as seen |
 | `/story scene stop` | ends the previews; `/story skip` ends the party's scene |
 | `/story skip` | ends the scene, the hold or the next timer, whichever the party waits on |
-| `/story reload` | reads config.yml again: scenes, stages and soundtrack. `/bq reload` reloads the quest package |
+| `/story reload` | reads config.yml again: scenes, stages, chapters and soundtrack. `/bq reload` reloads the quest package |
 
 Every event also goes to the server log as `[story] <kind> <text>`, so
 `docker logs <story container> | grep '\[story\]'` replays a session. `/story jump <stage> decision=<choice>` plays a

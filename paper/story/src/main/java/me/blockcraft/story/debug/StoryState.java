@@ -3,6 +3,7 @@ package me.blockcraft.story.debug;
 import com.google.gson.GsonBuilder;
 import me.blockcraft.story.cutscene.Cutscenes;
 import me.blockcraft.story.dialogue.DialogueHud;
+import me.blockcraft.story.game.Chapters;
 import me.blockcraft.story.game.Stage;
 import me.blockcraft.story.game.StoryGame;
 import me.blockcraft.story.sound.Soundtrack;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /** Everything about the party's story at one moment, for {@code /story state}, its JSON and the debug sidebar. */
-public record StoryState(String phase, String stage, int stageNumber, List<String> stages, List<String> members,
+public record StoryState(String phase, String chapter, String stage, int stageNumber, List<String> stages, List<String> members,
                          Map<String, String> facts, Optional<Cutscenes.Progress> scene, Optional<Double> hold,
                          List<Timer> timers, Optional<String> music, Optional<String> ambience,
                          Map<String, Map<String, String>> votes, Map<String, DialogueHud.Panel> panels,
@@ -30,7 +31,8 @@ public record StoryState(String phase, String stage, int stageNumber, List<Strin
         var stages = game.stages().stream().map(Stage::name).toList();
         var panels = new LinkedHashMap<String, DialogueHud.Panel>();
         game.members().forEach(member -> game.dialogue().panel(member).ifPresent(panel -> panels.put(member.getName(), panel)));
-        return new StoryState(game.phase().name(), game.stage(), stages.indexOf(game.stage()) + 1, stages,
+        return new StoryState(game.phase().name(), game.chapter().map(Chapters.Chapter::name).orElse(""), game.stage(),
+                stages.indexOf(game.stage()) + 1, stages,
                 game.members().stream().map(Player::getName).toList(), game.facts().ordered(), game.sceneProgress(), game.hold(),
                 game.timers().pending().stream().map((Timers.Pending pending) -> new Timer(pending.label(), pending.due() - now)).toList(),
                 game.music().playing(Soundtrack.Channel.MUSIC), game.music().playing(Soundtrack.Channel.AMBIENCE), game.openVotes(), panels,
@@ -39,7 +41,7 @@ public record StoryState(String phase, String stage, int stageNumber, List<Strin
 
     public List<String> lines() {
         var lines = new ArrayList<String>();
-        lines.add("stage " + (stage.isEmpty() ? "-" : stage + " (" + stageNumber + "/" + stages.size() + ")") + ", round " + phase
+        lines.add("chapter " + (chapter.isEmpty() ? "-" : chapter) + ", stage " + (stage.isEmpty() ? "-" : stage + " (" + stageNumber + "/" + stages.size() + ")") + ", round " + phase
                 + ", members " + String.join(", ", members));
         lines.add("facts " + (facts.isEmpty() ? "-" : facts.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList()));
         scene.ifPresent(at -> lines.add("scene " + at.scene() + " " + at.tick() + "/" + at.duration() + " for " + at.viewers()));
@@ -61,6 +63,7 @@ public record StoryState(String phase, String stage, int stageNumber, List<Strin
                 "timers", timers,
                 "soundtrack", Map.of("music", music.orElse(""), "ambience", ambience.orElse("")),
                 "votes", votes));
+        json.put("chapter", chapter);
         json.put("panels", panels);
         json.put("campaign", campaign.orElse(""));
         return new GsonBuilder().create().toJson(json);

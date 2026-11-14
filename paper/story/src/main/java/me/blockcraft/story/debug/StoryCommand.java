@@ -9,6 +9,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import me.blockcraft.story.game.Chapters;
 import me.blockcraft.story.game.Stage;
 import me.blockcraft.story.game.StoryGame;
 import net.kyori.adventure.text.Component;
@@ -28,6 +29,7 @@ import java.util.function.Supplier;
  * <ul>
  *     <li>{@code state [json]}, {@code log [count]}, {@code trace} and {@code hud} show what the story is doing,</li>
  *     <li>{@code jump <stage> [fact=value ...]} puts the party at a stage, from the waiting lobby too,</li>
+ *     <li>{@code chapter <chapter>} makes the next start play that chapter afresh,</li>
  *     <li>{@code fact <name> [value|+n|-n|clear]} reads or changes a fact,</li>
  *     <li>{@code run <action> [player]} runs a package action for the party, or for one member,</li>
  *     <li>{@code scene <name> [from tick]} previews a cutscene, {@code scene stop} ends it,</li>
@@ -68,6 +70,14 @@ public final class StoryCommand {
                     return Command.SINGLE_SUCCESS;
                 }))
                 .then(jump())
+                .then(Commands.literal("chapter").then(Commands.argument("chapter", StringArgumentType.word())
+                        .suggests(suggest(() -> game.chapters().all().stream().map(Chapters.Chapter::name).toList()))
+                        .executes(context -> {
+                            var chapter = StringArgumentType.getString(context, "chapter");
+                            var refused = game.pick(chapter);
+                            reply(context, refused.orElse("The next start plays " + chapter));
+                            return refused.isEmpty() ? Command.SINGLE_SUCCESS : 0;
+                        })))
                 .then(fact())
                 .then(run())
                 .then(scene())

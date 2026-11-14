@@ -66,7 +66,7 @@ public final class Story {
         world.setGameRule(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0);
         var mission = config.getString("mission.name", "mission");
         var game = new StoryGame(plugin, gameConfig, services.messages(), world, services.stats(), services.menus(),
-                new Campaigns(api.database(), mission), new SeenScenes(plugin, api.database(), mission), loadout);
+                chapter -> new Campaigns(api.database(), chapter), new SeenScenes(plugin, api.database(), mission), loadout);
         game.connect(Quests.register(plugin, game.mission(), game, game.trace(), game::members, game.npcs(), game.dialogue(), game.voices()));
         var board = new DebugBoard(plugin, game);
         api.presence().maxPlayers(config.getInt("players.max"));
