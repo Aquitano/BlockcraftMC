@@ -102,7 +102,7 @@ public final class StationMenu extends Menu {
         } else {
             lore.add(game.messages().get(offer.available().getAsBoolean() ? "shop.buy" : "shop.owned"));
         }
-        if (station.kind() == StationKind.ARMORY || station.kind() == StationKind.MYSTERY) {
+        if (guns.containsKey(slot) || station.kind() == StationKind.MYSTERY) {
             lore.addAll(game.messages().getLines(station.kind() == StationKind.ARMORY ? "shop.weapon-hint" : "shop.mystery-hint"));
         }
         set(slot, Items.of(offer.material()).name(offer.name()).lore(lore).hideAttributes().build());
