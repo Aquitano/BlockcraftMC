@@ -57,6 +57,7 @@ Neither attempt should spend gold or grant an item.
 13. Reach wave 7. It sends only black hellhounds under its own title. Get slowed by a Giftzombie from wave 12 on.
 14. When three enemies remain in a wave, check that they speed up, and that a wave with nobody alive spawns its next enemy at once.
 15. Let an Exploder come within four blocks. It hisses, glows, smokes and rushes for 1.5 seconds. Shoot one before it goes off and nothing explodes; let another go off and the blast hurts less at its edge and throws you back. A wave drops at most two powerups.
+16. Stand in the Inferno's sight within 24 blocks. About every four seconds a flame runs from its head to you with a blaze's shot, and the hit lands with it. Step behind cover or further away and it stops.
 
 ## Special enemies
 
