@@ -188,6 +188,8 @@ same `BLOCKCRAFT_ADDRESS_SECRET`, which then replaces the file. Changing the sec
 4. Point LuckPerms on every server at the same database (`storage-method` and `data` in its `config.yml`).
 5. [Import the ranks](#importing-the-ranks).
 6. Point the Paper servers at the proxy with modern forwarding. They register themselves with it.
+7. Start every server and the proxy with `-Duser.language.format=de -Duser.country.format=DE`, as `docker-compose.yml`
+   and the run tasks do. Without it, numbers in messages read `49,500` instead of `49.500`.
 
 ### Environment variables
 

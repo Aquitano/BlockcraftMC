@@ -16,6 +16,8 @@ tasks.runServer {
     minecraftVersion(libs.findVersion("minecraft").get().requiredVersion)
     runDirectory = rootProject.layout.projectDirectory.dir(if (providers.gradleProperty("game").isPresent) "run/paper-${localGame.get()}" else "run/paper")
     systemProperty("com.mojang.eula.agree", "true")
+    systemProperty("user.language.format", "de")
+    systemProperty("user.country.format", "DE")
     environment("BLOCKCRAFT_SERVER_NAME", localGame.get())
     if (providers.gradleProperty("game").isPresent) {
         environment("BLOCKCRAFT_SERVER_GROUP", localGame.get())
