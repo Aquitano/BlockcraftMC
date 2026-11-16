@@ -66,6 +66,14 @@ services:
     environment:
       BLOCKCRAFT_SERVER_GROUP: lobby
 
+  # Instead of sternenfront with VERIFY_GAME=lobby: the network's lobby, for its first join, NPCs and menus.
+  lobby:
+    extends: {file: docker-compose.yml, service: lobby}
+    <<: *low-priority
+    cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    mem_limit: 1280m
+    memswap_limit: 1280m
+
   zombies-data:
     extends: {file: docker-compose.yml, service: replay-storage}
     command: ["mkdir -p /data/plugins/Zombies && chown 1000:1000 /data /data/plugins /data/plugins/Zombies"]
@@ -165,6 +173,7 @@ volumes:
   velocity:
   sternenfront:
   story:
+  lobby:
   zombies:
   replay:
   replays:

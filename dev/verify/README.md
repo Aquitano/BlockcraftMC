@@ -20,8 +20,9 @@ dev/verify/verify.py down        # -v also deletes the database and the download
 After `stagePlugins`, `restart` restarts the game server and `join` reconnects; `restart client` or `restart velocity`
 picks up a changed mod or a new resource pack.
 
-`VERIFY_GAME=story` runs the story core's example game (`paper/storyexample`) instead of Sternenfront for every command, and
-`VERIFY_GAME=zombies` runs Zombies; `down` the other one first, since each takes the proxy's first-join route.
+`VERIFY_GAME=story` runs the story core's example game (`paper/storyexample`) instead of Sternenfront for every command,
+`VERIFY_GAME=zombies` runs Zombies and `VERIFY_GAME=lobby` the network's lobby; `down` the other one first, since each
+takes the proxy's first-join route. The scenarios are written for the games; on the lobby use the single commands.
 
 `VERIFY_PROJECT` names the Docker project (default `bcverify`), so a second rig can run beside the first with its own
 `VERIFY_PORT`. `VERIFY_PACK_URL` overrides the address the proxy offers the resource pack at, for a client outside Docker.
