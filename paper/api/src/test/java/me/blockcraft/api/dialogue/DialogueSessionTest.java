@@ -43,7 +43,7 @@ public class DialogueSessionTest {
     @Test
     public void longWordsAndUnicodeCannotOverflowThePanelOrSplitSurrogatePairs() {
         String text = "Äußere\u00a0Decks 😄\n" + "abcdefghij".repeat(20);
-        var pages = DialogueText.pages(text, 222);
+        var pages = DialogueText.pages(text, 222, DialogueText.PAGE_LINES);
         assertTrue(pages.size() > 1);
         for (var page : pages) {
             assertTrue(page.size() <= 3);
@@ -51,6 +51,20 @@ public class DialogueSessionTest {
         }
         assertEquals("Äußere Decks ?", pages.getFirst().getFirst());
         assertTrue(DialogueText.width(DialogueText.fit(text, 40)) <= 40);
+    }
+
+    @Test
+    public void aLineWithThreeChoicesKeepsRoomForThemOnItsLastPage() {
+        var choices = List.of(new Dialogue.Choice("a", ""), new Dialogue.Choice("b", ""), new Dialogue.Choice("c", ""));
+        var dialogue = new Dialogue("ask", Map.of("ask", new Dialogue.Line("speaker", "one\ntwo\nthree", Dialogue.Portrait.PILOT, "", choices)));
+        var session = new DialogueSession(dialogue, key -> key);
+        assertEquals(2, session.pageCount());
+        session.advance();
+        session.advance();
+        session.advance();
+        assertTrue(session.choosing());
+        assertEquals(List.of("two", "three"), session.visibleLines());
+        assertEquals(DialogueView.ROWS, session.visibleLines().size() + choices.size());
     }
 
     @Test

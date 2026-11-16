@@ -30,8 +30,9 @@ configured value.
    for clipping or overlaps.
 
 Command controls are `/presentation advance`, `/presentation next`, and `/presentation previous`.
-`/presentation stop` closes a dialogue or visual demo. Dialogue layout currently uses a 300-pixel panel with three
-body lines and up to three choices. Text is plain text after message resolution, with a bundled Latin glyph set.
+`/presentation stop` closes a dialogue or visual demo. The dialogue panel is 300 pixels wide and stands on the hearts,
+56 pixels tall for up to four rows of text and 66 for five. A page holds up to three lines, and the last page of a line
+with three choices holds two, so its choices fit. Text is plain text after message resolution, with a bundled Latin glyph set.
 
 ## Inspect the effects
 

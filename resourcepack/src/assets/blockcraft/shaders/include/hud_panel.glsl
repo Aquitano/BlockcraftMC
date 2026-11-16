@@ -8,7 +8,7 @@
 //   231  row    176 + tint  a panel in the top-left corner, on a boss bar line           HudPanel.Corner.TOP_LEFT
 //   233  row    176 + tint  a panel in the top-right corner, on a boss bar line          HudPanel.Corner.TOP_RIGHT
 //   232  row    176 + tint  a panel in the bottom-right corner, on the action bar        HudPanel.Corner.BOTTOM_RIGHT
-//   234  row    176 + tint  a panel above the hotbar's middle, on the action bar         Story's DialoguePanel
+//   234  row    176 + tint  a panel above the hotbar's middle, on the action bar         HudPanel.Corner.BOTTOM_CENTRE
 //   231  1-5    197         a text effect from text_effect.glsl                          TextMotion
 //
 // Blue 176 to 183 is a panel tint, an index into BLOCKCRAFT_PANEL_TINTS in the order of HudPanel.Tint. Blue 197 is a
@@ -47,7 +47,7 @@ const vec2 BLOCKCRAFT_BOTTOM_RIGHT_CORNER = vec2(-BLOCKCRAFT_BOTTOM_RIGHT_MARGIN
 
 // The bottom-centre panel's rows count from the top of a space BLOCKCRAFT_CENTRE_AREA pixels tall whose bottom lies
 // just above the hearts and food, which the client draws over the action bar, so the server grows a panel upwards by
-// starting it further down that space.
+// starting it further down that space. HudPanel.BOTTOM_CENTRE_AREA and BOTTOM_CENTRE_BOTTOM hold the same numbers.
 const float BLOCKCRAFT_CENTRE_BOTTOM = 42.0;
 const float BLOCKCRAFT_CENTRE_AREA = 128.0;
 

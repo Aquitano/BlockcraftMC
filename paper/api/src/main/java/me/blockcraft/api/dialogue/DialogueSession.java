@@ -67,7 +67,7 @@ final class DialogueSession {
 
     private void enter(String id) {
         lineId = id;
-        pages = DialogueText.pages(text.apply(line().text()), 222);
+        pages = DialogueText.pages(text.apply(line().text()), DialogueView.TEXT_WIDTH, DialogueView.ROWS - line().choices().size());
         page = 0;
         visible = 0;
         choice = 0;

@@ -1,18 +1,19 @@
 package me.blockcraft.story.dialogue;
 
+import me.blockcraft.api.pack.HudPanel;
+import me.blockcraft.api.pack.HudPanel.Corner;
+import me.blockcraft.api.pack.HudPanel.Glyph;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.api.pack.UiFont;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.ShadowColor;
-import net.kyori.adventure.text.format.TextColor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The dialogue panel above the hotbar as one action bar line. The pack's text shader moves every glyph whose colour
- * has red 234 to its row below the top of a space over the hotbar, as {@code hud_panel.glsl} describes, so the line
- * takes no width and the panel stays put however much it says. Letters draw from {@link UiFont#TEXT}, whose widths the
+ * The dialogue panel above the hotbar as one action bar line: a {@link HudPanel} in the bottom-centre, so the line takes
+ * no width and the panel stays put however much it says. Letters draw from {@link UiFont#TEXT}, whose widths the
  * server counts even under a player's own font pack, and the panel's pieces from the pack's {@code blockcraft:story}.
  */
 public final class DialoguePanel {
@@ -29,19 +30,11 @@ public final class DialoguePanel {
         }
     }
 
-    /** The shader's tints, in the order of its tint table. */
-    private enum Tint { WHITE, DIMMED, AQUA, RED, GOLD, SHADOW, YELLOW }
-
-    private record Glyph(String text, Key font, int x, int y, Tint tint, int advance) { }
-
     static final Key FONT = Key.key("blockcraft", "story");
     public static final int TEXT_WIDTH = 282;
     public static final int MAX_LINES = 5;
     public static final int MAX_ANSWERS = 5;
-    private static final int MARKER_RED = 234;
-    private static final int FIRST_TINT = 176;
-    /** The shader's space above the hotbar; a panel's rows count from its top, so a short panel starts lower. */
-    private static final int AREA = 128;
+    private static final int AREA = HudPanel.BOTTOM_CENTRE_AREA;
     private static final int WIDTH = 300;
     private static final int LEFT = -WIDTH / 2;
     private static final int RIGHT = WIDTH / 2;
@@ -126,41 +119,43 @@ public final class DialoguePanel {
         int pageLines = size.lines();
         int height = height(pageLines, size.answers(), size.hint());
         int top = AREA - height + view.rise();
-        var glyphs = new ArrayList<Glyph>();
-        wide(glyphs, TOP, LEFT, top, WIDTH);
+        var pieces = new ArrayList<Glyph>();
+        var letters = new ArrayList<Glyph>();
+        wide(pieces, TOP, LEFT, top, WIDTH);
         int y = CAP;
         while (y < height - CAP) {
             int left = height - CAP - y;
             for (int i = 0; i < SLICES.length; i++) {
                 if (SLICES[i] <= left) {
-                    wide(glyphs, (char) (FIRST_SLICE + 2 * (SLICES.length - 1 - i)), LEFT, top + y, WIDTH);
+                    wide(pieces, (char) (FIRST_SLICE + 2 * (SLICES.length - 1 - i)), LEFT, top + y, WIDTH);
                     y += SLICES[i];
                     break;
                 }
             }
         }
-        wide(glyphs, BOTTOM, LEFT, top + height - CAP, WIDTH);
-        glyphs.add(piece(SPEAKER, TEXT_X - 1, top + SPEAKER_Y, MARK_ADVANCE));
-        glyphs.add(text(view.speaker(), TEXT_X + 7, top + SPEAKER_Y, Tint.AQUA));
+        wide(pieces, BOTTOM, LEFT, top + height - CAP, WIDTH);
+        pieces.add(piece(SPEAKER, TEXT_X - 1, top + SPEAKER_Y, MARK_ADVANCE));
+        letters.add(text(view.speaker(), TEXT_X + 7, top + SPEAKER_Y, Tint.AQUA));
         for (int i = 0; i < view.lines().size(); i++) {
-            glyphs.add(text(view.lines().get(i), TEXT_X, top + BODY_Y + i * LINE_PITCH, Tint.WHITE));
+            letters.add(text(view.lines().get(i), TEXT_X, top + BODY_Y + i * LINE_PITCH, Tint.WHITE));
         }
         int answersTop = top + BODY_Y + Math.max(1, pageLines) * LINE_PITCH + 3;
         for (int i = 0; i < view.answers().size(); i++) {
             int row = answersTop + i * ANSWER_PITCH;
             boolean selected = i == view.selected();
-            if (selected) wide(glyphs, HIGHLIGHT, LEFT + 6, row - 1, HIGHLIGHT_WIDTH);
-            glyphs.add(piece(selected ? BADGE_LIT : BADGE, TEXT_X, row - 1, BADGE_ADVANCE));
-            glyphs.add(text(Integer.toString(i + 1), TEXT_X + 2, row, selected ? Tint.YELLOW : Tint.AQUA));
-            glyphs.add(text(view.answers().get(i), ANSWER_TEXT_X, row, selected ? Tint.YELLOW : Tint.DIMMED));
+            if (selected) wide(pieces, HIGHLIGHT, LEFT + 6, row - 1, HIGHLIGHT_WIDTH);
+            pieces.add(piece(selected ? BADGE_LIT : BADGE, TEXT_X, row - 1, BADGE_ADVANCE));
+            letters.add(text(Integer.toString(i + 1), TEXT_X + 2, row, selected ? Tint.YELLOW : Tint.AQUA));
+            letters.add(text(view.answers().get(i), ANSWER_TEXT_X, row, selected ? Tint.YELLOW : Tint.DIMMED));
         }
         if (!view.hint().isEmpty()) {
             int row = top + height - CAP - 8;
             int arrow = view.more() ? MORE_ADVANCE : 0;
-            glyphs.add(text(view.hint(), RIGHT - 9 - arrow - width(view.hint()), row, Tint.DIMMED));
-            if (view.more()) glyphs.add(piece(MORE, RIGHT - 8 - MORE_ADVANCE, row + (view.blink() ? 1 : 0), MORE_ADVANCE));
+            letters.add(text(view.hint(), RIGHT - 9 - arrow - width(view.hint()), row, Tint.DIMMED));
+            if (view.more()) pieces.add(piece(MORE, RIGHT - 8 - MORE_ADVANCE, row + (view.blink() ? 1 : 0), MORE_ADVANCE));
         }
-        return line(glyphs);
+        return Component.textOfChildren(HudPanel.render(Corner.BOTTOM_CENTRE, FONT, pieces),
+                HudPanel.render(Corner.BOTTOM_CENTRE, UiFont.TEXT, letters));
     }
 
     private static void wide(List<Glyph> glyphs, char left, int x, int y, int width) {
@@ -170,25 +165,10 @@ public final class DialoguePanel {
     }
 
     private static Glyph piece(char glyph, int x, int y, int advance) {
-        return new Glyph(Character.toString(glyph), FONT, x, y, Tint.WHITE, advance);
+        return new Glyph(Character.toString(glyph), x, y, Tint.WHITE, false, advance);
     }
 
     private static Glyph text(String text, int x, int y, Tint tint) {
-        return new Glyph(text, UiFont.TEXT, x, y, tint, width(text));
-    }
-
-    /** The glyphs as one line that ends where it began, each glyph's colour naming its row and tint, without shadows. */
-    private static Component line(List<Glyph> glyphs) {
-        var line = Component.text();
-        int cursor = 0;
-        for (var glyph : glyphs) {
-            if (glyph.text().isEmpty()) continue;
-            if (glyph.x() != cursor) line.append(UiFont.space(glyph.x() - cursor));
-            var colour = TextColor.color(MARKER_RED, Math.clamp(glyph.y(), 0, 255), FIRST_TINT + glyph.tint().ordinal());
-            line.append(Component.text(glyph.text(), colour).font(glyph.font()).shadowColor(ShadowColor.none()));
-            cursor = glyph.x() + glyph.advance();
-        }
-        if (cursor != 0) line.append(UiFont.space(-cursor));
-        return line.build();
+        return new Glyph(text, x, y, tint, false, width(text));
     }
 }

@@ -7,11 +7,21 @@ import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
+/**
+ * The shared dialogue panel's art in {@code blockcraft:dialogue}, its letters in {@code blockcraft:dialogue_text} and their
+ * widths for the server's {@code DialogueText}. The server's {@code DialogueView} lays these out as a bottom-centre
+ * {@code HudPanel}, which gives every glyph its row, so each one hangs from its line's top with an ascent of seven.
+ */
 public final class DialogueArt {
     private static final Color ACCENT = new Color(0x61DAD4);
+    private static final int WIDTH = 300;
+    /** The panel for up to four rows of text beside the portrait, and the one for five; DialogueView picks between them. */
+    private static final int[] HEIGHTS = {56, 66};
+    private static final int PORTRAIT = 48;
+    private static final int LETTER_WIDTH = 6;
+    private static final int LETTER_HEIGHT = 12;
 
     public static void main(String[] args) throws Exception {
         Path root = Path.of(args.length == 0 ? "src" : args[0]);
@@ -20,48 +30,34 @@ public final class DialogueArt {
         Path metrics = Path.of(args.length > 1 ? args[1] : "../paper/api/src/main/resources/dialogue-glyphs.properties");
         Files.createDirectories(textures);
         Files.createDirectories(fonts);
-        var panel = new BufferedImage(300, 116, BufferedImage.TYPE_INT_ARGB);
-        var g = panel.createGraphics();
-        g.setColor(new Color(0xF015202D, true));
-        g.fillRect(0, 0, 300, 116);
-        g.setColor(new Color(0x567080));
-        g.drawRect(0, 0, 299, 115);
-        g.setColor(ACCENT);
-        g.fillRect(0, 0, 36, 2);
-        g.fillRect(264, 114, 36, 2);
-        g.setColor(new Color(0x263B49));
-        g.fillRect(61, 21, 231, 35);
-        g.drawLine(8, 99, 291, 99);
-        g.dispose();
-        // The client draws a glyph wider than its 256-pixel font atlas as a missing-glyph box, so the panel is two halves.
-        ImageIO.write(panel.getSubimage(0, 0, 150, 116), "PNG", textures.resolve("panel_left.png").toFile());
-        ImageIO.write(panel.getSubimage(150, 0, 150, 116), "PNG", textures.resolve("panel_right.png").toFile());
         var providers = new ArrayList<String>();
-        providers.add(bitmap("panel_left.png", 116, 116, List.of("\\uE600")));
-        providers.add(bitmap("panel_right.png", 116, 116, List.of("\\uE601")));
+        for (int size = 0; size < HEIGHTS.length; size++) {
+            int height = HEIGHTS[size];
+            var panel = panel(height);
+            // The client draws a glyph wider than its 256-pixel font atlas as a missing-glyph box, so the panel is two halves.
+            String name = "panel_" + height;
+            ImageIO.write(panel.getSubimage(0, 0, WIDTH / 2, height), "PNG", textures.resolve(name + "_left.png").toFile());
+            ImageIO.write(panel.getSubimage(WIDTH / 2, 0, WIDTH / 2, height), "PNG", textures.resolve(name + "_right.png").toFile());
+            providers.add(bitmap(name + "_left.png", height, List.of(escape(0xE600 + 2 * size))));
+            providers.add(bitmap(name + "_right.png", height, List.of(escape(0xE601 + 2 * size))));
+        }
         String[] portraits = {"pilot", "pilot_happy", "pilot_worried", "droid", "droid_alert", "courier", "local", "note"};
         for (int index = 0; index < portraits.length; index++) {
-            var portrait = new BufferedImage(48, 128, BufferedImage.TYPE_INT_ARGB);
-            g = portrait.createGraphics();
+            var portrait = new BufferedImage(PORTRAIT, PORTRAIT, BufferedImage.TYPE_INT_ARGB);
+            var g = portrait.createGraphics();
             portrait(g, index);
             g.dispose();
             ImageIO.write(portrait, "PNG", textures.resolve(portraits[index] + ".png").toFile());
-            providers.add(bitmap(portraits[index] + ".png", 94, 128, List.of(escape(0xE610 + index))));
+            providers.add(bitmap(portraits[index] + ".png", PORTRAIT, List.of(escape(0xE610 + index))));
         }
-        var spaces = new ArrayList<String>();
-        for (int bit = 0; bit < 10; bit++) {
-            spaces.add("\"" + escape(0xE640 + bit) + "\":" + -(1 << bit));
-            spaces.add("\"" + escape(0xE650 + bit) + "\":" + (1 << bit));
-        }
-        providers.add("{\"type\":\"space\",\"advances\":{" + String.join(",", spaces) + "}}");
         Files.writeString(fonts.resolve("dialogue.json"), font(providers));
         var characters = new ArrayList<Integer>();
         for (int cp = 33; cp <= 126; cp++) characters.add(cp);
         for (int cp = 161; cp <= 255; cp++) characters.add(cp);
         characters.add(0x2026);
         int rows = (characters.size() + 15) / 16;
-        var letters = new BufferedImage(96, rows * 128, BufferedImage.TYPE_INT_ARGB);
-        g = letters.createGraphics();
+        var letters = new BufferedImage(16 * LETTER_WIDTH, rows * LETTER_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        var g = letters.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 9));
         g.setColor(Color.WHITE);
@@ -76,13 +72,13 @@ public final class DialogueArt {
                     continue;
                 }
                 int cp = characters.get(index);
-                int x = column * 6;
-                int y = row * 128;
-                g.setClip(x, y, 6, 12);
+                int x = column * LETTER_WIDTH;
+                int y = row * LETTER_HEIGHT;
+                g.setClip(x, y, LETTER_WIDTH, LETTER_HEIGHT);
                 g.drawString(Character.toString(cp), x, y + 8);
                 int ink = 0;
-                for (int dx = 0; dx < 6; dx++) {
-                    for (int dy = 0; dy < 12; dy++) {
+                for (int dx = 0; dx < LETTER_WIDTH; dx++) {
+                    for (int dy = 0; dy < LETTER_HEIGHT; dy++) {
                         if (letters.getRGB(x + dx, y + dy) >>> 24 != 0) ink = dx + 1;
                     }
                 }
@@ -95,20 +91,23 @@ public final class DialogueArt {
         ImageIO.write(letters, "PNG", textures.resolve("letters.png").toFile());
         Files.createDirectories(metrics.getParent());
         Files.writeString(metrics, widths.toString());
-        var baselines = new LinkedHashMap<String, Integer>();
-        baselines.put("speaker", 108);
-        baselines.put("body_0", 92);
-        baselines.put("body_1", 81);
-        baselines.put("body_2", 70);
-        baselines.put("choice_0", 56);
-        baselines.put("choice_1", 45);
-        baselines.put("choice_2", 34);
-        baselines.put("hint", 11);
-        baselines.put("page", 38);
-        for (var entry : baselines.entrySet()) {
-            Files.writeString(fonts.resolve("dialogue_" + entry.getKey() + ".json"), font(List.of(
-                    "{\"type\":\"space\",\"advances\":{\" \":4}}", bitmap("letters.png", entry.getValue(), 128, glyphRows))));
-        }
+        Files.writeString(fonts.resolve("dialogue_text.json"), font(List.of(
+                "{\"type\":\"space\",\"advances\":{\" \":4}}", bitmap("letters.png", LETTER_HEIGHT, glyphRows))));
+    }
+
+    /** Dark glass with a rim and two accent strips, one over the speaker's name and one in the opposite corner. */
+    private static BufferedImage panel(int height) {
+        var panel = new BufferedImage(WIDTH, height, BufferedImage.TYPE_INT_ARGB);
+        var g = panel.createGraphics();
+        g.setColor(new Color(0xF015202D, true));
+        g.fillRect(0, 0, WIDTH, height);
+        g.setColor(new Color(0x567080));
+        g.drawRect(0, 0, WIDTH - 1, height - 1);
+        g.setColor(ACCENT);
+        g.fillRect(0, 0, 36, 2);
+        g.fillRect(WIDTH - 36, height - 2, 36, 2);
+        g.dispose();
+        return panel;
     }
 
     private static void portrait(Graphics2D g, int index) {
@@ -240,8 +239,8 @@ public final class DialogueArt {
         g.fillRect(x, y, width, height);
     }
 
-    private static String bitmap(String texture, int ascent, int height, List<String> chars) {
-        return "{\"type\":\"bitmap\",\"file\":\"blockcraft:gui/dialogue/" + texture + "\",\"ascent\":" + ascent
+    private static String bitmap(String texture, int height, List<String> chars) {
+        return "{\"type\":\"bitmap\",\"file\":\"blockcraft:gui/dialogue/" + texture + "\",\"ascent\":7"
                 + ",\"height\":" + height + ",\"chars\":[\"" + String.join("\",\"", chars) + "\"]}";
     }
 

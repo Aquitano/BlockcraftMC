@@ -31,5 +31,7 @@ public class HudPanelTest {
         assertEquals(Arrays.stream(Tint.values()).map(Tint::name).toList(), named);
         assertTrue(shader.contains("const int BLOCKCRAFT_PANEL_TINT_COUNT = " + Tint.values().length + ";"));
         assertTrue(shader.contains("const float BLOCKCRAFT_BOTTOM_RIGHT_HEIGHT = " + HudPanel.BOTTOM_RIGHT_HEIGHT + ".0;"));
+        assertTrue(shader.contains("const float BLOCKCRAFT_CENTRE_AREA = " + HudPanel.BOTTOM_CENTRE_AREA + ".0;"));
+        assertTrue(shader.contains("const float BLOCKCRAFT_CENTRE_BOTTOM = " + HudPanel.BOTTOM_CENTRE_BOTTOM + ".0;"));
     }
 }

@@ -813,8 +813,8 @@ setup:
   set: "<prefix><muted>Gesetzt: <white><place><muted>. Dauerhaft wird es mit <white>/map save<muted>."
 
 dialogue:
-  controls: 'Schleichen: weiter | Handwechsel: Ende'
-  controls-choices: 'Scrollen: Wahl | Schleichen: OK | Handwechsel: Ende'
+  controls: 'Schleichen: weiter'
+  controls-choices: 'Mausrad, Schleichen'
   page: '<current>/<total>'
   pack-required: '<prefix><red>Die Präsentation startet, sobald das Ressourcenpaket vollständig geladen ist. Versuche es dann erneut.'
   invalid: '<prefix><red>Dieser Dialog ist nicht korrekt eingerichtet.'
