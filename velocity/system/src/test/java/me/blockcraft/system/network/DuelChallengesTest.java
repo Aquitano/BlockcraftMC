@@ -17,6 +17,8 @@ import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.party.PartyManager;
 import me.blockcraft.system.ranked.RankedQueue;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +39,7 @@ public class DuelChallengesTest {
     private Player target;
     private Player stranger;
     private ServerDirectory directory;
+    private Messages messages;
     private DuelChallenges challenges;
 
     private static final class TestClock extends Clock {
@@ -59,7 +62,7 @@ public class DuelChallengesTest {
         refresh();
         var data = folder.getRoot().toPath();
         var config = SystemConfig.load(data.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
-        var messages = Messages.load(data, () -> getClass().getResourceAsStream("/messages.yml"));
+        messages = Messages.load(data, () -> getClass().getResourceAsStream("/messages.yml"));
         var visibility = new PlayerVisibility(proxy.server, null, null, null);
         var choices = new PlayerChoices(null, null);
         choices.set(target, PlayerSetting.DUEL_INVITES, "on");
@@ -171,5 +174,28 @@ public class DuelChallengesTest {
         challenges.answer(target, "accept", setup.ticket().toString());
         assertEquals(1, proxy.requested(target).size());
         assertEquals("duell-1", proxy.requested(target).getFirst().getServerInfo().getName());
+    }
+
+    @Test
+    public void theChallengerLearnsWhyNoDuelStartsAndHowLongTheCooldownLasts() {
+        challenges.request(sender, "Sender");
+        assertEquals(messages.get("duel.self"), proxy.received(sender).getLast());
+        var setup = draft();
+        challenges.cancel(sender, setup.ticket());
+        challenges.request(sender, "Target");
+        assertEquals(messages.get("duel.busy.not-in-lobby"), proxy.received(sender).getLast());
+        proxy.connect(sender, "lobby-1");
+        clock.now = clock.now.plusSeconds(4);
+        challenges.request(sender, "Target");
+        assertEquals(messages.get("duel.cooldown", Formatter.number("seconds", 6)), proxy.received(sender).getLast());
+    }
+
+    @Test
+    public void aDeclineTellsTheChallengerWhoDeclined() {
+        var setup = draft();
+        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), new DuelRules("sumo", 1, true, false, 1), "Sumo"));
+        challenges.answer(target, "decline", setup.ticket().toString());
+        assertTrue(proxy.received(sender).contains(messages.get("duel.declined", Placeholder.unparsed("player", "Target"))));
+        assertEquals(messages.get("duel.you-declined"), proxy.received(target).getLast());
     }
 }
