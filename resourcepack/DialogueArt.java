@@ -33,9 +33,12 @@ public final class DialogueArt {
         g.fillRect(61, 21, 231, 35);
         g.drawLine(8, 99, 291, 99);
         g.dispose();
-        ImageIO.write(panel, "PNG", textures.resolve("panel.png").toFile());
+        // The client draws a glyph wider than its 256-pixel font atlas as a missing-glyph box, so the panel is two halves.
+        ImageIO.write(panel.getSubimage(0, 0, 150, 116), "PNG", textures.resolve("panel_left.png").toFile());
+        ImageIO.write(panel.getSubimage(150, 0, 150, 116), "PNG", textures.resolve("panel_right.png").toFile());
         var providers = new ArrayList<String>();
-        providers.add(bitmap("panel.png", 116, 116, List.of("\\uE600")));
+        providers.add(bitmap("panel_left.png", 116, 116, List.of("\\uE600")));
+        providers.add(bitmap("panel_right.png", 116, 116, List.of("\\uE601")));
         String[] portraits = {"pilot", "pilot_happy", "pilot_worried", "droid", "droid_alert", "guide", "courier", "local", "note"};
         for (int index = 0; index < portraits.length; index++) {
             var portrait = new BufferedImage(48, 128, BufferedImage.TYPE_INT_ARGB);

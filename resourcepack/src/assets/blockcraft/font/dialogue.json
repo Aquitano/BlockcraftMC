@@ -1,6 +1,7 @@
 {
   "providers": [
-    {"type":"bitmap","file":"blockcraft:gui/dialogue/panel.png","ascent":116,"height":116,"chars":["\uE600"]},
+    {"type":"bitmap","file":"blockcraft:gui/dialogue/panel_left.png","ascent":116,"height":116,"chars":["\uE600"]},
+    {"type":"bitmap","file":"blockcraft:gui/dialogue/panel_right.png","ascent":116,"height":116,"chars":["\uE601"]},
     {"type":"bitmap","file":"blockcraft:gui/dialogue/pilot.png","ascent":94,"height":128,"chars":["\ue610"]},
     {"type":"bitmap","file":"blockcraft:gui/dialogue/pilot_happy.png","ascent":94,"height":128,"chars":["\ue611"]},
     {"type":"bitmap","file":"blockcraft:gui/dialogue/pilot_worried.png","ascent":94,"height":128,"chars":["\ue612"]},

@@ -17,7 +17,8 @@ final class DialogueView {
 
     static Component draw(DialogueSession session, Messages text, Messages messages) {
         var output = Component.text().color(WHITE)
-                .append(at(0, Component.text('\uE600').font(ART), 301))
+                .append(at(0, Component.text('\uE600').font(ART), 151))
+                .append(at(150, Component.text('\uE601').font(ART), 151))
                 .append(at(8, Component.text((char) (0xE610 + session.line().portrait().ordinal())).font(ART), 49));
         output.append(text(64, "speaker", plain(text, session.line().speaker()), 222, ACCENT));
         var lines = session.visibleLines();

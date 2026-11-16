@@ -38,12 +38,15 @@ public class DialogueAssetsTest {
             }
         }
         var art = JsonParser.parseString(Files.readString(assets.resolve("font/dialogue.json"))).getAsJsonObject();
-        assertEquals(Dialogue.Portrait.values().length + 2, art.getAsJsonArray("providers").size());
-        for (int index = 0; index <= Dialogue.Portrait.values().length; index++) {
+        int images = 2 + Dialogue.Portrait.values().length;
+        assertEquals(images + 1, art.getAsJsonArray("providers").size());
+        for (int index = 0; index < images; index++) {
             var image = art.getAsJsonArray("providers").get(index).getAsJsonObject();
             assertTrue(image.get("ascent").getAsInt() <= image.get("height").getAsInt());
             String path = image.get("file").getAsString().substring("blockcraft:".length());
-            assertTrue(Files.exists(assets.resolve("textures").resolve(path)));
+            var file = assets.resolve("textures").resolve(path);
+            assertTrue(Files.exists(file));
+            assertTrue(path + " is wider than the client's 256-pixel font atlas", ImageIO.read(file.toFile()).getWidth() <= 256);
         }
     }
 
