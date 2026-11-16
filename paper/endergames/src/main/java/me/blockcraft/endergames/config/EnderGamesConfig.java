@@ -1,5 +1,6 @@
 package me.blockcraft.endergames.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.LootTable;
@@ -46,59 +47,61 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                             int berserkerSeconds, int scaredySeconds, double soupHeal) {
     }
 
-    public static EnderGamesConfig from(ConfigurationSection config) {
-        var countdown = section(config, "countdown");
-        var world = section(config, "world");
-        var startIsland = section(config, "start-island");
-        var chests = section(config, "enderchests");
-        var swap = section(config, "swap");
-        var rewards = section(config, "rewards");
-        var abilities = section(config, "abilities");
-        int swapMin = Math.max(10, swap.getInt("min-seconds", 60));
+    public static EnderGamesConfig from(ConfigurationSection yaml) {
+        var config = BundledDefaults.strict(yaml);
+        var countdown = config.section("countdown");
+        var world = config.section("world");
+        var startIsland = config.section("start-island");
+        var chests = config.section("enderchests");
+        var swap = config.section("swap");
+        var rewards = config.section("rewards");
+        var abilities = config.section("abilities");
+        var startIslandYaml = section(yaml, "start-island");
+        int swapMin = Math.max(10, swap.integer("min-seconds"));
         return new EnderGamesConfig(
-                Math.max(2, config.getInt("players.max", 24)),
+                Math.max(2, config.integer("players.max")),
                 new Countdowns(
-                        Math.max(1, countdown.getInt("full", 15)),
-                        Math.max(0, countdown.getInt("freeze", 5)),
-                        Math.max(0, countdown.getInt("protection", 90)),
-                        Math.max(60, countdown.getInt("round", 1800)),
-                        Math.max(1, countdown.getInt("tracker-after", 900))),
+                        Math.max(1, countdown.integer("full")),
+                        Math.max(0, countdown.integer("freeze")),
+                        Math.max(0, countdown.integer("protection")),
+                        Math.max(60, countdown.integer("round")),
+                        Math.max(1, countdown.integer("tracker-after"))),
                 new WorldSettings(
-                        Math.max(32, world.getInt("radius", 150)),
-                        seeds(world),
-                        Math.max(1, world.getInt("shrink-after", 1200)),
-                        Math.max(5, world.getInt("final-radius", 25))),
-                new StartIslandSettings(Math.clamp(startIsland.getInt("chests", 6), 1, 8), LootTable.fromYaml(startIsland),
-                        LootTable.fromYaml(section(startIsland, "ender-chests"))),
+                        Math.max(32, world.integer("radius")),
+                        seeds(section(yaml, "world")),
+                        Math.max(1, world.integer("shrink-after")),
+                        Math.max(5, world.integer("final-radius"))),
+                new StartIslandSettings(Math.clamp(startIsland.integer("chests"), 1, 8), LootTable.fromYaml(startIslandYaml),
+                        LootTable.fromYaml(section(startIslandYaml, "ender-chests"))),
                 new EnderChestSettings(
-                        Math.max(0, chests.getDouble("per-player", 0.5)),
-                        Math.max(0, chests.getInt("min", 4)),
-                        Math.max(0, chests.getInt("max", 12)),
-                        Math.max(10, chests.getInt("relocate-seconds", 150)),
-                        Math.max(1, chests.getInt("after-open-seconds", 10)),
-                        LootTable.fromYaml(chests)),
-                new SwapSettings(swapMin, Math.max(swapMin, swap.getInt("max-seconds", 120))),
-                new Rewards(Math.max(0, rewards.getInt("kill", 5)), Math.max(0, rewards.getInt("win", 20))),
-                CombatStyle.from(config),
-                CompassTracker.Settings.from(config),
-                KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice),
+                        Math.max(0, chests.decimal("per-player")),
+                        Math.max(0, chests.integer("min")),
+                        Math.max(0, chests.integer("max")),
+                        Math.max(10, chests.integer("relocate-seconds")),
+                        Math.max(1, chests.integer("after-open-seconds")),
+                        LootTable.fromYaml(section(yaml, "enderchests"))),
+                new SwapSettings(swapMin, Math.max(swapMin, swap.integer("max-seconds"))),
+                new Rewards(Math.max(0, rewards.integer("kill")), Math.max(0, rewards.integer("win"))),
+                CombatStyle.from(yaml),
+                CompassTracker.Settings.from(yaml),
+                KitCatalog.from(section(yaml, "kits"), Kit.class, Kit::defaultPrice),
                 new Abilities(
-                        Math.max(1, abilities.getDouble("headshot-multiplier", 1.5)),
-                        Math.max(1, abilities.getInt("lumberjack-max-logs", 96)),
-                        Math.max(0, abilities.getInt("enderman-pearls-per-kill", 2)),
-                        Math.max(0, abilities.getDouble("vampire-mob-heal", 6)),
-                        Math.max(0, abilities.getDouble("kangaroo-min-health", 8)),
-                        Math.max(0, abilities.getInt("spider-cobwebs-per-kill", 8)),
-                        Math.max(0, abilities.getDouble("stomper-max-fall-damage", 4)),
-                        Math.max(0.5, abilities.getDouble("stomper-radius", 2.5)),
-                        Math.max(0, abilities.getInt("scorpion-melee-seconds", 6)),
-                        Math.max(0, abilities.getInt("scorpion-arrow-seconds", 2)),
-                        Math.max(0, abilities.getInt("thor-cooldown-seconds", 5)),
-                        Math.max(1, abilities.getInt("thor-range", 40)),
-                        Math.max(0, abilities.getInt("teleporter-invulnerable-seconds", 10)),
-                        Math.max(0, abilities.getInt("berserker-seconds", 10)),
-                        Math.max(0, abilities.getInt("scaredy-seconds", 3)),
-                        Math.max(0, abilities.getDouble("soup-heal", 7))));
+                        Math.max(1, abilities.decimal("headshot-multiplier")),
+                        Math.max(1, abilities.integer("lumberjack-max-logs")),
+                        Math.max(0, abilities.integer("enderman-pearls-per-kill")),
+                        Math.max(0, abilities.decimal("vampire-mob-heal")),
+                        Math.max(0, abilities.decimal("kangaroo-min-health")),
+                        Math.max(0, abilities.integer("spider-cobwebs-per-kill")),
+                        Math.max(0, abilities.decimal("stomper-max-fall-damage")),
+                        Math.max(0.5, abilities.decimal("stomper-radius")),
+                        Math.max(0, abilities.integer("scorpion-melee-seconds")),
+                        Math.max(0, abilities.integer("scorpion-arrow-seconds")),
+                        Math.max(0, abilities.integer("thor-cooldown-seconds")),
+                        Math.max(1, abilities.integer("thor-range")),
+                        Math.max(0, abilities.integer("teleporter-invulnerable-seconds")),
+                        Math.max(0, abilities.integer("berserker-seconds")),
+                        Math.max(0, abilities.integer("scaredy-seconds")),
+                        Math.max(0, abilities.decimal("soup-heal"))));
     }
 
     private static ConfigurationSection section(ConfigurationSection config, String key) {
