@@ -806,6 +806,21 @@ news:
     - "<muted>Die Leute in der Lobby haben <accent>Aufgaben <muted>für dich"
     - "<muted>Mehr Infos auf <accent><website>"
 
+# The guide by the spawn (guide in config.yml): the name above it and in the dialogue panel, its tips, the chat line
+# each tip becomes without the resource pack, and the line about the rules that follows a newcomer's tips. The panel
+# shows plain text.
+guide:
+  name: "<accent>Kim <dark>· <muted>Lobby-Guide"
+  tips:
+    navigator: "Willkommen! Mit dem Kompass ganz links in deiner Leiste findest du jedes Spiel."
+    daily: "Jeden Tag hat der Postbote Coins für dich, auch über /daily. Hol sie täglich ab, dann wächst deine Serie."
+    friends: "Mit dem Freunde-Item rechts in der Leiste fügst du Freunde hinzu und siehst, wo sie spielen. Viel Spaß!"
+  chat: "<prefix><name><dark>: <muted><text>"
+  rules: "<prefix><muted>Auf dem ganzen Netzwerk gelten unsere Regeln. <button>"
+  rules-button: "<accent>[Regeln]"
+  rules-hover: "<muted>Die Regeln lesen"
+  rules-title: "<arrow><primary>Regeln auf <ip>"
+
 # The quest givers (quests in config.yml): their name, the dialog's title, what they say and what they ask.
 quests:
   board-title: "<arrow><primary>Auftragstafel"
