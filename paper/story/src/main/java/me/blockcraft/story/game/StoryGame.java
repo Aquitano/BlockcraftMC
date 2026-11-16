@@ -42,6 +42,7 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -336,7 +337,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
                             Placeholder.component("stage", stageName(open.campaign().stage())))),
                     () -> {
                         if (chapters.all().size() > 1) player.sendMessage(messages.get("lobby.chapter",
-                                Placeholder.component("chapter", chapterName(chapters.next(List.of(progress.finished().keySet()))))));
+                                chapterTags(chapters.next(List.of(progress.finished().keySet())))));
                     });
             chapters.all().reversed().stream().map(each -> progress.finished().get(each.name())).filter(Objects::nonNull)
                     .findFirst().map(last -> last.facts().get(DECISION)).ifPresent(earlier ->
@@ -350,6 +351,10 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
 
     private Component chapterName(Chapters.Chapter named) {
         return messages.has("chapter." + named.name()) ? messages.get("chapter." + named.name()) : Component.text(named.name());
+    }
+
+    private TagResolver chapterTags(Chapters.Chapter named) {
+        return TagResolver.resolver(Placeholder.component("chapter", chapterName(named)), Formatter.number("number", chapters.number(named)));
     }
 
     @Override
@@ -465,7 +470,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         var carried = chapters.before(next).flatMap(before -> standings.stream().map(standing -> standing.finished().get(before.name()))
                 .filter(Objects::nonNull).findFirst()).map(ended -> carried(next, ended.facts())).orElse(Map.of());
         enterChapter(next, Campaign.fresh(), "start", () -> {
-            if (chapters.all().size() > 1) Bukkit.broadcast(messages.get("campaign.chapter", Placeholder.component("chapter", chapterName(next))));
+            if (chapters.all().size() > 1) Bukkit.broadcast(messages.get("campaign.chapter", chapterTags(next)));
             open(next, carried);
         });
     }
@@ -872,7 +877,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
     private void travel(Chapters.Chapter next) {
         var carried = carried(next, facts.all());
         trace.event("chapter", chapter.name() + " is over, on to " + next.name());
-        loading.cover(round::players, chapterName(next), messages.get("travel.loading"), () -> {
+        loading.cover(round::players, chapterName(next), messages.get("travel.loading", chapterTags(next)), () -> {
             halt("travel");
             facts.clearAll("travel");
             enterChapter(next, Campaign.fresh(), "travel", () -> loading.reveal(round::players, () -> open(next, carried)));

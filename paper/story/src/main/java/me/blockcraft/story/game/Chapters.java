@@ -58,6 +58,10 @@ public record Chapters(List<Chapter> all) {
         return all.stream().filter(chapter -> chapter.stages().contains(stage)).findFirst();
     }
 
+    public int number(Chapter chapter) {
+        return all.indexOf(chapter) + 1;
+    }
+
     public Optional<Chapter> before(Chapter chapter) {
         int index = all.indexOf(chapter);
         return index > 0 ? Optional.of(all.get(index - 1)) : Optional.empty();

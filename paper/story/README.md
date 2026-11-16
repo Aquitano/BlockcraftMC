@@ -121,7 +121,9 @@ Ending a chapter opens the next one, and the party goes straight on into it in t
 the last chapter. A party that leaves on the way and comes back starts from the waiting lobby: it resumes a chapter it
 left open, or plays the earliest chapter any of its members has still to finish, so nobody is taken past a chapter
 they have not played. A party that has finished every chapter starts over. The waiting lobby tells each player their
-own next chapter, named by `chapter.<chapter>` in messages.yml.
+own next chapter, named by `chapter.<chapter>` in messages.yml. That name is the loading screen's title and the core adds
+"Kapitel" and the number, so it holds only the name and stays short: a title of more than about 20 letters runs off a
+1280 × 720 window at GUI scale 3.
 
 `carries` lists the facts a chapter takes over from the ending of the one before. Going on in the same round, those
 are the facts the party has just ended with; starting from the waiting lobby, the ones the first member, in join

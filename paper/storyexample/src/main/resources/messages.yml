@@ -14,8 +14,8 @@ npc:
     role: "<right>Sprechen"
 
 chapter:
-  signal: "Kapitel 1: Das Signal"
-  relief: "Kapitel 2: Die Ablösung"
+  signal: "Das Signal"
+  relief: "Die Ablösung"
 
 stage:
   briefing: "<primary>Ziel <dark>● <white>Sprich mit Funkerin Mara"

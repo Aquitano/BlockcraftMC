@@ -692,8 +692,9 @@ def story_chapters(client, run):
     client.until("the first chapter's ending", lambda: story_state()["stage"] == "done", 60, 0.5)
     run.report["first"] = story_state()
     run.shot(client, "ending")
-    client.until("the loading screen", lambda: client("hud")["title"]["text"] != "" and "Kapitel" in client("hud")["title"]["text"], 30, 0.3)
-    run.report["loading_title"] = [client("hud")["title"]["text"], client("hud")["subtitle"]["text"]]
+    client.until("the loading screen", lambda: client("hud")["title"]["text"] != "" and "Kapitel" in client("hud")["subtitle"]["text"], 30, 0.3)
+    hud = client("hud")
+    run.report["loading_title"] = {part: {key: hud[part][key] for key in ("text", "width", "overflows")} for part in ("title", "subtitle")}
     client("capture", name=f"{run.name}/loading", frames=6, every=8)
     client.until("the second chapter", lambda: story_state()["chapter"] == "relief", 120, 1)
     client.until("the screen to come back", lambda: client("hud")["title"]["text"] == "", 60, 0.5)
