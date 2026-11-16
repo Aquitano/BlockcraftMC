@@ -1,6 +1,7 @@
 package me.blockcraft.story.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -159,7 +160,7 @@ public final class StoryGame implements RoundConnections.Seating, Party, Listene
         this.timers = new Timers(plugin, trace);
         var config = plugin.getConfig();
         var mission = config.getConfigurationSection("mission");
-        this.mission = mission.getString("name", "mission");
+        this.mission = BundledDefaults.strict(mission).text("name");
         this.cutscenes = loadCutscenes(worlds.main(), config.getConfigurationSection("cutscenes.scenes"));
         this.stages = Stage.load(worlds.main(), config.getConfigurationSection("stages"));
         divide(chapters(this.mission, stages, config));

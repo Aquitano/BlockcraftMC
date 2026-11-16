@@ -1,6 +1,7 @@
 package me.blockcraft.story;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -64,7 +65,7 @@ public final class Story {
         var services = GameServices.load(plugin, gameConfig, "bc_story_stats", CoreDefaults.underMessages(plugin, api.tags()));
         var world = Bukkit.getWorlds().getFirst();
         ChapterWorlds.settle(world);
-        var mission = config.getString("mission.name", "mission");
+        var mission = BundledDefaults.strict(config).text("mission.name");
         var templates = Optional.ofNullable(System.getenv("BLOCKCRAFT_STORY_WORLDS")).filter(path -> !path.isBlank()).map(Path::of)
                 .orElseGet(() -> api.map().file(plugin, "worlds"));
         var worlds = new ChapterWorlds(plugin, world, templates);
