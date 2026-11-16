@@ -354,7 +354,7 @@ public final class CombatFeedback {
             return;
         }
         state.strained = suppression > 0 || rattling > 0;
-        boolean shown = !covered(player);
+        boolean shown = !Scenes.isViewing(player);
         ScreenEffects.suppressed(player, shown ? suppression : 0);
         ScreenEffects.rattled(player, shown && rattling > 0 ? (double) rattling / rattle.ticks() : 0);
     }
@@ -393,14 +393,8 @@ public final class CombatFeedback {
         }
     }
 
-    /** Whether a dialogue, a screen effect or a scene has the screen, which every part of the HUD then leaves to it. */
-    public static boolean covered(Player player) {
-        var api = BlockcraftApi.get();
-        return api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
-    }
-
     private boolean hidden(Player player) {
-        return !game.onField(player) || covered(player);
+        return !game.onField(player) || Scenes.isViewing(player);
     }
 
     public void show(Player player, ActionBar actionBar) {
