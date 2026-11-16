@@ -1,8 +1,9 @@
 package me.blockcraft.lobby.daily;
 
+import me.blockcraft.common.config.StrictConfig;
+
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -11,8 +12,6 @@ import java.util.Optional;
  * a streak, and its last entry every day past its end.
  */
 public record DailyRewards(List<Integer> coins, int previewDays, String skin) {
-
-    private static final List<Integer> DEFAULT_COINS = List.of(10, 15, 20, 25, 30, 40, 60);
 
     /** A player's last claim: the streak day it paid and the day it was made. */
     public record Claimed(int streak, LocalDate day) {
@@ -23,17 +22,15 @@ public record DailyRewards(List<Integer> coins, int previewDays, String skin) {
     }
 
     public DailyRewards {
-        coins = coins.isEmpty() ? DEFAULT_COINS : coins.stream().map(amount -> Math.max(0, amount)).toList();
+        if (coins.isEmpty()) {
+            throw new IllegalArgumentException("daily-rewards.coins needs at least one amount");
+        }
+        coins = coins.stream().map(amount -> Math.max(0, amount)).toList();
         previewDays = Math.clamp(previewDays, 0, 7);
     }
 
-    public static DailyRewards fromYaml(Map<String, Object> section) {
-        var coins = section.get("coins") instanceof List<?> list
-                ? list.stream().filter(Number.class::isInstance).map(amount -> ((Number) amount).intValue()).toList()
-                : List.<Integer>of();
-        return new DailyRewards(coins,
-                section.get("preview-days") instanceof Number days ? days.intValue() : 3,
-                section.get("skin") instanceof String skin ? skin : "");
+    public static DailyRewards from(StrictConfig section) {
+        return new DailyRewards(section.integers("coins"), section.integer("preview-days"), section.text("skin"));
     }
 
     /** A last claim dated today or later counts as today's, so a clock that moved back never pays a second time. */

@@ -1,8 +1,9 @@
 package me.blockcraft.lobby.config;
 
+import me.blockcraft.common.config.StrictConfig;
+
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Lobby's {@code flights} section: every {@code interval-seconds} one of {@code models}, props pieces built with their
@@ -11,15 +12,10 @@ import java.util.Map;
  */
 public record FlightsConfig(boolean enabled, Duration interval, int height, int length, int flightTicks, List<String> models) {
 
-    public static FlightsConfig fromYaml(Map<String, Object> config) {
-        var models = config.get("models") instanceof List<?> list ? list.stream().map(String::valueOf).toList() : List.<String>of();
-        return new FlightsConfig(!Boolean.FALSE.equals(config.get("enabled")),
-                Duration.ofSeconds(number(config, "interval-seconds", 300, 30, 86400)),
-                number(config, "height", 85, 8, 200), number(config, "length", 180, 32, 400),
-                number(config, "flight-ticks", 900, 100, 6000), models);
-    }
-
-    private static int number(Map<String, Object> config, String key, int fallback, int min, int max) {
-        return Math.clamp(config.get(key) instanceof Number number ? number.intValue() : fallback, min, max);
+    public static FlightsConfig from(StrictConfig config) {
+        return new FlightsConfig(config.flag("enabled"),
+                Duration.ofSeconds(Math.clamp(config.integer("interval-seconds"), 30, 86400)),
+                Math.clamp(config.integer("height"), 8, 200), Math.clamp(config.integer("length"), 32, 400),
+                Math.clamp(config.integer("flight-ticks"), 100, 6000), config.texts("models"));
     }
 }

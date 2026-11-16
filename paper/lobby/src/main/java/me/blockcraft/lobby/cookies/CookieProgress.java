@@ -1,5 +1,7 @@
 package me.blockcraft.lobby.cookies;
 
+import me.blockcraft.common.config.StrictConfig;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,20 +15,25 @@ public final class CookieProgress {
             upgrades = List.copyOf(upgrades);
         }
 
-        public static Rules fromYaml(Map<String, Object> config) {
-            long cap = number(config, "max-cookies", 1_000_000, 1, 1_000_000_000);
-            var upgrades = config.get("upgrades") instanceof List<?> entries ? entries.stream()
-                    .filter(Map.class::isInstance).map(entry -> (Map<?, ?>) entry).limit(16)
-                    .map(entry -> new Upgrade(number(entry, "cost", 50, 1, cap),
-                            number(entry, "per-click", 2, 1, cap))).toList()
-                    : List.of(new Upgrade(50, 2), new Upgrade(200, 5), new Upgrade(1000, 10));
-            return new Rules(cap, 1_000_000_000 / number(config, "clicks-per-second", 5, 1, 20),
-                    number(config, "save-seconds", 30, 5, 300) * 20,
-                    number(config, "shutdown-save-seconds", 5, 1, 30), upgrades);
+        /** Each of {@code upgrades} costs {@code cost} cookies and pays {@code per-click} from then on. */
+        public static Rules from(StrictConfig config) {
+            long cap = Math.clamp(config.integer("max-cookies"), 1, 1_000_000_000);
+            if (!(config.values().get("upgrades") instanceof List<?> entries)) {
+                throw new IllegalStateException(config.file() + ": " + config.path() + ".upgrades must be a list");
+            }
+            var upgrades = entries.stream().filter(Map.class::isInstance).map(entry -> (Map<?, ?>) entry).limit(16)
+                    .map(entry -> new Upgrade(Math.clamp(whole(entry, "cost"), 1, cap), Math.clamp(whole(entry, "per-click"), 1, cap)))
+                    .toList();
+            return new Rules(cap, 1_000_000_000 / Math.clamp(config.integer("clicks-per-second"), 1, 20),
+                    Math.clamp(config.integer("save-seconds"), 5, 300) * 20L,
+                    Math.clamp(config.integer("shutdown-save-seconds"), 1, 30), upgrades);
         }
 
-        private static long number(Map<?, ?> config, String key, long fallback, long min, long max) {
-            return Math.clamp(config.get(key) instanceof Number value ? value.longValue() : fallback, min, max);
+        private static long whole(Map<?, ?> upgrade, String key) {
+            if (upgrade.get(key) instanceof Number value) {
+                return value.longValue();
+            }
+            throw new IllegalStateException("Every cookies.upgrades entry needs a whole " + key);
         }
     }
 

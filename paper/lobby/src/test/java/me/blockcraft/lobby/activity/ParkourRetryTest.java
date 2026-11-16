@@ -5,6 +5,8 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.settings.PlayerSettings;
+import me.blockcraft.common.config.StrictConfig;
+import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.ActivitiesConfig;
@@ -65,7 +67,8 @@ public class ParkourRetryTest {
             var checkpoint = new Location(fixture.world, 20, 75, 20);
             locations.set("parkour-start", start);
             locations.set("checkpoint-1", checkpoint);
-            fixture.parkour = new Parkour(fixture.plugin, locations, ActivitiesConfig.fromYaml(Map.of()), messages);
+            fixture.parkour = new Parkour(fixture.plugin, locations, ActivitiesConfig.from(StrictConfig.of("config.yml",
+                    YamlFile.load(ParkourRetryTest.class.getResourceAsStream("/config.yml"))).section("activities")), messages);
             var runsField = Parkour.class.getDeclaredField("runs");
             runsField.setAccessible(true);
             var runs = (Map<UUID, ParkourRun>) runsField.get(fixture.parkour);

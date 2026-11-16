@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.config;
 
 import me.blockcraft.api.pack.PackModel;
+import me.blockcraft.common.config.StrictConfig;
 import org.bukkit.Material;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
@@ -45,17 +46,15 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
     public record Part(Look look, Vector3f at, Vector3f size, float yaw, float pitch, float roll, boolean still) {
     }
 
-    public static PropsConfig fromYaml(Map<String, Object> config, Logger logger) {
+    public static PropsConfig from(StrictConfig config, Logger logger) {
         var props = new LinkedHashMap<String, Prop>();
-        if (config.get("pieces") instanceof Map<?, ?> pieces) {
-            pieces.forEach((name, value) -> {
-                if (value instanceof Map<?, ?> prop) {
-                    props.put(String.valueOf(name), prop(prop, String.valueOf(name), logger));
-                }
-            });
-        }
-        return new PropsConfig((float) number(config, "view-range", 0.5, 0.1, 4),
-                (int) number(config, "keyframe-ticks", 20, 2, 200), Map.copyOf(props));
+        config.section("pieces").values().forEach((name, value) -> {
+            if (value instanceof Map<?, ?> prop) {
+                props.put(String.valueOf(name), prop(prop, String.valueOf(name), logger));
+            }
+        });
+        return new PropsConfig((float) Math.clamp(config.decimal("view-range"), 0.1, 4),
+                Math.clamp(config.integer("keyframe-ticks"), 2, 200), Map.copyOf(props));
     }
 
     private static Prop prop(Map<?, ?> prop, String name, Logger logger) {

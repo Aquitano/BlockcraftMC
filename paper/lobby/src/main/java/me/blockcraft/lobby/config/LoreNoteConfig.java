@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.config;
 
+import me.blockcraft.common.config.StrictConfig;
 import org.bukkit.Material;
 
 import java.util.Collections;
@@ -13,15 +14,12 @@ import java.util.Map;
  */
 public record LoreNoteConfig(int reward, Map<String, Material> notes) {
 
-    public static LoreNoteConfig fromYaml(Map<String, Object> config) {
+    public static LoreNoteConfig from(StrictConfig config) {
         var notes = new LinkedHashMap<String, Material>();
-        if (config.get("notes") instanceof Map<?, ?> listed) {
-            listed.forEach((key, item) -> {
-                var material = Material.matchMaterial(String.valueOf(item).toUpperCase(Locale.ROOT));
-                notes.put(String.valueOf(key), material == null || !material.isItem() ? Material.PAPER : material);
-            });
-        }
-        return new LoreNoteConfig(Math.max(0, config.get("reward") instanceof Number number ? number.intValue() : 0),
-                Collections.unmodifiableMap(notes));
+        config.section("notes").values().forEach((key, item) -> {
+            var material = Material.matchMaterial(String.valueOf(item).toUpperCase(Locale.ROOT));
+            notes.put(String.valueOf(key), material == null || !material.isItem() ? Material.PAPER : material);
+        });
+        return new LoreNoteConfig(Math.max(0, config.integer("reward")), Collections.unmodifiableMap(notes));
     }
 }
