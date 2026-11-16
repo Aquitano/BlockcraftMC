@@ -854,10 +854,21 @@ def swap_menu(client):
     if client("status")["screen"] != "ContainerScreen":
         return None
     menu = client("screen")
-    if "Waffe ersetzen" not in menu["title"]:
+    if "waffe ersetzen" not in menu["title"].lower():
         return None
-    menu["carried"] = [slot for slot in menu["slots"] if any("ersetzen" in line and "Klicken" in line for line in slot.get("lore", []))]
+    menu["carried"] = offered(menu, lambda line: "ersetzen" in line and "Klicken" in line)
     return menu
+
+
+def offered(menu, mark):
+    """The first slot of each item whose lore has a line that {mark} accepts: a card on a station's screen repeats its
+    item in every slot it covers."""
+    seen, slots = set(), []
+    for slot in menu["slots"]:
+        if any(mark(line) for line in slot.get("lore", [])) and slot.get("name") not in seen:
+            seen.add(slot.get("name"))
+            slots.append(slot)
+    return slots
 
 
 def swap(client, menu):
@@ -876,7 +887,7 @@ def visit(client, run, name):
     menu = open_menu(client, block)
     if menu is None:
         return {"menu": None, "said": feedback(client, client("status")["tick"] - 40)}
-    offers = [slot for slot in menu["slots"] if any("Preis" in line for line in slot.get("lore", []))]
+    offers = offered(menu, lambda line: "Preis" in line)
     result = {"title": menu["title"], "offers": [{"name": offer.get("name"), "lore": offer.get("lore")} for offer in offers], "clicks": []}
     run.shot(client, f"{name}_menu")
     for offer in offers:
