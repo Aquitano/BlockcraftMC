@@ -126,7 +126,7 @@ public final class FakeProxy {
         return ((Sent) connection).sent();
     }
 
-    List<Object> received(Player player) {
+    public List<Object> received(Player player) {
         return received.getOrDefault(player.getUniqueId(), List.of());
     }
 
