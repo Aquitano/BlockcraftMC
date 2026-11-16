@@ -132,7 +132,7 @@ final class Blasters implements Listener, AutoCloseable {
         plugin.getServer().getPluginManager().callEvent(new ShotEvent(player));
         var at = player.getEyeLocation();
         boolean grenade = weapon.mode() == WeaponSpec.Mode.GRENADE;
-        double speed = Math.clamp(plugin.getConfig().getDouble("projectiles." + (grenade ? "grenade-speed" : "rocket-speed")), .1, 2);
+        double speed = grenade ? plugin.settings().grenadeSpeed() : plugin.settings().rocketSpeed();
         var velocity = at.getDirection().multiply(speed);
         if (grenade) velocity.setY(velocity.getY() + .15);
         var display = at.getWorld().spawn(at, ItemDisplay.class, entity -> {
@@ -147,8 +147,8 @@ final class Blasters implements Listener, AutoCloseable {
     }
 
     void tick(int now) {
-        double cooling = Math.clamp(plugin.getConfig().getDouble("heat.cool-per-tick"), .1, 10);
-        int delay = Math.clamp(plugin.getConfig().getInt("heat.delay-ticks"), 0, 100);
+        double cooling = plugin.settings().coolPerTick();
+        int delay = plugin.settings().coolDelayTicks();
         heat.values().forEach(value -> { if (now - value.firedAt > delay) value.value = Math.max(0, value.value - cooling); });
         for (Iterator<Projectile> it = projectiles.iterator(); it.hasNext();) {
             var p = it.next();
@@ -162,7 +162,7 @@ final class Blasters implements Listener, AutoCloseable {
             boolean collision = travelled < p.velocity.length() - .001 || hit.actor() != null;
             p.distance += travelled;
             p.at = hit.at();
-            int fuse = Math.clamp(plugin.getConfig().getInt("projectiles.grenade-fuse-ticks"), 10, 200);
+            int fuse = plugin.settings().grenadeFuseTicks();
             if ((!grenade && collision) || (grenade && now - p.born >= fuse) || p.distance >= p.weapon.range() || now - p.born > 200) {
                 explode(p); p.display.remove(); it.remove(); continue;
             }
@@ -179,7 +179,7 @@ final class Blasters implements Listener, AutoCloseable {
         var world = p.at.getWorld();
         world.spawnParticle(Particle.EXPLOSION, p.at, 1);
         world.playSound(p.at, Sound.ENTITY_GENERIC_EXPLODE, .8f, 1);
-        double radius = Math.clamp(plugin.getConfig().getDouble("projectiles.explosion-radius"), 1, 8);
+        double radius = plugin.settings().explosionRadius();
         for (var actor : creatures.actors()) {
             if (!actor.entity.isValid() || actor.entity.getWorld() != world || (p.loan && !actor.practice)) continue;
             var center = actor.bounds().getCenter();

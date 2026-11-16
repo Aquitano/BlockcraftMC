@@ -29,7 +29,7 @@ final class SceneryActors implements AutoCloseable {
 
     void spawn() {
         close();
-        var world = plugin.getServer().getWorld(plugin.getConfig().getString("scenery.world", "world"));
+        var world = plugin.getServer().getWorld(plugin.settings().sceneryWorld());
         if (world == null) return;
         world.getEntities().stream().filter(entity -> entity.getScoreboardTags().contains(TAG))
                 .forEach(org.bukkit.entity.Entity::remove);

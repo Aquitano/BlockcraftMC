@@ -24,7 +24,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.BoundingBox;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -32,6 +31,7 @@ import java.util.function.Consumer;
 
 public final class StarWarsPlugin extends JavaPlugin implements Listener {
     private Messages messages;
+    private StarWarsConfig settings;
     private Map<String, WeaponSpec> weapons;
     private Creatures creatures;
     private Blasters blasters;
@@ -41,6 +41,7 @@ public final class StarWarsPlugin extends JavaPlugin implements Listener {
 
     @Override public void onEnable() {
         BundledDefaults.apply(this);
+        settings = StarWarsConfig.from(getConfig());
         messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), BlockcraftApi.get().tags());
         weapons = WeaponSpec.load(getConfig().getConfigurationSection("weapons"));
         weaponKey = new NamespacedKey(this, "weapon");
@@ -94,8 +95,8 @@ public final class StarWarsPlugin extends JavaPlugin implements Listener {
     }
 
     private void exhibits() {
-        if (!getConfig().getBoolean("practice.enabled")) return;
-        var world = getServer().getWorld(getConfig().getString("practice.world", "world"));
+        if (!settings.practice().enabled()) return;
+        var world = getServer().getWorld(settings.practice().world());
         if (world == null) return;
         world.getEntities().stream().filter(entity -> entity.getScoreboardTags().contains("blockcraft.starwars")).forEach(org.bukkit.entity.Entity::remove);
         for (var entry : getConfig().getMapList("practice.exhibits")) {
@@ -108,10 +109,12 @@ public final class StarWarsPlugin extends JavaPlugin implements Listener {
     }
 
     boolean inPractice(Location at) {
-        if (!getConfig().getBoolean("practice.enabled") || !at.getWorld().getName().equals(getConfig().getString("practice.world"))) return false;
-        var c = getConfig();
-        return new BoundingBox(c.getDouble("practice.min.x"), c.getDouble("practice.min.y"), c.getDouble("practice.min.z"),
-                c.getDouble("practice.max.x"), c.getDouble("practice.max.y"), c.getDouble("practice.max.z")).contains(at.toVector());
+        var practice = settings.practice();
+        return practice.enabled() && at.getWorld().getName().equals(practice.world()) && practice.area().contains(at.toVector());
+    }
+
+    StarWarsConfig settings() {
+        return settings;
     }
 
     WeaponSpec weapon(ItemStack item) {
