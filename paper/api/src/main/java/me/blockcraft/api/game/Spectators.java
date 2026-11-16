@@ -9,6 +9,8 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.task.Tasks;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,6 +21,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,10 @@ import java.util.function.Supplier;
 public final class Spectators implements Listener {
 
     private static final Set<UUID> WATCHING = ConcurrentHashMap.newKeySet();
+    private static final ClickCallback.Options BUTTON = ClickCallback.Options.builder()
+            .uses(ClickCallback.UNLIMITED_USES)
+            .lifetime(Duration.ofHours(1))
+            .build();
 
     private final Plugin plugin;
     private final BlockcraftApi api;
@@ -110,6 +117,26 @@ public final class Spectators implements Listener {
             }
         }
         SpectatorItem.give(player, api.messages());
+    }
+
+    void joinedRunning(Player spectator) {
+        arena.joinedRunning(spectator, button(spectator, "arena.running-pick", () -> pick(spectator)),
+                button(spectator, "arena.running-lobby", () -> ProxyMessaging.hub(plugin, spectator)));
+    }
+
+    private Component button(Player spectator, String key, Runnable action) {
+        var messages = api.messages();
+        return messages.get(key)
+                .hoverEvent(messages.get(key + "-hover"))
+                .clickEvent(ClickEvent.callback(audience -> {
+                    if (audience == spectator) {
+                        Tasks.sync(plugin, () -> {
+                            if (spectator.isOnline() && isSpectator(spectator)) {
+                                action.run();
+                            }
+                        });
+                    }
+                }, BUTTON));
     }
 
     /** The spectator plays again: everyone sees them, and they no longer see the spectators. */

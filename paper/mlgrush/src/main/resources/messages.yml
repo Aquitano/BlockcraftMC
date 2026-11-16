@@ -9,7 +9,6 @@ commands:
     description: "Zeigt die Top 10 einer Kategorie"
 join:
   introduction: "<prefix><muted>Stoße deinen Gegner von der Brücke und baue sein Bett ab. Jeder Bettabbau gibt einen Punkt."
-  spectator: "<prefix><muted>Du schaust diesem Match zu."
   next-match: "<prefix><muted>Ein Platz ist frei. Du spielst im nächsten Match mit."
 round:
   map: "<prefix><muted>Karte: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."

@@ -23,7 +23,6 @@ mode:
 
 join:
   introduction: "<prefix><muted>Ein Gegner, eure Spielauswahl. Wählt oben das Format und darunter Modus und Map."
-  spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
 
 # <map> is the map's name or vote.random-map; option names a vote in its confirmation.
 vote:

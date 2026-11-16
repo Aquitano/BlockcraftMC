@@ -319,11 +319,8 @@ public final class Duel {
         if (round.join(player)) {
             prepareLobby(player);
             if (challenge == null || challengeAccepted) lobbyCountdown.start();
-        } else {
-            if (current != null) {
-                current.spectate(player);
-            }
-            player.sendMessage(messages.get("join.spectator"));
+        } else if (current != null) {
+            current.spectate(player);
         }
         Tasks.sync(plugin, this::refreshScoreboards);
     }

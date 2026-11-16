@@ -131,7 +131,6 @@ public final class StandaloneRushGame {
             countdown.start();
         } else {
             player.teleport(spectatorSpawn());
-            player.sendMessage(messages.get("join.spectator"));
         }
         player.sendMessage(messages.get("round.map", Placeholder.unparsed("map", arena.name())));
         refreshPresence();

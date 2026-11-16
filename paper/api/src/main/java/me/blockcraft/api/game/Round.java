@@ -122,6 +122,9 @@ public final class Round implements Listener {
         if (phase != GamePhase.LOBBY || full() || api.isVanished(player)) {
             watch(player);
             arena.arrive(player);
+            if (phase == GamePhase.INGAME && !api.isVanished(player)) {
+                spectators.joinedRunning(player);
+            }
             return false;
         }
         seat(player);
