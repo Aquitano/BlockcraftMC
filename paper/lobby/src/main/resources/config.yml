@@ -652,6 +652,14 @@ quests:
     reward: 50
     task: {type: play, table: bc_skywars_stats}
 
+# The guide at the optional /lobbyset guide spot by the spawn. A player new to the network hears its tips
+# greet-after-ticks after arriving, in the dialogue panel once the resource pack has loaded, or as chat lines when it
+# has not loaded within pack-wait-seconds more. A click on the guide repeats the tips.
+guide:
+  skin: ""
+  greet-after-ticks: 40
+  pack-wait-seconds: 10
+
 # The daily login reward (/daily, a chat line on arrival, and a figure at the optional /lobbyset daily spot). One claim
 # per day in the network's calendar zone; consecutive days raise the streak, a missed day starts it again at day 1.
 # coins pays day 1, 2, ... of a streak, the last value every day after. preview-days is how many coming days the

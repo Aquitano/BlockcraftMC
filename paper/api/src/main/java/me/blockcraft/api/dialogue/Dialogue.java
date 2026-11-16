@@ -13,7 +13,7 @@ public record Dialogue(String first, Map<String, Line> lines) {
         }
     }
     public enum Portrait {
-        PILOT, PILOT_HAPPY, PILOT_WORRIED, DROID, DROID_ALERT
+        PILOT, PILOT_HAPPY, PILOT_WORRIED, DROID, DROID_ALERT, GUIDE, COURIER, LOCAL, NOTE
     }
     public record Loaded(Dialogue dialogue, List<String> problems) {
         public boolean valid() {

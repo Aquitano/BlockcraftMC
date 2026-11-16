@@ -534,3 +534,11 @@ ambient-motes-1:
   z: 1640.5
   yaw: 0.0
   pitch: 0.0
+guide:
+  ==: org.bukkit.Location
+  world: world
+  x: -970.5
+  y: 27.0
+  z: 1630.5
+  yaw: 73.0
+  pitch: 0.0

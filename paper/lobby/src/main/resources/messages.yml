@@ -789,9 +789,11 @@ boards:
   board-changelog: "<accent><bold>Neuigkeiten</bold><newline><click>Lesen"
   board-rules: "<accent><bold>Regeln</bold><newline><click>Lesen"
 
-# What changed lately, shown once to everyone who comes back after changelog.version in config.yml changed.
+# What changed lately, shown once to everyone who comes back after changelog.version in config.yml changed: in the
+# dialogue panel under speaker, as plain text, or as a dialog under title for a client without the resource pack.
 changelog:
   title: "<arrow><primary>Neuigkeiten <dark>· <muted><version>"
+  speaker: "Neuigkeiten · <version>"
   entries:
     - "<accent>Neue Spielmodi<dark>: <muted>EnderGames, TTT und SkyWars sind da."
     - "<accent>EnderGames<dark>: <muted>acht ausgesuchte Welten statt Zufall."
@@ -806,6 +808,21 @@ news:
     - "<muted>Die Leute in der Lobby haben <accent>Aufgaben <muted>für dich"
     - "<muted>Mehr Infos auf <accent><website>"
 
+# The guide by the spawn (guide in config.yml): the name above it and in the dialogue panel, its tips, the chat line
+# each tip becomes without the resource pack, and the line about the rules that follows a newcomer's tips. The panel
+# shows plain text.
+guide:
+  name: "<accent>Kim <dark>· <muted>Lobby-Guide"
+  tips:
+    navigator: "Willkommen! Mit dem Kompass ganz links in deiner Leiste findest du jedes Spiel."
+    daily: "Jeden Tag hat der Postbote Coins für dich, auch über /daily. Hol sie täglich ab, dann wächst deine Serie."
+    friends: "Mit dem Freunde-Item rechts in der Leiste fügst du Freunde hinzu und siehst, wo sie spielen. Viel Spaß!"
+  chat: "<prefix><name><dark>: <muted><text>"
+  rules: "<prefix><muted>Auf dem ganzen Netzwerk gelten unsere Regeln. <button>"
+  rules-button: "<accent>[Regeln]"
+  rules-hover: "<muted>Die Regeln lesen"
+  rules-title: "<arrow><primary>Regeln auf <ip>"
+
 # The quest givers (quests in config.yml): their name, the dialog's title, what they say and what they ask.
 quests:
   board-title: "<arrow><primary>Auftragstafel"
@@ -816,6 +833,13 @@ quests:
   status-claimed: "<muted>Danke nochmal! Mehr habe ich gerade nicht für dich."
   claimed: "<prefix><success>Aufgabe erledigt! <muted>+<accent><coins> Coins"
   claim-failed: "<prefix><error>Das hat nicht geklappt. Ist die Aufgabe wirklich erledigt?"
+  # A quest giver in the dialogue panel, plain text: after their talk come the task and its status from above.
+  talk:
+    progress:
+      - "<task>"
+      - "<status>"
+    later: "Später."
+    later-reply: "Ich warte hier. Komm wieder, wenn du so weit bist."
   archivarin:
     name: "<accent>Die Archivarin"
     title: "<arrow><primary>Die Archivarin"
@@ -854,3 +878,13 @@ daily:
   available: "<prefix><muted>Deine tägliche Belohnung wartet<dark>: <accent><coins> Coins <dark>· <claim>"
   claim-button: "<success>[Abholen]"
   claim-hover: "<muted>Serie und Belohnung ansehen."
+  # The courier in the dialogue panel, plain text; the panel with the pack, the dialog above without it.
+  talk:
+    offer: "Post für dich! Heute ist Tag <streak> deiner Serie, dafür gibt es <coins> Coins."
+    claim: "Abholen (<coins> Coins)"
+    ask-upcoming: "Was gibt es die nächsten Tage?"
+    upcoming: "<days>. Verpasst du einen Tag, fängt deine Serie wieder bei Tag 1 an."
+    upcoming-day: "Tag <day>: <coins> Coins"
+    later: "Später."
+    later-reply: "Ich bin den ganzen Tag hier. Deine Post wartet bis Mitternacht."
+    claimed: "Heute habe ich nichts mehr für dich. Du bist bei Tag <streak> deiner Serie. Die nächste Post kommt in <hours> Std. <minutes> Min."
