@@ -20,15 +20,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
- * A game's stats screens, written with its {@code menu.stats} and {@code menu.global-stats} messages: a head per
- * player the viewer can see, with the numbers everyone sees for them, and a global screen whose entries print the
- * top ten of a stat. A ranked game shows each player's rating of the season too.
+ * A game's stats screens, written with its {@code menu.stats} and {@code menu.global-stats} messages. They open on
+ * the viewer's own numbers, a tile for each line of the player lore; from there a head per player the viewer can
+ * see shows the numbers everyone sees for them, and a global screen's entries print the top ten of a stat. A ranked
+ * game shows each player's rating of the season too.
  */
 public final class StatsMenus {
 
     private static final int ROWS = 2;
+    private static final int OWN_ROWS = 3;
+    private static final int HEAD_SLOT = 13;
+    private static final int TILE_ROW = 18;
+    private static final int COLUMNS = 9;
     private static final Map<Integer, Stat> CATEGORIES = Map.of(
             0, Stat.WINS,
             2, Stat.DEATHS,
@@ -75,8 +81,8 @@ public final class StatsMenus {
     }
 
     public void open(Player viewer) {
-        List<Player> shown = Bukkit.getOnlinePlayers().stream()
-                .filter(viewer::canSee)
+        List<Player> shown = Stream.concat(Stream.of(viewer), Bukkit.getOnlinePlayers().stream()
+                        .filter(player -> !player.equals(viewer) && viewer.canSee(player)))
                 .map(Player.class::cast)
                 .toList();
         var elo = BlockcraftApi.get().elo();
@@ -88,8 +94,13 @@ public final class StatsMenus {
                     for (int index = 0; index < shown.size(); index++) {
                         entries.add(new Entry(shown.get(index), numbers(viewer, shown.get(index), loaded.get(index))));
                     }
-                    new PlayersMenu(entries).open(viewer);
+                    new OwnMenu(entries).open(viewer);
                 });
+    }
+
+    /** The tiles share the row centred, as many as the lore has lines, up to a full row. */
+    static int tileSlot(int index, int tiles) {
+        return TILE_ROW + (COLUMNS - Math.min(tiles, COLUMNS)) / 2 + index;
     }
 
     /** Another player's numbers as everyone sees them, which for a nicked player are the nick's. */
@@ -104,12 +115,38 @@ public final class StatsMenus {
         return numbers.build();
     }
 
+    /** The first entry is the viewer's own. */
+    private final class OwnMenu extends Menu {
+
+        OwnMenu(List<Entry> entries) {
+            super(OWN_ROWS, messages.get("menu.stats.title"));
+            var own = entries.getFirst();
+            closeButton(ToolbarButton.LEFT);
+            if (entries.size() > 1) {
+                var shared = BlockcraftApi.get().messages();
+                toolbar(ToolbarButton.MIDDLE, MenuIcon.TOOL_FRIENDS.item().name(shared.get("stats-menu.players"))
+                        .lore(shared.get("stats-menu.players-lore")).build(), player -> new PlayersMenu(entries).open(player));
+            }
+            toolbar(ToolbarButton.RIGHT, MenuIcon.GLOBAL_STATS.mark(Items.head(globalHead))
+                    .name(messages.get("menu.stats.global")).build(), player -> new GlobalMenu().open(player));
+            info(HEAD_SLOT, Items.head(own.player().getUniqueId(), own.player().getName())
+                    .name(messages.get("menu.stats.player", own.numbers())).build());
+            var lines = messages.getLines(playerLore, own.numbers());
+            for (int index = 0; index < Math.min(lines.size(), COLUMNS); index++) {
+                info(tileSlot(index, lines.size()), MenuIcon.PAGE.item().name(lines.get(index)).build());
+            }
+        }
+
+        @Override
+        protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+        }
+    }
+
     private final class PlayersMenu extends ListMenu<Entry> {
 
         PlayersMenu(List<Entry> entries) {
             super(rowsFor(entries.size()), messages.get("menu.stats.title"));
-            set(lastRowSlot(), MenuIcon.GLOBAL_STATS.mark(Items.head(globalHead)).name(messages.get("menu.stats.global")).build());
-            closeButton();
+            backButton(StatsMenus.this::open);
             show(entries);
         }
 
@@ -128,13 +165,6 @@ public final class StatsMenus {
 
         @Override
         protected void onSelect(Player player, Entry entry, InventoryClickEvent event) {
-        }
-
-        @Override
-        protected void onButton(Player player, int slot, InventoryClickEvent event) {
-            if (slot == lastRowSlot()) {
-                new GlobalMenu().open(player);
-            }
         }
     }
 

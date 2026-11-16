@@ -430,7 +430,6 @@ deploy:
     places: "Einsatzorte"
     post: "<post>"
     dropship: "Landung bei <letter>"
-    legend: "Legende"
     hint: "Ort anklicken: Einsatz dort, sobald möglich"
     hint-paid: "Ort anklicken: als <unit> für <cost> KP"
     orientation: "Norden oben · Osten rechts"
@@ -448,12 +447,6 @@ deploy:
       percent: "<value> %"
       metres: "<value> m"
       none: "-"
-    key:
-      recommended: "Empfohlen"
-      confirmed: "Dein Einsatzort"
-      pending: "Erneut anklicken"
-      locked: "Gesperrt"
-      contested: "Blinkt: umkämpft"
 
 death:
   self-explosion: "<prefix><white><player> <muted>wurde von der eigenen Explosion erwischt."

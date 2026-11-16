@@ -34,7 +34,7 @@ layout:
 rematch:
   unavailable: "<prefix><error>Eine Revanche ist nur direkt nach einem Match mit demselben Gegner möglich."
   waiting: "<prefix><muted>Du bist bereit. Warte auf deinen Gegner."
-  request: "<prefix><accent><player> <muted>möchte eine Revanche. Klicke auf Nochmal spielen oder rechtsklicke das Revanche-Item."
+  request: "<prefix><accent><player> <muted>möchte eine Revanche. Rechtsklicke das Revanche-Item."
   starting: "<prefix><muted>Revanche auf <accent><map> <muted>in <accent><seconds> Sekunden<muted>!"
 scoreboard:
   title: "<mlgrush><bold>MLG Rush"
