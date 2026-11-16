@@ -1,5 +1,6 @@
 package me.blockcraft.skywars.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
 import me.blockcraft.api.kit.KitCatalog;
@@ -25,27 +26,28 @@ public record SkyWarsConfig(int maxPlayers, Countdowns countdowns, Arena arena, 
     public record Rewards(int kill, int win) {
     }
 
-    public static SkyWarsConfig from(ConfigurationSection config) {
-        var countdown = section(config, "countdown");
-        var arena = section(config, "arena");
-        var chests = section(config, "chests");
-        var rewards = section(config, "rewards");
-        int round = Math.max(60, countdown.getInt("round", 900));
+    public static SkyWarsConfig from(ConfigurationSection yaml) {
+        var config = BundledDefaults.strict(yaml);
+        var countdown = config.section("countdown");
+        var arena = config.section("arena");
+        var chests = section(yaml, "chests");
+        var rewards = config.section("rewards");
+        int round = Math.max(60, countdown.integer("round"));
         return new SkyWarsConfig(
-                Math.clamp(config.getInt("players.max", 12), 2, 12),
+                Math.clamp(config.integer("players.max"), 2, 12),
                 new Countdowns(
-                        Math.max(1, countdown.getInt("full", 15)),
-                        Math.max(1, countdown.getInt("freeze", 5)),
+                        Math.max(1, countdown.integer("full")),
+                        Math.max(1, countdown.integer("freeze")),
                         round,
-                        Math.clamp(countdown.getInt("refill-after", 300), 1, round),
-                        Math.clamp(countdown.getInt("border-after", 600), 1, round)),
-                new Arena(arena.getInt("void-height", 40), arena.getInt("build-height", 125),
-                        Math.max(4, arena.getInt("final-radius", 12))),
+                        Math.clamp(countdown.integer("refill-after"), 1, round),
+                        Math.clamp(countdown.integer("border-after"), 1, round)),
+                new Arena(arena.integer("void-height"), arena.integer("build-height"),
+                        Math.max(4, arena.integer("final-radius"))),
                 new Loot(table(chests, "armour"), table(chests, "weapons"), table(chests, "utility"),
                         table(chests, "semi-middle"), table(chests, "middle")),
-                new Rewards(Math.max(0, rewards.getInt("kill", 5)), Math.max(0, rewards.getInt("win", 20))),
-                CombatStyle.from(config),
-                KitCatalog.from(section(config, "kits"), Kit.class));
+                new Rewards(Math.max(0, rewards.integer("kill")), Math.max(0, rewards.integer("win"))),
+                CombatStyle.from(yaml),
+                KitCatalog.from(section(yaml, "kits"), Kit.class));
     }
 
     private static LootTable table(ConfigurationSection chests, String key) {
