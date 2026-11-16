@@ -75,46 +75,17 @@ public final class SystemConfig {
     public record InfoCommand(String name, List<String> aliases) {
     }
 
-    public record PackArchive(String file, String url) {
-    }
-
-    public record PackProfiles(boolean enabled, Map<String, PackArchive> archives, Map<String, List<String>> groups,
-                               List<String> defaultPacks) {
-        public static PackProfiles disabled() {
-            return new PackProfiles(false, Map.of(), Map.of(), List.of());
-        }
-    }
-
     /**
-     * {@code file} is relative to the plugin directory and empty disables the pack; {@code port} 0 serves nothing;
-     * a joining player waits at most {@code waitSeconds} for their client to load it.
+     * Clients load the base archive and their server group's addons, each {@code blockcraft-<name>.zip} in the plugin
+     * directory and at {@code baseUrl}; {@code port} 0 serves nothing. A group with no addons (replay) takes those of
+     * the recorded game's group. A joining player waits at most {@code waitSeconds} for their client to load them.
      */
-    public record ResourcePack(String file, String url, int port, boolean required, int waitSeconds, PackProfiles profiles, int downloadRetries) {
-        public ResourcePack(String file, String url, int port, boolean required, int waitSeconds, PackProfiles profiles) {
-            this(file, url, port, required, waitSeconds, profiles, 0);
-        }
-        public ResourcePack(String file, String url, int port, boolean required, int waitSeconds) {
-            this(file, url, port, required, waitSeconds, PackProfiles.disabled());
-        }
+    public record ResourcePack(URI baseUrl, int port, int waitSeconds, int downloadRetries,
+                               Map<String, List<String>> groups, List<String> defaultAddons) {
     }
 
     /** {@code groups} are the server groups that see a first join announced and count greetings for it. */
     public record Welcome(boolean enabled, Set<String> groups, int greetingSeconds, int listedGreeters) {
-    }
-
-    private static PackProfiles packProfiles(Map<String, Object> resourcePack) {
-        var profiles = YamlFile.section(resourcePack, "profiles");
-        var archives = new LinkedHashMap<String, PackArchive>();
-        var configuredArchives = YamlFile.section(profiles, "archives");
-        for (var name : configuredArchives.keySet()) {
-            var archive = YamlFile.section(configuredArchives, name);
-            archives.put(name, new PackArchive(string(archive, "file"), string(archive, "url")));
-        }
-        var groups = new LinkedHashMap<String, List<String>>();
-        var configuredGroups = YamlFile.section(profiles, "groups");
-        configuredGroups.keySet().forEach(group -> groups.put(group, strings(configuredGroups, group)));
-        return new PackProfiles(Boolean.TRUE.equals(profiles.get("enabled")), Map.copyOf(archives),
-                Map.copyOf(groups), strings(profiles, "default-packs"));
     }
 
     private final Path file;
@@ -199,12 +170,14 @@ public final class SystemConfig {
         this.serverHealth = new ServerHealth(number(serverHealth, "tps-warn", 19), number(serverHealth, "tps-critical", 15),
                 number(serverHealth, "mspt-warn", 40), number(serverHealth, "mspt-critical", 50));
         var resourcePack = YamlFile.section(root, "resource-pack");
-        var packUrl = environment.get("BLOCKCRAFT_RESOURCE_PACK_URL");
-        this.resourcePack = new ResourcePack(string(resourcePack, "file"),
-                packUrl == null || packUrl.isBlank() ? string(resourcePack, "url") : packUrl,
-                number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")),
-                Math.max(1, number(resourcePack, "wait-seconds", 120)), packProfiles(resourcePack),
-                Math.clamp(number(resourcePack, "download-retries", 1), 0, 3));
+        var packBaseUrl = env(environment, "BLOCKCRAFT_RESOURCE_PACK_BASE_URL", string(resourcePack, "base-url"));
+        var packGroups = YamlFile.section(resourcePack, "groups");
+        this.resourcePack = new ResourcePack(URI.create(packBaseUrl.endsWith("/") ? packBaseUrl : packBaseUrl + "/"),
+                number(resourcePack, "port", 0), Math.max(1, number(resourcePack, "wait-seconds", 120)),
+                Math.clamp(number(resourcePack, "download-retries", 1), 0, 3),
+                packGroups.keySet().stream().collect(Collectors.toUnmodifiableMap(group -> group,
+                        group -> strings(packGroups, group))),
+                strings(resourcePack, "default-addons"));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);

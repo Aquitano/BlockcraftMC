@@ -28,8 +28,8 @@ services:
       MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
 
-  # Minecraft is not HTTP, so the proxy takes players itself; the resource pack stays on loopback for the web server
-  # that publishes it at RESOURCE_PACK_URL.
+  # Minecraft is not HTTP, so the proxy takes players itself; the resource pack archives stay on loopback for the web
+  # server that publishes them under RESOURCE_PACK_BASE_URL.
   velocity:
     ports: !override
       - "25565:25565"
@@ -37,7 +37,7 @@ services:
     environment:
       <<: [*db-password, *network]
       VELOCITY_FORWARDING_SECRET: ${FORWARDING_SECRET:?set FORWARDING_SECRET in .env}
-      BLOCKCRAFT_RESOURCE_PACK_URL: ${RESOURCE_PACK_URL:?set RESOURCE_PACK_URL in .env}
+      BLOCKCRAFT_RESOURCE_PACK_BASE_URL: ${RESOURCE_PACK_BASE_URL:?set RESOURCE_PACK_BASE_URL in .env}
       BLOCKCRAFT_WAKER_TOKEN: ${WAKER_TOKEN:-}
 
   lobby: *paper

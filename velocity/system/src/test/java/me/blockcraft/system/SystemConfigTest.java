@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.List;
@@ -24,33 +25,16 @@ public class SystemConfigTest {
     public final TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void splitPackProfilesAreOptInAndKeepLobbyExhibitionConfigurable() throws IOException {
+    public void packArchivesLiveUnderOneBaseUrlThatTheEnvironmentOverrides() throws IOException {
         var file = folder.getRoot().toPath().resolve("config.yml");
-        var defaults = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"));
-        assertFalse(defaults.resourcePack().profiles().enabled());
-        assertEquals("blockcraft.zip", defaults.resourcePack().file());
-        assertEquals(List.of("lobby"), defaults.resourcePack().profiles().groups().get("lobby"));
-        assertEquals(List.of("starwars"), defaults.resourcePack().profiles().groups().get("story"));
-        Files.writeString(file, """
-                resource-pack:
-                  profiles:
-                    enabled: true
-                    groups:
-                      lobby: [lobby]
-                """);
-        var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"));
-        assertTrue(config.resourcePack().profiles().enabled());
-        assertEquals(List.of("lobby"), config.resourcePack().profiles().groups().get("lobby"));
-        assertEquals("blockcraft-starwars.zip", config.resourcePack().profiles().archives().get("starwars").file());
-    }
-
-    @Test
-    public void productionStoryProfileIncludesItsBodiesWeaponsAndDialogueShader() throws IOException {
-        var file = folder.getRoot().toPath().resolve("config.yml");
-        Files.copy(java.nio.file.Path.of("../../prod/resource-pack.yml"), file);
-        var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"));
-        assertTrue(config.resourcePack().profiles().enabled());
-        assertEquals(List.of("starwars"), config.resourcePack().profiles().groups().get("story"));
+        var defaults = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml")).resourcePack();
+        assertEquals(URI.create("http://localhost:8080/"), defaults.baseUrl());
+        assertEquals(Map.of("lobby", List.of("lobby"), "sternenfront", List.of("starwars"), "story", List.of("starwars"),
+                "replay", List.of()), defaults.groups());
+        assertEquals(List.of("modes"), defaults.defaultAddons());
+        var production = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"),
+                Map.of("BLOCKCRAFT_RESOURCE_PACK_BASE_URL", "https://mc.example.net/packs")).resourcePack();
+        assertEquals(URI.create("https://mc.example.net/packs/"), production.baseUrl());
     }
 
     @Test

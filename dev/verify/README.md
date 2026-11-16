@@ -25,7 +25,8 @@ picks up a changed mod or a new resource pack.
 takes the proxy's first-join route. The scenarios are written for the games; on the lobby use the single commands.
 
 `VERIFY_PROJECT` names the Docker project (default `bcverify`), so a second rig can run beside the first with its own
-`VERIFY_PORT`. `VERIFY_PACK_URL` overrides the address the proxy offers the resource pack at, for a client outside Docker.
+`VERIFY_PORT`. `VERIFY_PACK_BASE_URL` overrides the address the proxy offers the resource pack archives under, for a
+client outside Docker.
 
 ## Scenarios
 

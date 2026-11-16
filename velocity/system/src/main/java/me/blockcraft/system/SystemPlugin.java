@@ -273,8 +273,9 @@ public final class SystemPlugin {
         events.register(this, new FreezeSwitchListener(repositories.frozen(), messages, logger));
         events.register(this, new VanishSwitchListener(this, proxy, repositories.vanish(), visibility, logger));
         events.register(this, playtime);
-        pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages, logger, directory::groupOf);
-        pack.ifPresent(networkPack -> events.register(this, networkPack));
+        var networkPack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages, logger, directory::groupOf);
+        events.register(this, networkPack);
+        pack = Optional.of(networkPack);
 
         var punishmentCommands = new PunishmentCommands(support, lookup, moderationActions, repositories.punishments(), messages);
         for (var type : PunishmentType.values()) {
