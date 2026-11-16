@@ -101,9 +101,6 @@ final class DeployScreen {
     private static final int ROOMY_PLACES = 5;
     private static final int ROOMY_PITCH = 20;
     private static final int TIGHT_PITCH = 15;
-    private static final int LEGEND_PITCH = 10;
-    /** Where the legend's lines start, a gap right of its marks. */
-    private static final int LEGEND_TEXT = 196;
     /** The widest a line under the map may be: the space between the side panels. */
     private static final int HINT_WIDTH = 176;
     private static final int HINT_TOP = 218;
@@ -318,7 +315,7 @@ final class DeployScreen {
         }
     }
 
-    /** A map's few spawns spread over the space above the key; five posts with the dropship need every line of it. */
+    /** A map's few spawns spread out; five posts with the dropship sit closer together. */
     private void places(View view) {
         label(182, 21, plain("deploy.screen.places"), MUTED, 110);
         int count = Math.min(view.places().size(), MOST_PLACES);
@@ -334,14 +331,6 @@ final class DeployScreen {
             }
             text(199, top + 3, place.name(), place.open() ? WHITE : MUTED);
             marks(top + 2, place);
-        }
-        label(182, 144, plain("deploy.screen.legend"), MUTED, 110);
-        var keys = List.of(Icon.RECOMMENDED, Icon.CONFIRMED, Icon.PENDING, Icon.LOCKED, Icon.CONTESTED);
-        var colours = List.of(GOLD, GREEN, AMBER, RED, WHITE);
-        var lines = List.of("recommended", "confirmed", "pending", "locked", "contested");
-        for (int index = 0; index < keys.size(); index++) {
-            icon(182, 153 + index * LEGEND_PITCH, keys.get(index), colours.get(index));
-            label(LEGEND_TEXT, 155 + index * LEGEND_PITCH, plain("deploy.screen.key." + lines.get(index)), WHITE, 100);
         }
         label(182, 214, plain("deploy.screen.orientation"), DIM, 110);
     }

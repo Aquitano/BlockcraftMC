@@ -60,7 +60,7 @@ public final class DeployArt {
     static final int BUTTON_INK = 0xFF1B1E26;
 
     /** Tops of the server's text lines; Sternenfront's DeployScreen draws on no others. */
-    static final int[] LINES = {-3, 19, 21, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 153, 154, 155, 163, 165, 168, 173, 175, 178, 183, 185, 193, 195, 196, 197, 203, 206, 214, 218};
+    static final int[] LINES = {-3, 19, 21, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 154, 168, 178, 196, 197, 203, 206, 214, 218};
 
     static final String[] FACTIONS = {"kolonien", "hegemonie"};
     static final int[] ACCENTS = {0xFF3D8BFF, 0xFFE8473F};
@@ -282,7 +282,6 @@ public final class DeployArt {
         canvas.panel(179, 17, 117, 209);
         canvas.fill(180, 18, 115, 10, HEADER);
         canvas.fill(180, 28, 115, 1, EDGE);
-        canvas.fill(181, 139, 113, 1, EDGE);
 
         canvas.fill(SLOT_LEFT - 1, 17, span(COLUMNS) + 2, 12, EDGE);
         canvas.fill(SLOT_LEFT, 18, span(COLUMNS), 10, HEADER);
