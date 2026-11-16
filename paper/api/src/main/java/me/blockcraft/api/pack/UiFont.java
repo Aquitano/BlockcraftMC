@@ -3,6 +3,7 @@ package me.blockcraft.api.pack;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.io.IOException;
@@ -105,6 +106,12 @@ public final class UiFont {
                 .append(at(labelX, Component.text(text).font(Key.key("blockcraft",
                         "label_" + tile.shape().name().toLowerCase(Locale.ROOT) + "_" + tile.slot() / 9)), text.length() * LABEL_ADVANCE))
                 .build();
+    }
+
+    /** {@code capitals}, already in {@link #LABEL_LETTERS}, in the row of {@code slot}, starting {@code x} pixels into it. */
+    public static Component rowLabel(int slot, int x, String capitals, TextColor color) {
+        return at(8 + slot % 9 * 18 + x, Component.text(capitals).color(color)
+                .font(Key.key("blockcraft", "label_wide_" + slot / 9)), capitals.length() * LABEL_ADVANCE);
     }
 
     /** {@code text} in capitals from {@code letters}: any space as a space, and a question mark for a letter they lack. */
