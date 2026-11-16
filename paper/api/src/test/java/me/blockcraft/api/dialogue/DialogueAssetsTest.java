@@ -38,7 +38,7 @@ public class DialogueAssetsTest {
             }
         }
         var art = JsonParser.parseString(Files.readString(assets.resolve("font/dialogue.json"))).getAsJsonObject();
-        assertEquals(7, art.getAsJsonArray("providers").size());
+        assertEquals(Dialogue.Portrait.values().length + 2, art.getAsJsonArray("providers").size());
         for (int index = 0; index <= Dialogue.Portrait.values().length; index++) {
             var image = art.getAsJsonArray("providers").get(index).getAsJsonObject();
             assertTrue(image.get("ascent").getAsInt() <= image.get("height").getAsInt());
