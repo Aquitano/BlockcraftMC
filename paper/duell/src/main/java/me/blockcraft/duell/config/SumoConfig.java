@@ -1,6 +1,6 @@
 package me.blockcraft.duell.config;
 
-import org.bukkit.configuration.ConfigurationSection;
+import me.blockcraft.common.config.StrictConfig;
 
 public record SumoConfig(int radius, int floorY, int loseY, double spawnDistance, int pointsToWin,
                          int resetSeconds) {
@@ -22,9 +22,8 @@ public record SumoConfig(int radius, int floorY, int loseY, double spawnDistance
         }
     }
 
-    public static SumoConfig from(ConfigurationSection config) {
-        return new SumoConfig(config.getInt("sumo.radius", 4), config.getInt("sumo.floor-y", 64),
-                config.getInt("sumo.lose-y", 61), config.getDouble("sumo.spawn-distance", 2),
-                config.getInt("sumo.points-to-win", 3), config.getInt("sumo.reset-seconds", 3));
+    public static SumoConfig from(StrictConfig sumo) {
+        return new SumoConfig(sumo.integer("radius"), sumo.integer("floor-y"), sumo.integer("lose-y"),
+                sumo.decimal("spawn-distance"), sumo.integer("points-to-win"), sumo.integer("reset-seconds"));
     }
 }
