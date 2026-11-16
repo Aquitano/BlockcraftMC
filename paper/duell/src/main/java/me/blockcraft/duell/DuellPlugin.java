@@ -45,8 +45,7 @@ public final class DuellPlugin extends JavaPlugin {
         pairs.createTable();
 
         var items = new GameItems(messages);
-        var rushConfig = RushConfig.from(getConfig().getConfigurationSection("mlgrush") == null
-                ? new org.bukkit.configuration.file.YamlConfiguration() : getConfig().getConfigurationSection("mlgrush"));
+        var rushConfig = RushConfig.from(getConfig().getConfigurationSection("mlgrush"));
         var rushMaps = MapPool.load(getDataPath().resolve("rush/maps.yml"), rushConfig.arena());
         var rushArena = new RushArena(rushMaps.maps().getFirst(), new NamespacedKey(this, "rush"));
         var lootChests = new LootChests(config.loot());

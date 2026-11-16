@@ -27,6 +27,12 @@ public final class MlgRushPlugin extends JavaPlugin {
         BundledDefaults.apply(this);
         var config = RushConfig.from(getConfig());
         var gameConfig = GameConfig.from(getConfig());
+        var read = BundledDefaults.strict(getConfig());
+        int winCoins = read.integer("rewards.win");
+        if (read.integer("players.min") != 2 || read.integer("countdown.lobby") < 1 || read.integer("countdown.restart") < 2
+                || winCoins < 0) {
+            throw new IllegalArgumentException("MLG Rush needs two players, positive countdowns (restart >= 2) and a reward of at least 0");
+        }
         var mapsFile = getDataPath().resolve("maps.yml");
         if (Files.notExists(mapsFile)) {
             saveResource("maps.yml", false);
@@ -37,7 +43,7 @@ public final class MlgRushPlugin extends JavaPlugin {
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "mlgrush_stats");
         var arena = new RushArena(map);
-        game = new StandaloneRushGame(this, gameConfig, config, services.messages(), arena, maps, services.stats(), services.menus());
+        game = new StandaloneRushGame(this, gameConfig, config, winCoins, services.messages(), arena, maps, services.stats(), services.menus());
         services.listen(new ConnectionListener(game),
                 new ArenaProtection(() -> false),
                 WorldProtection.during(() -> !game.isIngame(), api.buildMode()).rescue(game::lobbySpawn),
