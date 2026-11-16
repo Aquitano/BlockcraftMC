@@ -117,6 +117,6 @@ final class Rivalries {
     }
 
     private boolean masked(Player player, Player rival) {
-        return api.nickRank(player).isPresent() || api.nickRank(rival).isPresent();
+        return api.nickRanks().of(player).isPresent() || api.nickRanks().of(rival).isPresent();
     }
 }

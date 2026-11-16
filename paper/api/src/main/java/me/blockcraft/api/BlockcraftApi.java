@@ -3,7 +3,6 @@ package me.blockcraft.api;
 import me.blockcraft.api.achievement.Achievements;
 import me.blockcraft.api.afk.Afk;
 import me.blockcraft.api.audit.StaffAudit;
-import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.presentation.VisualEffects;
 import me.blockcraft.api.elo.Elo;
@@ -55,7 +54,6 @@ import java.util.Optional;
  * @param settings     remembered per-player choices such as the chat tag or kill effect
  * @param resourcePack which clients wear the network's resource pack, and the icons each one can draw
  * @param profiles     the player's own profile card: rank, level, coins and per-game stats
- * @param effects      kill and win effects to play from a game's death and win handling
  * @param messages     BlockcraftAPI's own messages: chat tag texts and other strings shared by every plugin
  * @param servers      the live server list of the whole network
  * @param server       this server as the proxy knows it
@@ -90,7 +88,6 @@ public record BlockcraftApi(
         PlayerSettings settings,
         ResourcePacks resourcePack,
         Profiles profiles,
-        Effects effects,
         WeaponStyles weapons,
         Messages messages,
         ServerRepository servers,
@@ -144,11 +141,6 @@ public record BlockcraftApi(
     /** The name the player logged in with, whatever nick they wear; the one to write into name columns. */
     public String realName(Player player) {
         return realNames.of(player);
-    }
-
-    /** The LuckPerms group whose rank the player's nick shows, empty while they wear none. */
-    public Optional<String> nickRank(Player player) {
-        return nickRanks.of(player);
     }
 
     /** Whether the player is away from the keyboard; the tab list and the proxy never show it while they are vanished. */

@@ -12,7 +12,6 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
 import me.blockcraft.api.config.ConfigOverrides;
-import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.presentation.VisualEffects;
@@ -180,7 +179,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 ? waitingLobby(Path.of(waitingPath)) : Optional.<WaitingLobby>empty();
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
-                settings, resourcePack, profiles, new Effects(settings), weapons, messages,
+                settings, resourcePack, profiles, weapons, messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
                 waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 calendar, RoundConfig.from(config), visuals);
