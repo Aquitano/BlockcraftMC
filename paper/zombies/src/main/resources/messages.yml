@@ -166,6 +166,7 @@ shop:
     - "<muted>Bei einer dritten wählst du, welche sie ersetzt."
   replace-title: "<arrow><zombies>Zombies <dark>· <muted>Waffe ersetzen"
   replace-body: "<muted>Du trägst schon zwei Waffen. Welche soll <zombies><weapon> <muted>ersetzen?"
+  replace-choice: "<click>Durch <zombies><weapon> <muted>ersetzen"
   weapon-stats: "<muted>Schaden pro Schuss <primary><damage> <dark>· <muted>Magazin <primary><clip>"
   ammo: "<primary>Gehaltene Waffe vollständig nachladen"
   armor: "<primary>Rüstung <dark>· <muted>Stufe <tier>"

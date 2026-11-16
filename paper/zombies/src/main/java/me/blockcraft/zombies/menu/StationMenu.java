@@ -137,11 +137,11 @@ public final class StationMenu extends Menu {
         var gun = guns.get(slot);
         var survivor = game.survivor(player);
         if (gun != null && offer.available().getAsBoolean() && game.weapons().full(player) && survivor.gold() >= offer.price()) {
-            new ReplaceWeaponDialog(game, player, gun, replaced -> {
+            new ReplaceWeaponMenu(game, player, gun, replaced -> {
                 game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && survivor.weapons().containsKey(replaced),
                         () -> game.weapons().give(player, gun, replaced));
                 game.openStation(player, station);
-            }, () -> game.openStation(player, station)).open(player, () -> game.canUse(player, station));
+            }).returningTo(back -> game.openStation(back, station)).open(player, () -> game.canUse(player, station));
             return;
         }
         if (!game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && (!needsPower() || game.powered()), offer.grant())) {
