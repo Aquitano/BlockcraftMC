@@ -1,5 +1,6 @@
 package me.blockcraft.cores.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
 import org.bukkit.Material;
@@ -15,25 +16,25 @@ public record CoresConfig(int playersPerTeam, int fullSeconds, int roundSeconds,
                           int protectionSeconds, int bowKillArrows, int voidHeight, int buildHeight,
                           CombatStyle combat, List<ItemStack> kit, LootTable chests) {
 
-    public static CoresConfig from(ConfigurationSection config) {
-        var chests = config.getConfigurationSection("chests");
+    public static CoresConfig from(ConfigurationSection yaml) {
+        var config = BundledDefaults.strict(yaml);
         return new CoresConfig(
-                Math.max(1, config.getInt("teams.players-per-team", 4)),
-                Math.max(1, config.getInt("countdown.full", 20)),
-                Math.max(60, config.getInt("countdown.round", 2700)),
-                Math.max(0, config.getInt("rewards.kill", 5)),
-                Math.max(0, config.getInt("rewards.core", 15)),
-                Math.max(0, config.getInt("rewards.win", 25)),
-                Math.max(1, config.getInt("cores.alarm-radius", 8)),
-                Math.max(1, config.getInt("cores.alarm-seconds", 10)),
-                Math.clamp(config.getInt("cores.fatigue-level", 0), 0, 4),
-                Math.max(0, config.getInt("respawn.protection-seconds", 5)),
-                Math.max(0, config.getInt("bow-kill-arrows", 4)),
-                config.getInt("void-height", 40),
-                config.getInt("build-height", 100),
-                CombatStyle.from(config),
-                config.getMapList("kit").stream().map(CoresConfig::item).toList(),
-                chests == null ? new LootTable(0, 0, List.of()) : LootTable.fromYaml(chests));
+                Math.max(1, config.integer("teams.players-per-team")),
+                Math.max(1, config.integer("countdown.full")),
+                Math.max(60, config.integer("countdown.round")),
+                Math.max(0, config.integer("rewards.kill")),
+                Math.max(0, config.integer("rewards.core")),
+                Math.max(0, config.integer("rewards.win")),
+                Math.max(1, config.integer("cores.alarm-radius")),
+                Math.max(1, config.integer("cores.alarm-seconds")),
+                Math.clamp(config.integer("cores.fatigue-level"), 0, 4),
+                Math.max(0, config.integer("respawn.protection-seconds")),
+                Math.max(0, config.integer("bow-kill-arrows")),
+                config.integer("void-height"),
+                config.integer("build-height"),
+                CombatStyle.from(yaml),
+                yaml.getMapList("kit").stream().map(CoresConfig::item).toList(),
+                LootTable.fromYaml(yaml.getConfigurationSection("chests")));
     }
 
     private static ItemStack item(Map<?, ?> entry) {
