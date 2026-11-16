@@ -789,9 +789,11 @@ boards:
   board-changelog: "<accent><bold>Neuigkeiten</bold><newline><click>Lesen"
   board-rules: "<accent><bold>Regeln</bold><newline><click>Lesen"
 
-# What changed lately, shown once to everyone who comes back after changelog.version in config.yml changed.
+# What changed lately, shown once to everyone who comes back after changelog.version in config.yml changed: in the
+# dialogue panel under speaker, as plain text, or as a dialog under title for a client without the resource pack.
 changelog:
   title: "<arrow><primary>Neuigkeiten <dark>· <muted><version>"
+  speaker: "Neuigkeiten · <version>"
   entries:
     - "<accent>Neue Spielmodi<dark>: <muted>EnderGames, TTT und SkyWars sind da."
     - "<accent>EnderGames<dark>: <muted>acht ausgesuchte Welten statt Zufall."
