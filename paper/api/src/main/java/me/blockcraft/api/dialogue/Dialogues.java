@@ -31,8 +31,14 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+/**
+ * The pack's talking panel above the hotbar. A dialogue that asks something holds the player's input until they answer:
+ * scrolling picks, sneaking confirms. One that only tells reads itself out and lets the player play on underneath, so
+ * a greeting never stops a newcomer from using what it describes.
+ */
 public final class Dialogues implements Listener, AutoCloseable {
-    private record Viewing(DialogueSession session, Messages text, Consumer<String> completed, long expires, PresentationScope scope) {}
+    private record Viewing(DialogueSession session, Messages text, Consumer<String> completed, long expires, PresentationScope scope,
+                           boolean holds) {}
 
     private final Plugin plugin;
     private final Messages messages;
@@ -40,7 +46,9 @@ public final class Dialogues implements Listener, AutoCloseable {
     private final Dialogue.Loaded demo;
     private final int charactersPerTick;
     private final int timeoutTicks;
+    private final int readTicks;
     private final Map<UUID, Viewing> viewers = new HashMap<>();
+    private final Map<UUID, Long> readSince = new HashMap<>();
     private BukkitTask task;
     private final List<Predicate<Player>> unavailable = new ArrayList<>();
 
@@ -50,6 +58,7 @@ public final class Dialogues implements Listener, AutoCloseable {
         this.packs = packs;
         charactersPerTick = number(config, "characters-per-tick", 2, 1, 20);
         timeoutTicks = number(config, "timeout-seconds", 180, 15, 1800) * 20;
+        readTicks = number(config, "read-seconds", 5, 1, 60) * 20;
         var demoConfig = new HashMap<String, Object>();
         if (config.get("demo") instanceof Map<?, ?> fields) fields.forEach((key, value) -> demoConfig.put(String.valueOf(key), value));
         demo = Dialogue.load(demoConfig);
@@ -65,6 +74,12 @@ public final class Dialogues implements Listener, AutoCloseable {
 
     public boolean active(Player player) {
         return viewers.containsKey(player.getUniqueId());
+    }
+
+    /** Whether the player's dialogue asks something and so keeps their clicks, scrolling and hits for itself. */
+    public boolean holds(Player player) {
+        var viewing = viewers.get(player.getUniqueId());
+        return viewing != null && viewing.holds();
     }
 
     public boolean startDemo(Player player) {
@@ -135,7 +150,7 @@ public final class Dialogues implements Listener, AutoCloseable {
         if (scope.closed()) return false;
         player.closeInventory();
         var session = new DialogueSession(dialogue, key -> DialogueView.plain(text, key));
-        viewers.put(player.getUniqueId(), new Viewing(session, text, completed, now() + timeoutTicks, scope));
+        viewers.put(player.getUniqueId(), new Viewing(session, text, completed, now() + timeoutTicks, scope, dialogue.asks()));
         scope.own(() -> {
             var current = viewers.get(player.getUniqueId());
             if (current != null && current.scope() == scope) stop(player);
@@ -146,6 +161,7 @@ public final class Dialogues implements Listener, AutoCloseable {
     }
 
     public void stop(Player player) {
+        readSince.remove(player.getUniqueId());
         var viewing = viewers.remove(player.getUniqueId());
         if (viewing == null) return;
         try {
@@ -172,6 +188,11 @@ public final class Dialogues implements Listener, AutoCloseable {
             }
             boolean revealing = !viewing.session().revealed();
             viewing.session().reveal(charactersPerTick);
+            if (!viewing.holds() && viewing.session().revealed()
+                    && now() - readSince.computeIfAbsent(id, ignored -> now()) >= readTicks) {
+                advance(player);
+                continue;
+            }
             if (revealing || now() % 20 == 0) {
                 player.sendActionBar(DialogueView.draw(viewing.session(), viewing.text(), messages));
             }
@@ -185,6 +206,7 @@ public final class Dialogues implements Listener, AutoCloseable {
     public void advance(Player player) {
         var viewing = viewers.get(player.getUniqueId());
         if (viewing == null) return;
+        readSince.remove(player.getUniqueId());
         viewing.session().advance();
         if (viewing.session().finished()) {
             stop(player);
@@ -209,7 +231,7 @@ public final class Dialogues implements Listener, AutoCloseable {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onScroll(PlayerItemHeldEvent event) {
-        if (!active(event.getPlayer())) return;
+        if (!holds(event.getPlayer())) return;
         int delta = Math.floorMod(event.getNewSlot() - event.getPreviousSlot(), 9);
         select(event.getPlayer(), delta <= 4 ? 1 : -1);
         event.setCancelled(true);
@@ -227,17 +249,17 @@ public final class Dialogues implements Listener, AutoCloseable {
     /** First, so that hotbar items which skip a denied use stay still while the player reads. */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInteract(PlayerInteractEvent event) {
-        if (active(event.getPlayer())) event.setCancelled(true);
+        if (holds(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityInteract(PlayerInteractEntityEvent event) {
-        if (active(event.getPlayer())) event.setCancelled(true);
+        if (holds(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onAttack(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player player && active(player)) event.setCancelled(true);
+        if (event.getDamager() instanceof Player player && holds(player)) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

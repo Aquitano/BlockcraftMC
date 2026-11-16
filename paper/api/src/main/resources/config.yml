@@ -237,6 +237,8 @@ curiosities:
 dialogue:
   characters-per-tick: 2
   timeout-seconds: 180
+  # How long a line of a dialogue without choices stays after it is written out, before the next one follows.
+  read-seconds: 5
   demo:
     first: arrival
     lines:

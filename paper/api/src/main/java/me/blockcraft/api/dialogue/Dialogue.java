@@ -25,6 +25,10 @@ public record Dialogue(String first, Map<String, Line> lines) {
         lines = Map.copyOf(lines);
     }
 
+    public boolean asks() {
+        return lines.values().stream().anyMatch(line -> !line.choices().isEmpty());
+    }
+
     public List<String> problems() {
         var problems = new ArrayList<String>();
         if (!lines.containsKey(first)) problems.add("Missing first dialogue line: " + first);

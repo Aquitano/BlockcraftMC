@@ -68,7 +68,7 @@ public final class SpotEntities implements Listener {
     }
 
     private static boolean reading(Player player) {
-        return BlockcraftApi.get().dialogues().active(player);
+        return BlockcraftApi.get().dialogues().holds(player);
     }
 
     public final class Group<K> implements AutoCloseable {
