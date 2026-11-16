@@ -2,11 +2,12 @@ package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ShotEvent;
+import me.blockcraft.api.pack.HudPanel;
+import me.blockcraft.api.pack.HudPanel.Corner;
+import me.blockcraft.api.pack.HudPanel.Glyph;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.bot.Bots;
-import me.blockcraft.sternenfront.game.HudPanel.Corner;
-import me.blockcraft.sternenfront.game.HudPanel.Glyph;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import me.blockcraft.sternenfront.game.MinimapLayout.Mark;
 import me.blockcraft.sternenfront.game.MinimapLayout.Member;
 import me.blockcraft.sternenfront.game.MinimapLayout.Role;
@@ -134,7 +135,7 @@ final class Minimap implements Listener {
         var glyphs = new ArrayList<>(MinimapLayout.disc());
         game.map().headquarters().forEach((faction, headquarters) -> {
             var centre = headquarters.zone().getCenter();
-            view.inside(centre.getX(), centre.getZ()).ifPresent(pixel -> glyphs.add(MinimapLayout.mark(Mark.HEADQUARTERS, pixel, Tint.of(faction))));
+            view.inside(centre.getX(), centre.getZ()).ifPresent(pixel -> glyphs.add(MinimapLayout.mark(Mark.HEADQUARTERS, pixel, Tint.of(faction.text()))));
         });
         // Posts on one bearing share the rim with nearer ones, and the nearer badge goes on top.
         var farthestFirst = game.posts().indices().stream()
@@ -143,7 +144,7 @@ final class Minimap implements Listener {
             var centre = game.map().posts().get(index).center();
             glyphs.add(MinimapLayout.badge(PostBadge.of(game.posts(), index, tick),
                     view.clamped(centre.getX(), centre.getZ(), MinimapLayout.BADGE_REACH),
-                    game.posts().owner(index).map(Tint::of).orElse(Tint.WHITE)));
+                    game.posts().owner(index).map(Faction::text).map(Tint::of).orElse(Tint.WHITE)));
         }
         game.deployment().postToHeadFor(viewer).ifPresent(target -> {
             var centre = game.map().posts().get(target).center();
@@ -171,11 +172,11 @@ final class Minimap implements Listener {
             var at = actor.getLocation();
             view.inside(at.getX(), at.getZ()).ifPresent(pixel -> {
                 if (!ally) {
-                    enemies.add(MinimapLayout.mark(Mark.ENEMY, pixel, Tint.of(faction.get())));
+                    enemies.add(MinimapLayout.mark(Mark.ENEMY, pixel, Tint.of(faction.get().text())));
                 } else if (squad.contains(actor.getUniqueId())) {
-                    squadDots.add(MinimapLayout.mark(Mark.SQUADMATE, pixel, Tint.SQUAD));
+                    squadDots.add(MinimapLayout.mark(Mark.SQUADMATE, pixel, Tint.GOLD));
                 } else {
-                    glyphs.add(MinimapLayout.mark(Mark.ALLY, pixel, Tint.of(side)));
+                    glyphs.add(MinimapLayout.mark(Mark.ALLY, pixel, Tint.of(side.text())));
                 }
             });
         }
@@ -216,8 +217,8 @@ final class Minimap implements Listener {
         var members = new ArrayList<Member>();
         members.add(new Member(viewer.getName(), role(viewer), Tint.WHITE, true));
         squadPlayers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).sorted(Comparator.comparing(Player::getName))
-                .forEach(player -> members.add(new Member(player.getName(), role(player), Tint.SQUAD, game.onField(player))));
-        squadmates.forEach(mate -> members.add(new Member(botName(side, mate), Role.of(mate.role()), Tint.SQUAD, mate.body().isPresent())));
+                .forEach(player -> members.add(new Member(player.getName(), role(player), Tint.GOLD, game.onField(player))));
+        squadmates.forEach(mate -> members.add(new Member(botName(side, mate), Role.of(mate.role()), Tint.GOLD, mate.body().isPresent())));
         return members;
     }
 

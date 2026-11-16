@@ -251,15 +251,15 @@ Marked text shadows are suppressed.
 
 GUI text can also be a HUD panel, which the text shader moves into a corner of the screen and colours from its tint
 table. The table at the top of `hud_panel.glsl` lists every colour the text shader reserves, for panels and text effects
-alike; ordinary text must avoid them and their darkened shadows. `HudPanelTest` checks that Sternenfront's `HudPanel`
+alike; ordinary text must avoid them and their darkened shadows. `HudPanelTest` checks that the api's `HudPanel`
 writes the same corners and tints in the same order. A panel must take no width and start in its line's middle, where
 the shader expects it. The shader finds a glyph's boss bar line from where the glyph lies in it, so every glyph of
 `HudArt`'s `blockcraft:minimap` font hangs from the line's top and is at most 16 pixels tall; `MinimapLayoutTest` checks
 both. The minimap uses the top-left corner and the kill feed the top-right, both on the minimap's boss bar line.
 Sternenfront's ability tiles use the bottom-right corner with `HudArt`'s `blockcraft:abilities` font. The action bar
 holds other text, so the server places that panel at the line's middle; `AbilityPanelTest` and `CombatFeedbackTest`
-check the widths involved. It hangs from a corner a full column of four tiles above the screen's bottom, which
-`AbilityPanelTest` checks against the shader. Its art has twice the texels of its GUI size, so it keeps detail from GUI scale 2 up; `HudArt`
+check the widths involved. The bottom-right corner lies `HudPanel.BOTTOM_RIGHT_HEIGHT` above the screen's bottom, a full
+column of four tiles, which `HudPanelTest` checks against the shader and `AbilityPanelTest` against the column. Its art has twice the texels of its GUI size, so it keeps detail from GUI scale 2 up; `HudArt`
 writes every icon, ready and recharging, to `build/hud/ability-icons.png` for judging the set.
 
 Sternenfront target outlines reserve scoreboard colors `DARK_AQUA` and `DARK_RED`. Its server sends those colors only

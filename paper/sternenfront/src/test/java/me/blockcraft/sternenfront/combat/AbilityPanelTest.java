@@ -1,5 +1,7 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.pack.HudPanel;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Binding;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Charges;
@@ -7,7 +9,6 @@ import me.blockcraft.sternenfront.combat.AbilityPanel.Slot;
 import me.blockcraft.sternenfront.combat.AbilityPanel.State;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.AbilityIcon;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import me.blockcraft.sternenfront.hero.HeroAbility;
 import net.kyori.adventure.key.Key;
 import org.junit.Test;
@@ -53,12 +54,12 @@ public class AbilityPanelTest {
         }
         for (int first = 0; first < slots.size(); first += AbilityPanel.MAX_SLOTS) {
             var column = slots.subList(first, Math.min(slots.size(), first + AbilityPanel.MAX_SLOTS));
-            for (var glyph : AbilityPanel.layout(column, Tint.REPUBLIC)) {
+            for (var glyph : AbilityPanel.layout(column, Tint.AQUA)) {
                 int height = glyph.text().codePoints().map(codepoint -> heights.getOrDefault(codepoint, 0)).max().orElseThrow();
                 assertTrue(glyph.toString(), glyph.x() < 0 && glyph.y() >= 0 && glyph.y() + height <= AbilityPanel.HEIGHT);
                 assertEquals(glyph.toString(), glyph.advance(), glyph.text().codePoints().map(abilities::get).sum());
             }
-            assertEquals(column.toString(), 0, PackFonts.width(AbilityPanel.render(column, Tint.REPUBLIC), fonts));
+            assertEquals(column.toString(), 0, PackFonts.width(AbilityPanel.render(column, Tint.AQUA), fonts));
         }
         for (var provider : PackFonts.providers("abilities")) {
             var json = provider.getAsJsonObject();
@@ -73,7 +74,7 @@ public class AbilityPanelTest {
     @Test
     public void theShaderMakesRoomForAFullColumn() throws IOException {
         var shader = Files.readString(PackFonts.FONTS.resolveSibling("shaders/include/hud_panel.glsl"));
-        assertTrue(shader.contains("const float BLOCKCRAFT_ABILITY_COLUMN = " + AbilityPanel.HEIGHT + ".0;"));
+        assertEquals(HudPanel.BOTTOM_RIGHT_HEIGHT, AbilityPanel.HEIGHT);
         assertTrue(shader.contains("const float BLOCKCRAFT_ABILITY_NAME_WIDTH = " + AbilityPanel.NAME_WIDTH + ".0;"));
     }
 
@@ -93,14 +94,14 @@ public class AbilityPanelTest {
     public void aTileCountsItsStoredUsesOnlyWhileItHoldsSeveralAndHasOneLeft() {
         var counted = List.of(new Charges(2, 2), new Charges(1, 2), new Charges(12, 12));
         for (var charges : counted) {
-            var glyphs = AbilityPanel.layout(List.of(new Slot(Binding.F, AbilityIcon.GRENADE, "Granate", new State.Ready(), charges)), Tint.REPUBLIC);
+            var glyphs = AbilityPanel.layout(List.of(new Slot(Binding.F, AbilityIcon.GRENADE, "Granate", new State.Ready(), charges)), Tint.AQUA);
             var count = glyphs.stream().map(glyph -> glyph.text().charAt(0)).filter(glyph -> glyph >= AbilityPanel.FIRST_COUNT
                     && glyph < AbilityPanel.FIRST_COUNT + 10).map(glyph -> String.valueOf(glyph - AbilityPanel.FIRST_COUNT)).toList();
             assertEquals(charges.toString(), String.valueOf(charges.stored()), String.join("", count));
         }
         for (var charges : List.of(Charges.ONE, new Charges(0, 2))) {
             var state = charges.stored() > 0 ? new State.Ready() : new State.Cooling(5, 0.5);
-            var glyphs = AbilityPanel.layout(List.of(new Slot(Binding.F, AbilityIcon.GRENADE, "Granate", state, charges)), Tint.REPUBLIC);
+            var glyphs = AbilityPanel.layout(List.of(new Slot(Binding.F, AbilityIcon.GRENADE, "Granate", state, charges)), Tint.AQUA);
             assertTrue(charges.toString(), glyphs.stream().map(glyph -> glyph.text().charAt(0))
                     .noneMatch(glyph -> glyph >= AbilityPanel.FIRST_COUNT && glyph < AbilityPanel.FIRST_COUNT + 10));
         }

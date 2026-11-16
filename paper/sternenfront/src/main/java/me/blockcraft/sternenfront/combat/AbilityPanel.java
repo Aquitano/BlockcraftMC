@@ -1,10 +1,10 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.pack.HudPanel;
+import me.blockcraft.api.pack.HudPanel.Corner;
+import me.blockcraft.api.pack.HudPanel.Glyph;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.sternenfront.game.AbilityIcon;
-import me.blockcraft.sternenfront.game.HudPanel;
-import me.blockcraft.sternenfront.game.HudPanel.Corner;
-import me.blockcraft.sternenfront.game.HudPanel.Glyph;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 
@@ -111,7 +111,7 @@ final class AbilityPanel {
         glyphs.add(glyph(BACKING, left, top, Tint.WHITE, TILE_ADVANCE));
         switch (slot.state()) {
             case State.Ready _ -> glyphs.addAll(face(FIRST_ICON, slot, side, left, top));
-            case State.Armed _ -> glyphs.addAll(face(FIRST_ICON, slot, Tint.SQUAD, left, top));
+            case State.Armed _ -> glyphs.addAll(face(FIRST_ICON, slot, Tint.GOLD, left, top));
             case State.Cooling(int seconds, double done) -> {
                 int level = (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
                 if (level > 0) {

@@ -1,7 +1,8 @@
 package me.blockcraft.sternenfront.game;
 
-import me.blockcraft.sternenfront.game.HudPanel.Glyph;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
+import me.blockcraft.api.pack.HudPanel;
+import me.blockcraft.api.pack.HudPanel.Glyph;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayDeque;

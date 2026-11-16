@@ -1,8 +1,8 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.HudPanel.Glyph;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.sternenfront.PackFonts;
-import me.blockcraft.sternenfront.game.HudPanel.Glyph;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import me.blockcraft.sternenfront.game.MinimapLayout.Mark;
 import me.blockcraft.sternenfront.game.MinimapLayout.Member;
 import me.blockcraft.sternenfront.game.MinimapLayout.Pixel;
@@ -58,7 +58,7 @@ public class MinimapLayoutTest {
 
     @Test
     public void theSquadListIsHeadedAboveItsMembers() {
-        var glyphs = MinimapLayout.list("Trupp", List.of(new Member("CT-4", Role.MEDIC, Tint.SQUAD, true)));
+        var glyphs = MinimapLayout.list("Trupp", List.of(new Member("CT-4", Role.MEDIC, Tint.GOLD, true)));
         var heading = glyphs.getFirst();
         assertEquals("TRUPP", heading.text());
         assertEquals(Tint.DIMMED, heading.tint());
@@ -67,9 +67,9 @@ public class MinimapLayoutTest {
 
     @Test
     public void deadOrRedeployingMembersAreDimmed() {
-        var line = MinimapLayout.member(1, Role.MEDIC, Tint.SQUAD, "CT-4", false);
+        var line = MinimapLayout.member(1, Role.MEDIC, Tint.GOLD, "CT-4", false);
         assertTrue(line.stream().allMatch(glyph -> glyph.tint() == Tint.DIMMED));
-        assertEquals(Tint.SQUAD, MinimapLayout.member(1, Role.MEDIC, Tint.SQUAD, "CT-4", true).getFirst().tint());
+        assertEquals(Tint.GOLD, MinimapLayout.member(1, Role.MEDIC, Tint.GOLD, "CT-4", true).getFirst().tint());
     }
 
     /**
@@ -84,19 +84,19 @@ public class MinimapLayoutTest {
         for (int post = 0; post < 5; post++) {
             double angle = post * Math.PI * 2 / 5;
             var rim = view.clamped(Math.sin(angle) * 900, -Math.cos(angle) * 900, MinimapLayout.BADGE_REACH);
-            glyphs.add(MinimapLayout.badge(new PostBadge(post, post % 2 == 0), rim, Tint.REPUBLIC));
+            glyphs.add(MinimapLayout.badge(new PostBadge(post, post % 2 == 0), rim, Tint.AQUA));
             glyphs.add(MinimapLayout.target(rim));
         }
         for (var mark : Mark.values()) {
-            glyphs.add(MinimapLayout.mark(mark, view.inside(0, -48).orElseThrow(), Tint.SQUAD));
-            glyphs.add(MinimapLayout.mark(mark, view.inside(-48, 0).orElseThrow(), Tint.SEPARATISTS));
+            glyphs.add(MinimapLayout.mark(mark, view.inside(0, -48).orElseThrow(), Tint.GOLD));
+            glyphs.add(MinimapLayout.mark(mark, view.inside(-48, 0).orElseThrow(), Tint.RED));
         }
         for (int heading = 0; heading < 16; heading++) {
             glyphs.add(MinimapLayout.arrow(heading * 22.5f));
         }
         var members = new ArrayList<Member>();
         for (var role : Role.values()) {
-            members.add(new Member("Ein_sehr_langer_Name", role, Tint.SQUAD, role.ordinal() % 2 == 0));
+            members.add(new Member("Ein_sehr_langer_Name", role, Tint.GOLD, role.ordinal() % 2 == 0));
         }
         members.add(new Member("ÄÖÜ-.:!?/+& 0123456789", Role.HERO, Tint.WHITE, true));
         glyphs.addAll(MinimapLayout.list("Trupp", members));
