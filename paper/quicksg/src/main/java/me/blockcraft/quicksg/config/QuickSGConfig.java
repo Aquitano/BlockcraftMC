@@ -50,7 +50,7 @@ public record QuickSGConfig(
                 CompassTracker.Settings.from(config),
                 new Rewards(rewards.getInt("kill", 5), rewards.getInt("death", 2), rewards.getInt("win", 15)),
                 KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice),
-                LootTable.fromYaml(chest, 1, 7),
+                LootTable.fromYaml(chest),
                 CombatStyle.from(config));
     }
 

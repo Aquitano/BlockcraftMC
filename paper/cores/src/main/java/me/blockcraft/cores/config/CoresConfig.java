@@ -33,7 +33,7 @@ public record CoresConfig(int playersPerTeam, int fullSeconds, int roundSeconds,
                 config.getInt("build-height", 100),
                 CombatStyle.from(config),
                 config.getMapList("kit").stream().map(CoresConfig::item).toList(),
-                chests == null ? new LootTable(0, 0, List.of()) : LootTable.fromYaml(chests, 3, 6));
+                chests == null ? new LootTable(0, 0, List.of()) : LootTable.fromYaml(chests));
     }
 
     private static ItemStack item(Map<?, ?> entry) {

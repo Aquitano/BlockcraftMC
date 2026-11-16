@@ -58,7 +58,7 @@ public record DuellConfig(
                 config.getInt("rewards.win", 10),
                 config.getInt("vs.best-of", 3),
                 maps,
-                LootTable.fromYaml(chest, 1, 6),
+                LootTable.fromYaml(chest),
                 CombatStyle.from(config),
                 Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)),
                 SumoConfig.from(config),

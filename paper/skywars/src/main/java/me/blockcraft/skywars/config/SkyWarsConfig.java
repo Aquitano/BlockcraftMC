@@ -49,7 +49,7 @@ public record SkyWarsConfig(int maxPlayers, Countdowns countdowns, Arena arena, 
     }
 
     private static LootTable table(ConfigurationSection chests, String key) {
-        return LootTable.fromYaml(section(chests, key), 3, 5);
+        return LootTable.fromYaml(section(chests, key));
     }
 
     private static ConfigurationSection section(ConfigurationSection config, String key) {
