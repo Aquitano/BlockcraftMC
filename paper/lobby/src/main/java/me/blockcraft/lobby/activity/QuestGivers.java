@@ -13,6 +13,7 @@ import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.lobby.config.Quest;
 import me.blockcraft.lobby.menu.QuestDialog;
+import me.blockcraft.lobby.menu.QuestTalk;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
@@ -22,7 +23,8 @@ import java.util.UUID;
 
 /**
  * Figures at the map's {@code quest-<key>} spots, each with one quest from the {@code quests} section. Talking to one
- * reads the player's progress and shows it in a {@link QuestDialog}; a finished quest pays its reward once, written
+ * reads the player's progress and has the figure say it in the dialogue panel, see {@link QuestTalk}, or shows it in a
+ * {@link QuestDialog} for a client whose pack has not loaded; a finished quest pays its reward once, written
  * with its unlock {@code lobby.quest.<key>} in one go so it cannot be claimed twice.
  */
 public final class QuestGivers implements AutoCloseable {
@@ -75,7 +77,12 @@ public final class QuestGivers implements AutoCloseable {
         Sounds.SHOP_TALK.play(player);
         var id = player.getUniqueId();
         BlockcraftApi.get().playerTasks().latest(player, () -> progress(id, quest),
-                progress -> new QuestDialog(messages, quest, progress, claimer -> claim(claimer, quest)).open(player));
+                progress -> BlockcraftApi.get().dialogues().startOrElse(player, QuestTalk.dialogue(quest, progress),
+                        QuestTalk.text(messages, quest, progress), ending -> {
+                            if (ending.equals(QuestTalk.CLAIM)) {
+                                claim(player, quest);
+                            }
+                        }, () -> new QuestDialog(messages, quest, progress, claimer -> claim(claimer, quest)).open(player)));
     }
 
     /** Blocking; reads what the quest counts and whether its reward was claimed. */
@@ -94,7 +101,7 @@ public final class QuestGivers implements AutoCloseable {
         };
     }
 
-    /** Checks again before paying, since the dialog may have stood open while the player's state changed. */
+    /** Checks again before paying, since the conversation may have run while the player's state changed. */
     private void claim(Player player, Quest quest) {
         var id = player.getUniqueId();
         var name = BlockcraftApi.get().realName(player);

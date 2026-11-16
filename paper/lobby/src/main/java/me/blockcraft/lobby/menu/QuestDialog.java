@@ -46,7 +46,7 @@ public final class QuestDialog {
         messages.getLines(prefix + "talk").forEach(line -> body.add(DialogBody.plainMessage(line)));
         body.add(DialogBody.plainMessage(Component.empty()));
         body.add(DialogBody.plainMessage(messages.get(prefix + "task")));
-        body.add(DialogBody.plainMessage(status()));
+        body.add(DialogBody.plainMessage(status(messages, quest, progress)));
         var buttons = new ArrayList<ActionButton>();
         if (progress.done() && !progress.claimed()) {
             buttons.add(Dialogs.button(messages.get("quests.claim", Formatter.number("coins", quest.reward())), claim));
@@ -56,7 +56,7 @@ public final class QuestDialog {
         Dialogs.show(player, dialog);
     }
 
-    private Component status() {
+    static Component status(Messages messages, Quest quest, Progress progress) {
         if (progress.claimed()) {
             return messages.get("quests.status-claimed");
         }

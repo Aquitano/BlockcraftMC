@@ -831,6 +831,13 @@ quests:
   status-claimed: "<muted>Danke nochmal! Mehr habe ich gerade nicht für dich."
   claimed: "<prefix><success>Aufgabe erledigt! <muted>+<accent><coins> Coins"
   claim-failed: "<prefix><error>Das hat nicht geklappt. Ist die Aufgabe wirklich erledigt?"
+  # A quest giver in the dialogue panel, plain text: after their talk come the task and its status from above.
+  talk:
+    progress:
+      - "<task>"
+      - "<status>"
+    later: "Später."
+    later-reply: "Ich warte hier. Komm wieder, wenn du so weit bist."
   archivarin:
     name: "<accent>Die Archivarin"
     title: "<arrow><primary>Die Archivarin"
