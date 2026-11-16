@@ -10,6 +10,7 @@ import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.LobbyConnector;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.Map;
 import java.util.Set;
@@ -43,9 +44,15 @@ public final class KickListener {
         var from = event.getServer();
         var skipped = refused.computeIfAbsent(player.getUniqueId(), _ -> ConcurrentHashMap.newKeySet());
         skipped.add(from.getServerInfo().getName());
-        lobby.lobbyExcept(skipped).ifPresent(server -> event.setResult(RedirectPlayer.create(server, messages.get("kicked-to-lobby",
-                Placeholder.unparsed("server", from.getServerInfo().getName()),
-                Placeholder.component("reason", event.getServerKickReason().orElse(Component.empty()))))));
+        lobby.lobbyExcept(skipped).ifPresent(server -> event.setResult(RedirectPlayer.create(server, notice(event))));
+    }
+
+    private Component notice(KickedFromServerEvent event) {
+        var game = lobby.gameOn(event.getServer());
+        return event.getServerKickReason()
+                .filter(reason -> !PlainTextComponentSerializer.plainText().serialize(reason).isBlank())
+                .map(reason -> messages.get("kicked-to-lobby", game, Placeholder.component("reason", reason)))
+                .orElseGet(() -> messages.get("kicked-to-lobby-no-reason", game));
     }
 
     @Subscribe
