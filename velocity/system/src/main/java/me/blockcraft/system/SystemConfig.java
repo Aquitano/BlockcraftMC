@@ -4,8 +4,7 @@ import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.elo.EloFormula;
-import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.network.NetworkAddresses;
+import me.blockcraft.common.network.NetworkConfig;
 import me.blockcraft.system.moderation.PunishmentPreset;
 import me.blockcraft.system.network.OnDemand;
 import me.blockcraft.system.ranked.RankedQueue;
@@ -53,7 +52,7 @@ public final class SystemConfig {
     public record Friends(int max, int requestMinutes) {
     }
 
-    /** The ranked Duell queue and the Elo it reads, which must match BlockcraftAPI's {@code elo} section. */
+    /** The ranked Duell queue and network.yml's Elo, which the Duell servers rate the series with. */
     public record Ranked(RankedQueue.Settings queue, EloFormula elo) {
     }
 
@@ -126,14 +125,14 @@ public final class SystemConfig {
     private final NetworkCalendar calendar;
     private final int calendarPollSeconds;
     private final Duration privateChatCooldown;
+    private final Duration reportCooldown;
 
-    private SystemConfig(Path file, Map<String, Object> root, Map<String, String> environment) {
+    private SystemConfig(Path file, Map<String, Object> root, NetworkConfig shared, Map<String, String> environment) {
         this.file = file;
         this.database = DatabaseConfig.fromYaml(YamlFile.section(root, "database"));
-        var network = NetworkAddresses.fromYaml(root);
-        this.network = new Network(string(network, "ip"), string(network, "website"), string(network, "shop"),
-                string(network, "teamspeak"), string(network, "discord"));
-        this.networkTags = Messages.tagsOf(network);
+        this.network = new Network(address(shared, "ip"), address(shared, "website"), address(shared, "shop"),
+                address(shared, "teamspeak"), address(shared, "discord"));
+        this.networkTags = shared.tags();
         this.lobbyGroup = string(root, "lobby-group");
         var discovery = YamlFile.section(root, "discovery");
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
@@ -162,7 +161,7 @@ public final class SystemConfig {
                 Math.max(0, number(ranked, "base-range", 100)), Math.max(0, number(ranked, "range-per-second", 5)),
                 Math.max(0, number(ranked, "max-range", 400)),
                 Duration.ofSeconds(Math.max(30, number(ranked, "match-timeout-seconds", 180)))),
-                new EloFormula(number(ranked, "start-rating", 1000), number(ranked, "k-factor", 32)));
+                shared.elo());
         var alerts = YamlFile.section(root, "alerts");
         this.alerts = new Alerts(env(environment, "BLOCKCRAFT_ALERTS_WEBHOOK_URL", string(alerts, "webhook-url")),
                 number(alerts, "min-interval-seconds", 300), number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
@@ -209,9 +208,10 @@ public final class SystemConfig {
                 Math.max(1, number(welcome, "greeting-seconds", 60)), Math.max(1, number(welcome, "listed-greeters", 2)));
         this.serverListFriends = Boolean.TRUE.equals(YamlFile.section(root, "server-list").get("show-friends"));
         this.serverListCache = Duration.ofSeconds(Math.max(1, number(YamlFile.section(root, "server-list"), "cache-seconds", 30)));
-        this.calendar = NetworkCalendar.fromYaml(YamlFile.section(root, "calendar"));
-        this.calendarPollSeconds = Math.max(1, number(YamlFile.section(root, "calendar"), "poll-seconds", 5));
+        this.calendar = shared.calendar();
+        this.calendarPollSeconds = shared.calendarPollSeconds();
         this.privateChatCooldown = Duration.ofSeconds(Math.max(0, number(YamlFile.section(root, "private-chat"), "cooldown-seconds", 2)));
+        this.reportCooldown = Duration.ofSeconds(Math.max(0, number(YamlFile.section(root, "report"), "cooldown-seconds", 10)));
     }
 
     public static SystemConfig load(Path file, Supplier<InputStream> bundledDefault) {
@@ -219,7 +219,8 @@ public final class SystemConfig {
     }
 
     public static SystemConfig load(Path file, Supplier<InputStream> bundledDefault, Map<String, String> environment) {
-        return new SystemConfig(file, YamlFile.loadWithDefaults(file, bundledDefault), environment);
+        return new SystemConfig(file, YamlFile.loadWithDefaults(file, bundledDefault),
+                NetworkConfig.load(file.getParent(), environment), environment);
     }
 
     public DatabaseConfig database() {
@@ -230,7 +231,7 @@ public final class SystemConfig {
         return network;
     }
 
-    /** The network addresses as tags, resolved in every message of this plugin. */
+    /** network.yml's addresses and palette as tags, resolved in every message of this plugin. */
     public TagResolver networkTags() {
         return networkTags;
     }
@@ -363,6 +364,11 @@ public final class SystemConfig {
         return privateChatCooldown;
     }
 
+    /** How long a player waits after a report before filing the next one. */
+    public Duration reportCooldown() {
+        return reportCooldown;
+    }
+
     public NetworkCalendar calendar() {
         return calendar;
     }
@@ -429,6 +435,10 @@ public final class SystemConfig {
                 .map(entry -> new InfoCommand(String.valueOf(entry.get("name")), entry.get("aliases") instanceof List<?> aliases
                         ? aliases.stream().map(String::valueOf).toList() : List.of()))
                 .toList();
+    }
+
+    private static String address(NetworkConfig shared, String key) {
+        return shared.addresses().getOrDefault(key, "");
     }
 
     private static String string(Map<String, Object> section, String key) {

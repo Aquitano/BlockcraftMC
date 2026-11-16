@@ -46,7 +46,7 @@ current season (`ranked` in its `config.yml`) and sends the pair to an empty ser
 starts if the group sleeps. Once both stand on it, the proxy sends each a `RankedMatch` message. That server then plays
 their series rated, whatever `rating.enabled` and the rating vote say. A rematch is unrated unless both vote for it.
 
-`ranked.start-rating` and `ranked.k-factor` in the proxy's config must match BlockcraftAPI's `elo` section.
+The proxy and the Duell servers rate with the same `elo` section of `network.yml` (main README, "Config and messages").
 
 Seasons last three months (`Season`), so every January, April, July and October everyone starts again at the start
 rating. `/elo` keeps the past seasons' tables.

@@ -63,13 +63,10 @@ public class MessageKeysTest {
     @Test
     public void noPlaceholderIsNamedLikeANetworkTag() throws IOException {
         var networkTags = new HashSet<String>();
-        for (Path module : MessageFiles.modules()) {
-            MessageFiles.bundled(module).keySet().stream()
-                    .filter(key -> key.startsWith("palette."))
-                    .forEach(key -> networkTags.add(key.substring("palette.".length())));
-        }
-        try (var config = Files.newInputStream(API.resolve("src/main/resources/config.yml"))) {
-            networkTags.addAll(YamlFile.section(YamlFile.load(config), "network").keySet());
+        try (var network = Files.newInputStream(ROOT.resolve("common/src/main/resources/network.yml"))) {
+            var root = YamlFile.load(network);
+            networkTags.addAll(YamlFile.section(root, "network").keySet());
+            networkTags.addAll(YamlFile.section(root, "palette").keySet());
         }
         var shadowed = new ArrayList<String>();
         for (Path module : MessageFiles.modules()) {

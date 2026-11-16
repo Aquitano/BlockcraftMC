@@ -1,34 +1,5 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
-# The network's colours. Every Paper plugin's messages.yml may use these as tags, so a redesign happens here
-# and nowhere else. The values are spliced in before parsing, so a colour tag colours what follows it.
-palette:
-  primary: "<blue>"
-  accent: "<yellow>"
-  muted: "<gray>"
-  dark: "<dark_gray>"
-  success: "<green>"
-  error: "<red>"
-  bullet: "<dark_gray>● "
-  arrow: "<dark_gray>» "
-  left: "<green>Linksklick <dark_gray>· <gray>"
-  right: "<yellow>Rechtsklick <dark_gray>· <gray>"
-  click: "<green>Klicken <dark_gray>· <gray>"
-  quicksg: "<gold>"
-  emeraldrush: "<green>"
-  duell: "<aqua>"
-  bedwars: "<dark_aqua>"
-  mlgrush: "<light_purple>"
-  knockbackffa: "<aqua>"
-  zombies: "<dark_green>"
-  cores: "<yellow>"
-  sternenfront: "<#e8a33d>"
-  endergames: "<dark_purple>"
-  ttt: "<red>"
-  skywars: "<blue>"
-  archive: "<#d4a85a>"
-  premium: "<gold>"
-
 games:
   quicksg:
     name: "<quicksg>QuickSG"

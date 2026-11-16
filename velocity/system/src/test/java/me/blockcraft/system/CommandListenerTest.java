@@ -2,6 +2,7 @@ package me.blockcraft.system;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.NetworkConfig;
 import me.blockcraft.system.listener.CommandListener;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -52,8 +53,9 @@ public class CommandListenerTest {
 
     @Test
     public void everyHelpCommandSuggestsItselfAndExplainsItselfOnHover() throws Exception {
-        var loaded = Messages.load(folder.newFolder().toPath(), () -> getClass().getResourceAsStream("/messages.yml"));
-        var commands = loaded.with(loaded.tagsOf("palette")).getLines("help").stream()
+        var directory = folder.newFolder().toPath();
+        var messages = Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"), NetworkConfig.load(directory).tags());
+        var commands = messages.getLines("help").stream()
                 .filter(line -> PlainTextComponentSerializer.plainText().serialize(line).strip().startsWith("/"))
                 .toList();
         assertTrue(commands.size() > 20);

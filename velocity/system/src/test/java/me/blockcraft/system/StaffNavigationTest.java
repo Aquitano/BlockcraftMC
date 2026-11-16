@@ -57,8 +57,8 @@ public class StaffNavigationTest {
     public void reportNotificationsAreOnlyExposedToStaff() {
         var proxy = new FakeProxy();
         var player = proxy.join("Player");
-        var staff = proxy.join("Staff", "blockcraft.report.notify");
-        var command = new ReportCommand(null, null, "blockcraft.report.notify", null)
+        var staff = proxy.join("Staff", SystemPermissions.REPORT_NOTIFY);
+        var command = new ReportCommand(null, null, null)
                 .create().getNode();
 
         assertTrue(command.canUse(player));

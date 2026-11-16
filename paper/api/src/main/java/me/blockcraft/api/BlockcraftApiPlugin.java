@@ -62,7 +62,6 @@ import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.db.DatabaseException;
-import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.moderation.SettingsRepository;
@@ -150,10 +149,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         });
         var buildMode = new BuildMode();
         var flight = new FlightGrants();
-        var eloSection = YamlFile.section(config, "elo");
-        var elo = new Elo(new EloRepository(database,
-                new EloFormula(number(eloSection, "start-rating", 1000), number(eloSection, "k-factor", 32))),
-                SkillGroup.ladder(YamlFile.section(eloSection, "groups")), messages);
+        var elo = new Elo(new EloRepository(database, resources.network().elo()),
+                SkillGroup.ladder(YamlFile.section(YamlFile.section(config, "elo"), "groups")), messages);
         var afk = new Afk(this, notifications, messages,
                 Duration.ofMinutes(Math.max(1, number(YamlFile.section(config, "afk"), "idle-minutes", 5))));
         var ignores = new Ignores(this, new IgnoreRepository(database));
@@ -169,8 +166,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
                 StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages);
         var tabTeams = new TabTeams(this, LuckPermsProvider.get(), messages, nickRanks, afk, vanished);
-        var calendarSection = YamlFile.section(config, "calendar");
-        var calendar = NetworkCalendar.fromYaml(calendarSection);
+        var calendar = resources.network().calendar();
         var forcedOccasions = new ForcedOccasions(new SettingsRepository(database), calendar);
         forcedOccasions.reload();
         var waitingPath = Optional.ofNullable(System.getenv("BLOCKCRAFT_WAITING_TEMPLATE"))
@@ -180,7 +176,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, weapons, messages,
-                servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
+                servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), List.copyOf(resources.network().addresses().values()), xp, map,
                 waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 calendar, RoundConfig.from(config), visuals);
         BlockcraftApi.install(api);
@@ -230,7 +226,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         heartbeat.start(Duration.ofSeconds(heartbeatSeconds));
         getServer().getPluginManager().registerEvents(heartbeat, this);
         groups.start(number(groupStatus, "refresh-ticks", 50));
-        long occasionTicks = Math.max(1, number(calendarSection, "poll-seconds", 5)) * 20L;
+        long occasionTicks = resources.network().calendarPollSeconds() * 20L;
         getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
             try {
                 forcedOccasions.reload();

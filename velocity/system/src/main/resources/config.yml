@@ -8,15 +8,6 @@ database:
   pool-size: 10
   connection-timeout-seconds: 5
 
-# The addresses messages name as <ip>, <website>, <shop>, <teamspeak> and <discord>; keep them in step with
-# BlockcraftAPI's network section. BLOCKCRAFT_NETWORK_<KEY> overrides an entry.
-network:
-  ip: BlockcraftMC.net
-  website: https://BlockcraftMC.net
-  shop: https://shop.BlockcraftMC.net
-  teamspeak: ts.BlockcraftMC.net
-  discord: https://discord.gg/kh3xaQ3
-
 # Server group players land in; game groups are joined with /play <group>.
 lobby-group: lobby
 
@@ -44,16 +35,13 @@ on-demand:
 
 # /ranked pairs two players of the group's game whose Elo differs by at most base-range, plus range-per-second for
 # every second both waited, up to max-range, and sends them to an empty server of the group, which plays their series
-# rated. A pair that has not met there after match-timeout-seconds is dropped. start-rating and k-factor must match
-# BlockcraftAPI's elo section.
+# rated with network.yml's elo. A pair that has not met there after match-timeout-seconds is dropped.
 ranked:
   group: duell
   base-range: 100
   range-per-second: 5
   max-range: 400
   match-timeout-seconds: 180
-  start-rating: 1000
-  k-factor: 32
 
 # /servers colours a server's TPS below tps-warn and its milliseconds per tick at or above mspt-warn, stronger past
 # the critical values.
@@ -96,7 +84,7 @@ resource-pack:
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100
 motd:
-  # Empty uses messages.yml's motd.brand with the uppercase, spaced network.ip; /motd setdefault overrides it.
+  # Empty uses messages.yml's motd.brand with the uppercase, spaced ip from network.yml; /motd setdefault overrides it.
   default: ""
   random:
     - "&7Heute schon &6QuickSG &7gewonnen?"
@@ -140,7 +128,7 @@ auto-broadcast-minutes: 5
 tab:
   refresh-seconds: 5
 
-# How long a code from /discord link stays valid; the invite itself is network.discord.
+# How long a code from /discord link stays valid; the invite itself is network.yml's network.discord.
 discord-code-minutes: 10
 
 joinme:
@@ -176,6 +164,10 @@ info-commands:
 
 unbannable:
   - Aquitano
+
+# A player waits cooldown-seconds after a /report before filing the next one.
+report:
+  cooldown-seconds: 10
 
 # Command names (without the slash) players need blockcraft.system.blockedcommands.bypass to run.
 blocked-commands:
@@ -246,20 +238,3 @@ welcome:
 server-list:
   cache-seconds: 30
   show-friends: false
-
-# The days the network celebrates, counted in zone; founded is the yyyy-MM-dd the network opened, and empty means it
-# has no birthday to celebrate; OG has no date and is only switched on with /event; poll-seconds is how often the occasions forced with /event are read back. Mirrors
-# calendar in BlockcraftAPI's config.yml, so keep the two the same.
-calendar:
-  zone: Europe/Berlin
-  easter:
-    days-before: 2
-    days-after: 7
-  halloween:
-    from: "10-17"
-    to: "10-31"
-  winter:
-    from: "12-01"
-    to: "02-29"
-  founded: ""
-  poll-seconds: 5
