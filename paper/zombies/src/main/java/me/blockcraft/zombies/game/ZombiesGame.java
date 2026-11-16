@@ -1,7 +1,6 @@
 package me.blockcraft.zombies.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.dialogue.Dialogues;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
@@ -102,7 +101,6 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private final Map<UUID, Drop> drops = new HashMap<>();
     private final Set<UUID> reviving = new HashSet<>();
     private final BukkitTask task;
-    private final Dialogues.Handle weaponPanelBesideDialogues;
     private Phase phase = Phase.LOBBY;
     private Countdown clock;
     private TimerBar timerBar;
@@ -141,7 +139,6 @@ public final class ZombiesGame implements RoundConnections.Seating {
         this.mysteryBox = new MysteryBox(this);
         this.racks = new WeaponRacks(arena, config.armory(), config.forSale());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
-        this.weaponPanelBesideDialogues = BlockcraftApi.get().dialogues().beside(this::weaponPanel);
         arena.labels(messages);
     }
 
@@ -714,7 +711,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     /**
      * {@code text} on the action bar, with the held gun's panel for a fighter with the pack, which the pack's text shader
      * moves into the bottom-right corner from the line's middle. The panel replaces the weapon's line; its gold stays in
-     * the sidebar. While a dialogue holds the action bar, such as a note read mid-round, it draws the panel beside itself.
+     * the sidebar.
      */
     public void status(Player player, Component text) {
         BlockcraftApi.get().notifications().status(player, weaponPanel(player).map(panel -> UiFont.centredOn(text, panel)).orElse(text));
@@ -806,7 +803,6 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     public void stop() {
         task.cancel();
-        weaponPanelBesideDialogues.close();
         phase = Phase.ENDING;
         lobbyCountdown.cancel();
         round.stop();

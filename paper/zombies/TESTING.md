@@ -36,7 +36,8 @@ Coordinates below are relative to `origin`, which defaults to world `(0, 96, 0)`
 Open each wing and walk to its stations. Check that the floating labels identify the door price and station.
 Each bought door rolls up row by row. Turning on the power lights the bulbs outward from the generator, including the jeep's headlights.
 Read the five notes: one in the radio shelter and one in each wing.
-The first read of each note pays coins and counts toward five. Reading a note again only opens it.
+The first read of each note pays coins and counts toward five. Each read prints the note in chat, and reading one
+again only prints it. Read one mid-wave: shooting and switching weapons keep working.
 Try a purchase with too little gold, then move away with a shop open and try again.
 Neither attempt should spend gold or grant an item.
 
