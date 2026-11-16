@@ -13,7 +13,6 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.helpers.NOPLogger;
 
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,10 +31,9 @@ public class ArchiveMenusTest {
         var pool = pool();
         write("lobby", "Blockcraft");
         write("summer", "ClayMC");
-        var config = YamlConfiguration.loadConfiguration(new StringReader("""
-                guide:
-                  suggested-visits: [summer, missing, lobby, summer]
-                """));
+        var config = YamlConfiguration.loadConfiguration(new InputStreamReader(
+                getClass().getResourceAsStream("/config.yml"), StandardCharsets.UTF_8));
+        config.set("guide.suggested-visits", List.of("summer", "missing", "lobby", "summer"));
         var menus = new ArchiveMenus(null, pool, null, null, null, ArchiveConfig.from(config));
 
         assertEquals(List.of("summer", "lobby"), menus.suggestedExhibits().stream().map(exhibit -> exhibit.key()).toList());

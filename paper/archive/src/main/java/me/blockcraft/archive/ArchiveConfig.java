@@ -1,5 +1,6 @@
 package me.blockcraft.archive;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.nio.file.Path;
@@ -14,13 +15,14 @@ public record ArchiveConfig(int maxPlayers, Path exhibits, Duration unloadAfter,
         suggestedVisits = List.copyOf(suggestedVisits);
     }
 
-    public static ArchiveConfig from(ConfigurationSection config) {
+    public static ArchiveConfig from(ConfigurationSection yaml) {
+        var config = BundledDefaults.strict(yaml);
         return new ArchiveConfig(
-                config.getInt("max-players"),
-                Path.of(config.getString("exhibits.directory", "/exhibits")),
-                Duration.ofSeconds(config.getLong("exhibits.unload-after-seconds")),
-                config.getInt("notes.max-length"),
-                config.getStringList("guide.collection-order"),
-                config.getStringList("guide.suggested-visits"));
+                config.integer("max-players"),
+                Path.of(config.text("exhibits.directory")),
+                Duration.ofSeconds(config.integer("exhibits.unload-after-seconds")),
+                config.integer("notes.max-length"),
+                config.texts("guide.collection-order"),
+                config.texts("guide.suggested-visits"));
     }
 }
