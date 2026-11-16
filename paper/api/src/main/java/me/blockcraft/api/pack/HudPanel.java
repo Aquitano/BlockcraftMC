@@ -22,7 +22,13 @@ public final class HudPanel {
         /** On the action bar, starting in the line's middle, with its top {@link #BOTTOM_RIGHT_HEIGHT} above the corner. */
         BOTTOM_RIGHT(232),
         /** On a boss bar line like the top-left, from the corner leftwards. */
-        TOP_RIGHT(233);
+        TOP_RIGHT(233),
+        /**
+         * On the action bar, starting in the line's middle, with each row counted from the top of a space
+         * {@link #BOTTOM_CENTRE_AREA} tall that ends {@link #BOTTOM_CENTRE_BOTTOM} above the screen's bottom, just over the
+         * hearts. A panel shorter than the space starts its rows lower, so it stands on that bottom.
+         */
+        BOTTOM_CENTRE(234);
 
         final int red;
 
@@ -61,6 +67,8 @@ public final class HudPanel {
      * column of ability tiles. A shorter panel starts its glyphs that much lower, so it stands on the same margin.
      */
     public static final int BOTTOM_RIGHT_HEIGHT = 108;
+    public static final int BOTTOM_CENTRE_AREA = 128;
+    public static final int BOTTOM_CENTRE_BOTTOM = 42;
     static final int FIRST_TINT = 176;
     /** The menu tiles' capitals, which the panels' fonts share, with an underscore of the panels' own. */
     private static final String CAPITALS = UiFont.LABEL_LETTERS + "_";
@@ -73,7 +81,8 @@ public final class HudPanel {
 
     /**
      * The glyphs as one line that ends where it began, so the client starts it where the panel's origin is meant to
-     * be whatever it shows. Each glyph's colour carries its row and tint; its shadow, when it has one, carries the same row.
+     * be whatever it shows, and lines of other fonts or panels can follow it on the same action bar. Each glyph's colour
+     * carries its row and tint; its shadow, when it has one, carries the same row.
      */
     public static Component render(Corner corner, Key font, List<Glyph> glyphs) {
         var line = Component.text();
