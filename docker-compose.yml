@@ -254,7 +254,7 @@ services:
       - sternenfront:/data
       - replays:/replays
 
-  # The story core with its example mission (paper/story/README.md), on the flat world, since the example brings no
+  # The story core with its example mission (paper/storyexample/README.md), on the flat world, since the example brings no
   # map. Only with `--profile story`, so a plain `docker compose up` never starts it.
   story:
     <<: *paper

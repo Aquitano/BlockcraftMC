@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
-# The game server under test: sternenfront, story for the story core's example game, or zombies.
+# The game server under test: sternenfront, story for the story core's example game, zombies or lobby.
 GAME = os.environ.get("VERIFY_GAME", "sternenfront")
 STACK = ("mariadb", "velocity", GAME, "client")
 PLAYER = "Verify"

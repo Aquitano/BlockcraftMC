@@ -82,7 +82,8 @@ docker compose up -d     # MariaDB, Velocity on 25565, the waker and every Paper
 docker compose up -d mariadb velocity lobby <game>   # or only what you need
 ```
 
-Connect to `localhost:25565`. Every Paper server takes 1G of heap or more, so prefer the subset on a small machine.
+Connect to `localhost:25565`. A Paper server takes 1G of heap, the lobby 512M, the replay server 768M and EnderGames
+1536M, so prefer the subset on a small machine.
 
 - `docker compose down` keeps the plugin data in its named volumes, and `docker compose down -v` starts over.
 - After a code change, `./gradlew stagePlugins` and `docker compose restart <server>` pick up the new jars.
@@ -105,7 +106,7 @@ docker compose up -d mariadb    # MariaDB on localhost:3306, database/user/passw
 
 - `-Pgame=zombies` runs a game server instead of the lobby, with the map from `worlds/zombies` and its own run directory
   `run/paper-zombies`. A game server stops itself after every round, which also ends the Gradle task.
-- `-Pplugins=core,lobby` limits either run task to a subset. `BlockcraftAPI` is always included.
+- `-Pplugins=core,lobby` limits the Paper run task to a subset. `BlockcraftAPI` is always included.
 - The run directories under `run/` are seeded from `dev/`. The run tasks accept the Minecraft EULA on your behalf and drop
   `ranks.json.gz` next to LuckPerms. On a fresh database, run `lp import ranks` and `lp user <name> parent set owner` in
   either console once, and `lp import ranks` again after a change to `ranks.json`.
@@ -183,7 +184,7 @@ same `BLOCKCRAFT_ADDRESS_SECRET`, which then replaces the file. Changing the sec
 ### Without containers
 
 1. Copy the jars from `build/libs` plus LuckPerms into `plugins/` of the respective server.
-2. Configure the `database` section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugin's
+2. Configure the `database` section of `plugins/BlockcraftAPI/config.yml` (Paper) and of the Velocity plugin's
    `config.yml`.
 3. Put `blockcraft.zip` next to the proxy plugin's config, with `resource-pack.url` reachable from the internet.
 4. Point LuckPerms on every server at the same database (`storage-method` and `data` in its `config.yml`).
@@ -506,11 +507,13 @@ timeouts allow entry, and only the session's first offer waits. Only the proxy h
 each backend on arrival over the `Pack` subchannel.
 
 To regenerate the assets after changing the art generators, adding an icon or model, or updating Minecraft, install
-Python 3, uv and FFmpeg and run the command below. Normal builds package the checked-in assets. Use a client jar matching
-`minecraft` in `gradle/libs.versions.toml`; the map inspector caches one in `run/map-inspector/data`.
+Python 3, uv and FFmpeg and run the command below. Normal builds package the checked-in assets.
 
 ```sh
-./gradlew :resourcepack:regenerate -PclientJar=/path/to/minecraft-client.jar
+./gradlew :resourcepack:regenerate
 ```
+
+A new `PackModel` also needs `:paper:api:packOverrides -PclientJar=<jar>`, with a client jar matching `minecraft` in
+`gradle/libs.versions.toml`; the map inspector caches one in `run/map-inspector/data`.
 
 [`resourcepack/README.md`](resourcepack/README.md) has the client's constraints and how to make a model.

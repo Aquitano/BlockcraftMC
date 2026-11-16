@@ -2,7 +2,7 @@
 
 How the proxy serves the pack is in the [root README](../README.md#resource-pack). This file is for changing what it draws.
 
-The [split pack prototype](SPLIT_PACK.md) documents the additional archives, client stack order, and rollout limits.
+The [split pack guide](SPLIT_PACK.md) documents the additional archives, client stack order, and rollout limits.
 
 The [presentation test guide](../paper/api/PRESENTATION.md) covers screen effects, gameplay accents, and the Sternenfront
 intro.
@@ -164,7 +164,7 @@ Nexo places and tracks furniture. The API's `FurnitureSolids` adds native backin
 and disabled states. Run `:resourcepack:generateObjectiveArt` to regenerate their nine native item routes under
 `sternenfront/objectives`. The split builder includes these assets only in the Star Wars archive.
 Generation validates geometry, texture references, UVs, and state differences. It writes a manifest with anchors,
-footprints, interaction dimensions, and software renders to `build/objectives`.
+footprints, interaction dimensions, and software renders to `build/previews/objectives` in the scratch workspace.
 
 The generated `nexo/items/blockcraft_starwars_objectives.yml` provides placeable versions with a one-block solid
 barrier core in every state. Raw item displays remain non-solid. Place them through Nexo or the existing furniture
@@ -173,7 +173,7 @@ layout so placement and removal also manage collision. The shield generator is o
 Star Wars block raycasts and bot line-of-sight checks include the smaller native colliders used by the building kits.
 Sternenfront can connect these props to map-owned circuits for repair, sabotage, timed console overrides, and native shield fields.
 Maps without [field-objectives.yml](../paper/sternenfront/README.md#field-objectives) retain their existing rules. The production lobby contains only its accepted ordinary scenery.
-Operator instructions are generated in `build/objectives/README.md`.
+Operator instructions are generated in `build/previews/objectives/README.md` in the scratch workspace.
 
 ## Planet building kit
 
@@ -186,7 +186,7 @@ Nexo placements receive native structural backing and coarse equipment collision
 `MilitaryKitArt.py` adds 23 shared military pieces and surface variants. `KitActors.py` adds six static actors and
 six BetterModel rigs. Their Gradle tasks are `generateMilitaryKitArt` and `generateKitActors`; both belong to
 `regenerate`. The [shared kit guide](art/shared-kit/README.md) covers the sliding door and collision cores.
-The [actor guide](art/kit_actors/README.md) covers bone routes, clips and passive exhibition configuration.
+The [actor guide](art/kit_actors/README.md) covers bone routes, clips and static or animated placement.
 All three kits belong to the Star Wars pack. The ordinary lobby does not load that pack.
 Production profile delivery must be enabled separately; packaging does not activate it.
 
@@ -195,8 +195,8 @@ Production profile delivery must be enabled separately; packaging does not activ
 `YardArt.java` authors nine original props with separate 64-pixel atlases in
 `models/item/sternenfront/yard/` and `textures/item/sternenfront/yard/`. The props use ivory enamel, blue-gray steel,
 charcoal recesses, teal instruments, amber indicators and weathered copper. They reference no vanilla textures.
-`:resourcepack:generateYardArt` regenerates only these assets and `resourcepack/build/yard/contact-sheet.png`.
-The contact sheet uses the generated geometry and face UVs with ordinary directional shading.
+`:resourcepack:generateYardArt` regenerates only these assets and a contact sheet at `build/previews/yard.png` in the
+scratch workspace. The contact sheet uses the generated geometry and face UVs with ordinary directional shading.
 
 The `PackModel` paths are `sternenfront/yard/console`, `power_coupler`, `engine_cradle`, `cargo_stack`, `repair_droid`,
 `wall_panel`, `clone_tank`, `embryo_rack` and `gene_archive`, all under `sternenfront/yard/`.
