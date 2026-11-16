@@ -26,24 +26,24 @@ const int BLOCKCRAFT_PANEL_TINT_COUNT = 8;
 const vec3 BLOCKCRAFT_PANEL_TINTS[BLOCKCRAFT_PANEL_TINT_COUNT] = vec3[](
     vec3(1.0),                          // WHITE
     vec3(0.6),                          // DIMMED
-    vec3(85.0, 255.0, 255.0) / 255.0,   // REPUBLIC, aqua
-    vec3(255.0, 85.0, 85.0) / 255.0,    // SEPARATISTS, red
-    vec3(255.0, 170.0, 0.0) / 255.0,    // SQUAD, gold: the player's fireteam
+    vec3(85.0, 255.0, 255.0) / 255.0,   // AQUA
+    vec3(255.0, 85.0, 85.0) / 255.0,    // RED
+    vec3(255.0, 170.0, 0.0) / 255.0,    // GOLD
     vec3(0.12),                         // SHADOW
-    vec3(255.0, 255.0, 85.0) / 255.0,   // ACCENT, yellow: where to go
+    vec3(255.0, 255.0, 85.0) / 255.0,   // YELLOW
     vec3(1.0)                           // LABEL, white: an ability's name, which a narrow GUI leaves out
 );
 const int BLOCKCRAFT_SHADOW_TINT = 5;
 const int BLOCKCRAFT_LABEL_TINT = 7;
 
-// Each panel's corner, from the screen's corner of the same name. The bottom-right panel hangs from the top of a full
-// column of ability tiles, AbilityPanel.HEIGHT pixels tall.
+// Each panel's corner, from the screen's corner of the same name. The bottom-right panel hangs from
+// HudPanel.BOTTOM_RIGHT_HEIGHT pixels above its margin, the top of a full column of Sternenfront's ability tiles.
 const vec2 BLOCKCRAFT_TOP_LEFT_CORNER = vec2(4.0, 4.0);
 const vec2 BLOCKCRAFT_TOP_RIGHT_CORNER = vec2(-4.0, 4.0);
-const float BLOCKCRAFT_ABILITY_COLUMN = 108.0;
+const float BLOCKCRAFT_BOTTOM_RIGHT_HEIGHT = 108.0;
 const float BLOCKCRAFT_BOTTOM_RIGHT_MARGIN = 3.0;
 const vec2 BLOCKCRAFT_BOTTOM_RIGHT_CORNER = vec2(-BLOCKCRAFT_BOTTOM_RIGHT_MARGIN,
-        -BLOCKCRAFT_BOTTOM_RIGHT_MARGIN - BLOCKCRAFT_ABILITY_COLUMN);
+        -BLOCKCRAFT_BOTTOM_RIGHT_MARGIN - BLOCKCRAFT_BOTTOM_RIGHT_HEIGHT);
 
 // The bottom-centre panel's rows count from the top of a space BLOCKCRAFT_CENTRE_AREA pixels tall whose bottom lies
 // just above the hearts and food, which the client draws over the action bar, so the server grows a panel upwards by

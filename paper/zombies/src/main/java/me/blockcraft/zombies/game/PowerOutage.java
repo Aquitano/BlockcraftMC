@@ -1,6 +1,5 @@
 package me.blockcraft.zombies.game;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.config.ZombiesConfig;
@@ -67,8 +66,7 @@ final class PowerOutage implements WaveEvent {
         }
         var player = holder.get();
         if (progress < config.fixTicks()) {
-            BlockcraftApi.get().notifications().status(player, game.messages().get("event.power_outage.fixing",
-                    Formatter.number("progress", 100 * progress / config.fixTicks())));
+            game.status(player, game.messages().get("event.power_outage.fixing", Formatter.number("progress", 100 * progress / config.fixTicks())));
             return true;
         }
         fixed = true;

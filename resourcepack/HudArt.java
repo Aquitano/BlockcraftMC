@@ -14,6 +14,7 @@ import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -256,6 +257,7 @@ public final class HudArt {
         var letters = labelLetters(root.getParent().getParent().resolve("font"));
         minimap(root, letters);
         abilities(root, args.length > 1 ? Path.of(args[1]) : null, letters);
+        zombiesWeapon(root, letters);
         var misc = root.getParent().resolve("misc");
         Files.createDirectories(misc);
         ImageIO.write(scope(), "PNG", misc.resolve("long_rifle_scope.png").toFile());
@@ -869,7 +871,7 @@ public final class HudArt {
         ImageIO.write(keyBadges(), "PNG", root.resolve("ability_keys.png").toFile());
         ImageIO.write(cooldownDigits(), "PNG", root.resolve("ability_digits.png").toFile());
         var labels = ImageIO.read(root.resolve("labels.png").toFile());
-        ImageIO.write(countDigits(mapLetters(labels, letters), letters), "PNG", root.resolve("ability_count.png").toFile());
+        ImageIO.write(countDigits(mapLetters(labels, letters), letters, DIGIT_LETTERS), "PNG", root.resolve("ability_count.png").toFile());
         ImageIO.write(nameLetters(labels, letters), "PNG", root.resolve("ability_letters.png").toFile());
         Files.writeString(root.getParent().getParent().resolve("font/abilities.json"), String.join(",\n    ",
                 "{\n  \"providers\": [\n    {\"type\":\"space\",\"advances\":{\" \":4}}",
@@ -888,6 +890,115 @@ public final class HudArt {
         }
     }
 
+    /**
+     * Zombies' weapon panel in the modes pack's {@code blockcraft:zombies/weapon} font: a backing and a frame the shader
+     * tints, each gun's side drawn from its pack model at twice the resolution, the clip in the cooldown's digits, the
+     * reserve in the stored uses' digits after a slash, and the magazine bar's track and fills. Every glyph hangs from
+     * the line's top, and Zombies' {@code WeaponPanel} counts the widths written here.
+     */
+    private static void zombiesWeapon(Path root, String letters) throws Exception {
+        var zombies = root.resolve("zombies");
+        Files.createDirectories(zombies);
+        var panel = new BufferedImage(2 * WEAPON_PANEL_WIDTH, WEAPON_PANEL_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        panel.createGraphics().drawImage(backing(WEAPON_PANEL_WIDTH, WEAPON_PANEL_HEIGHT), 0, 0, null);
+        panel.createGraphics().drawImage(frame(WEAPON_PANEL_WIDTH, WEAPON_PANEL_HEIGHT), WEAPON_PANEL_WIDTH, 0, null);
+        padAdvance(panel, 2 * WEAPON_PANEL_WIDTH - 1, 0, WEAPON_PANEL_HEIGHT);
+        ImageIO.write(panel, "PNG", zombies.resolve("weapon_panel.png").toFile());
+        var providers = new ArrayList<String>();
+        providers.add(topAligned("zombies/weapon_panel.png", WEAPON_PANEL_HEIGHT, run(0xE000, 2)));
+        var models = root.getParent().getParent().resolve("models/item/zombies");
+        for (int gun = 0; gun < ZOMBIES_GUNS.size(); gun++) {
+            var file = "gun_" + ZOMBIES_GUNS.get(gun) + ".png";
+            ImageIO.write(gunSide(Files.readString(models.resolve(ZOMBIES_GUNS.get(gun) + ".json"))), "PNG", zombies.resolve(file).toFile());
+            providers.add(topAligned("zombies/" + file, GUN_HEIGHT, run(0xE010 + gun, 1)));
+        }
+        ImageIO.write(cooldownDigits(), "PNG", zombies.resolve("weapon_digits.png").toFile());
+        providers.add(topAligned("zombies/weapon_digits.png", DIGIT, run(0xE020, DIGITS.length)));
+        var labels = mapLetters(ImageIO.read(root.resolve("labels.png").toFile()), letters);
+        ImageIO.write(countDigits(labels, letters, DIGIT_LETTERS + "/"), "PNG", zombies.resolve("weapon_count.png").toFile());
+        providers.add(topAligned("zombies/weapon_count.png", COUNT_HEIGHT, run(0xE030, DIGIT_LETTERS.length() + 1)));
+        ImageIO.write(magazineBar(), "PNG", zombies.resolve("weapon_bar.png").toFile());
+        providers.add(topAligned("zombies/weapon_bar.png", BAR_CELL_HEIGHT, run(0xE040, BAR_LEVELS + 1)));
+        var font = root.getParent().getParent().resolve("font/zombies/weapon.json");
+        Files.createDirectories(font.getParent());
+        Files.writeString(font, "{\n  \"providers\": [\n    " + String.join(",\n    ", providers) + "\n  ]\n}\n");
+    }
+
+    private static final int WEAPON_PANEL_WIDTH = 64;
+    private static final int WEAPON_PANEL_HEIGHT = 30;
+    /** In the order of Zombies' {@code Weapon}, each named as its pack model. */
+    private static final List<String> ZOMBIES_GUNS = List.of("pistol", "rifle", "shotgun", "sniper", "flamethrower");
+    private static final int GUN_WIDTH = 32;
+    private static final int GUN_HEIGHT = 12;
+    /** The model's height, from its lowest grip to its highest sight, drawn centred in the icon. */
+    private static final double GUN_BOTTOM = 2, GUN_TOP = 11;
+    /**
+     * The vanilla blocks the guns' models are textured with, as a flat colour, a lit top and a shaded bottom. A dark
+     * block is lifted so the part still reads on the panel's dark glass.
+     */
+    private static final Map<String, int[]> GUN_MATERIALS = Map.of(
+            "metal", new int[] {0xFFC9CED6, 0xFFEEF1F5, 0xFF8C939E},
+            "dark", new int[] {0xFF5D636E, 0xFF808894, 0xFF3E434C},
+            "grip", new int[] {0xFF8A6239, 0xFFA87C4D, 0xFF5E4026},
+            "copper", new int[] {0xFFC8734F, 0xFFE3946E, 0xFF8E4A31});
+    private static final Pattern ELEMENT = Pattern.compile(
+            "\"from\":\\s*\\[([^\\]]*)]\\s*,\\s*\"to\":\\s*\\[([^\\]]*)]\\s*,\\s*\"faces\":\\s*\\{\\s*\"\\w+\":\\s*\\{\\s*\"texture\":\\s*\"#(\\w+)\"");
+
+    /**
+     * The gun from the side, muzzle to the right: each cuboid of the model filled in its material, one texel per half
+     * unit, centred in the icon along the barrel.
+     */
+    private static BufferedImage gunSide(String model) {
+        record Part(double[] from, double[] to, int[] colours) { }
+        var parts = new ArrayList<Part>();
+        var elements = ELEMENT.matcher(model);
+        while (elements.find()) {
+            parts.add(new Part(coordinates(elements.group(1)), coordinates(elements.group(2)), GUN_MATERIALS.get(elements.group(3))));
+        }
+        if (parts.isEmpty() || parts.size() != model.split("\"from\"", -1).length - 1) {
+            throw new IllegalStateException("A gun model's elements no longer read as cuboids of one material each");
+        }
+        double back = parts.stream().mapToDouble(part -> part.from()[2]).min().orElseThrow();
+        double front = parts.stream().mapToDouble(part -> part.to()[2]).max().orElseThrow();
+        int left = (int) Math.round(GUN_WIDTH - (front - back));
+        int top = (int) Math.round(GUN_HEIGHT - (GUN_TOP - GUN_BOTTOM));
+        var image = new BufferedImage(2 * GUN_WIDTH, 2 * GUN_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        for (var part : parts) {
+            int x0 = left + (int) Math.round(2 * (part.from()[2] - back)), x1 = left + (int) Math.round(2 * (part.to()[2] - back));
+            int y0 = top + (int) Math.round(2 * (GUN_TOP - part.to()[1])), y1 = top + (int) Math.round(2 * (GUN_TOP - part.from()[1]));
+            for (int y = y0; y < y1; y++) {
+                for (int x = x0; x < x1; x++) {
+                    image.setRGB(x, y, part.colours()[y == y0 ? 1 : y == y1 - 1 ? 2 : 0]);
+                }
+            }
+        }
+        padAdvance(image, image.getWidth() - 1, 0, image.getHeight());
+        return image;
+    }
+
+    private static double[] coordinates(String list) {
+        return Arrays.stream(list.split(",")).mapToDouble(value -> Double.parseDouble(value.strip())).toArray();
+    }
+
+    private static final int BAR_WIDTH = 56;
+    private static final int BAR_LEVELS = BAR_WIDTH / 2;
+    /** A glyph is at least as tall as its ascent, so the bar's three rows lie at the foot of a seven-row cell. */
+    private static final int BAR_CELL_HEIGHT = 7;
+    private static final int BAR_TOP = BAR_CELL_HEIGHT - 3;
+
+    /** The bar's dark track, then its fill at every level of two pixels, white so the shader's tint colours it. */
+    private static BufferedImage magazineBar() {
+        var image = new BufferedImage(BAR_WIDTH * (BAR_LEVELS + 1), BAR_CELL_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        fill(image, 0, BAR_TOP, BAR_WIDTH, 3, 0xE02B3545);
+        for (int level = 1; level <= BAR_LEVELS; level++) {
+            int left = level * BAR_WIDTH;
+            fill(image, left, BAR_TOP, 2 * level, 2, 0xFFFFFFFF);
+            fill(image, left, BAR_TOP + 2, 2 * level, 1, 0xFFB4B4B4);
+            padAdvance(image, left + BAR_WIDTH - 1, 0, BAR_CELL_HEIGHT);
+        }
+        return image;
+    }
+
     private static final int TILE = 24;
     private static final int ICON = 16;
     private static final int BADGE = 9;
@@ -898,26 +1009,38 @@ public final class HudArt {
     /** One fill per GUI pixel of the tile's inside, which the frame's pixel borders on every side. */
     private static final int FILL_LEVELS = TILE - 2;
 
-    /** Dark glass with its corners cut, its top row a shade lighter. */
     private static BufferedImage tileBacking() {
-        var image = new BufferedImage(TILE, TILE, BufferedImage.TYPE_INT_ARGB);
-        fill(image, 0, 0, TILE, TILE, 0xDB141B28);
-        fill(image, 1, 1, TILE - 2, 1, 0xDB222D41);
-        cutCorners(image, 0, 0, TILE, TILE);
-        padAdvance(image, TILE - 1, 0, TILE);
+        return backing(TILE, TILE);
+    }
+
+    private static BufferedImage tileFrame() {
+        return frame(TILE, TILE);
+    }
+
+    /** Dark glass with its corners cut, its top row a shade lighter. */
+    private static BufferedImage backing(int width, int height) {
+        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        fill(image, 0, 0, width, height, 0xDB141B28);
+        fill(image, 1, 1, width - 2, 1, 0xDB222D41);
+        cutCorners(image, 0, 0, width, height);
+        padAdvance(image, width - 1, 0, height);
         return image;
     }
 
     /** A ring a GUI pixel wide in white, so the shader's tint colours it, with brighter brackets round its cut corners. */
-    private static BufferedImage tileFrame() {
-        var image = new BufferedImage(TILE, TILE, BufferedImage.TYPE_INT_ARGB);
-        for (int edge = 0; edge < TILE; edge++) {
-            int alpha = edge < BRACKET || edge >= TILE - BRACKET ? 0xFF000000 : 0xC7000000;
-            for (int[] at : new int[][] {{edge, 0}, {edge, TILE - 1}, {0, edge}, {TILE - 1, edge}}) {
-                image.setRGB(at[0], at[1], alpha | 0xFFFFFF);
-            }
+    private static BufferedImage frame(int width, int height) {
+        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        for (int x = 0; x < width; x++) {
+            int alpha = x < BRACKET || x >= width - BRACKET ? 0xFF000000 : 0xC7000000;
+            image.setRGB(x, 0, alpha | 0xFFFFFF);
+            image.setRGB(x, height - 1, alpha | 0xFFFFFF);
         }
-        cutCorners(image, 0, 0, TILE, TILE);
+        for (int y = 0; y < height; y++) {
+            int alpha = y < BRACKET || y >= height - BRACKET ? 0xFF000000 : 0xC7000000;
+            image.setRGB(0, y, alpha | 0xFFFFFF);
+            image.setRGB(width - 1, y, alpha | 0xFFFFFF);
+        }
+        cutCorners(image, 0, 0, width, height);
         return image;
     }
 
@@ -1035,15 +1158,17 @@ public final class HudArt {
             {".####.", "##..##", "##..##", "##..##", ".####.", "##..##", "##..##", "##..##", ".####."},
             {".####.", "##..##", "##..##", "##..##", ".#####", "....##", "....##", "...##.", ".###.."}};
 
+    private static final String DIGIT_LETTERS = "0123456789";
+
     /**
-     * The uses an ability has stored, for a tile's corner as the hotbar counts a stack: the label digits from
-     * {@code letterSheet} at twice the resolution, white and ringed dark so they read over any icon.
+     * The uses an ability has stored, for a tile's corner as the hotbar counts a stack: the label letters {@code glyphs}
+     * from {@code letterSheet} at twice the resolution, white and ringed dark so they read over any icon.
      */
-    private static BufferedImage countDigits(BufferedImage letterSheet, String letters) {
+    private static BufferedImage countDigits(BufferedImage letterSheet, String letters, String glyphs) {
         int cell = 2 * COUNT_WIDTH;
-        var image = new BufferedImage(cell * 10, 2 * COUNT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-        for (int digit = 0; digit < 10; digit++) {
-            int left = 3 * letters.indexOf((char) ('0' + digit));
+        var image = new BufferedImage(cell * glyphs.length(), 2 * COUNT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        for (int digit = 0; digit < glyphs.length(); digit++) {
+            int left = 3 * letters.indexOf(glyphs.charAt(digit));
             for (int y = -1; y <= 5; y++) {
                 for (int x = -1; x <= 3; x++) {
                     boolean ink = countInk(letterSheet, left, x, y);

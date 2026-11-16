@@ -1,8 +1,9 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.HudPanel;
+import me.blockcraft.api.pack.HudPanel.Corner;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.sternenfront.PackFonts;
-import me.blockcraft.sternenfront.game.HudPanel.Corner;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import me.blockcraft.sternenfront.game.KillFeed.Kind;
 import me.blockcraft.sternenfront.game.KillFeed.Named;
 import net.kyori.adventure.key.Key;
@@ -23,7 +24,7 @@ public class KillFeedTest {
     public void theNewestLineIsOnTopAndALineGreysOutBeforeItGoes() {
         var feed = new KillFeed(100);
         for (int kill = 0; kill < 5; kill++) {
-            feed.add(ann, Kind.KILL, Optional.of(new Named("CT-" + kill, Tint.REPUBLIC)), kill * 10);
+            feed.add(ann, Kind.KILL, Optional.of(new Named("CT-" + kill, Tint.AQUA)), kill * 10);
         }
         var live = feed.live(ann, 40);
         assertEquals(KillFeed.ROWS, live.size());
@@ -40,7 +41,7 @@ public class KillFeedTest {
     @Test
     public void everyLineEndsAtTheCornerAndThePanelTakesNoRoom() throws IOException {
         var feed = new KillFeed(100);
-        var enemy = Optional.of(new Named("Ein_sehr_langer_Name", Tint.SEPARATISTS));
+        var enemy = Optional.of(new Named("Ein_sehr_langer_Name", Tint.RED));
         feed.add(ann, Kind.DEATH, Optional.empty(), 0);
         feed.add(ann, Kind.DEATH, enemy, 0);
         feed.add(ann, Kind.ASSIST, enemy, 0);

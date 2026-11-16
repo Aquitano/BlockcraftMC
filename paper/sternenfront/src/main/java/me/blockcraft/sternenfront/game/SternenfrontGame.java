@@ -25,6 +25,7 @@ import me.blockcraft.api.game.VoteMenu;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.HudPanel;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.scene.Scenes;
@@ -318,7 +319,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (faction.isEmpty()) {
             return Optional.empty();
         }
-        var tint = HudPanel.Tint.of(faction.get());
+        var tint = HudPanel.Tint.of(faction.get().text());
         return fighter instanceof Player player ? Optional.of(new KillFeed.Named(player.getName(), tint))
                 : bots.squadmate(fighter).map(mate -> new KillFeed.Named(minimap.botName(faction.get(), mate), tint));
     }
@@ -1083,7 +1084,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     public void botDied(LivingEntity victim, Faction faction, Bots.Squadmate bot, Optional<Player> killer, int points) {
-        var named = new KillFeed.Named(minimap.botName(faction, bot), HudPanel.Tint.of(faction));
+        var named = new KillFeed.Named(minimap.botName(faction, bot), HudPanel.Tint.of(faction.text()));
         support.killed(victim, named, killer, points);
         reinforcements.lose(faction, 1);
         killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {

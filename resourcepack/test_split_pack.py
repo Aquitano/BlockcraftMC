@@ -35,10 +35,13 @@ class SplitPackTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'requires missing'):
             verify(self.files, packs)
 
-    def test_global_hud_is_starwars_only(self):
+    def test_every_stack_draws_corner_panels(self):
         shader = 'assets/minecraft/shaders/core/text.vsh'
-        self.assertNotIn(b'blockcraft_panel_', self.packs['base'][shader])
-        self.assertIn(b'blockcraft_panel_', self.packs['starwars'][shader])
+        self.assertEqual(self.packs['base'][shader], self.files[shader])
+        self.assertIn('assets/blockcraft/shaders/include/hud_panel.glsl', self.packs['base'])
+        self.assertNotIn(shader, self.packs['starwars'])
+
+    def test_boss_bar_blanks_and_rigs_are_starwars_only(self):
         for path in self.files:
             if '/boss_bar/' in path or '/bettermodel/' in path:
                 self.assertIn(path, self.packs['starwars'])
@@ -48,6 +51,7 @@ class SplitPackTest(unittest.TestCase):
         for kind in ('models/item', 'items', 'textures/item'):
             self.assertEqual(owner(f'assets/blockcraft/{kind}/sternenfront/objectives/comms_console.json'), 'starwars')
             self.assertEqual(owner(f'assets/blockcraft/{kind}/props/imported/halloween/new_prop.json'), 'lobby')
+        self.assertEqual(owner('assets/blockcraft/font/zombies/weapon.json'), 'modes')
 
     def test_lobby_and_starwars_selectors_keep_only_their_own_cases(self):
         item = 'assets/minecraft/items/paper.json'

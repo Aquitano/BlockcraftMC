@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Binding;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Charges;
@@ -8,7 +9,7 @@ import me.blockcraft.sternenfront.combat.AbilityPanel.Slot;
 import me.blockcraft.sternenfront.combat.AbilityPanel.State;
 import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.CombatFeedback;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
+import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
@@ -65,7 +66,7 @@ public final class CombatHud {
         int width = UiFont.width(hud(Component.empty(), Component.empty(), Component.empty()))
                 + METER_ICON_ADVANCE + METER_ADVANCE + Math.max(STATE_WIDTH, UiFont.width(state));
         var abilities = BlockcraftApi.get().resourcePack().applied(player)
-                ? AbilityPanel.render(slots(player, blade), game.factionOf(player).map(Tint::of).orElse(Tint.WHITE)) : Component.empty();
+                ? AbilityPanel.render(slots(player, blade), game.factionOf(player).map(Faction::text).map(Tint::of).orElse(Tint.WHITE)) : Component.empty();
         game.feedback().show(player, new CombatFeedback.ActionBar(meter, width, abilities));
     }
 

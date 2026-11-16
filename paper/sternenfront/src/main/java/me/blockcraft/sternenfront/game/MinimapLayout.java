@@ -1,8 +1,9 @@
 package me.blockcraft.sternenfront.game;
 
-import me.blockcraft.sternenfront.game.HudPanel.Corner;
-import me.blockcraft.sternenfront.game.HudPanel.Glyph;
-import me.blockcraft.sternenfront.game.HudPanel.Tint;
+import me.blockcraft.api.pack.HudPanel;
+import me.blockcraft.api.pack.HudPanel.Corner;
+import me.blockcraft.api.pack.HudPanel.Glyph;
+import me.blockcraft.api.pack.HudPanel.Tint;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 
@@ -107,7 +108,7 @@ final class MinimapLayout {
 
     /** Corners round the badge of the post the player should make for. */
     static Glyph target(Pixel badge) {
-        return new Glyph(String.valueOf(TARGET), badge.x() - TARGET_HALF, badge.y() - TARGET_HALF, Tint.ACCENT, true, TARGET_ADVANCE);
+        return new Glyph(String.valueOf(TARGET), badge.x() - TARGET_HALF, badge.y() - TARGET_HALF, Tint.YELLOW, true, TARGET_ADVANCE);
     }
 
     static Glyph mark(Mark mark, Pixel at, Tint tint) {
