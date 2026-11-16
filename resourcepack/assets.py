@@ -35,6 +35,7 @@ FAMILIES = {
     'gallery': Family('SternenfrontGallery.py', ('battle', 'rigs')),
     'ui': Family('PackArt.java', ('bodies',), ('src',)),
     'hud': Family('HudArt.java', arguments=('src', 'build/previews/hud.png')),
+    'stations': Family('StationArt.java', ('hud',), ('src',)),
     'yard': Family('YardArt.java', arguments=('src', 'build/previews/yard.png')),
     'dialogue': Family('DialogueArt.java', arguments=('src', '../paper/api/src/main/resources/dialogue-glyphs.properties')),
     'story': Family('StoryArt.java', arguments=('src',)),

@@ -15,6 +15,13 @@ line's middle beside it, and a downed player sees only the bleed-out countdown. 
 hides the panel until the notice ends. Without the pack the action bar names the gun, its ammunition and the gold as
 before; with it the gold stays in the sidebar.
 
+With the pack, each station opens a screen of its own instead of a chest of items: up to four offers as cards with
+the offer's picture, its name, a line on what it does and a band with its price and whether it can be bought, is
+already owned, wants power or is at its maximum; the header shows the station and the player's gold. The armory's gun
+cards show damage and clip, and the swap screen puts the offered gun above the two carried ones, an arrow leading to
+each. A card's words are in `messages.yml` under `shop.card`, `shop.state` and `perk.card`, short enough for two lines
+of sixteen capitals. Without the pack, or at a station with more than four offers, the chest stays.
+
 ## Run it
 
 From the repository root, build the plugins and start the local services:

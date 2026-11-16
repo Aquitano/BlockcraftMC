@@ -265,6 +265,10 @@ Zombies' weapon panel uses the same corner with `HudArt`'s `blockcraft:zombies/w
 carries. It stands on the corner's margin below the column's top, and `WeaponPanelTest` checks its glyphs against the
 font. `HudArt` draws each gun's icon from its pack model in flat colours of the vanilla blocks the model uses, so a
 changed gun model needs `assets.py generate hud`.
+Zombies' station screens come from `StationArt`, family `stations`: a whole chest screen per layout in riveted olive
+iron with sunk cards and a hazard-striped rail for the exit, and a line font for each height a card writes at. The cards'
+guns are the weapon panel's side views at full size. Zombies' `StationScreen` lays the cards out from the same numbers,
+which `StationScreenTest` compares, along with every glyph's width.
 
 Sternenfront target outlines reserve scoreboard colors `DARK_AQUA` and `DARK_RED`. Its server sends those colors only
 to combat viewers with the pack applied. The outline shader stores logarithmic reversed-Z depth in the RGB bytes and

@@ -84,6 +84,8 @@ weapon:
   shotgun: "Schrotflinte"
   sniper: "Scharfschützengewehr"
   flamethrower: "Flammenwerfer"
+  card:
+    sniper: "Scharfschützen-Gewehr"
   knife: "<primary>Messer"
   knife-lore: "<muted>Für den Nahkampf, wenn die Munition knapp wird."
   name: "<zombies><weapon>"
@@ -150,6 +152,11 @@ perk:
     quick_reload: "<muted>Halbiert die Nachladezeit deiner Waffen."
     quick_revive: "<muted>Rettet Mitspieler doppelt so schnell oder dich selbst einmal im Solo-Spiel."
     frozen_bullets: "<muted>Deine Treffer verlangsamen Gegner."
+  card:
+    extra_health: "+<hearts> Herzen"
+    quick_reload: "Halbe Ladezeit"
+    quick_revive: "Schneller retten"
+    frozen_bullets: "Treffer bremsen"
 shop:
   title: "<arrow><zombies>Zombies <dark>· <muted><station>"
   price: "<muted>Preis <dark>· <accent><price> Gold"
@@ -165,6 +172,7 @@ shop:
     - "<muted>Du trägst höchstens zwei Waffen."
     - "<muted>Bei einer dritten wählst du, welche sie ersetzt."
   replace-title: "<arrow><zombies>Zombies <dark>· <muted>Waffe ersetzen"
+  replace-heading: "Waffe ersetzen"
   replace-body: "<muted>Du trägst schon zwei Waffen. Welche soll <zombies><weapon> <muted>ersetzen?"
   replace-choice: "<click>Durch <zombies><weapon> <muted>ersetzen"
   weapon-stats: "<muted>Schaden pro Schuss <primary><damage> <dark>· <muted>Magazin <primary><clip>"
@@ -178,6 +186,43 @@ shop:
   not-enough: "<error>Du hast nicht genug Gold."
   bought: "<success>Gekauft <dark>· <accent><gold> Gold übrig"
   mystery-take: "<muted>Nimm die Waffe innerhalb von <accent><seconds>s <muted>aus der Kiste."
+  # The station screens' cards write in capitals of their own, so these stay short: a name of up to two lines of
+  # sixteen letters and a line of what the offer does in what room the name leaves.
+  card:
+    ammo:
+      name: "Munition"
+      line: "Gehaltene Waffe auffüllen"
+    armor:
+      name: "Rüstung Stufe <tier>"
+      line: "Weniger Schaden"
+    power:
+      name: "Strom"
+      line: "Schaltet Stationen frei"
+    upgrade:
+      name: "Waffe verbessern"
+      line: "Gehaltene Waffe stärker"
+    mystery:
+      name: "Zufallskiste"
+      line: "Zufällige Waffe ziehen"
+    team-revive:
+      name: "Team-Rettung"
+      line: "Rettet alle Gefallenen"
+  state:
+    buy: "Kaufen"
+    expensive: "Zu teuer"
+    power: "Strom aus"
+    owned: "Im Besitz"
+    active: "Aktiv"
+    full: "Voll"
+    no-gun: "Keine Waffe"
+    upgraded: "Verbessert"
+    maxed: "Maximum"
+    busy: "Belegt"
+    none-left: "Keine Waffe frei"
+    on: "Eingeschaltet"
+    nobody-down: "Niemand gefallen"
+    new: "Neue Waffe"
+    replace: "Ersetzen"
 mystery:
   result: "<prefix><muted>Die Kiste zeigt <zombies><weapon><muted>! Klicke sie innerhalb von <accent><seconds>s <muted>an, um sie zu nehmen."
   gone: "<prefix><muted>Die Kiste hat <zombies><weapon> <muted>wieder verschluckt."
