@@ -19,7 +19,7 @@ import java.time.Duration;
  */
 public record Reports(ReportCommand command, ReportService service) {
 
-    public static Reports load(Object plugin, ProxyServer proxy, Logger logger, Path systemDirectory,
+    public static Reports load(ProxyServer proxy, Logger logger, Path systemDirectory,
                                Database database, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
                                PlayerSettingRepository settings) {
         Path directory = systemDirectory.resolve("reports");
@@ -31,8 +31,7 @@ public record Reports(ReportCommand command, ReportService service) {
         String permission = String.valueOf(config.getOrDefault("staff-permission", "blockcraft.report.notify"));
         var cooldown = Duration.ofSeconds(Math.max(0, ((Number) config.getOrDefault("report-cooldown-seconds", 10)).longValue()));
         var service = new ReportService(proxy, logger, repository, preferences, messages, permission, cooldown, lookup, visibility);
-        return new Reports(new ReportCommand(plugin, proxy, preferences, messages,
-                permission, service, visibility), service);
+        return new Reports(new ReportCommand(preferences, messages, permission, visibility), service);
     }
 
 }

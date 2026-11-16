@@ -23,7 +23,7 @@ anticheat:
   history-max-entries: 10000
   history-pending-capacity: 256
 
-# What a player can pick in the /report dialog; the choice is stored as the report's reason, free text appended.
+# The reasons /report offers as chat buttons or accepts typed after the name; typed details follow the reason.
 report:
   reasons:
     - Hacking

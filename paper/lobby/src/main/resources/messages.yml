@@ -87,14 +87,13 @@ friends:
   empty: "<arrow><muted>Noch keine Freunde"
   note: "<arrow><primary>Freunde hinzufügen"
   note-lore:
-    - "<bullet><click>Spielernamen eingeben"
+    - "<bullet><click>Im Chat hinzufügen"
   list-tab: "<primary>Freunde <muted>· <count>"
   requests-tab: "<accent>Anfragen <muted>· <count>"
   forbidden: "<error>Du darfst das Freunde-Menü nicht verwenden."
   no-requests: "<muted>Keine offenen Anfragen"
-  player-name: "<primary>Spielername"
-  send: "<success>Anfrage senden"
-  invalid-name: "<prefix><error>Bitte gib einen gültigen Spielernamen ein."
+  add-hint: "<prefix><muted>Freund hinzufügen: <accent>/friend add [Name]"
+  add-hover: "<muted>Klicke, um den Befehl in den Chat zu schreiben"
 
 premium:
   required:

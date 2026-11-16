@@ -15,6 +15,7 @@ import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
+import me.blockcraft.system.RequestButtons;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.network.OnDemandServers;
@@ -222,10 +223,9 @@ public final class DuelChallenges {
                 Placeholder.component("combat", messages.get(rules.legacy() ? "duel.legacy" : "duel.modern")),
                 Placeholder.component("rating", messages.get(rules.rated() ? "duel.rated" : "duel.unrated")),
                 Formatter.number("games", rules.bestOf()), Formatter.number("seconds", settings.inviteSeconds())));
-        challenge.target.sendMessage(messages.get("duel.accept").clickEvent(ClickEvent.runCommand("/duel accept " + challenge.ticket))
-                .hoverEvent(messages.get("duel.accept-hover"))
-                .append(messages.get("duel.decline").clickEvent(ClickEvent.runCommand("/duel decline " + challenge.ticket))
-                        .hoverEvent(messages.get("duel.decline-hover"))));
+        challenge.target.sendMessage(RequestButtons.line(messages, "duel.buttons",
+                new RequestButtons.Answer("/duel accept " + challenge.ticket, messages.get("duel.accept-hover")),
+                new RequestButtons.Answer("/duel decline " + challenge.ticket, messages.get("duel.decline-hover"))));
         sender.sendMessage(messages.get("duel.sent").clickEvent(ClickEvent.runCommand("/duel cancel " + challenge.ticket))
                 .hoverEvent(messages.get("duel.cancel-hover")));
     }
