@@ -1,6 +1,7 @@
 package me.blockcraft.system;
 
 import me.blockcraft.common.calendar.NetworkCalendar;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.elo.EloFormula;
@@ -129,7 +130,7 @@ public final class SystemConfig {
 
     private SystemConfig(Path file, Map<String, Object> root, NetworkConfig shared, Map<String, String> environment) {
         this.file = file;
-        this.database = DatabaseConfig.fromYaml(YamlFile.section(root, "database"));
+        this.database = DatabaseConfig.fromYaml(StrictConfig.of("BlockcraftSystem config.yml", root).section("database"));
         this.network = new Network(address(shared, "ip"), address(shared, "website"), address(shared, "shop"),
                 address(shared, "teamspeak"), address(shared, "discord"));
         this.networkTags = shared.tags();

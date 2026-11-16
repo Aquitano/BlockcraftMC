@@ -6,7 +6,6 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.world.WorldProtection;
-import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.StatsCommand;
 import me.blockcraft.api.game.StatsRepository;
@@ -41,7 +40,7 @@ public final class KnockbackFfaPlugin extends JavaPlugin {
         });
         game.start();
         Bukkit.getOnlinePlayers().forEach(game::join);
-        ServerRestart.whenIdle(this, GameConfig.from(getConfig()));
+        ServerRestart.whenIdle(this, BundledDefaults.strict(getConfig()).integer("idle-restart-minutes"));
     }
 
     @Override

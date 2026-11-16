@@ -2,6 +2,8 @@ package me.blockcraft.api.notification;
 
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.common.config.StrictConfig;
+import me.blockcraft.common.config.YamlFile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -18,7 +20,6 @@ import java.lang.reflect.Proxy;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,6 +28,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class NotificationsTest {
+
+    private static final Notifications.Timing TIMING = Notifications.Timing.from(StrictConfig.of("config.yml",
+            YamlFile.load(NotificationsTest.class.getResourceAsStream("/config.yml"))).section("notifications"));
 
     @Test
     public void hitAndKillMarkersAppearImmediatelyAndRestoreAnObjectiveSubtitleForTheTimeItHasLeft() throws Exception {
@@ -62,7 +66,7 @@ public class NotificationsTest {
         var previous = serverField.get(null);
         try {
             serverField.set(null, server);
-            var notices = new Notifications(plugin, null, new ResourcePacks(null), Notifications.Timing.from(Map.of()));
+            var notices = new Notifications(plugin, null, new ResourcePacks(null), TIMING);
             var hud = Component.text("Health, heat and cooldowns");
             var objective = Title.title(Component.text("POST CAPTURED"), Component.text("Market"),
                     Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ZERO));
@@ -141,7 +145,7 @@ public class NotificationsTest {
         var previous = serverField.get(null);
         try {
             serverField.set(null, server);
-            var notices = new Notifications(plugin, null, new ResourcePacks(null), Notifications.Timing.from(Map.of()));
+            var notices = new Notifications(plugin, null, new ResourcePacks(null), TIMING);
             var hud = Component.text("Heat 40%");
             var hit = Component.text("HEADSHOT +100");
             var objective = Component.text("POST CAPTURED");
@@ -195,7 +199,7 @@ public class NotificationsTest {
         var previous = serverField.get(null);
         try {
             serverField.set(null, server);
-            var notices = new Notifications(plugin, null, new ResourcePacks(null), Notifications.Timing.from(Map.of()));
+            var notices = new Notifications(plugin, null, new ResourcePacks(null), TIMING);
             for (int at = 0; at < 24; at += 4) {
                 tick.set(at);
                 notices.status(player, Component.text("Heat 40%"));

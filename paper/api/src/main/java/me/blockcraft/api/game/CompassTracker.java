@@ -5,6 +5,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
@@ -22,10 +23,9 @@ public final class CompassTracker {
     public record Settings(double rangeHorizontal, double rangeVertical, int cooldownTicks) {
 
         public static Settings from(ConfigurationSection config) {
-            return new Settings(
-                    config.getDouble("tracker.range-horizontal", 100.0),
-                    config.getDouble("tracker.range-vertical", 25.0),
-                    Math.max(0, config.getInt("tracker.cooldown-ticks", 20)));
+            var tracker = BundledDefaults.strict(config).section("tracker");
+            return new Settings(tracker.decimal("range-horizontal"), tracker.decimal("range-vertical"),
+                    Math.max(0, tracker.integer("cooldown-ticks")));
         }
     }
 

@@ -13,6 +13,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -74,9 +75,10 @@ public class CommandListenerTest {
 
     private CommandListener listener() throws Exception {
         var data = folder.newFolder().toPath();
-        var config = SystemConfig.load(data.resolve("config.yml"), () -> bytes("""
+        Files.writeString(data.resolve("config.yml"), """
                 blocked-commands: [pl, plugins, 'bukkit:plugins', version, pex]
-                """));
+                """);
+        var config = SystemConfig.load(data.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
         var messages = Messages.load(data, () -> bytes("""
                 command-blocked: 'Nicht verfügbar!'
                 blocked-replies:

@@ -33,7 +33,7 @@ public final class GameServices {
                 ? StatsMenus.ranked(messages, stats, topList, config.globalStatsHead())
                 : StatsMenus.of(messages, stats, topList, config.globalStatsHead());
         WaitingBoard.show(plugin, stats);
-        ServerRestart.whenIdle(plugin, config);
+        ServerRestart.whenIdle(plugin, config.idleRestartMinutes());
     }
 
     public static GameServices load(JavaPlugin plugin, GameConfig config, String statsTable) {

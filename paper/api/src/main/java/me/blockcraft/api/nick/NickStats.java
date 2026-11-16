@@ -2,6 +2,7 @@ package me.blockcraft.api.nick;
 
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.rank.NickRanks;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.elo.EloRating;
 import org.bukkit.entity.Player;
 
@@ -18,29 +19,24 @@ public final class NickStats {
     /** A closed range a disguise draws from; {@code nick-stats.<key>: {min, max}} in config.yml. */
     public record Range(double min, double max) {
 
-        public static Range from(Map<String, Object> section, String key, double min, double max) {
-            var range = section.get(key) instanceof Map<?, ?> values ? values : Map.of();
-            return new Range(number(range, "min", min), number(range, "max", max));
+        public static Range from(StrictConfig range) {
+            return new Range(range.decimal("min"), range.decimal("max"));
         }
 
         double draw(Random random) {
             return min + random.nextDouble() * (max - min);
         }
-
-        private static double number(Map<?, ?> section, String key, double fallback) {
-            return section.get(key) instanceof Number value ? value.doubleValue() : fallback;
-        }
     }
 
     public record Ranges(Range rounds, Range winRate, Range kdr, Range rating, Range level) {
 
-        public static Ranges from(Map<String, Object> section) {
+        public static Ranges from(StrictConfig section) {
             return new Ranges(
-                    Range.from(section, "rounds", 20, 200),
-                    Range.from(section, "win-rate", 0.05, 0.3),
-                    Range.from(section, "kdr", 0.6, 1.6),
-                    Range.from(section, "rating", 900, 1250),
-                    Range.from(section, "level", 3, 12));
+                    Range.from(section.section("rounds")),
+                    Range.from(section.section("win-rate")),
+                    Range.from(section.section("kdr")),
+                    Range.from(section.section("rating")),
+                    Range.from(section.section("level")));
         }
     }
 

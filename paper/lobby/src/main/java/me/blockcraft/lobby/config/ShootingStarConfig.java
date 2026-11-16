@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.config;
 
 import me.blockcraft.common.calendar.HourWindow;
+import me.blockcraft.common.config.StrictConfig;
 
 import java.time.Duration;
 import java.util.List;
@@ -13,7 +14,7 @@ public record ShootingStarConfig(boolean enabled, HourWindow night, Duration che
     public static ShootingStarConfig fromYaml(Map<String, Object> config) {
         var prefixes = config.get("wish-prefixes") instanceof List<?> values
                 ? values.stream().map(String::valueOf).map(String::strip).filter(value -> !value.isEmpty()).toList() : List.<String>of();
-        return new ShootingStarConfig(!Boolean.FALSE.equals(config.get("enabled")), HourWindow.fromYaml(config, 22, 2),
+        return new ShootingStarConfig(!Boolean.FALSE.equals(config.get("enabled")), HourWindow.from(new StrictConfig("Lobby config.yml", "shooting-stars", config)),
                 Duration.ofSeconds(positive(config, "check-seconds", 60)), positive(config, "odds", 30),
                 Duration.ofSeconds(positive(config, "cooldown-seconds", 1800)),
                 Duration.ofSeconds(positive(config, "wish-seconds", 15)), Math.clamp(positive(config, "animation-ticks", 40), 1, 200),

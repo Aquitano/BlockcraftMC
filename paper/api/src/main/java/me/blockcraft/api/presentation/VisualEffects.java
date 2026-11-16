@@ -3,7 +3,7 @@ package me.blockcraft.api.presentation;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.xp.LevelUpEvent;
-import me.blockcraft.common.config.YamlFile;
+import me.blockcraft.common.config.StrictConfig;
 import org.bukkit.Color;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -45,22 +45,17 @@ public final class VisualEffects implements Listener, AutoCloseable {
     private long tick;
     private boolean closed;
 
-    public VisualEffects(Plugin plugin, ResourcePacks packs, Map<String, Object> presentation) {
+    /** {@code gameplay} is {@code presentation.gameplay} of BlockcraftAPI's config.yml. */
+    public VisualEffects(Plugin plugin, ResourcePacks packs, StrictConfig gameplay) {
         this.plugin = plugin;
         this.packs = packs;
-        var gameplay = YamlFile.section(presentation, "gameplay");
-        gameplayEnabled = !Boolean.FALSE.equals(gameplay.get("enabled"));
-        gameplayIntensity = bounded(gameplay, "intensity", 0.5, 0, 1);
-        gameplayFadeTicks = (int) bounded(gameplay, "fade-ticks", 6, 1, 40);
-        gameplayCooldownTicks = (int) bounded(gameplay, "cooldown-ticks", 40, 0, 1200);
-        levelUpTicks = (int) bounded(gameplay, "level-up-ticks", 24, 0, 200);
+        gameplayEnabled = gameplay.flag("enabled");
+        gameplayIntensity = Math.clamp(gameplay.decimal("intensity"), 0, 1);
+        gameplayFadeTicks = (int) Math.clamp(gameplay.decimal("fade-ticks"), 1, 40);
+        gameplayCooldownTicks = (int) Math.clamp(gameplay.decimal("cooldown-ticks"), 0, 1200);
+        levelUpTicks = (int) Math.clamp(gameplay.decimal("level-up-ticks"), 0, 200);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
-    }
-
-    private static double bounded(Map<String, Object> config, String key, double fallback, double min, double max) {
-        double value = config.get(key) instanceof Number number ? number.doubleValue() : fallback;
-        return Double.isFinite(value) ? Math.clamp(value, min, max) : fallback;
     }
 
     public boolean accent(Player player, ScreenEffects.Atmosphere atmosphere, int durationTicks) {

@@ -6,6 +6,7 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.world.WorldProtection;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.activity.Ambience;
@@ -130,7 +131,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
         var parkour = new Parkour(this, activityLocations, activities, messages);
         closables.add(parkour);
-        var throwFight = new LobbyThrows(this, messages, api.calendar(), ThrowFight.Settings.fromYaml(YamlFile.section(yaml, "throw-fight")),
+        var throwFight = new LobbyThrows(this, messages, api.calendar(), ThrowFight.Settings.from(StrictConfig.of("Lobby config.yml", yaml).section("throw-fight")),
                 parkour::running);
         closables.add(throwFight);
         var items = new LobbyItems(messages, throwFight::item);

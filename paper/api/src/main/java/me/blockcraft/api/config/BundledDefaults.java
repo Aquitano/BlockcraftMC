@@ -1,7 +1,12 @@
 package me.blockcraft.api.config;
 
+import me.blockcraft.common.config.StrictConfig;
 import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A plugin's {@code config.yml} on disk holds only an operator's overrides, and Bukkit's {@code getInt(path, fallback)}
@@ -17,6 +22,18 @@ public final class BundledDefaults {
         var config = plugin.getConfig();
         config.options().copyDefaults(true);
         fill(config);
+    }
+
+    /** {@code section} of a config {@link #apply} filled, read without fallbacks of its own. */
+    public static StrictConfig strict(ConfigurationSection section) {
+        return new StrictConfig("config.yml", section.getCurrentPath(), tree(section));
+    }
+
+    private static Map<String, Object> tree(ConfigurationSection section) {
+        var tree = new LinkedHashMap<String, Object>();
+        section.getValues(false).forEach((key, value) ->
+                tree.put(key, value instanceof ConfigurationSection nested ? tree(nested) : value));
+        return tree;
     }
 
     static void fill(Configuration config) {

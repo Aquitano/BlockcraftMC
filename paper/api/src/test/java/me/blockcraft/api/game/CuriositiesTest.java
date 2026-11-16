@@ -1,5 +1,7 @@
 package me.blockcraft.api.game;
 
+import me.blockcraft.common.config.StrictConfig;
+import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -13,7 +15,8 @@ public class CuriositiesTest {
 
     @Test
     public void picksOneNotableFactByItsThresholdAndIgnoresIneligiblePlayers() {
-        var facts = new Curiosities(Curiosities.minimums(Map.of()));
+        var facts = new Curiosities(Curiosities.minimums(StrictConfig.of("config.yml",
+                YamlFile.load(CuriositiesTest.class.getResourceAsStream("/config.yml"))).section("curiosities")));
         var jumper = UUID.randomUUID();
         var archer = UUID.randomUUID();
         facts.record(jumper, Curiosities.Kind.JUMPS, 214);

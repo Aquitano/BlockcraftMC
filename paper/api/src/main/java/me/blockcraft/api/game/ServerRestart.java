@@ -53,8 +53,8 @@ public final class ServerRestart {
     }
 
     /** Stops an empty server after {@code idle-restart-minutes}; with players online it looks again as long after. */
-    public static void whenIdle(Plugin plugin, GameConfig config) {
-        int seconds = config.idleRestartMinutes() * 60;
+    public static void whenIdle(Plugin plugin, int idleRestartMinutes) {
+        int seconds = Math.max(1, idleRestartMinutes) * 60;
         whenIdle(plugin, seconds, seconds);
     }
 

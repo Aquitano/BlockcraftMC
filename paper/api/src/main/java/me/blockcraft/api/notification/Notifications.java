@@ -5,6 +5,7 @@ import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -27,16 +28,16 @@ import static me.blockcraft.api.notification.NoticeQueue.Priority;
 public final class Notifications implements Listener {
     public record Timing(long status, long feedback, long reward, long important, long maxWait,
                          long xpWindow, long soundWindow, long soundGap, long soundLifetime) {
-        public static Timing from(Map<String, Object> config) {
-            return new Timing(ticks(config, "status-ticks", 25), ticks(config, "feedback-ticks", 40),
-                    ticks(config, "reward-ticks", 40), ticks(config, "important-ticks", 60),
-                    ticks(config, "max-wait-ticks", 200), ticks(config, "xp-window-ticks", 10),
-                    ticks(config, "sound-window-ticks", 4), ticks(config, "sound-gap-ticks", 30),
-                    ticks(config, "sound-lifetime-ticks", 40));
+        public static Timing from(StrictConfig config) {
+            return new Timing(ticks(config, "status-ticks"), ticks(config, "feedback-ticks"),
+                    ticks(config, "reward-ticks"), ticks(config, "important-ticks"),
+                    ticks(config, "max-wait-ticks"), ticks(config, "xp-window-ticks"),
+                    ticks(config, "sound-window-ticks"), ticks(config, "sound-gap-ticks"),
+                    ticks(config, "sound-lifetime-ticks"));
         }
 
-        private static long ticks(Map<String, Object> config, String key, long fallback) {
-            return Math.clamp(config.get(key) instanceof Number value ? value.longValue() : fallback, 1, 1200);
+        private static long ticks(StrictConfig config, String key) {
+            return Math.clamp(config.integer(key), 1, 1200);
         }
     }
 
