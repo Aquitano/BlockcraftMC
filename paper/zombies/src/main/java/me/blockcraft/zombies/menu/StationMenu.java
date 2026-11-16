@@ -24,7 +24,7 @@ import java.util.function.BooleanSupplier;
 
 public final class StationMenu extends Menu {
 
-    private record Offer(Component name, Material material, int price, BooleanSupplier available, Runnable grant) { }
+    private record Offer(Component name, int price, BooleanSupplier available, Runnable grant) { }
 
     private final ZombiesGame game;
     private final ArenaMap.Station station;
@@ -42,13 +42,13 @@ public final class StationMenu extends Menu {
                 int slot = 10;
                 for (var weapon : config.forSale()) {
                     guns.put(slot, weapon);
-                    add(slot, new Offer(game.messages().get("weapon." + weapon.key()), weapon.model().fallback(), config.guns().get(weapon).price(),
+                    add(slot, weapon.model().item(), new Offer(game.messages().get("weapon." + weapon.key()), config.guns().get(weapon).price(),
                             () -> !survivor.weapons().containsKey(weapon), () -> game.weapons().give(player, weapon)),
                             game.messages().get("shop.weapon-stats", Formatter.number("damage", config.guns().get(weapon).damage() * config.guns().get(weapon).pellets()),
                                     Formatter.number("clip", config.guns().get(weapon).clip())));
                     slot += 2;
                 }
-                add(22, new Offer(game.messages().get("shop.ammo"), Material.ARROW, config.ammoPrice(),
+                add(22, Items.of(Material.ARROW), new Offer(game.messages().get("shop.ammo"), config.ammoPrice(),
                         () -> game.weapons().held(player).filter(weapon -> !survivor.weapons().get(weapon).full()).isPresent(), () -> {
                             game.weapons().held(player).ifPresent(weapon -> survivor.weapons().get(weapon).refill());
                         }));
@@ -57,7 +57,7 @@ public final class StationMenu extends Menu {
                 var perks = station.perk().map(List::of).orElse(List.of(Perk.values()));
                 int slot = perks.size() == 1 ? 13 : 10;
                 for (var perk : perks) {
-                    add(slot, new Offer(game.messages().get("perk." + perk.key()), perk.material(), config.perks().get(perk),
+                    add(slot, Items.of(perk.material()), new Offer(game.messages().get("perk." + perk.key()), config.perks().get(perk),
                             () -> !survivor.perks().contains(perk), () -> game.grantPerk(player, perk)),
                             game.messages().get("perk.description." + perk.key(), Formatter.number("hearts", config.extraHealth() / 2)));
                     slot += 2;
@@ -65,23 +65,23 @@ public final class StationMenu extends Menu {
             }
             case ARMOR -> {
                 int tier = survivor.armor();
-                add(13, new Offer(game.messages().get("shop.armor", Formatter.number("tier", tier + 1)),
-                        tier == 0 ? Material.IRON_CHESTPLATE : Material.DIAMOND_CHESTPLATE,
+                add(13, Items.of(tier == 0 ? Material.IRON_CHESTPLATE : Material.DIAMOND_CHESTPLATE),
+                        new Offer(game.messages().get("shop.armor", Formatter.number("tier", tier + 1)),
                         config.armorPrice() * (tier + 1), () -> survivor.armor() == tier && tier < Survivor.MAX_ARMOR, () -> game.armor(player)));
             }
-            case POWER -> add(13, new Offer(game.messages().get("shop.power"), Material.REDSTONE, config.powerPrice(),
+            case POWER -> add(13, Items.of(Material.REDSTONE), new Offer(game.messages().get("shop.power"), config.powerPrice(),
                     () -> !game.powerBought(), () -> game.powerOn(station)));
             case UPGRADE -> {
                 var selected = game.weapons().held(player);
-                add(13, new Offer(game.messages().get("shop.upgrade"), Material.ENCHANTED_BOOK, config.upgradePrice(),
+                add(13, Items.of(Material.ENCHANTED_BOOK), new Offer(game.messages().get("shop.upgrade"), config.upgradePrice(),
                         () -> selected.isPresent() && !survivor.weapons().get(selected.get()).upgraded(),
                         () -> survivor.weapons().get(selected.orElseThrow()).upgrade()));
             }
-            case MYSTERY -> add(13, new Offer(game.messages().get("shop.mystery"), Material.ENDER_CHEST, config.mysteryPrice(),
+            case MYSTERY -> add(13, Items.of(Material.ENDER_CHEST), new Offer(game.messages().get("shop.mystery"), config.mysteryPrice(),
                     () -> !game.mysteryBox().busy(station) && game.mysteryBox().hasGunFor(player),
                     () -> game.mysteryBox().roll(player, station)),
                     game.messages().get("shop.mystery-take", Formatter.number("seconds", config.mystery().takeTicks() / 20)));
-            case TEAM_REVIVE -> add(13, new Offer(game.messages().get("shop.team-revive"), Material.TOTEM_OF_UNDYING,
+            case TEAM_REVIVE -> add(13, Items.of(Material.TOTEM_OF_UNDYING), new Offer(game.messages().get("shop.team-revive"),
                     config.teamRevivePrice(), game::needsRevive, game::teamRevive));
         }
         info(31, Items.of(Material.GOLD_INGOT).name(game.messages().get("shop.balance", Formatter.number("gold", survivor.gold()))).build());
@@ -92,7 +92,7 @@ public final class StationMenu extends Menu {
         return station.kind() == StationKind.PERKS || station.kind() == StationKind.UPGRADE || station.kind() == StationKind.TEAM_REVIVE;
     }
 
-    private void add(int slot, Offer offer, Component... details) {
+    private void add(int slot, Items.Builder icon, Offer offer, Component... details) {
         offers.put(slot, offer);
         var lore = new ArrayList<Component>();
         lore.addAll(java.util.Arrays.asList(details));
@@ -105,7 +105,7 @@ public final class StationMenu extends Menu {
         if (guns.containsKey(slot) || station.kind() == StationKind.MYSTERY) {
             lore.addAll(game.messages().getLines(station.kind() == StationKind.ARMORY ? "shop.weapon-hint" : "shop.mystery-hint"));
         }
-        set(slot, Items.of(offer.material()).name(offer.name()).lore(lore).hideAttributes().build());
+        set(slot, icon.name(offer.name()).lore(lore).hideAttributes().build());
     }
 
     @Override
