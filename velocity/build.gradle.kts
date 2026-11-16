@@ -5,7 +5,7 @@ plugins {
 val libs = the<VersionCatalogsExtension>().named("libs")
 
 // Runs one Velocity proxy (port 25565) with every plugin here plus LuckPerms; backends register themselves.
-// `-Pplugins=system` selects the network plugin, including reports.
+// `-Pplugins=<name>,...` limits it to the named plugins.
 val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").map(String::trim).toSet() }
 
 tasks.runVelocity {

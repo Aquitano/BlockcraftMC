@@ -154,6 +154,7 @@ public final class SystemConfig {
     private final NetworkCalendar calendar;
     private final int calendarPollSeconds;
     private final Duration privateChatCooldown;
+    private final Duration reportCooldown;
 
     private SystemConfig(Path file, Map<String, Object> root, NetworkConfig shared, Map<String, String> environment) {
         this.file = file;
@@ -237,6 +238,7 @@ public final class SystemConfig {
         this.calendar = shared.calendar();
         this.calendarPollSeconds = shared.calendarPollSeconds();
         this.privateChatCooldown = Duration.ofSeconds(Math.max(0, number(YamlFile.section(root, "private-chat"), "cooldown-seconds", 2)));
+        this.reportCooldown = Duration.ofSeconds(Math.max(0, number(YamlFile.section(root, "report"), "cooldown-seconds", 10)));
     }
 
     public static SystemConfig load(Path file, Supplier<InputStream> bundledDefault) {
@@ -387,6 +389,11 @@ public final class SystemConfig {
 
     public Duration privateChatCooldown() {
         return privateChatCooldown;
+    }
+
+    /** How long a player waits after a report before filing the next one. */
+    public Duration reportCooldown() {
+        return reportCooldown;
     }
 
     public NetworkCalendar calendar() {

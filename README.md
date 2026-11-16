@@ -440,7 +440,7 @@ original request may already have reached storage.
   a renamed account or a nicked staff member still resolves to who did what.
 
 A game's `countdown.restart` below seven seconds is raised to seven, so the result and the return countdown fit before
-the final shutdown grace second. Report config and messages live in `plugins/blockcraft-system/reports`.
+the final shutdown grace second. Reports are part of BlockcraftSystem: `report` in its `config.yml` and `messages.yml`.
 
 ## Tests
 
