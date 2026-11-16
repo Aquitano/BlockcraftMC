@@ -1,23 +1,21 @@
 package me.blockcraft.api.shop;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.dialog.ConfirmDialog;
+import me.blockcraft.api.chat.ChatPrompt;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-/** Quotes and buys a coin unlock, then returns only while the player is still on that purchase's screen. */
+/** Quotes a coin unlock, asks in chat whether to buy it, then returns to the menu it was bought from. */
 public final class Purchases {
 
     private record Quote(int balance, boolean owned) { }
@@ -69,19 +67,34 @@ public final class Purchases {
                 return;
             }
             var messages = api.messages();
-            var details = List.of(
-                    messages.get("purchase.confirm-price", Formatter.number("coins", price)),
-                    messages.get("purchase.confirm-balance", Formatter.number("coins", quote.balance())),
-                    messages.get(quote.balance() >= price ? "purchase.confirm-remaining" : "purchase.confirm-missing",
-                            Formatter.number("coins", Math.abs(quote.balance() - price))));
-            Optional<Consumer<Player>> accept = quote.balance() >= price ? Optional.of(this::buy) : Optional.empty();
-            MenuIcon.style(subject, api.resourcePack().applied(player));
-            new ConfirmDialog(subject, details, accept, previous -> {
-                if (eligible.test(previous)) {
-                    returnTo.accept(previous);
-                }
-            }).open(player, () -> eligible.test(player));
+            if (quote.balance() < price) {
+                Sounds.MENU_DENY.play(player);
+                api.notifications().feedback(player, messages.get("purchase.confirm-missing",
+                        Formatter.number("coins", price - quote.balance())));
+                return;
+            }
+            // Chat cannot be clicked behind an open menu; either answer leads back to it.
+            Menu.close(player, closed -> closed.sendMessage(prompt(closed, quote.balance())));
         });
+    }
+
+    private Component prompt(Player player, int balance) {
+        var messages = api.messages();
+        var details = Component.join(JoinConfiguration.newlines(),
+                messages.get("purchase.confirm-price", Formatter.number("coins", price)),
+                messages.get("purchase.confirm-balance", Formatter.number("coins", balance)),
+                messages.get("purchase.confirm-remaining", Formatter.number("coins", balance - price)));
+        var prompt = new ChatPrompt(player);
+        return messages.get("purchase.prompt",
+                Placeholder.component("item", subjectName()),
+                Formatter.number("coins", price),
+                Placeholder.component("buy", prompt.button(messages.get("purchase.buy"), details, this::buy)),
+                Placeholder.component("cancel", prompt.button(messages.get("purchase.cancel"),
+                        messages.get("purchase.cancel-hover"), cancelled -> {
+                            if (eligible.test(cancelled)) {
+                                returnTo.accept(cancelled);
+                            }
+                        })));
     }
 
     private void buy(Player player) {
@@ -98,11 +111,8 @@ public final class Purchases {
                 case BOUGHT -> {
                     api.notifications().rewardSound(player, Sounds.PURCHASE);
                     api.notifications().feedback(player, messages.get("purchase.completed"));
-                    var meta = subject.getItemMeta();
-                    var subjectName = meta == null ? null : meta.displayName();
                     player.sendMessage(messages.get("purchase.bought",
-                            Placeholder.component("item", subjectName != null ? subjectName : Component.translatable(subject.translationKey())),
-                            Formatter.number("coins", price)));
+                            Placeholder.component("item", subjectName()), Formatter.number("coins", price)));
                     onOwned.accept(player);
                 }
                 case ALREADY_OWNED -> {
@@ -122,6 +132,12 @@ public final class Purchases {
             api.notifications().feedback(failed, messages.get("operation.failed"));
             returnIfCurrent(failed, current);
         });
+    }
+
+    private Component subjectName() {
+        var meta = subject.getItemMeta();
+        var name = meta == null ? null : meta.displayName();
+        return name != null ? name : Component.translatable(subject.translationKey());
     }
 
     private boolean available(Player player) {

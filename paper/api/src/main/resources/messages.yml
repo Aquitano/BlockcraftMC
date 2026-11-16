@@ -136,10 +136,6 @@ menu:
   page: "<muted>Seite <page> von <pages>"
   refresh: "<primary>Aktualisieren"
   empty: "<muted>Hier ist noch nichts."
-  confirm:
-    unavailable: "<arrow><error>Kauf nicht möglich"
-    title: "<arrow><primary>Bestätigen"
-    accept: "<success>Kaufen"
 
 purchase:
   completed: "<success>Kauf abgeschlossen."
@@ -148,6 +144,10 @@ purchase:
   confirm-balance: "<muted>Dein Guthaben <dark>· <accent><coins> Coins"
   confirm-remaining: "<muted>Nach dem Kauf <dark>· <success><coins> Coins"
   confirm-missing: "<error>Dir fehlen <coins> Coins."
+  prompt: "<prefix><item> <muted>für <accent><coins> Coins <muted>kaufen? <buy> <cancel>"
+  buy: "<success>[Kaufen]"
+  cancel: "<error>[Abbrechen]"
+  cancel-hover: "<muted>Zurück zum Menü"
   bought: "<prefix><item> <success>für <accent><coins> Coins <success>freigeschaltet."
   balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
   too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."

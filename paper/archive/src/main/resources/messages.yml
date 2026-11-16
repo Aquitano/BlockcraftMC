@@ -85,7 +85,10 @@ note:
     label: "Was sollen spätere Besucher hier wissen?"
     leave: "<success>Hinterlassen"
   delete:
-    accept: "<error>Löschen"
+    prompt: "<prefix><muted>Die Notiz von <accent><author> <muted>löschen? <delete> <cancel>"
+    accept: "<error>[Löschen]"
+    cancel: "<muted>[Abbrechen]"
+    cancel-hover: "<muted>Zurück zur Ausstellung"
 
 setup:
   help:
