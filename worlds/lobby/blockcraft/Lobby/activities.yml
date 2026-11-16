@@ -534,3 +534,43 @@ ambient-motes-1:
   z: 1640.5
   yaw: 0.0
   pitch: 0.0
+quest-archivarin:
+  ==: org.bukkit.Location
+  world: world
+  x: -945.5
+  y: 24.0
+  z: 1618.5
+  yaw: -90.0
+  pitch: 0.0
+quest-laeuferin:
+  ==: org.bukkit.Location
+  world: world
+  x: -938.5
+  y: 24.0
+  z: 1615.5
+  yaw: 90.0
+  pitch: 0.0
+quest-kundschafter:
+  ==: org.bukkit.Location
+  world: world
+  x: -943.5
+  y: 23.0
+  z: 1604.5
+  yaw: 180.0
+  pitch: 0.0
+board-rules:
+  ==: org.bukkit.Location
+  world: world
+  x: -970.0
+  y: 28.0
+  z: 1629.0
+  yaw: 180.0
+  pitch: 0.0
+board-changelog:
+  ==: org.bukkit.Location
+  world: world
+  x: -968.0
+  y: 28.0
+  z: 1634.0
+  yaw: -33.690067
+  pitch: 0.0
