@@ -263,7 +263,8 @@ column of four tiles, which `HudPanelTest` checks against the shader and `Abilit
 writes every icon, ready and recharging, to `build/hud/ability-icons.png` for judging the set.
 Both dialogue panels use the bottom-centre space, which ends `HudPanel.BOTTOM_CENTRE_BOTTOM` above the screen's bottom,
 just over the hearts. The shared panel from `DialogueArt` is 56 or 66 pixels tall, so at the smallest GUI, 240 pixels
-tall, its top stays below the crosshair; `DialogueAssetsTest` checks that and the 256-pixel limit.
+tall, its top stays below the crosshair; `DialogueAssetsTest` checks that and the 256-pixel limit. While a dialogue
+holds the action bar, `Dialogues.beside` draws a game's own corner panel with it, as Zombies does with its weapon panel.
 Zombies' weapon panel uses the same corner with `HudArt`'s `blockcraft:zombies/weapon` font, which the modes pack
 carries. It stands on the corner's margin below the column's top, and `WeaponPanelTest` checks its glyphs against the
 font. `HudArt` draws each gun's icon from its pack model in flat colours of the vanilla blocks the model uses, so a
