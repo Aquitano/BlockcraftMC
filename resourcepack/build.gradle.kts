@@ -45,8 +45,6 @@ val verifyAssets = tasks.register<Exec>("verifyAssets") {
     commandLine(assetCommand("assets.py", "check"))
 }
 
-// Players get credits for what the pack contains; the map provenance and open questions stay in the repository.
-val packCredits = setOf("Music", "Sound effects", "Models and textures")
 val packSource = providers.gradleProperty("packSource").map { file(it) }.getOrElse(file("src"))
 
 val verifySplitPack = tasks.register<Exec>("verifySplitPack") {
@@ -83,23 +81,6 @@ tasks.check {
     dependsOn(verifyAssets, verifySplitPack, verifyBetterModel)
 }
 
-val pack = tasks.register<Zip>("pack") {
-    dependsOn(verifyBetterModel, verifySplitPack)
-    from(packSource)
-    from("../CREDITS.md") {
-        into("credits")
-        var shipped = true
-        filter { line ->
-            if (line.startsWith("## ")) shipped = line.removePrefix("## ") in packCredits
-            line.takeIf { shipped }
-        }
-    }
-    archiveFileName = "blockcraft.zip"
-    destinationDirectory = layout.buildDirectory
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
-}
-
 tasks.assemble {
-    dependsOn(pack, packSplit)
+    dependsOn(packSplit)
 }

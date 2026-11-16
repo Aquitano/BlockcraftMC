@@ -13,7 +13,7 @@ tasks.runVelocity {
     runDirectory = rootProject.layout.projectDirectory.dir("run/velocity")
     systemProperty("user.language.format", "de")
     systemProperty("user.country.format", "DE")
-    dependsOn(":packRanks", ":resourcepack:pack")
+    dependsOn(":packRanks", ":resourcepack:packSplit")
     doFirst {
         copy {
             from(rootProject.file("dev/velocity"))
@@ -24,7 +24,7 @@ tasks.runVelocity {
             into(runDirectory.dir("plugins/luckperms"))
         }
         copy {
-            from(project(":resourcepack").layout.buildDirectory.file("blockcraft.zip"))
+            from(project(":resourcepack").layout.buildDirectory.dir("split")) { include("blockcraft-*.zip") }
             into(runDirectory.dir("plugins/blockcraft-system"))
         }
     }

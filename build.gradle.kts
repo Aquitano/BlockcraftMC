@@ -176,9 +176,6 @@ tasks.register<Sync>("stagePlugins") {
     from(packRanks) {
         into("velocity/luckperms")
     }
-    from(project(":resourcepack").tasks.named("pack")) {
-        into("velocity/blockcraft-system")
-    }
     from(project(":resourcepack").tasks.named("packSplit")) {
         include("blockcraft-base.zip", "blockcraft-lobby.zip", "blockcraft-modes.zip", "blockcraft-starwars.zip")
         into("velocity/blockcraft-system")

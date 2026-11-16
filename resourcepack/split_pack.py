@@ -1,4 +1,4 @@
-"""Build prototype resource packs from an existing generated source tree."""
+"""Build the network's split resource packs from an existing generated source tree."""
 import argparse
 import copy
 import json
@@ -204,6 +204,7 @@ def main():
         parser.error('Output must be outside the source tree')
     files, packs = build(source)
     external = verify(files, packs)
+    # Players get credits for what the pack contains; map provenance and open questions stay in the repository.
     credits = source.parent.parent / 'CREDITS.md'
     if credits.is_file():
         shipped = True
