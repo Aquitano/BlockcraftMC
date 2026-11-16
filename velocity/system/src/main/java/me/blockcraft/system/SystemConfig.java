@@ -128,91 +128,91 @@ public final class SystemConfig {
     private final Duration privateChatCooldown;
     private final Duration reportCooldown;
 
-    private SystemConfig(Path file, Map<String, Object> root, NetworkConfig shared, Map<String, String> environment) {
+    private SystemConfig(Path file, Map<String, Object> yaml, NetworkConfig shared, Map<String, String> environment) {
+        var root = StrictConfig.of("BlockcraftSystem config.yml", yaml);
         this.file = file;
-        this.database = DatabaseConfig.fromYaml(StrictConfig.of("BlockcraftSystem config.yml", root).section("database"));
+        this.database = DatabaseConfig.fromYaml(root.section("database"));
         this.network = new Network(address(shared, "ip"), address(shared, "website"), address(shared, "shop"),
                 address(shared, "teamspeak"), address(shared, "discord"));
         this.networkTags = shared.tags();
-        this.lobbyGroup = string(root, "lobby-group");
-        var discovery = YamlFile.section(root, "discovery");
-        this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
-                number(discovery, "seat-seconds", 15), Math.clamp(number(discovery, "max-snapshot-age-seconds", 30), 1, 3600));
-        var onDemand = YamlFile.section(root, "on-demand");
+        this.lobbyGroup = root.text("lobby-group");
+        var discovery = root.section("discovery");
+        this.discovery = new Discovery(discovery.integer("poll-seconds"), discovery.integer("stale-seconds"),
+                discovery.integer("seat-seconds"), Math.clamp(discovery.integer("max-snapshot-age-seconds"), 1, 3600));
+        var onDemand = root.section("on-demand");
         var onDemandGroups = Arrays.stream(env(environment, "BLOCKCRAFT_ON_DEMAND_GROUPS", "").split(","))
                 .map(String::strip).map(group -> group.toLowerCase(Locale.ROOT))
                 .filter(group -> !group.isEmpty() && !group.equals(lobbyGroup))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        this.onDemand = new OnDemandConfig(Boolean.TRUE.equals(onDemand.get("enabled")),
-                URI.create(string(onDemand, "url").isBlank() ? "http://waker:8080" : string(onDemand, "url")),
-                env(environment, "BLOCKCRAFT_WAKER_TOKEN", string(onDemand, "token")),
+        this.onDemand = new OnDemandConfig(onDemand.flag("enabled"), URI.create(onDemand.text("url")),
+                env(environment, "BLOCKCRAFT_WAKER_TOKEN", onDemand.text("token")),
                 new OnDemand.Settings(Collections.unmodifiableSet(onDemandGroups),
-                        Duration.ofMinutes(Math.max(1, number(onDemand, "idle-stop-minutes", 10))),
-                        Duration.ofSeconds(Math.max(30, number(onDemand, "start-timeout-seconds", 120))),
-                        Math.max(0, number(onDemand, "max-awake", 0))));
-        var ranked = YamlFile.section(root, "ranked");
-        var duels = YamlFile.section(root, "duels");
+                        Duration.ofMinutes(Math.max(1, onDemand.integer("idle-stop-minutes"))),
+                        Duration.ofSeconds(Math.max(30, onDemand.integer("start-timeout-seconds"))),
+                        Math.max(0, onDemand.integer("max-awake"))));
+        var ranked = root.section("ranked");
+        var duels = root.section("duels");
         this.duels = new me.blockcraft.system.duel.DuelChallenges.Settings(
-                Math.clamp(number(duels, "setup-seconds", 60), 15, 300),
-                Math.clamp(number(duels, "invite-seconds", 30), 5, 120),
-                Math.clamp(number(duels, "transfer-seconds", 15), 5, 60),
-                Math.clamp(number(duels, "cooldown-seconds", 10), 1, 60));
+                Math.clamp(duels.integer("setup-seconds"), 15, 300),
+                Math.clamp(duels.integer("invite-seconds"), 5, 120),
+                Math.clamp(duels.integer("transfer-seconds"), 5, 60),
+                Math.clamp(duels.integer("cooldown-seconds"), 1, 60));
         this.ranked = new Ranked(new RankedQueue.Settings(
-                string(ranked, "group").isBlank() ? "duell" : string(ranked, "group").toLowerCase(Locale.ROOT),
-                Math.max(0, number(ranked, "base-range", 100)), Math.max(0, number(ranked, "range-per-second", 5)),
-                Math.max(0, number(ranked, "max-range", 400)),
-                Duration.ofSeconds(Math.max(30, number(ranked, "match-timeout-seconds", 180)))),
+                ranked.text("group").toLowerCase(Locale.ROOT),
+                Math.max(0, ranked.integer("base-range")), Math.max(0, ranked.integer("range-per-second")),
+                Math.max(0, ranked.integer("max-range")),
+                Duration.ofSeconds(Math.max(30, ranked.integer("match-timeout-seconds")))),
                 shared.elo());
-        var alerts = YamlFile.section(root, "alerts");
-        this.alerts = new Alerts(env(environment, "BLOCKCRAFT_ALERTS_WEBHOOK_URL", string(alerts, "webhook-url")),
-                number(alerts, "min-interval-seconds", 300), number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
-        var serverHealth = YamlFile.section(root, "server-health");
-        this.serverHealth = new ServerHealth(number(serverHealth, "tps-warn", 19), number(serverHealth, "tps-critical", 15),
-                number(serverHealth, "mspt-warn", 40), number(serverHealth, "mspt-critical", 50));
-        var resourcePack = YamlFile.section(root, "resource-pack");
-        var packBaseUrl = env(environment, "BLOCKCRAFT_RESOURCE_PACK_BASE_URL", string(resourcePack, "base-url"));
-        var packGroups = YamlFile.section(resourcePack, "groups");
+        var alerts = root.section("alerts");
+        this.alerts = new Alerts(env(environment, "BLOCKCRAFT_ALERTS_WEBHOOK_URL", alerts.text("webhook-url")),
+                alerts.integer("min-interval-seconds"), alerts.integer("lag-mspt"), alerts.integer("lag-polls"));
+        var serverHealth = root.section("server-health");
+        this.serverHealth = new ServerHealth(serverHealth.integer("tps-warn"), serverHealth.integer("tps-critical"),
+                serverHealth.integer("mspt-warn"), serverHealth.integer("mspt-critical"));
+        var resourcePack = root.section("resource-pack");
+        var packBaseUrl = env(environment, "BLOCKCRAFT_RESOURCE_PACK_BASE_URL", resourcePack.text("base-url"));
+        var packGroups = resourcePack.section("groups");
         this.resourcePack = new ResourcePack(URI.create(packBaseUrl.endsWith("/") ? packBaseUrl : packBaseUrl + "/"),
-                number(resourcePack, "port", 0), Math.max(1, number(resourcePack, "wait-seconds", 120)),
-                Math.clamp(number(resourcePack, "download-retries", 1), 0, 3),
-                packGroups.keySet().stream().collect(Collectors.toUnmodifiableMap(group -> group,
-                        group -> strings(packGroups, group))),
-                strings(resourcePack, "default-addons"));
-        this.maxWarns = number(root, "max-warns", 8);
-        this.maxStrikes = number(root, "max-strikes", 5);
-        this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
-        this.historyLimit = Math.max(1, number(YamlFile.section(root, "history"), "limit", 10));
-        this.staffLogPageSize = Math.max(1, number(YamlFile.section(root, "stafflog"), "page-size", 10));
-        this.watchRecent = Duration.ofDays(Math.max(1, number(YamlFile.section(root, "watch"), "recent-days", 30)));
-        var alts = YamlFile.section(root, "alts");
-        this.alts = new Alts(Duration.ofDays(Math.max(1, number(alts, "retention-days", 90))),
-                Boolean.TRUE.equals(alts.get("block-banned-alts")), number(alts, "purge-hour", 4));
-        var freeze = YamlFile.section(root, "freeze");
-        this.freeze = new Freeze(number(freeze, "quit-punishment", 0), Duration.ofSeconds(number(freeze, "quit-grace-seconds", 10)));
-        this.tabRefreshSeconds = number(YamlFile.section(root, "tab"), "refresh-seconds", 5);
-        this.discordCodeMinutes = number(root, "discord-code-minutes", 10);
-        var joinMe = YamlFile.section(root, "joinme");
-        this.joinMe = new JoinMe(number(joinMe, "daily-limit", 6), number(joinMe, "reset-hour", 0));
-        var friends = YamlFile.section(root, "friends");
-        this.friends = new Friends(number(friends, "max", 50), number(friends, "request-minutes", 10));
-        this.maxIgnored = number(YamlFile.section(root, "ignore"), "max", 50);
-        this.infoCommands = infoCommands(root);
-        this.unbannable = strings(root, "unbannable").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
-        this.blockedCommands = strings(root, "blocked-commands").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
-        this.punishments = presets(YamlFile.section(root, "punishments"));
-        this.maxPlayers = number(root, "max-players", 100);
-        var motd = YamlFile.section(root, "motd");
-        this.defaultMotd = string(motd, "default");
-        this.randomMotds = new ArrayList<>(strings(motd, "random"));
-        var welcome = YamlFile.section(root, "welcome");
-        this.welcome = new Welcome(Boolean.TRUE.equals(welcome.get("enabled")), Set.copyOf(strings(welcome, "groups")),
-                Math.max(1, number(welcome, "greeting-seconds", 60)), Math.max(1, number(welcome, "listed-greeters", 2)));
-        this.serverListFriends = Boolean.TRUE.equals(YamlFile.section(root, "server-list").get("show-friends"));
-        this.serverListCache = Duration.ofSeconds(Math.max(1, number(YamlFile.section(root, "server-list"), "cache-seconds", 30)));
+                resourcePack.integer("port"), Math.max(1, resourcePack.integer("wait-seconds")),
+                Math.clamp(resourcePack.integer("download-retries"), 0, 3),
+                packGroups.keys().stream().collect(Collectors.toUnmodifiableMap(group -> group, packGroups::texts)),
+                resourcePack.texts("default-addons"));
+        this.maxWarns = root.integer("max-warns");
+        this.maxStrikes = root.integer("max-strikes");
+        this.autoBroadcastMinutes = root.integer("auto-broadcast-minutes");
+        this.historyLimit = Math.max(1, root.integer("history.limit"));
+        this.staffLogPageSize = Math.max(1, root.integer("stafflog.page-size"));
+        this.watchRecent = Duration.ofDays(Math.max(1, root.integer("watch.recent-days")));
+        var alts = root.section("alts");
+        this.alts = new Alts(Duration.ofDays(Math.max(1, alts.integer("retention-days"))), alts.flag("block-banned-alts"),
+                alts.integer("purge-hour"));
+        var freeze = root.section("freeze");
+        this.freeze = new Freeze(freeze.integer("quit-punishment"), Duration.ofSeconds(freeze.integer("quit-grace-seconds")));
+        this.tabRefreshSeconds = root.integer("tab.refresh-seconds");
+        this.discordCodeMinutes = root.integer("discord-code-minutes");
+        var joinMe = root.section("joinme");
+        this.joinMe = new JoinMe(joinMe.integer("daily-limit"), joinMe.integer("reset-hour"));
+        var friends = root.section("friends");
+        this.friends = new Friends(friends.integer("max"), friends.integer("request-minutes"));
+        this.maxIgnored = root.integer("ignore.max");
+        this.infoCommands = infoCommands(yaml);
+        this.unbannable = root.texts("unbannable").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
+        this.blockedCommands = root.texts("blocked-commands").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
+        this.punishments = presets(YamlFile.section(yaml, "punishments"));
+        this.maxPlayers = root.integer("max-players");
+        var motd = root.section("motd");
+        this.defaultMotd = motd.text("default");
+        this.randomMotds = new ArrayList<>(motd.texts("random"));
+        var welcome = root.section("welcome");
+        this.welcome = new Welcome(welcome.flag("enabled"), Set.copyOf(welcome.texts("groups")),
+                Math.max(1, welcome.integer("greeting-seconds")), Math.max(1, welcome.integer("listed-greeters")));
+        var serverList = root.section("server-list");
+        this.serverListFriends = serverList.flag("show-friends");
+        this.serverListCache = Duration.ofSeconds(Math.max(1, serverList.integer("cache-seconds")));
         this.calendar = shared.calendar();
         this.calendarPollSeconds = shared.calendarPollSeconds();
-        this.privateChatCooldown = Duration.ofSeconds(Math.max(0, number(YamlFile.section(root, "private-chat"), "cooldown-seconds", 2)));
-        this.reportCooldown = Duration.ofSeconds(Math.max(0, number(YamlFile.section(root, "report"), "cooldown-seconds", 10)));
+        this.privateChatCooldown = Duration.ofSeconds(Math.max(0, root.integer("private-chat.cooldown-seconds")));
+        this.reportCooldown = Duration.ofSeconds(Math.max(0, root.integer("report.cooldown-seconds")));
     }
 
     public static SystemConfig load(Path file, Supplier<InputStream> bundledDefault) {
@@ -442,21 +442,9 @@ public final class SystemConfig {
         return shared.addresses().getOrDefault(key, "");
     }
 
-    private static String string(Map<String, Object> section, String key) {
-        return String.valueOf(section.getOrDefault(key, ""));
-    }
-
     /** Production sets these instead of editing the copied config.yml; blank counts as unset, as for the database. */
     private static String env(Map<String, String> environment, String variable, String fallback) {
         String value = environment.get(variable);
         return value == null || value.isBlank() ? fallback : value;
-    }
-
-    private static int number(Map<String, Object> section, String key, int fallback) {
-        return section.get(key) instanceof Number number ? number.intValue() : fallback;
-    }
-
-    private static List<String> strings(Map<String, Object> section, String key) {
-        return section.get(key) instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
     }
 }
