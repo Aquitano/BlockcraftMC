@@ -66,9 +66,9 @@ public final class NetworkPack {
     private final Map<UUID, ResourcePackInfo> packs;
     private final Optional<HttpServer> server;
     private final Duration wait;
-    private final boolean required;
     private final int downloadRetries;
-    private final SystemConfig.PackProfiles profiles;
+    private final Map<String, List<String>> groups;
+    private final List<String> defaultAddons;
     private final Function<String, Optional<String>> groupOf;
     private final Messages messages;
     private final Logger logger;
@@ -79,60 +79,47 @@ public final class NetworkPack {
         this.packs = packs;
         this.server = server;
         this.wait = Duration.ofSeconds(config.waitSeconds());
-        this.required = config.required() || config.profiles().enabled();
         this.downloadRetries = config.downloadRetries();
-        this.profiles = config.profiles();
+        this.groups = config.groups();
+        this.defaultAddons = config.defaultAddons();
         this.groupOf = groupOf;
         this.messages = messages;
         this.logger = logger;
     }
 
-    public static Optional<NetworkPack> start(ProxyServer proxy, SystemConfig.ResourcePack config, Path dataDirectory,
-                                              Messages messages, Logger logger,
-                                              Function<String, Optional<String>> groupOf) {
+    public static NetworkPack start(ProxyServer proxy, SystemConfig.ResourcePack config, Path dataDirectory,
+                                    Messages messages, Logger logger, Function<String, Optional<String>> groupOf) {
         Optional<HttpServer> server = Optional.empty();
         try {
             if (config.port() < 0 || config.port() > 65535) {
                 throw new IllegalArgumentException("Resource pack port must be between 0 and 65535");
             }
-            var definitions = config.profiles().enabled() ? config.profiles().archives()
-                    : Map.of("base", new SystemConfig.PackArchive(config.file(), config.url()));
-            if (config.profiles().enabled()) {
-                if (!definitions.keySet().containsAll(Set.of("base", "lobby", "modes", "starwars"))
-                        || definitions.keySet().stream().anyMatch(name -> !name.matches("[a-z][a-z0-9-]*"))) {
-                    throw new IllegalArgumentException("Profiles need base, lobby, modes and starwars archives");
-                }
-                validateSelection(config.profiles().defaultPacks(), definitions);
-                config.profiles().groups().values().forEach(names -> validateSelection(names, definitions));
+            var names = new LinkedHashSet<String>();
+            names.add("base");
+            names.addAll(config.defaultAddons());
+            config.groups().values().forEach(names::addAll);
+            if (names.stream().anyMatch(name -> !name.matches("[a-z][a-z0-9-]*"))) {
+                throw new IllegalArgumentException("Resource pack names must be lowercase letters, digits and dashes");
             }
             var packs = new LinkedHashMap<UUID, ResourcePackInfo>();
             var archives = new LinkedHashMap<String, byte[]>();
-            for (var entry : definitions.entrySet()) {
-                var archive = entry.getValue();
-                if (archive.file().isBlank()) throw new IllegalArgumentException("Empty resource pack file");
-                var file = dataDirectory.resolve(archive.file());
-                var bytes = Files.readAllBytes(file);
-                if (archives.put(file.getFileName().toString(), bytes) != null) {
-                    throw new IllegalArgumentException("Duplicate resource pack filename");
-                }
-                packs.put(packId(entry.getKey()), proxy.createResourcePackBuilder(archive.url())
-                        .setId(packId(entry.getKey())).setHash(sha1(bytes))
-                        .setShouldForce(config.required() || config.profiles().enabled())
+            for (var name : names) {
+                var fileName = "blockcraft-" + name + ".zip";
+                var bytes = Files.readAllBytes(dataDirectory.resolve(fileName));
+                var url = config.baseUrl().resolve(fileName).toString();
+                archives.put(fileName, bytes);
+                packs.put(packId(name), proxy.createResourcePackBuilder(url)
+                        .setId(packId(name)).setHash(sha1(bytes)).setShouldForce(true)
                         .setPrompt(messages.get("resource-pack.prompt")).build());
-                logger.info("Offering resource pack {} ({} KiB) as {}", file.getFileName(), bytes.length / 1024, archive.url());
+                logger.info("Offering resource pack {} ({} KiB) as {}", fileName, bytes.length / 1024, url);
             }
             if (config.port() > 0) server = Optional.of(serve(config.port(), archives));
-            return Optional.of(new NetworkPack(Map.copyOf(packs), server, config, messages, logger, groupOf));
+            return new NetworkPack(Map.copyOf(packs), server, config, messages, logger, groupOf);
         } catch (IOException | RuntimeException failure) {
             server.ifPresent(running -> running.stop(0));
             logger.warn("Could not prepare resource packs on port {}", config.port(), failure);
-            if (!config.required() && !config.profiles().enabled()) return Optional.empty();
-            return Optional.of(new NetworkPack(Map.of(), Optional.empty(), config, messages, logger, groupOf));
+            return new NetworkPack(Map.of(), Optional.empty(), config, messages, logger, groupOf);
         }
-    }
-
-    private static void validateSelection(List<String> names, Map<String, SystemConfig.PackArchive> definitions) {
-        if (!definitions.keySet().containsAll(names)) throw new IllegalArgumentException("Unknown pack in profile");
     }
 
     public void stop() {
@@ -146,11 +133,9 @@ public final class NetworkPack {
     }
 
     public synchronized CompletableFuture<Boolean> prepareReplay(Player player, String game) {
-        if (!profiles.enabled()) return CompletableFuture.completedFuture(true);
         var destination = player.getCurrentServer().map(connection -> connection.getServerInfo().getName());
-        var group = destination.flatMap(groupOf);
-        if (group.isEmpty() || !profiles.groups().containsKey(group.orElseThrow())
-                || !profiles.groups().get(group.orElseThrow()).isEmpty()) return CompletableFuture.completedFuture(false);
+        var group = destination.flatMap(groupOf).filter(name -> groups.containsKey(name) && groups.get(name).isEmpty());
+        if (group.isEmpty()) return CompletableFuture.completedFuture(false);
         var client = clients.computeIfAbsent(player.getUniqueId(), id -> new Client());
         client.replayGroup = group.orElseThrow();
         client.replayGame = game;
@@ -183,11 +168,10 @@ public final class NetworkPack {
     }
 
     private Optional<Set<UUID>> selection(String destination, Client client) {
-        if (!profiles.enabled()) return Optional.of(Set.of(ID));
         return groupOf.apply(destination).flatMap(group -> {
-            var names = profiles.groups().getOrDefault(group, profiles.defaultPacks());
+            var names = groups.getOrDefault(group, defaultAddons);
             if (names.isEmpty() && group.equals(client.replayGroup) && !group.equals(client.replayGame)) {
-                names = profiles.groups().getOrDefault(client.replayGame, profiles.defaultPacks());
+                names = groups.getOrDefault(client.replayGame, defaultAddons);
             }
             if (names.isEmpty()) return Optional.empty();
             var ids = new LinkedHashSet<UUID>();
@@ -203,7 +187,7 @@ public final class NetworkPack {
         var client = clients.computeIfAbsent(player.getUniqueId(), id -> new Client());
         var old = client.pending;
         client.pending = null;
-        var destination = profiles.enabled() ? event.server().getServerInfo().getName() : "";
+        var destination = event.server().getServerInfo().getName();
         var selected = selection(destination, client);
         if (selected.isEmpty() || packs.isEmpty()) {
             player.disconnect(messages.get(packs.isEmpty() ? "resource-pack.unavailable" : "resource-pack.unsupported-profile"));
@@ -212,16 +196,12 @@ public final class NetworkPack {
         }
         client.needed = selected.orElseThrow();
         client.destination = destination;
-        if (required && client.needed.stream().anyMatch(id -> failed(client.statuses.get(id)))) {
+        if (client.needed.stream().anyMatch(id -> failed(client.statuses.get(id)))) {
             player.disconnect(messages.get("resource-pack.failed"));
             if (old != null) old.answer().complete(null);
             return EventTask.resumeWhenComplete(CompletableFuture.completedFuture(null));
         }
-        var mustWait = client.needed.stream().anyMatch(id -> {
-            var status = client.statuses.get(id);
-            return status != PackStatus.APPLIED && (required || status == null
-                    || status == PackStatus.OFFERED || status == PackStatus.DOWNLOADING);
-        });
+        var mustWait = client.needed.stream().anyMatch(id -> client.statuses.get(id) != PackStatus.APPLIED);
         var answer = new CompletableFuture<Void>();
         if (mustWait) {
             var pending = new Pending(destination, client.needed, answer);
@@ -238,7 +218,7 @@ public final class NetworkPack {
         if (clients.get(player.getUniqueId()) != client || client.pending != pending) return;
         pending.packs().stream().filter(id -> client.statuses.get(id) != PackStatus.APPLIED)
                 .forEach(id -> client.statuses.put(id, PackStatus.FAILED));
-        if (required) player.disconnect(messages.get("resource-pack.timeout"));
+        player.disconnect(messages.get("resource-pack.timeout"));
         tellBase(player, client);
         answered(client);
     }
@@ -252,7 +232,7 @@ public final class NetworkPack {
         for (var id : client.needed) {
             var status = client.statuses.get(id);
             if (status == PackStatus.APPLIED || status == PackStatus.OFFERED || status == PackStatus.DOWNLOADING
-                    || required && failed(status) || !required && status == PackStatus.DECLINED) continue;
+                    || failed(status)) continue;
             client.statuses.put(id, PackStatus.OFFERED);
             player.sendResourcePackOffer(packs.get(id));
         }
@@ -266,7 +246,7 @@ public final class NetworkPack {
         if (client == null) return;
         if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DISCARDED && client.removals.remove(id)) return;
         if (!client.statuses.containsKey(id)) return;
-        if (required && failed(client.statuses.get(id))) return;
+        if (failed(client.statuses.get(id))) return;
         if (event.getStatus() == PlayerResourcePackStatusEvent.Status.FAILED_DOWNLOAD
                 && client.needed.contains(id) && client.retries.getOrDefault(id, 0) < downloadRetries) {
             client.retries.merge(id, 1, Integer::sum);
@@ -283,7 +263,7 @@ public final class NetworkPack {
         client.statuses.put(id, status);
         if (failed(status) && client.needed.contains(id)) {
             logger.warn("{} could not load resource pack {}: {}", event.getPlayer().getUsername(), id, event.getStatus());
-            if (required) event.getPlayer().disconnect(messages.get(status == PackStatus.DECLINED
+            event.getPlayer().disconnect(messages.get(status == PackStatus.DECLINED
                     ? "resource-pack.declined" : "resource-pack.failed"));
             answered(client);
         } else if (client.pending != null && client.pending.packs().stream()
@@ -310,17 +290,15 @@ public final class NetworkPack {
         var player = event.getPlayer();
         var client = clients.get(player.getUniqueId());
         if (client == null) return;
-        if (profiles.enabled()) {
-            var destination = player.getCurrentServer().map(connection -> connection.getServerInfo().getName());
-            var selected = destination.flatMap(name -> selection(name, client));
-            if (selected.isPresent() && destination.orElseThrow().equals(client.destination)) {
-                client.needed = selected.orElseThrow();
-                removeUnused(player, client);
-                answered(client);
-                if (destination.flatMap(groupOf).filter(client.replayGroup::equals).isEmpty()) {
-                    client.replayGroup = "";
-                    client.replayGame = "";
-                }
+        var destination = player.getCurrentServer().map(connection -> connection.getServerInfo().getName());
+        var selected = destination.flatMap(name -> selection(name, client));
+        if (selected.isPresent() && destination.orElseThrow().equals(client.destination)) {
+            client.needed = selected.orElseThrow();
+            removeUnused(player, client);
+            answered(client);
+            if (destination.flatMap(groupOf).filter(client.replayGroup::equals).isEmpty()) {
+                client.replayGroup = "";
+                client.replayGame = "";
             }
         }
         tellBase(player, client);
@@ -338,7 +316,7 @@ public final class NetworkPack {
 
     @Subscribe
     public synchronized void onKick(KickedFromServerEvent event) {
-        if (!profiles.enabled() || !event.kickedDuringServerConnect()) return;
+        if (!event.kickedDuringServerConnect()) return;
         var player = event.getPlayer();
         var client = clients.get(player.getUniqueId());
         if (client == null || client.pending == null

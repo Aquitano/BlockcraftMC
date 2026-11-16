@@ -73,44 +73,25 @@ alerts:
   lag-mspt: 50
   lag-polls: 6
 
-# The network resource pack (menu panels, HUD icons; README "Resource pack"). file lives in this plugin's directory,
-# is hashed at startup and served at http://<this proxy>:<port>/<file>; url is that address as clients reach it, or
-# wherever else the same file is hosted, then port 0 serves nothing. required also prompts clients whose server list
-# entry turns packs off, which would otherwise decline silently. Required packs must finish applying before entry;
-# declining, failing or exceeding wait-seconds disconnects the client. A missing required file blocks entry too.
-# Optional packs allow entry after failure or timeout. An empty file disables optional packs.
-# BLOCKCRAFT_RESOURCE_PACK_URL overrides url.
+# The network resource pack (README "Resource pack"): every client loads base and the addons its server group lists
+# under groups, or default-addons for any other group. Each archive is blockcraft-<name>.zip in this plugin's
+# directory, hashed at startup and served at http://<this proxy>:<port>/<file>; base-url is where clients reach those
+# files, or wherever else the same files are hosted, then port 0 serves nothing. BLOCKCRAFT_RESOURCE_PACK_BASE_URL
+# overrides base-url. Every selected archive must finish applying before entry; declining, failing or exceeding
+# wait-seconds disconnects the client, and a missing archive blocks entry. A failed download is offered again up to
+# download-retries times within the same wait.
 resource-pack:
-  file: blockcraft.zip
-  url: http://localhost:8080/blockcraft.zip
+  base-url: http://localhost:8080/
   port: 8080
-  required: true
   wait-seconds: 120
   download-retries: 1
-  # Opt-in prototype. All selected packs are required, even when required above is false.
-  # The base keeps the existing shared UI identity. Addons have independent UUIDs and hashes.
-  profiles:
-    enabled: false
-    archives:
-      base:
-        file: blockcraft-base.zip
-        url: http://localhost:8080/blockcraft-base.zip
-      lobby:
-        file: blockcraft-lobby.zip
-        url: http://localhost:8080/blockcraft-lobby.zip
-      modes:
-        file: blockcraft-modes.zip
-        url: http://localhost:8080/blockcraft-modes.zip
-      starwars:
-        file: blockcraft-starwars.zip
-        url: http://localhost:8080/blockcraft-starwars.zip
-    default-packs: [modes]
-    # Base is always first. Replays select the profile of their recorded game.
-    groups:
-      lobby: [lobby]
-      sternenfront: [starwars]
-      story: [starwars]
-      replay: []
+  # A replay's empty list takes the addons of the recorded game's group.
+  groups:
+    lobby: [lobby]
+    sternenfront: [starwars]
+    story: [starwars]
+    replay: []
+  default-addons: [modes]
 
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100

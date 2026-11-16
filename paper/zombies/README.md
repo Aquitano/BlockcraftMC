@@ -90,9 +90,8 @@ through the shared round summary, while gold stays in the match.
 
 For MariaDB integration tests, set `BLOCKCRAFT_TEST_DB_PORT` and `BLOCKCRAFT_TEST_DB_PASSWORD` for an isolated test database.
 In a Minecraft client, check a solo start, gun controls, a room purchase, power and upgrades, and a cooperative revive.
-Check the weapon models and the enemies' headgear with the resource pack both applied and absent. The proxy's
-`resource-pack.required` kicks whoever declines the pack, so turn it off in BlockcraftSystem's config for the run
-without it.
+Check the weapon models and the enemies' headgear with the resource pack applied. The proxy kicks whoever declines
+the pack, so its vanilla fallbacks show only before it loads.
 The [arena playtest checklist](TESTING.md) covers every station, barricade, and player state.
 
 To inspect a saved arena in the local 3D viewer, use the [map inspector](../../dev/map-inspector/README.md):
