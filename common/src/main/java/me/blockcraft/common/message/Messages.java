@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 /**
  * MiniMessage strings loaded from a plugin's {@code messages.yml}, bundled defaults underneath;
  * {@code <prefix>} resolves to the {@code prefix} key everywhere, and the global resolvers a module
- * is loaded with (the network tags and the colour palette) resolve in every message too.
+ * is loaded with (network.yml's addresses and palette) resolve in every message too.
  */
 public final class Messages {
 
@@ -49,28 +49,6 @@ public final class Messages {
 
     private static TagResolver prefixOf(Map<String, String> messages) {
         return Placeholder.parsed("prefix", messages.getOrDefault("prefix", ""));
-    }
-
-    /**
-     * Every direct child of {@code section} as a tag named after its key, so {@code palette.primary} becomes
-     * {@code <primary>}. The values are spliced into the message before it is parsed, so a colour tag colours
-     * whatever follows it.
-     */
-    public TagResolver tagsOf(String section) {
-        String prefix = section + ".";
-        var tags = messages.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(prefix) && entry.getKey().indexOf('.', prefix.length()) < 0)
-                .map(entry -> Placeholder.parsed(entry.getKey().substring(prefix.length()), entry.getValue()))
-                .toList();
-        return TagResolver.resolver(tags);
-    }
-
-    /** Every scalar of a config section as an unparsed tag named after its key; used for the network addresses. */
-    public static TagResolver tagsOf(Map<String, Object> section) {
-        return TagResolver.resolver(section.entrySet().stream()
-                .filter(entry -> !(entry.getValue() instanceof Map<?, ?>) && !(entry.getValue() instanceof List<?>))
-                .map(entry -> Placeholder.unparsed(entry.getKey(), String.valueOf(entry.getValue())))
-                .toList());
     }
 
     public Component get(String key, TagResolver... resolvers) {

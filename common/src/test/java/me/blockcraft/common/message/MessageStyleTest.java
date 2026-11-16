@@ -23,7 +23,6 @@ public class MessageStyleTest {
     /** A line that opens with a click word; "Klicke, um …" is a sentence in a chat hover, not a hint. */
     private static final Pattern HAND_WRITTEN_HINT =
             Pattern.compile("^(?:<[^>]+>|\\s)*(?:Linksklick|Rechtsklick|Klicken|Klicke)(?![,\\w])");
-    private static final String PALETTE = "palette.";
     private static final Pattern TITLE = Pattern.compile("^<arrow><[\\w-]+>[^●]+$");
     private static final Pattern MENU = Pattern.compile("extends (?:List)?Menu\\b");
     private static final Pattern MENU_TITLE = Pattern.compile("super\\(([^;]*);");
@@ -38,7 +37,7 @@ public class MessageStyleTest {
                 continue;
             }
             MessageFiles.bundled(module).forEach((key, value) -> value.lines()
-                    .filter(line -> !key.startsWith(PALETTE) && HAND_WRITTEN_HINT.matcher(line).find())
+                    .filter(line -> HAND_WRITTEN_HINT.matcher(line).find())
                     .forEach(line -> handWritten.add(MessageFiles.ROOT.relativize(module) + " " + key + ": " + line)));
         }
         assertEquals(String.join("\n", handWritten), List.of(), handWritten);

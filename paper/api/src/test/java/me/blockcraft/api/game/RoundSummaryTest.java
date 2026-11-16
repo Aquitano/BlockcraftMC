@@ -2,6 +2,7 @@ package me.blockcraft.api.game;
 
 import me.blockcraft.api.pack.DisplayFont;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.NetworkConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
@@ -146,8 +147,9 @@ public class RoundSummaryTest {
     }
 
     private Messages messages() throws Exception {
-        var messages = Messages.load(folder.newFolder().toPath(), () -> getClass().getResourceAsStream("/messages.yml"));
-        return messages.with(messages.tagsOf("palette"), DisplayFont.TAG);
+        var directory = folder.newFolder().toPath();
+        return Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"),
+                NetworkConfig.load(directory).tags(), DisplayFont.TAG);
     }
 
     private static String plain(Component component) {

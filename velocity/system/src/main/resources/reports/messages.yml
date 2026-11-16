@@ -1,15 +1,4 @@
 prefix: "<error>Reports <dark>» <reset>"
-
-# The network's colours, the same tags the Paper plugins use (BlockcraftAPI messages.yml).
-palette:
-  primary: "<blue>"
-  accent: "<yellow>"
-  muted: "<gray>"
-  dark: "<dark_gray>"
-  success: "<green>"
-  error: "<red>"
-  bullet: "<dark_gray>● "
-  arrow: "<dark_gray>» "
 player-only: "<error>Du musst ein Spieler sein!"
 usage: "<prefix>Nutze <error>/report [Spieler]"
 no-permission: "<prefix>Du hast nicht genügend Rechte!"

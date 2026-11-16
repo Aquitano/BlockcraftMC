@@ -199,7 +199,7 @@ In containers, these replace the config edits.
 | Variable | Replaces |
 | --- | --- |
 | `BLOCKCRAFT_DB_HOST`, `_PORT`, `_NAME`, `_USER`, `_PASSWORD` | The `database` section of every Blockcraft plugin |
-| `BLOCKCRAFT_NETWORK_<KEY>` | An entry of every `network` section, such as `BLOCKCRAFT_NETWORK_IP` for `<ip>` |
+| `BLOCKCRAFT_NETWORK_<KEY>` | An entry of `network.yml`'s `network` section, such as `BLOCKCRAFT_NETWORK_IP` for `<ip>` |
 | `BLOCKCRAFT_SERVER_NAME`, `_GROUP`, `_HOST` | What a server announces; see [Server discovery and groups](#server-discovery-and-groups) |
 | `BLOCKCRAFT_WORLD_TEMPLATE` | `world.template`; see [Maps](#maps) |
 | `BLOCKCRAFT_WAITING_TEMPLATE` | `waiting-lobby.template`, the [shared waiting island](worlds/README.md#shared-waiting-island) |
@@ -288,8 +288,10 @@ Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `conf
 either to its data folder. A file of the same name there holds only the keys an operator changed. Every other key
 follows the bundled default of the running version, so an update brings its new texts and settings along.
 
-The `network` addresses and the colour `palette` exist on both sides: in BlockcraftAPI and in the proxy plugins. Changing
-either means editing both.
+What the proxy and the Paper servers must agree on lives in `common`'s `network.yml`, which both jars bundle: the
+`network` addresses, the colour `palette`, the `calendar` and the ranked `elo`. Change it there. A `network.yml` in
+BlockcraftSystem's or BlockcraftAPI's data folder overrides keys for that plugin only, so on its own it splits the
+network.
 
 ## Server discovery and groups
 

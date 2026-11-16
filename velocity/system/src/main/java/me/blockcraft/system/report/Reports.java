@@ -9,6 +9,7 @@ import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -20,12 +21,11 @@ import java.time.Duration;
 public record Reports(ReportCommand command, ReportService service) {
 
     public static Reports load(Object plugin, ProxyServer proxy, Logger logger, Path systemDirectory,
-                               Database database, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
+                               TagResolver networkTags, Database database, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
                                PlayerSettingRepository settings) {
         Path directory = systemDirectory.resolve("reports");
         var config = YamlFile.loadWithDefaults(directory.resolve("config.yml"), () -> Reports.class.getResourceAsStream("/reports/config.yml"));
-        var loaded = Messages.load(directory, () -> Reports.class.getResourceAsStream("/reports/messages.yml"));
-        var messages = loaded.with(loaded.tagsOf("palette"));
+        var messages = Messages.load(directory, () -> Reports.class.getResourceAsStream("/reports/messages.yml"), networkTags);
         var preferences = new NotifyPreferences(choices, settings);
         var repository = new ReportRepository(database);
         String permission = String.valueOf(config.getOrDefault("staff-permission", "blockcraft.report.notify"));
