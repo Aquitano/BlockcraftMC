@@ -15,7 +15,3 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: true
-permissions:
-  blockcraft.presentation:
-    description: Tests the shared dialogue and presentation prototypes
-    default: op

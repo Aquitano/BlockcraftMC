@@ -18,14 +18,6 @@ public final class ConfirmDialog {
 
     private final Dialog dialog;
 
-    public ConfirmDialog(ItemStack subject, Consumer<Player> onAccept, Consumer<Player> onCancel) {
-        this(subject, List.of(), onAccept, onCancel);
-    }
-
-    public ConfirmDialog(ItemStack subject, List<Component> details, Consumer<Player> onAccept, Consumer<Player> onCancel) {
-        this(subject, details, Optional.of(onAccept), onCancel);
-    }
-
     public ConfirmDialog(ItemStack subject, List<Component> details, Optional<Consumer<Player>> onAccept, Consumer<Player> onCancel) {
         this(subject, details, BlockcraftApi.get().messages().get("menu.confirm.accept"), onAccept, onCancel);
     }

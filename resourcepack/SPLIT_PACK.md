@@ -36,7 +36,7 @@ Generation remains a separate explicit operation.
 
 ## Content boundaries
 
-Base contains network icons, cosmetics, menus, shared dialogue and presentation assets, UI sounds, the shared item and text effects,
+Base contains network icons, cosmetics, menus, shared presentation assets, UI sounds, the shared item and text effects,
 and the text shader's corner HUD panels, so every stack can draw a `HudPanel`.
 Menu atlases and mode preview tiles stay shared because network menus use them.
 These images can include Sternenfront previews. They do not activate its HUD.
@@ -58,7 +58,7 @@ Shared inventory slot highlight blanks remain in base.
 Every source file must occur in at least one split archive.
 Checks resolve item models, model parents and textures, bitmap and reference fonts, sound files, shader includes, post-effect shaders, and texture metadata against each effective stack.
 They reject missing custom dependencies, forbidden profile files, changed vanilla item fallbacks, lost selector cases, and boss-bar blanks or rigs in base or modes.
-`split-report.json` lists unresolved vanilla resources separately. The builder lists them separately. The current integration audit also resolved all 303 against the installed Minecraft 26.3 client JAR.
+`split-report.json` lists unresolved vanilla resources separately.
 Model texture variables and renderer semantics still depend on Minecraft.
 
 The builder classifies the current accepted layout. New namespaces fail; new asset categories inside existing namespaces require ownership review.
@@ -69,12 +69,6 @@ For additional external exports, assemble them before splitting and select that 
 Nexo and BetterModel server configuration remain staged through their existing tasks.
 No art, imported source files, or rig files are regenerated.
 
-The isolated Minecraft 26.3 client verified lobby entry, lobby-to-Sternenfront, Sternenfront-to-Duell, and return-to-lobby.
-The verification client's `packs` command confirmed only base and the destination's addon remained selected after each
-transfer. The source assets match the earlier accepted set byte-for-byte. An earlier integration run rendered an A280
-and the Star Wars HUD in a round, an ordinary pistol and pink boss bar in Duell, and ordinary lobby furniture.
-Refusal and timeout behavior have automated tests but were not exercised by these client runs.
-The proxy suite covers combined compatibility, split transfers, lobby return and Star Wars addon removal. Database integration was not enabled.
 The lobby and ordinary games receive none of the Star Wars boss-bar blanks.
 The proxy implements these stacks behind `resource-pack.profiles.enabled` in its configuration. Each archive needs
 its own reachable URL under `resource-pack.profiles.archives`. The combined `BLOCKCRAFT_RESOURCE_PACK_URL` override
@@ -85,10 +79,7 @@ A failed download is retried up to `resource-pack.download-retries` times, once 
 loading deadline. Refusal, exhausted retries, a failed reload, or timeout blocks entry. Automatic lobby recovery is not implemented.
 Replay transfers carry the recording's original game to the proxy. The replay backend requests that game's profile
 and waits for acknowledgement before playback, including when switching recordings on the same backend.
-An unknown replay origin remains blocked. Replay profile selection and bounded download retries have automated tests.
-The isolated Minecraft 26.3 client also opened a Sternenfront recording from the lobby, played it with
-only base and Star Wars loaded, and returned to the lobby. Switching between recordings of different modes on the
-same replay backend is covered by automated tests, but has not been exercised with this client.
+An unknown replay origin remains blocked.
 The combined archive remains the default while profile delivery is disabled.
 
 ## Production rollout
@@ -103,7 +94,3 @@ Keep matching Paper and Velocity jars, rigs, furniture definitions and packs tog
 the proxy after replacement. Stopped on-demand modes pick up the same files on their next start. Recreate existing
 on-demand containers when their plugin source lists or pinned runtime settings change. Starting a stopped container
 does not refresh those settings.
-
-The lobby loads only `blockcraft/scenery/furniture.yml` and its ordinary ambient creatures and seasonal settings.
-The temporary asset exhibitions, practice areas and their extra pack overlay are retired. Models remain available
-for real map construction and Sternenfront. No exhibition world is included in the release.

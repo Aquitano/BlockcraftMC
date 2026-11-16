@@ -328,7 +328,7 @@ A player's squad is the fireteam that last took their order (see Bots). It stays
 and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
 
 The map is a boss bar line of its own that the pack's text shader moves into the corner, and it empties with the combat
-HUD for dialogues, screen effects and scenes and while the player is dead. The line itself stays for as long as a player
+HUD during a scene and while the player is dead. The line itself stays for as long as a player
 with the pack is in the round, so the bars keep one order and never jump a slot: the objective line, the map's, then a
 post's capture bar and the heroes' bars. A bar that arrives late, such as the objective line for a player who rejoins,
 puts the ones after it back below it. The map redraws every `minimap.update-ticks` and sends nothing while nothing on it

@@ -88,11 +88,6 @@ public final class NetworkPack {
     }
 
     public static Optional<NetworkPack> start(ProxyServer proxy, SystemConfig.ResourcePack config, Path dataDirectory,
-                                              Messages messages, Logger logger) {
-        return start(proxy, config, dataDirectory, messages, logger, name -> Optional.empty());
-    }
-
-    public static Optional<NetworkPack> start(ProxyServer proxy, SystemConfig.ResourcePack config, Path dataDirectory,
                                               Messages messages, Logger logger,
                                               Function<String, Optional<String>> groupOf) {
         Optional<HttpServer> server = Optional.empty();

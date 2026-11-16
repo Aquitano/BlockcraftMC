@@ -24,7 +24,7 @@ public class ScreenEffectsTest {
     public void replacingFramesAndClearingPresentationPreservesOtherPluginsEffects() {
         var values = new ArrayList<>(List.of(Key.key("other", "weather")));
         var player = player(values);
-        ScreenEffects.atmosphere(player, ScreenEffects.Atmosphere.STORM);
+        ScreenEffects.atmosphere(new PresentationScope(plugin()), player, ScreenEffects.Atmosphere.STORM);
         ScreenEffects.frame(player, 1, true);
         ScreenEffects.frame(player, 0.5, true);
         assertEquals(List.of(Key.key("other", "weather"), Key.key("blockcraft", "presentation/atmosphere/storm"),
@@ -35,7 +35,7 @@ public class ScreenEffectsTest {
                 Key.key("blockcraft", "presentation/cinematic/letterbox/16")), values);
         ScreenEffects.clearAtmosphere(player);
         assertEquals(List.of(Key.key("other", "weather"), Key.key("blockcraft", "presentation/cinematic/letterbox/16")), values);
-        ScreenEffects.clear(player);
+        ScreenEffects.frame(player, 0, false);
         assertEquals(List.of(Key.key("other", "weather")), values);
     }
 
@@ -43,10 +43,8 @@ public class ScreenEffectsTest {
     public void oldOwnerCannotClearNewerFramesOrAtmosphere() {
         var values = new ArrayList<Key>();
         var player = player(values);
-        var plugin = (Plugin) Proxy.newProxyInstance(Plugin.class.getClassLoader(), new Class<?>[]{Plugin.class},
-                (proxy, method, args) -> { throw new AssertionError(method.getName()); });
-        var old = new PresentationScope(plugin);
-        var current = new PresentationScope(plugin);
+        var old = new PresentationScope(plugin());
+        var current = new PresentationScope(plugin());
         ScreenEffects.frame(old, player, 1, false);
         ScreenEffects.atmosphere(old, player, ScreenEffects.Atmosphere.STORM);
         ScreenEffects.frame(current, player, 0.5, true);
@@ -58,6 +56,11 @@ public class ScreenEffectsTest {
         assertTrue(values.isEmpty());
         ScreenEffects.frame(current, player, 1, false);
         assertTrue(values.isEmpty());
+    }
+
+    private static Plugin plugin() {
+        return (Plugin) Proxy.newProxyInstance(Plugin.class.getClassLoader(), new Class<?>[]{Plugin.class},
+                (proxy, method, args) -> { throw new AssertionError(method.getName()); });
     }
 
     private static Player player(List<Key> values) {

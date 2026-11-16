@@ -818,8 +818,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         for (var player : round.players()) {
-            BlockcraftApi.get().dialogues().stop(player);
-            BlockcraftApi.get().visuals().stop(player);
+            BlockcraftApi.get().visuals().clearAccent(player);
             intro.cancel(player);
         }
         round.enter(GamePhase.INGAME);
@@ -893,7 +892,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         playMusic();
         radio.tick(tick, round.players().stream()
                 .filter(player -> player.isOnline() && player.getWorld().equals(map.world()) && !intro.running()
-                        && !Scenes.isViewing(player) && !BlockcraftApi.get().dialogues().active(player))
+                        && !Scenes.isViewing(player))
                 .flatMap(player -> factionOf(player).stream().map(faction -> new BattleRadio.Listener(player, faction,
                         BlockcraftApi.get().resourcePack().applied(player)))).toList());
         bots.tick(tick);

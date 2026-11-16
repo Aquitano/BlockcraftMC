@@ -1,4 +1,4 @@
-"""Build prototype resource packs from an existing generated source tree."""
+"""Build the split resource packs from an existing generated source tree."""
 import argparse
 import copy
 import json

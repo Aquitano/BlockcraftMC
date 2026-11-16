@@ -3,6 +3,8 @@ package me.blockcraft.api.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.coins.Coins;
+import me.blockcraft.api.cosmetic.KillEffect;
+import me.blockcraft.api.cosmetic.WinEffect;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -11,6 +13,7 @@ import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.round.RoundRecap;
+import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -196,7 +199,7 @@ public final class RoundSummary {
             return;
         }
         accusations.killed(victim, killer);
-        api.effects().onKill(killer, victim);
+        api.settings().get(killer, PlayerSetting.KILL_EFFECT).flatMap(KillEffect::byKey).ifPresent(effect -> effect.play(victim));
         if (api.streaks().announces(score.streak)) {
             Bukkit.broadcast(messages.get("summary.streak",
                     Placeholder.unparsed("player", killer.getName()), Formatter.number("streak", score.streak)));
@@ -272,7 +275,7 @@ public final class RoundSummary {
 
     /** Pays the winner and plays their win effect; a win on half a heart or less is a close call. */
     public void awardWin(Player winner) {
-        api.effects().onWin(winner);
+        api.settings().get(winner, PlayerSetting.WIN_EFFECT).flatMap(WinEffect::byKey).ifPresent(effect -> effect.play(winner));
         winners.put(winner.getUniqueId(), winner.getName());
         var score = score(winner);
         score.xp += api.xp().award(winner, XpReward.WIN);

@@ -58,7 +58,7 @@ public final class TeamMenu extends Menu {
 
     @Override
     protected Optional<Component> screen() {
-        return Optional.of(UiFont.menuTitle(ROWS, true, UiFont.overlaid(UiFont.Overlay.STERNENFRONT_FACTIONS, title)));
+        return Optional.of(UiFont.menuTitle(ROWS, true, false, UiFont.overlaid(UiFont.Overlay.STERNENFRONT_FACTIONS, title)));
     }
 
     @Override

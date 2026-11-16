@@ -5,8 +5,6 @@ plugins {
 val libs = the<VersionCatalogsExtension>().named("libs")
 
 // Runs one Velocity proxy (port 25565) with every plugin here plus LuckPerms; backends register themselves.
-// `-Pplugins=system` selects the network plugin, including reports.
-val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").map(String::trim).toSet() }
 
 tasks.runVelocity {
     velocityVersion(libs.findVersion("velocity-api").get().requiredVersion)
@@ -28,10 +26,6 @@ tasks.runVelocity {
             into(runDirectory.dir("plugins/blockcraft-system"))
         }
     }
-    pluginJars.from(provider {
-        subprojects
-            .filter { !selectedPlugins.isPresent || it.name in selectedPlugins.get() }
-            .map { it.tasks.named("shadowJar") }
-    })
+    pluginJars.from(provider { subprojects.map { it.tasks.named("shadowJar") } })
     pluginJars.from(rootProject.tasks.named("downloadLuckPermsVelocity"))
 }

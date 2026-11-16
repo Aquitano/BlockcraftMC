@@ -7,6 +7,7 @@ import me.blockcraft.api.pack.HudPanel.Corner;
 import me.blockcraft.api.pack.HudPanel.Glyph;
 import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.sternenfront.bot.Bots;
 import me.blockcraft.sternenfront.game.MinimapLayout.Mark;
 import me.blockcraft.sternenfront.game.MinimapLayout.Member;
@@ -91,7 +92,7 @@ final class Minimap implements Listener {
                 hide(player);
                 continue;
             }
-            boolean seen = !CombatFeedback.covered(player);
+            boolean seen = !Scenes.isViewing(player);
             var map = seen && game.onField(player) ? map(player, field, tick) : List.<Glyph>of();
             var feed = seen ? KillFeed.layout(game.killFeed().live(player.getUniqueId(), tick), player.getName(), tick) : List.<Glyph>of();
             draw(player, map, feed, tick);
@@ -189,7 +190,7 @@ final class Minimap implements Listener {
 
     private void draw(Player viewer, List<Glyph> map, List<Glyph> feed, long tick) {
         var panel = panels.computeIfAbsent(viewer.getUniqueId(), ignored -> new Panel());
-        var announcement = tick < panel.announcedUntil && !CombatFeedback.covered(viewer) ? panel.announcement : Component.empty();
+        var announcement = tick < panel.announcedUntil && !Scenes.isViewing(viewer) ? panel.announcement : Component.empty();
         if (!map.equals(panel.drawnMap) || !feed.equals(panel.drawnFeed) || !announcement.equals(panel.drawnAnnouncement)) {
             panel.drawnMap = List.copyOf(map);
             panel.drawnFeed = List.copyOf(feed);

@@ -46,7 +46,7 @@ final class BattlePresentation implements AutoCloseable {
         if (deploying(player)) return;
         int fadeTicks = Math.clamp(game.plugin().getConfig().getInt("presentation.deployment.fade-ticks"), 0, 40);
         if (fadeTicks == 0 || !game.plugin().getConfig().getBoolean("presentation.effects")
-                || !BlockcraftApi.get().resourcePack().applied(player) || busy(player)) {
+                || !BlockcraftApi.get().resourcePack().applied(player) || Scenes.isViewing(player)) {
             deploy.run();
             return;
         }
@@ -73,7 +73,7 @@ final class BattlePresentation implements AutoCloseable {
             public void run() {
                 if (scope.closed()) return;
                 if (!player.isOnline() || player.isDead() || player.getWorld() != world
-                        || game.phase() != GamePhase.INGAME || !game.isPlaying(player) || busy(player)) {
+                        || game.phase() != GamePhase.INGAME || !game.isPlaying(player) || Scenes.isViewing(player)) {
                     scope.close();
                     return;
                 }
@@ -139,12 +139,7 @@ final class BattlePresentation implements AutoCloseable {
         }.runTaskTimer(game.plugin(), 0, 2);
         scope.own(task::cancel);
         var banner = game.messages().get("post.capture-banner", game.posts().name(index));
-        present.stream().filter(player -> !busy(player)).forEach(player -> game.announce(player, banner, duration + FADE_TICKS));
-    }
-
-    private static boolean busy(Player player) {
-        var api = BlockcraftApi.get();
-        return Scenes.isViewing(player) || api.dialogues().active(player) || api.visuals().active(player);
+        present.stream().filter(player -> !Scenes.isViewing(player)).forEach(player -> game.announce(player, banner, duration + FADE_TICKS));
     }
 
     /** From the fade to their deployment until the player stands on their spawn, through any landing. */

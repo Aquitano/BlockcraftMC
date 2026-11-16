@@ -88,10 +88,6 @@ public record CameraPath(List<Keyframe> frames) {
         return frames.getLast().tick();
     }
 
-    public boolean cutAt(int tick) {
-        return frames.stream().anyMatch(frame -> frame.cut() && frame.tick() == tick);
-    }
-
     /** The tick of the next cut after {@code tick}, or one past the end: the camera of the current shot lives until then. */
     public int shotEnd(int tick) {
         return frames.stream().filter(frame -> frame.cut() && frame.tick() > tick)

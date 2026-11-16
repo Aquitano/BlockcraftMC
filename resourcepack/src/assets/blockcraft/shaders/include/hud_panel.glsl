@@ -9,7 +9,7 @@
 //   233  row    176 + tint  a panel in the top-right corner, on a boss bar line          HudPanel.Corner.TOP_RIGHT
 //   232  row    176 + tint  a panel in the bottom-right corner, on the action bar        HudPanel.Corner.BOTTOM_RIGHT
 //   234  row    176 + tint  a panel above the hotbar's middle, on the action bar         HudPanel.Corner.BOTTOM_CENTRE
-//   231  1-5    197         a text effect from text_effect.glsl                          TextMotion
+//   231  1-5    197         a text effect from text_effect.glsl                          nothing yet
 //
 // Blue 176 to 183 is a panel tint, an index into BLOCKCRAFT_PANEL_TINTS in the order of HudPanel.Tint. Blue 197 is a
 // text effect and never a tint.

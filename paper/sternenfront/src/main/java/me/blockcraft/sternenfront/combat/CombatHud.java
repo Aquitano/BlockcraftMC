@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.combat;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.HudPanel.Tint;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Binding;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Charges;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Slot;
@@ -52,7 +53,7 @@ public final class CombatHud {
     private static final char FIRST_VENT_CELL = '\uE260';
 
     public void show(Player player, Guard guard) {
-        if (CombatFeedback.covered(player)) return;
+        if (Scenes.isViewing(player)) return;
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
         var heat = fighter.heat();

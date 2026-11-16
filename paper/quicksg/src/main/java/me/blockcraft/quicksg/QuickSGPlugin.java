@@ -61,7 +61,6 @@ public final class QuickSGPlugin extends JavaPlugin {
         services.commands(commands -> {
             commands.register(StartCommand.of(game.lobbyCountdown())
                     .then(DebugCommands.timer(game))
-                    .then(DebugCommands.wins(this, stats))
                     .build());
             commands.register(SetupCommand.locations(messages, List.of(LocationKey.values()).stream()
                             .filter(key -> api.waitingLobby().isEmpty() || key != LocationKey.LOBBY && key != LocationKey.LOBBY_CENTER).toList(),

@@ -44,12 +44,6 @@ public final class StatsRepository {
                 player.toString(), name, delta.kills(), delta.deaths(), delta.wins(), delta.losses(), delta.points());
     }
 
-    public List<TopEntry> top(Stat stat, int limit) {
-        String column = stat.column();
-        return db.queryList("SELECT NAME, " + column + " FROM " + table + " ORDER BY " + column + " DESC LIMIT ?",
-                row -> new TopEntry(row.getString("NAME"), row.getInt(column)), limit);
-    }
-
     /** The top of the board with each row's player, for a face or a skin next to the name. */
     public List<Leader> leaders(Stat stat, int limit) {
         String column = stat.column();
