@@ -72,14 +72,14 @@ public final class Soundtrack implements AutoCloseable {
         this.trace = trace;
         this.settings = settings;
         this.listeners = listeners;
-        this.lengths = lengths();
+        this.lengths = lengths(plugin);
         for (var channel : Channel.values()) next.put(channel, new HashMap<>());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 10, 10);
     }
 
-    private static Map<String, Integer> lengths() {
+    private static Map<String, Integer> lengths(Plugin plugin) {
         var properties = new Properties();
-        try (var input = Soundtrack.class.getResourceAsStream("/soundtrack.properties")) {
+        try (var input = plugin.getResource("soundtrack.properties")) {
             if (input != null) properties.load(new InputStreamReader(input, StandardCharsets.UTF_8));
         } catch (IOException failure) {
             throw new IllegalStateException("Cannot read soundtrack.properties", failure);

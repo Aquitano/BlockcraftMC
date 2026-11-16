@@ -14,6 +14,7 @@ fun generateAssets(taskName: String, family: String) = tasks.register<Exec>(task
 generateAssets("generateTextures", "ui")
 generateAssets("generateSounds", "sounds")
 generateAssets("generateSternenfrontSounds", "sternenfront-sounds")
+generateAssets("generateStorySounds", "story-sounds")
 generateAssets("generateProps", "props")
 generateAssets("generateSternenfrontArt", "bodies")
 generateAssets("generateRigModels", "rigs")

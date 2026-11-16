@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
-# The game server under test: sternenfront, story for the story prototype, or zombies.
+# The game server under test: sternenfront, story for the story core's example game, or zombies.
 GAME = os.environ.get("VERIFY_GAME", "sternenfront")
 STACK = ("mariadb", "velocity", GAME, "client")
 PLAYER = "Verify"
@@ -669,17 +669,41 @@ def story_state():
 
 def story_jump(client, run):
     """Jumps to every stage of the story in turn, from the waiting lobby, with /story jump, and records each stage's
-    state and a frame; the last stage plays its ending scene to the end."""
+    state and a frame, then a last frame of whatever the last stage ends in."""
     stages = story_state()["stages"]
     run.report["stages"] = {}
     for stage in stages:
-        rcon(f"story jump {stage}")
+        answer = rcon(f"story jump {stage}")
         settle(client, 40)
         run.shot(client, stage)
-        run.report["stages"][stage] = story_state()
-    client.until("the ending scene", lambda: client("status")["gamemode"] == "spectator", 30)
-    client("capture", name=f"{run.name}/ending", frames=6, every=40)
+        run.report["stages"][stage] = {"answer": re.sub(r"\x1b\[[0-9;]*m", "", answer), **story_state()}
+    settle(client, 100)
+    run.shot(client, "end")
     run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 60").splitlines()]
+
+
+def story_chapters(client, run):
+    """With the example game: ends its first chapter by jumping to the stage that ends it, and photographs the way into
+    the second, which plays in a world of its own: the ending, the loading screen and the arrival. It reports the
+    chapter, world and facts the second chapter starts with and the story log of the way there."""
+    if not client("status")["in_world"]:
+        join(client)
+    rcon("story jump ending")
+    client.until("the first chapter's ending", lambda: story_state()["stage"] == "done", 60, 0.5)
+    run.report["first"] = story_state()
+    run.shot(client, "ending")
+    client.until("the loading screen", lambda: client("hud")["title"]["text"] != "" and "Kapitel" in client("hud")["title"]["text"], 30, 0.3)
+    run.report["loading_title"] = [client("hud")["title"]["text"], client("hud")["subtitle"]["text"]]
+    client("capture", name=f"{run.name}/loading", frames=6, every=8)
+    client.until("the second chapter", lambda: story_state()["chapter"] == "relief", 120, 1)
+    client.until("the screen to come back", lambda: client("hud")["title"]["text"] == "", 60, 0.5)
+    settle(client, 40)
+    run.shot(client, "arrived")
+    run.report["second"] = story_state()
+    run.report["dimension"] = client("status")["dimension"]
+    run.report["chat"] = client("hud")["chat"]
+    run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 40").splitlines()]
+
 
 
 HORDE = ("zombie ", "husk ", "wolf ")
@@ -996,7 +1020,7 @@ def database(query):
 SCENARIOS = {"replay": (replay, "joined"), "scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
              "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field"),
              "underfire": (under_fire, "field"), "glint": (glint, "field"), "camera": (camera, "world"),
-             "storyjump": (story_jump, "world"), "survive": (survive, "world"), "stations": (stations, "server"),
+             "storyjump": (story_jump, "world"), "storychapters": (story_chapters, "world"), "survive": (survive, "world"), "stations": (stations, "server"),
              "horde": (horde_of, "server")}
 
 
@@ -1163,7 +1187,7 @@ def main():
         keep_running_map()
         compose("up", "-d", "--force-recreate", "--no-deps", *args.services)
     elif args.action == "down":
-        compose("--profile", "replay", "--profile", "mapgen", "down", *(["-v"] if args.v else []))
+        compose("--profile", "replay", "--profile", "mapgen", "--profile", "story", "down", *(["-v"] if args.v else []))
     elif args.action == "logs":
         compose("logs", "--no-log-prefix", "--tail", args.tail, args.service)
     elif args.action == "rcon":

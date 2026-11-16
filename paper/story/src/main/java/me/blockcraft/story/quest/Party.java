@@ -46,6 +46,6 @@ public interface Party {
     /** Ends the mission with {@code ending}'s title, summary and rewards. */
     void end(String ending, String cause);
 
-    /** {@code member} stands at the console; a console the party has held stays held until a jump. */
-    void consoleReached(ConsoleObjective console, Player member);
+    /** {@code member} stands at the spot of a hold; a spot the party has held stays held until a jump. */
+    void holdReached(HoldObjective hold, Player member);
 }

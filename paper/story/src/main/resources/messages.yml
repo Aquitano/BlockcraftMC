@@ -1,5 +1,9 @@
-prefix: "<sternenfront>Einsatz <dark>» <reset>"
-game-name: "<sternenfront>Einsatz"
+# The core's texts, which a story game's own messages.yml lies on. The game adds what its mission says: `npc.<id>.name`
+# and `.role`, `chapter.<chapter>` for each chapter's name, `stage.<stage>` for the boss bar and `stage-start.<stage>`
+# for the chat, `choice.<choice>` for each answer of a vote, `ending.<ending>.title`, `.subtitle` and `.summary`, and
+# `cutscene.<scene>.<n>` with `cutscene.speaker.<actor>` for a cutscene's lines. It usually words `prefix`, `game-name` and `join.introduction` anew.
+prefix: "<primary>Einsatz <dark>» <reset>"
+game-name: "<primary>Einsatz"
 
 commands:
   start:
@@ -15,24 +19,27 @@ join:
 lobby:
   previous: "<prefix><muted>Eure letzte Entscheidung: <accent><choice>"
   resume: "<prefix><muted>Dein letzter Einsatz ist noch offen: <white><stage>"
+  chapter: "<prefix><muted>Dein nächstes Kapitel: <white><chapter>"
 
 campaign:
+  chapter: "<prefix><muted>Ihr spielt <white><chapter><muted>."
   resumed: "<prefix><muted>Der Einsatz geht weiter, beim letzten Abschnitt, den ihr erreicht habt."
   unsaved: "<prefix><error>Der Abschluss des Einsatzes konnte nicht gespeichert werden."
   unreadable: "<prefix><error>Euer Einsatz konnte nicht geladen werden. <muted>Der Countdown beginnt von vorn."
+  unreachable: "<prefix><error>Das nächste Kapitel konnte nicht geladen werden."
 
-item:
-  blaster: "<arrow><primary>DC-15-Karabiner"
+travel:
+  loading: "<muted>Lädt …"
 
 menu:
   stats:
-    title: "<arrow><sternenfront>Einsatz <dark>· <muted>Stats"
+    title: "<arrow><primary>Einsatz <dark>· <muted>Stats"
     player: "<accent><player>"
     player-lore:
       - "<arrow><primary>Einsätze geschafft<dark>: <muted><wins>"
     global: "<arrow><primary>Globale Stats"
   global-stats:
-    title: "<arrow><sternenfront>Einsatz <dark>· <muted>Globale Stats"
+    title: "<arrow><primary>Einsatz <dark>· <muted>Globale Stats"
     wins: "<arrow><primary>Einsätze geschafft"
 
 dialogue:
@@ -43,13 +50,9 @@ dialogue:
     watching: "<player> antwortet"
 
 stage:
-  done: "<sternenfront>Einsatz <dark>● <white>Abgeschlossen"
+  done: "<primary>Einsatz <dark>● <white>Abgeschlossen"
 
-defense:
-  droid: "<red>B1-Kampfdroide"
-  started: "<prefix><muted>Der Upload läuft, solange jemand an der Konsole steht."
-  held: "<prefix><success>Die Droiden ziehen sich zurück."
-  down: "<prefix><error>Du bist gefallen. <muted>Ein Sanitäter hat dich zum Hauptquartier gebracht."
+fallen: "<prefix><error>Du bist gefallen. <muted>Du bist zurück am Sammelpunkt."
 
 vote:
   cast: "<prefix><accent><player> <muted>stimmt für <white><choice> <dark>(<votes>/<members>)"

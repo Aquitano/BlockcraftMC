@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Where the engine runs one trigger for every member, as {@code stage_<stage>} and a held console are, each party
+ * Where the engine runs one trigger for every member, as {@code stage_<stage>} and a held spot are, each party
  * action in it acts once for the party: for the first member it runs for, and never again for that trigger until the
- * party enters another stage, so a member who rejoins does not run it a second time. A lasting trigger, a held console,
+ * party enters another stage, so a member who rejoins does not run it a second time. A lasting trigger, a held spot,
  * keeps what acted until a jump, as a member who was away completes it later. BetonQuest runs a {@code folder} without
  * a delay at once, so its actions count; a delayed one runs outside the trigger and acts every time. Each configured
  * or inline action counts on its own, by the instance BetonQuest made of it.

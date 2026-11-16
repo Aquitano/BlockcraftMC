@@ -56,7 +56,7 @@ services:
       - ./dev/verify/${VERIFY_OVERRIDES:-sternenfront-overrides.yml}:/data/plugins/Sternenfront/config.yml:ro
       - ./worlds/sturmwerft:/worlds/sturmwerft
 
-  # Instead of sternenfront with VERIFY_GAME=story: the story prototype, also on the proxy's first-join route.
+  # Instead of sternenfront with VERIFY_GAME=story: the story core's example game, also on the proxy's first-join route.
   story:
     extends: {file: docker-compose.yml, service: story}
     <<: *low-priority

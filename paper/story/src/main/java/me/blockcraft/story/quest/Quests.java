@@ -52,12 +52,12 @@ import java.util.function.Supplier;
  *     <li>{@code storyscene <scene> [then:<actions>]} plays a cutscene, {@code storyafter <ticks> <actions>} schedules,</li>
  *     <li>{@code storymusic} and {@code storyambience <track|stop>}, {@code storysound <sound> [volume:] [pitch:] [at:]},</li>
  *     <li>{@code storyend <ending>} ends the mission,</li>
- *     <li>{@code holdconsole <location> <radius> <seconds>} as an objective, {@code blockcraft <key>} as an NPC, and
+ *     <li>{@code holdspot <location> <radius> <seconds>} as an objective, {@code blockcraft <key>} as an NPC, and
  *     {@code blockhud} as the conversation IO, which shows conversations in the {@link DialogueHud}.</li>
  * </ul>
  * The game itself runs {@code begin} once when the mission starts, {@code enter_<stage>} once when the party enters a
  * stage, {@code stage_<stage>} for every member then and for a member who rejoins, and {@code decided_<topic>} once a
- * vote is decided, each only where the package has it. Within {@code stage_<stage>} and a held console's actions, a
+ * vote is decided, each only where the package has it. Within {@code stage_<stage>} and a held spot's actions, a
  * party action acts once for the party however many members run it, as {@link Fanout} says.
  */
 public final class Quests {
@@ -166,8 +166,8 @@ public final class Quests {
                     party.vote(profile.getPlayer(), topic.getValue(profile), choice.getValue(profile))));
         });
 
-        api.objectives().registry().register("holdconsole", (ObjectiveFactory) (instruction, service) ->
-                new ConsoleObjective(plugin, service, api.profiles(), party, fanout, instruction.location().get(),
+        api.objectives().registry().register("holdspot", (ObjectiveFactory) (instruction, service) ->
+                new HoldObjective(plugin, service, api.profiles(), party, fanout, instruction.location().get(),
                         instruction.number().get(), instruction.number().get()));
         var registry = api.npcs().registry();
         registry.register(StoryNpcs.TYPE, instruction -> new StoryNpcs.Lookup(npcs, instruction.string().get()));
@@ -303,7 +303,7 @@ public final class Quests {
         fanout.reset();
     }
 
-    /** A jump: every trigger may act again, a held console's too. */
+    /** A jump: every trigger may act again, a held spot's too. */
     public void forget() {
         fanout.clear();
     }

@@ -46,7 +46,8 @@ Start with [Build](#build), [Run locally](#run-locally) or [Deploy](#deploy). Ot
 | [`paper/sternenfront`](paper/sternenfront/README.md) | Next-Gen | Clone Wars: Republic versus Separatists conquest; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/ttt`](paper/ttt/README.md) | Next-Gen | TTT 2 (group `ttt2`): TTT with chores and sabotage; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/zombies`](paper/zombies/README.md) | Next-Gen | Solo or co-op Zombies survival |
-| [`paper/story`](paper/story/README.md) | Prototype | The engine for co-op story missions on BetonQuest; only with `docker compose --profile story` |
+| [`paper/story`](paper/story/README.md) | Core | The library plugin for co-op story games on BetonQuest; it plays nothing by itself |
+| [`paper/storyexample`](paper/storyexample/README.md) | Example | The smallest story game on that core; only with `docker compose --profile story` |
 
 ## Build
 
@@ -204,6 +205,7 @@ In containers, these replace the config edits.
 | `BLOCKCRAFT_WAITING_TEMPLATE` | `waiting-lobby.template`, the [shared waiting island](worlds/README.md#shared-waiting-island) |
 | `BLOCKCRAFT_REPLAY_DIRECTORY` | Where recordings are stored |
 | `BLOCKCRAFT_TTT_MODE` | `tasks` makes a TTT server play TTT 2 |
+| `BLOCKCRAFT_STORY_WORLDS` | Where a story game finds its [chapter worlds](paper/story/README.md#a-world-for-each-chapter), instead of its map bundle |
 | `BLOCKCRAFT_RESOURCE_PACK_URL` | The proxy's `resource-pack.url` |
 | `BLOCKCRAFT_WAKER_TOKEN` | The proxy's `on-demand.token` |
 | `BLOCKCRAFT_ON_DEMAND_GROUPS` | Names the groups the proxy starts on demand; it has no config key |

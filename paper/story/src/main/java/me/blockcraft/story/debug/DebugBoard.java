@@ -78,7 +78,7 @@ public final class DebugBoard implements AutoCloseable {
         var lines = new ArrayList<Component>();
         lines.add(pair("stage", state.stage().isEmpty() ? "-" : state.stage() + " " + state.stageNumber() + "/" + state.stages().size()));
         state.scene().ifPresent(at -> lines.add(pair("scene", at.scene() + " " + at.tick() + "/" + at.duration())));
-        state.upload().ifPresent(done -> lines.add(pair("upload", Math.round(done * 100) + "%")));
+        state.hold().ifPresent(done -> lines.add(pair("hold", Math.round(done * 100) + "%")));
         state.timers().forEach(timer -> lines.add(pair(timer.inTicks() / 20 + "s", timer.label())));
         state.music().ifPresent(track -> lines.add(pair("music", track)));
         state.ambience().ifPresent(track -> lines.add(pair("ambience", track)));

@@ -1,0 +1,6 @@
+name: StoryExample
+version: '${version}'
+main: me.blockcraft.storyexample.StoryExamplePlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI, Story, BetonQuest]

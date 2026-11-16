@@ -1,0 +1,56 @@
+# The example mission. A story game's config.yml holds only its mission and what it sets differently from the core,
+# whose own config.yml documents every key. The positions fit the flat world the `story` service starts with.
+mission:
+  name: example
+  landing:
+    - "0.5 -60 0.5 0 0"
+    - "2.5 -60 0.5 0 0"
+    - "-1.5 -60 0.5 0 0"
+    - "4.5 -60 0.5 0 0"
+  rally: "0.5 -60 0.5 0 0"
+  npcs:
+    mara: {at: "0.5 -60 8.5 180 0"}
+
+# The example's own key, which StoryExamplePlugin reads: where the compass of its loadout points.
+signal: "20.5 -60 8.5"
+
+stages:
+  briefing: {bar: blue}
+  signal: {bar: yellow}
+  hold: {bar: red, progress: 0, spawn: "20.5 -60 8.5 90 0"}
+  report: {bar: blue}
+  ending: {bar: green, facts: {decision: stay}}
+  debrief: {bar: blue, facts: {decision: stay}}
+
+# Two chapters. The party goes from the first into the second, which plays in a world of its own and knows what the
+# party decided in the first. That world is a copy of the shared waiting island, so the example brings no map: the
+# story service mounts its template as the chapter world `relief`.
+chapters:
+  signal: {from: briefing}
+  relief:
+    from: debrief
+    carries: [decision]
+    world: relief
+    landing: ["-193.5 47 -317.5 0 0"]
+    rally: "-193.5 47 -317.5 0 0"
+    npcs:
+      mara: {at: "-191.5 47 -313.5 180 0"}
+
+cutscenes:
+  scenes:
+    # Mara walks up to where she waits for the party, and the camera comes down to her.
+    arrival:
+      shots:
+        - {tick: 0, at: "9 -52 -5", look: "0.5 -59 10"}
+        - {tick: 90, at: "5 -57.5 3", look: "0.5 -58.6 8.5"}
+        - {tick: 140, at: "3 -58.4 5.5", follow: mara}
+        - {tick: 190, at: "2.6 -58.4 6", follow: mara}
+      actors:
+        mara:
+          marks:
+            - {tick: 0, at: "0.5 -60 16.5 180 0"}
+            - {tick: 20, at: "0.5 -60 16.5 180 0"}
+            - {tick: 100, at: "0.5 -60 8.5 180 0"}
+      lines:
+        - {tick: 20, ticks: 75, speaker: mara, text: cutscene.arrival.1}
+        - {tick: 105, ticks: 80, speaker: mara, text: cutscene.arrival.2}

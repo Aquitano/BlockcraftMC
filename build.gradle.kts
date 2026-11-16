@@ -156,6 +156,9 @@ tasks.register<Sync>("stagePlugins") {
     from("paper/story/betonquest") {
         into("paper/betonquest/BetonQuest")
     }
+    from("paper/storyexample/betonquest") {
+        into("paper/betonquest/BetonQuest")
+    }
     from("paper/story/faststats") {
         into("paper/betonquest/faststats")
     }
