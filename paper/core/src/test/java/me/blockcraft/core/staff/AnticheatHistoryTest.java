@@ -1,6 +1,7 @@
 package me.blockcraft.core.staff;
 
 import me.blockcraft.common.anticheat.AnticheatEvidence;
+import me.blockcraft.common.config.StrictConfig;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
@@ -105,8 +106,8 @@ public class AnticheatHistoryTest {
 
     @Test
     public void configurationCannotMakeRetentionOrQueuesUnbounded() {
-        assertEquals(new AnticheatHistory.Settings(30, 100, 4096), AnticheatHistory.Settings.fromYaml(Map.of(
-                "history-days", Integer.MAX_VALUE, "history-max-entries", -1, "history-pending-capacity", Integer.MAX_VALUE)));
+        assertEquals(new AnticheatHistory.Settings(30, 100, 4096), AnticheatHistory.Settings.from(StrictConfig.of("config.yml", Map.of(
+                "history-days", Integer.MAX_VALUE, "history-max-entries", -1, "history-pending-capacity", Integer.MAX_VALUE))));
     }
 
     private static void await(CountDownLatch latch) {

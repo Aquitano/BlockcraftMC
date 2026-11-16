@@ -2,9 +2,9 @@ package me.blockcraft.core.staff;
 
 import me.blockcraft.common.anticheat.AnticheatEvidence;
 import me.blockcraft.common.anticheat.AnticheatEvidenceRepository;
+import me.blockcraft.common.config.StrictConfig;
 import org.slf4j.Logger;
 
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -16,15 +16,10 @@ import java.util.function.Consumer;
 public final class AnticheatHistory implements AutoCloseable {
 
     public record Settings(int days, int maximum, int pending) {
-        public static Settings fromYaml(Map<String, Object> section) {
-            return new Settings(number(section, "history-days", 7, 1, 30),
-                    number(section, "history-max-entries", 10_000, 100, 100_000),
-                    number(section, "history-pending-capacity", 256, 16, 4096));
-        }
-
-        private static int number(Map<String, Object> section, String key, int fallback, int minimum, int maximum) {
-            int value = section.get(key) instanceof Number configured ? configured.intValue() : fallback;
-            return Math.clamp(value, minimum, maximum);
+        public static Settings from(StrictConfig anticheat) {
+            return new Settings(Math.clamp(anticheat.integer("history-days"), 1, 30),
+                    Math.clamp(anticheat.integer("history-max-entries"), 100, 100_000),
+                    Math.clamp(anticheat.integer("history-pending-capacity"), 16, 4096));
         }
     }
 
