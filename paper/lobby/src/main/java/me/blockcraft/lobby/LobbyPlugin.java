@@ -43,7 +43,6 @@ import me.blockcraft.lobby.command.TeamBoardCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.config.FlightsConfig;
 import me.blockcraft.lobby.config.GameNpcConfig;
-import me.blockcraft.lobby.config.GuideConfig;
 import me.blockcraft.lobby.config.HerobrineConfig;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -86,7 +85,6 @@ import me.blockcraft.lobby.menu.Menus;
 import me.blockcraft.lobby.menu.NavigatorTeleports;
 import me.blockcraft.lobby.menu.SecretsSection;
 import me.blockcraft.lobby.npc.GameNpcs;
-import me.blockcraft.lobby.npc.Guide;
 import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.Leaderboards;
 import me.blockcraft.lobby.npc.OwnPlacings;
@@ -211,9 +209,8 @@ public final class LobbyPlugin extends JavaPlugin {
         var quests = new QuestGivers(spotEntities, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
         me.blockcraft.api.scenery.FurnitureInteractions.register(this, java.util.Map.of("blockcraft_quest_board", quests::openBoard));
         var daily = new DailyCourier(this, spotEntities, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
-        var guide = new Guide(this, spotEntities, activityLocations, GuideConfig.fromYaml(YamlFile.section(yaml, "guide")), messages);
-        closables.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily, guide));
-        register(gameNpcs, ownPlacings, loreNotes, noticeBoards, daily, guide);
+        closables.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily));
+        register(gameNpcs, ownPlacings, loreNotes, noticeBoards, daily);
         LobbyNews.start(this, messages, YamlFile.section(yaml, "news")).ifPresent(news -> {
             closables.add(news);
             register(news);
@@ -227,7 +224,6 @@ public final class LobbyPlugin extends JavaPlugin {
         leaderboards.names().stream().map(Podiums::spot).sorted().forEach(optionalSpots::add);
         optionalSpots.addAll(quests.spots());
         optionalSpots.add(DailyCourier.SPOT);
-        optionalSpots.add(Guide.SPOT);
         optionalSpots.addAll(scenes.spots());
         optionalSpots.addAll(ambience.spots());
         var optionalBlocks = new ArrayList<>(loreNotes.spots());
@@ -288,7 +284,6 @@ public final class LobbyPlugin extends JavaPlugin {
                         noticeBoards.refresh();
                         quests.refresh();
                         daily.refresh();
-                        guide.refresh();
                         cookieBlock.refresh();
                         scenes.refresh();
                     }));

@@ -3,13 +3,14 @@ package me.blockcraft.api.proxy;
 import me.blockcraft.api.game.DuelCancelledEvent;
 import me.blockcraft.api.game.DuelSetupEvent;
 import me.blockcraft.api.game.DuelAcceptedEvent;
+import me.blockcraft.api.dialog.WelcomeDialog;
 import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.NewcomerEvent;
-import me.blockcraft.api.player.WelcomeEvent;
 import me.blockcraft.api.ranked.RankedMatchEvent;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.network.ProxyMessage;
 import me.blockcraft.common.network.ProxyMessageCodec;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -21,6 +22,8 @@ import java.time.Duration;
 
 /** Hands what the proxy says about a player to the part of BlockcraftAPI that keeps it. */
 public final class ProxyMessageListener implements PluginMessageListener {
+
+    private static final long WELCOME_AFTER_ARRIVAL_TICKS = 60L;
 
     private final Plugin plugin;
     private final ResourcePacks resourcePacks;
@@ -49,8 +52,14 @@ public final class ProxyMessageListener implements PluginMessageListener {
                 case ProxyMessage.Spectate spectate -> new SpectateRequestEvent(player, spectate.friend()).callEvent();
                 case ProxyMessage.Ignore ignore -> ignores.update(player, ignore.other(), ignore.ignoring());
                 case ProxyMessage.Setting setting -> settings.changedOnProxy(player, setting.setting(), setting.value());
-                case ProxyMessage.Welcome welcome ->
-                        new WelcomeEvent(player, GsonComponentSerializer.gson().deserialize(welcome.rulesJson())).callEvent();
+                case ProxyMessage.Welcome welcome -> {
+                    var rules = GsonComponentSerializer.gson().deserialize(welcome.rulesJson());
+                    Tasks.later(plugin, WELCOME_AFTER_ARRIVAL_TICKS, () -> {
+                        if (player.isOnline()) {
+                            WelcomeDialog.open(player, rules);
+                        }
+                    });
+                }
                 case ProxyMessage.Newcomer newcomer ->
                         new NewcomerEvent(newcomer.player(), newcomer.name(), Duration.ofSeconds(newcomer.seconds())).callEvent();
                 case ProxyMessage.RankedMatch match -> new RankedMatchEvent(player, match.opponent()).callEvent();

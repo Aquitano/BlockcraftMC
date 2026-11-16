@@ -39,7 +39,7 @@ public final class DialogueArt {
         var providers = new ArrayList<String>();
         providers.add(bitmap("panel_left.png", 116, 116, List.of("\\uE600")));
         providers.add(bitmap("panel_right.png", 116, 116, List.of("\\uE601")));
-        String[] portraits = {"pilot", "pilot_happy", "pilot_worried", "droid", "droid_alert", "guide", "courier", "local", "note"};
+        String[] portraits = {"pilot", "pilot_happy", "pilot_worried", "droid", "droid_alert", "courier", "local", "note"};
         for (int index = 0; index < portraits.length; index++) {
             var portrait = new BufferedImage(48, 128, BufferedImage.TYPE_INT_ARGB);
             g = portrait.createGraphics();
@@ -118,9 +118,8 @@ public final class DialogueArt {
         for (int y = 4; y < 48; y += 6) g.drawLine(1, y, 46, y);
         if (index > 4) {
             switch (index) {
-                case 5 -> guide(g);
-                case 6 -> courier(g);
-                case 7 -> local(g);
+                case 5 -> courier(g);
+                case 6 -> local(g);
                 default -> note(g);
             }
         } else if (index < 3) {
@@ -173,32 +172,6 @@ public final class DialogueArt {
         }
         g.setColor(ACCENT);
         g.drawRect(0, 0, 47, 47);
-    }
-
-    private static void guide(Graphics2D g) {
-        fill(g, 0xF2BB8F, 18, 32, 12, 5);
-        fill(g, 0xFFCEA5, 14, 12, 20, 21);
-        fill(g, 0xF2BB8F, 31, 14, 3, 18);
-        fill(g, 0xE3B65A, 12, 10, 24, 5);
-        fill(g, 0xE3B65A, 12, 14, 3, 10);
-        fill(g, 0xE3B65A, 33, 14, 3, 8);
-        fill(g, 0x3E8E5A, 12, 4, 24, 7);
-        fill(g, 0x2C6B43, 10, 10, 28, 2);
-        fill(g, 0xE5AB44, 22, 5, 4, 4);
-        fill(g, 0x203444, 18, 19, 3, 2);
-        fill(g, 0x203444, 27, 19, 3, 2);
-        fill(g, 0xF0A58A, 16, 23, 3, 2);
-        fill(g, 0xF0A58A, 29, 23, 3, 2);
-        fill(g, 0xA65E51, 20, 26, 1, 1);
-        fill(g, 0xA65E51, 27, 26, 1, 1);
-        fill(g, 0xA65E51, 21, 27, 6, 1);
-        fill(g, 0xA65E51, 22, 28, 4, 1);
-        fill(g, 0x2F6E48, 8, 36, 32, 11);
-        fill(g, 0xE8EEF0, 18, 36, 4, 3);
-        fill(g, 0xE8EEF0, 26, 36, 4, 3);
-        fill(g, 0x24394B, 23, 36, 2, 11);
-        fill(g, 0xE5AB44, 29, 40, 6, 5);
-        fill(g, 0x203444, 31, 42, 2, 1);
     }
 
     private static void courier(Graphics2D g) {
