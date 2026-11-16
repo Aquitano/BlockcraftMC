@@ -261,6 +261,10 @@ holds other text, so the server places that panel at the line's middle; `Ability
 check the widths involved. The bottom-right corner lies `HudPanel.BOTTOM_RIGHT_HEIGHT` above the screen's bottom, a full
 column of four tiles, which `HudPanelTest` checks against the shader and `AbilityPanelTest` against the column. Its art has twice the texels of its GUI size, so it keeps detail from GUI scale 2 up; `HudArt`
 writes every icon, ready and recharging, to `build/hud/ability-icons.png` for judging the set.
+Zombies' weapon panel uses the same corner with `HudArt`'s `blockcraft:zombies/weapon` font, which the modes pack
+carries. It stands on the corner's margin below the column's top, and `WeaponPanelTest` checks its glyphs against the
+font. `HudArt` draws each gun's icon from its pack model in flat colours of the vanilla blocks the model uses, so a
+changed gun model needs `assets.py generate hud`.
 
 Sternenfront target outlines reserve scoreboard colors `DARK_AQUA` and `DARK_RED`. Its server sends those colors only
 to combat viewers with the pack applied. The outline shader stores logarithmic reversed-Z depth in the RGB bytes and
