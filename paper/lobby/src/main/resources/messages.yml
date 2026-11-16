@@ -869,3 +869,13 @@ daily:
   available: "<prefix><muted>Deine tägliche Belohnung wartet<dark>: <accent><coins> Coins <dark>· <claim>"
   claim-button: "<success>[Abholen]"
   claim-hover: "<muted>Serie und Belohnung ansehen."
+  # The courier in the dialogue panel, plain text; the panel with the pack, the dialog above without it.
+  talk:
+    offer: "Post für dich! Heute ist Tag <streak> deiner Serie, dafür gibt es <coins> Coins."
+    claim: "Abholen (<coins> Coins)"
+    ask-upcoming: "Was gibt es die nächsten Tage?"
+    upcoming: "<days>. Verpasst du einen Tag, fängt deine Serie wieder bei Tag 1 an."
+    upcoming-day: "Tag <day>: <coins> Coins"
+    later: "Später."
+    later-reply: "Ich bin den ganzen Tag hier. Deine Post wartet bis Mitternacht."
+    claimed: "Heute habe ich nichts mehr für dich. Du bist bei Tag <streak> deiner Serie. Die nächste Post kommt in <hours> Std. <minutes> Min."

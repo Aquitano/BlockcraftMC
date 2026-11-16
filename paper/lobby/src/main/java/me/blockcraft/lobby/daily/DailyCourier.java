@@ -24,7 +24,8 @@ import java.time.Duration;
 
 /**
  * Where players take their daily reward: {@code /daily}, the chat line on arrival while today's is still open, and the
- * courier figure at the map's optional {@code daily} spot. Each opens a {@link DailyRewardDialog}.
+ * courier figure at the map's optional {@code daily} spot. Each has the courier talk in the dialogue panel, see
+ * {@link DailyTalk}, or opens a {@link DailyRewardDialog} for a client whose pack has not loaded.
  */
 public final class DailyCourier implements Listener, AutoCloseable {
 
@@ -91,7 +92,12 @@ public final class DailyCourier implements Listener, AutoCloseable {
         var calendar = BlockcraftApi.get().calendar();
         BlockcraftApi.get().playerTasks().latest(player, () -> table.today(id, calendar.today()), today -> {
             var untilNext = Duration.between(calendar.now(), calendar.today().plusDays(1).atStartOfDay(calendar.zone()));
-            new DailyRewardDialog(messages, rewards, today, untilNext, this::claim).open(player);
+            BlockcraftApi.get().dialogues().startOrElse(player, DailyTalk.dialogue(today, rewards.previewDays() > 0),
+                    DailyTalk.text(messages, rewards, today, untilNext), ending -> {
+                        if (ending.equals(DailyTalk.CLAIM)) {
+                            claim(player);
+                        }
+                    }, () -> new DailyRewardDialog(messages, rewards, today, untilNext, this::claim).open(player));
         });
     }
 
