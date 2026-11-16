@@ -78,7 +78,7 @@ must verify changed translucency, item framing and physical behavior. [AGENTS.md
   `blockcraft:text` or a deploy line font. `PackArt` writes the letters' advances to
   `paper/api/src/main/resources/text-glyphs.properties`, which `UiFont.width` counts with.
 - **Wide glyphs.** The client packs font glyphs into atlases 256 pixels across and draws a glyph wider than that as a
-  missing-glyph box. `StoryArt` therefore draws the story dialogue's 300-pixel panel as left and right halves.
+  missing-glyph box. `StoryArt` and `DialogueArt` therefore draw their dialogue's 300-pixel panels as left and right halves.
 - **Crosshair marks.** The client centres a subtitle by the advances it measures from each glyph's last inked column, and
   draws a font pixel there two GUI pixels wide. `HudArt` therefore draws the marks, arcs, spread ticks and readiness
   marks at twice the resolution, centred between the middle texels, with a nearly clear texel in each cell's last
@@ -261,6 +261,9 @@ holds other text, so the server places that panel at the line's middle; `Ability
 check the widths involved. The bottom-right corner lies `HudPanel.BOTTOM_RIGHT_HEIGHT` above the screen's bottom, a full
 column of four tiles, which `HudPanelTest` checks against the shader and `AbilityPanelTest` against the column. Its art has twice the texels of its GUI size, so it keeps detail from GUI scale 2 up; `HudArt`
 writes every icon, ready and recharging, to `build/hud/ability-icons.png` for judging the set.
+Both dialogue panels use the bottom-centre space, which ends `HudPanel.BOTTOM_CENTRE_BOTTOM` above the screen's bottom,
+just over the hearts. The shared panel from `DialogueArt` is 56 or 66 pixels tall, so at the smallest GUI, 240 pixels
+tall, its top stays below the crosshair; `DialogueAssetsTest` checks that and the 256-pixel limit.
 Zombies' weapon panel uses the same corner with `HudArt`'s `blockcraft:zombies/weapon` font, which the modes pack
 carries. It stands on the corner's margin below the column's top, and `WeaponPanelTest` checks its glyphs against the
 font. `HudArt` draws each gun's icon from its pack model in flat colours of the vanilla blocks the model uses, so a

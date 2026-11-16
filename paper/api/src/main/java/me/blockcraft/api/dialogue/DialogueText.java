@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 
 final class DialogueText {
+    static final int PAGE_LINES = 3;
     private static final Properties WIDTHS = loadWidths();
 
     private DialogueText() {}
@@ -26,7 +27,8 @@ final class DialogueText {
         return result.toString();
     }
 
-    static List<List<String>> pages(String text, int maxWidth) {
+    /** {@code text} in pages of up to {@link #PAGE_LINES} lines, the last one holding no more than {@code lastPageLines}. */
+    static List<List<String>> pages(String text, int maxWidth, int lastPageLines) {
         var lines = new ArrayList<String>();
         for (String paragraph : normalize(text).split("\n", -1)) {
             var line = new StringBuilder();
@@ -52,8 +54,14 @@ final class DialogueText {
             lines.add(line.toString());
         }
         var pages = new ArrayList<List<String>>();
-        for (int start = 0; start < lines.size(); start += 3) {
-            pages.add(List.copyOf(lines.subList(start, Math.min(start + 3, lines.size()))));
+        for (int start = 0; start < lines.size(); start += PAGE_LINES) {
+            pages.add(List.copyOf(lines.subList(start, Math.min(start + PAGE_LINES, lines.size()))));
+        }
+        var last = pages.getLast();
+        if (last.size() > lastPageLines) {
+            int split = last.size() - lastPageLines;
+            pages.set(pages.size() - 1, List.copyOf(last.subList(0, split)));
+            pages.add(List.copyOf(last.subList(split, last.size())));
         }
         return List.copyOf(pages);
     }
