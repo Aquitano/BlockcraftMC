@@ -849,6 +849,24 @@ def open_menu(client, block):
     return client("screen")
 
 
+def swap_menu(client):
+    """The menu that asks which carried gun a third one replaces, when it is open, with the slots of those guns."""
+    if client("status")["screen"] != "ContainerScreen":
+        return None
+    menu = client("screen")
+    if "Waffe ersetzen" not in menu["title"]:
+        return None
+    menu["carried"] = [slot for slot in menu["slots"] if any("ersetzen" in line and "Klicken" in line for line in slot.get("lore", []))]
+    return menu
+
+
+def swap(client, menu):
+    """Replaces the first carried gun and reports what the menu showed."""
+    client("click", slot=menu["carried"][0]["slot"])
+    settle(client, 10)
+    return {"title": menu["title"], "slots": [{"slot": slot["slot"], "name": slot.get("name")} for slot in menu["slots"]]}
+
+
 def visit(client, run, name):
     """Opens a station's menu and clicks each of its offers once: what it offered, what each click said and cost."""
     station = outpost()["stations"][name]
@@ -868,12 +886,10 @@ def visit(client, run, name):
         client("click", slot=offer["slot"])
         settle(client, 10)
         click = {"offer": offer.get("name")}
-        if client("status")["screen"] == "MultiButtonDialogScreen":
-            dialog = client("screen")
-            click["dialog"] = {"title": dialog["title"], "buttons": dialog["buttons"]}
+        menu = swap_menu(client)
+        if menu is not None:
             run.shot(client, f"{name}_replace")
-            client("press", label=dialog["buttons"][0])
-            settle(client, 10)
+            click["swap"] = swap(client, menu)
         click.update(gold=[before, squad_board(client)["gold"]], said=feedback(client, since))
         result["clicks"].append(click)
     if client("status")["screen"]:
@@ -896,11 +912,10 @@ def take_from_box(client, run, name):
     client("tap", key="use")
     settle(client, 10)
     taken = {}
-    if client("status")["screen"] == "MultiButtonDialogScreen":
-        dialog = client("screen")
-        taken["dialog"] = {"title": dialog["title"], "buttons": dialog["buttons"]}
-        client("press", label=dialog["buttons"][0])
-        settle(client, 10)
+    menu = swap_menu(client)
+    if menu is not None:
+        run.shot(client, f"{name}_swap")
+        taken["swap"] = swap(client, menu)
     taken.update(hotbar=[item.get("name") for item in client("status")["hotbar"][:3]], said=feedback(client, since))
     return taken
 

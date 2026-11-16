@@ -22,9 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
+/**
+ * A station's offers in a chest of one row, its balance on the left and close on the right; the armory puts its guns
+ * in a row above that.
+ */
 public final class StationMenu extends Menu {
 
-    private record Offer(Component name, Material material, int price, BooleanSupplier available, Runnable grant) { }
+    private static final int COLUMNS = 9;
+
+    private record Offer(Component name, int price, BooleanSupplier available, Runnable grant) { }
 
     private final ZombiesGame game;
     private final ArenaMap.Station station;
@@ -32,67 +38,76 @@ public final class StationMenu extends Menu {
     private final Map<Integer, Weapon> guns = new LinkedHashMap<>();
 
     public StationMenu(ZombiesGame game, Player player, ArenaMap.Station station) {
-        super(4, game.messages().get("shop.title", Placeholder.component("station", game.messages().get(station.nameKey()))));
+        super(station.kind() == StationKind.ARMORY ? 2 : 1,
+                game.messages().get("shop.title", Placeholder.component("station", game.messages().get(station.nameKey()))));
         this.game = game;
         this.station = station;
+        int footer = station.kind() == StationKind.ARMORY ? COLUMNS : 0;
         var survivor = game.survivor(player);
         var config = game.config();
         switch (station.kind()) {
             case ARMORY -> {
-                int slot = 10;
-                for (var weapon : config.forSale()) {
+                var forSale = config.forSale();
+                for (int index = 0; index < forSale.size(); index++) {
+                    var weapon = forSale.get(index);
+                    var stats = config.guns().get(weapon);
+                    int slot = spread(index, forSale.size());
                     guns.put(slot, weapon);
-                    add(slot, new Offer(game.messages().get("weapon." + weapon.key()), weapon.model().fallback(), config.guns().get(weapon).price(),
+                    add(slot, weapon.model().item(), new Offer(game.messages().get("weapon." + weapon.key()), stats.price(),
                             () -> !survivor.weapons().containsKey(weapon), () -> game.weapons().give(player, weapon)),
-                            game.messages().get("shop.weapon-stats", Formatter.number("damage", config.guns().get(weapon).damage() * config.guns().get(weapon).pellets()),
-                                    Formatter.number("clip", config.guns().get(weapon).clip())));
-                    slot += 2;
+                            game.messages().get("shop.weapon-stats", Formatter.number("damage", stats.damage() * stats.pellets()),
+                                    Formatter.number("clip", stats.clip())));
                 }
-                add(22, new Offer(game.messages().get("shop.ammo"), Material.ARROW, config.ammoPrice(),
+                add(footer + COLUMNS / 2, Items.of(Material.ARROW), new Offer(game.messages().get("shop.ammo"), config.ammoPrice(),
                         () -> game.weapons().held(player).filter(weapon -> !survivor.weapons().get(weapon).full()).isPresent(), () -> {
                             game.weapons().held(player).ifPresent(weapon -> survivor.weapons().get(weapon).refill());
                         }));
             }
             case PERKS -> {
                 var perks = station.perk().map(List::of).orElse(List.of(Perk.values()));
-                int slot = perks.size() == 1 ? 13 : 10;
-                for (var perk : perks) {
-                    add(slot, new Offer(game.messages().get("perk." + perk.key()), perk.material(), config.perks().get(perk),
-                            () -> !survivor.perks().contains(perk), () -> game.grantPerk(player, perk)),
+                for (int index = 0; index < perks.size(); index++) {
+                    var perk = perks.get(index);
+                    add(spread(index, perks.size()), Items.of(perk.material()), new Offer(game.messages().get("perk." + perk.key()),
+                            config.perks().get(perk), () -> !survivor.perks().contains(perk), () -> game.grantPerk(player, perk)),
                             game.messages().get("perk.description." + perk.key(), Formatter.number("hearts", config.extraHealth() / 2)));
-                    slot += 2;
                 }
             }
             case ARMOR -> {
                 int tier = survivor.armor();
-                add(13, new Offer(game.messages().get("shop.armor", Formatter.number("tier", tier + 1)),
-                        tier == 0 ? Material.IRON_CHESTPLATE : Material.DIAMOND_CHESTPLATE,
-                        config.armorPrice() * (tier + 1), () -> survivor.armor() == tier && tier < Survivor.MAX_ARMOR, () -> game.armor(player)));
+                add(COLUMNS / 2, Items.of(tier == 0 ? Material.IRON_CHESTPLATE : Material.DIAMOND_CHESTPLATE),
+                        new Offer(game.messages().get("shop.armor", Formatter.number("tier", tier + 1)), config.armorPrice() * (tier + 1),
+                                () -> survivor.armor() == tier && tier < Survivor.MAX_ARMOR, () -> game.armor(player)));
             }
-            case POWER -> add(13, new Offer(game.messages().get("shop.power"), Material.REDSTONE, config.powerPrice(),
+            case POWER -> add(COLUMNS / 2, Items.of(Material.REDSTONE), new Offer(game.messages().get("shop.power"), config.powerPrice(),
                     () -> !game.powerBought(), () -> game.powerOn(station)));
             case UPGRADE -> {
                 var selected = game.weapons().held(player);
-                add(13, new Offer(game.messages().get("shop.upgrade"), Material.ENCHANTED_BOOK, config.upgradePrice(),
+                add(COLUMNS / 2, Items.of(Material.ENCHANTED_BOOK), new Offer(game.messages().get("shop.upgrade"), config.upgradePrice(),
                         () -> selected.isPresent() && !survivor.weapons().get(selected.get()).upgraded(),
                         () -> survivor.weapons().get(selected.orElseThrow()).upgrade()));
             }
-            case MYSTERY -> add(13, new Offer(game.messages().get("shop.mystery"), Material.ENDER_CHEST, config.mysteryPrice(),
+            case MYSTERY -> add(COLUMNS / 2, Items.of(Material.ENDER_CHEST), new Offer(game.messages().get("shop.mystery"), config.mysteryPrice(),
                     () -> !game.mysteryBox().busy(station) && game.mysteryBox().hasGunFor(player),
                     () -> game.mysteryBox().roll(player, station)),
                     game.messages().get("shop.mystery-take", Formatter.number("seconds", config.mystery().takeTicks() / 20)));
-            case TEAM_REVIVE -> add(13, new Offer(game.messages().get("shop.team-revive"), Material.TOTEM_OF_UNDYING,
+            case TEAM_REVIVE -> add(COLUMNS / 2, Items.of(Material.TOTEM_OF_UNDYING), new Offer(game.messages().get("shop.team-revive"),
                     config.teamRevivePrice(), game::needsRevive, game::teamRevive));
         }
-        info(31, Items.of(Material.GOLD_INGOT).name(game.messages().get("shop.balance", Formatter.number("gold", survivor.gold()))).build());
+        info(footer, Items.of(Material.GOLD_INGOT).name(game.messages().get("shop.balance", Formatter.number("gold", survivor.gold()))).build());
         closeButton();
+    }
+
+    /** The slot of offer {@code index} of {@code count}, centred in the first row with a gap between them while four or fewer. */
+    private static int spread(int index, int count) {
+        int step = count <= 4 ? 2 : 1;
+        return COLUMNS / 2 - step * (count - 1) / 2 + step * index;
     }
 
     private boolean needsPower() {
         return station.kind() == StationKind.PERKS || station.kind() == StationKind.UPGRADE || station.kind() == StationKind.TEAM_REVIVE;
     }
 
-    private void add(int slot, Offer offer, Component... details) {
+    private void add(int slot, Items.Builder icon, Offer offer, Component... details) {
         offers.put(slot, offer);
         var lore = new ArrayList<Component>();
         lore.addAll(java.util.Arrays.asList(details));
@@ -105,7 +120,7 @@ public final class StationMenu extends Menu {
         if (guns.containsKey(slot) || station.kind() == StationKind.MYSTERY) {
             lore.addAll(game.messages().getLines(station.kind() == StationKind.ARMORY ? "shop.weapon-hint" : "shop.mystery-hint"));
         }
-        set(slot, Items.of(offer.material()).name(offer.name()).lore(lore).hideAttributes().build());
+        set(slot, icon.name(offer.name()).lore(lore).hideAttributes().build());
     }
 
     @Override
@@ -122,11 +137,11 @@ public final class StationMenu extends Menu {
         var gun = guns.get(slot);
         var survivor = game.survivor(player);
         if (gun != null && offer.available().getAsBoolean() && game.weapons().full(player) && survivor.gold() >= offer.price()) {
-            new ReplaceWeaponDialog(game, player, gun, replaced -> {
+            new ReplaceWeaponMenu(game, player, gun, replaced -> {
                 game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && survivor.weapons().containsKey(replaced),
                         () -> game.weapons().give(player, gun, replaced));
                 game.openStation(player, station);
-            }, () -> game.openStation(player, station)).open(player, () -> game.canUse(player, station));
+            }).returningTo(back -> game.openStation(back, station)).open(player, () -> game.canUse(player, station));
             return;
         }
         if (!game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && (!needsPower() || game.powered()), offer.grant())) {
