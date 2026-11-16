@@ -19,6 +19,7 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.common.message.Messages;
@@ -437,7 +438,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
             if (corpse != null) {
                 corpse.text(messages.get("revive.marker", resolvers));
             }
-            helper.ifPresent(other -> BlockcraftApi.get().notifications().status(other, messages.get("revive.helping", resolvers)));
+            helper.ifPresent(other -> status(other, messages.get("revive.helping", resolvers)));
         }
     }
 
@@ -684,6 +685,10 @@ public final class ZombiesGame implements RoundConnections.Seating {
             if (held.isEmpty()) {
                 continue;
             }
+            if (BlockcraftApi.get().resourcePack().applied(player)) {
+                status(player, Component.empty());
+                continue;
+            }
             var ammo = survivor(player).weapons().get(held.get());
             BlockcraftApi.get().notifications().status(player, messages.get(ammo.reloading() ? "hud.reload" : "hud.weapon",
                     Placeholder.component("weapon", messages.get("weapon." + held.get().key())),
@@ -692,8 +697,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }
         for (var player : round.players()) {
             if (downed(player)) {
-                BlockcraftApi.get().notifications().status(player, messages.get("hud.downed",
-                        Formatter.number("seconds", Math.max(0, survivor(player).bleedAt() - tick) / 20)));
+                status(player, messages.get("hud.downed", Formatter.number("seconds", Math.max(0, survivor(player).bleedAt() - tick) / 20)));
             }
         }
         if (waveBar != null && inWave()) {
@@ -702,6 +706,23 @@ public final class ZombiesGame implements RoundConnections.Seating {
                     .progress(Math.clamp(enemies.remaining() / (float) waveTotal, 0, 1));
             Bukkit.getServer().showBossBar(waveBar);
         }
+    }
+
+    /**
+     * {@code text} on the action bar, with the held gun's panel for a fighter with the pack, which the pack's text shader
+     * moves into the bottom-right corner from the line's middle. The panel replaces the weapon's line; its gold stays in
+     * the sidebar.
+     */
+    public void status(Player player, Component text) {
+        BlockcraftApi.get().notifications().status(player, weaponPanel(player).map(panel -> UiFont.centredOn(text, panel)).orElse(text));
+    }
+
+    private Optional<Component> weaponPanel(Player player) {
+        var survivor = survivor(player);
+        if (survivor == null || downed(player) || !BlockcraftApi.get().resourcePack().applied(player)) {
+            return Optional.empty();
+        }
+        return weapons.held(player).map(weapon -> WeaponPanel.render(weapon, survivor.weapons().get(weapon), tick));
     }
 
     public void refreshSidebar() {

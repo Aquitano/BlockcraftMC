@@ -7,6 +7,7 @@ public final class Ammo {
     private int clip;
     private int reserve;
     private int readyAt;
+    private int reloadFrom;
     private int reloadAt;
     private boolean upgraded;
 
@@ -17,11 +18,17 @@ public final class Ammo {
     }
 
     public int clip() { return clip; }
+    public int capacity() { return capacity; }
     public int reserve() { return reserve; }
     public boolean upgraded() { return upgraded; }
     public boolean reloading() { return reloadAt > 0; }
     public int reloadAt() { return reloadAt; }
     public boolean full() { return clip == capacity && reserve == reserveCapacity; }
+
+    /** How much of a running reload has passed by {@code tick}, from none to all of it. */
+    public double reloaded(int tick) {
+        return reloading() ? Math.clamp((double) (tick - reloadFrom) / (reloadAt - reloadFrom), 0, 1) : 0;
+    }
 
     public boolean shoot(int tick, int cooldown) {
         if (reloading() || tick < readyAt || clip == 0) {
@@ -36,6 +43,7 @@ public final class Ammo {
         if (reloading() || clip == capacity || reserve == 0) {
             return false;
         }
+        reloadFrom = tick;
         reloadAt = tick + Math.max(1, duration);
         return true;
     }

@@ -8,6 +8,13 @@ hit. Losing the last fighter or exceeding a wave's time limit ends the match.
 `/zombies` opens the player guide. Right-click fires, left-click reloads, and the third slot holds the knife. Sneak near
 a broken window to repair it or near a downed teammate to revive them.
 
+With the resource pack, the held gun appears in the screen's bottom-right corner: its side view, the clip over the
+reserve, and a bar of the clip that turns red at a quarter and fills gold while a reload runs. An upgraded gun has a gold
+frame. The panel rides on the action bar, so reviving a teammate and repairing the generator keep their text in the
+line's middle beside it, and a downed player sees only the bleed-out countdown. A short notice, such as a purchase,
+hides the panel until the notice ends. Without the pack the action bar names the gun, its ammunition and the gold as
+before; with it the gold stays in the sidebar.
+
 ## Run it
 
 From the repository root, build the plugins and start the local services:
