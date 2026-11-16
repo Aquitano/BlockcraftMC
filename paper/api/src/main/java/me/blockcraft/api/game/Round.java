@@ -435,7 +435,7 @@ public final class Round implements Listener {
         if (!endInPlace(player -> ProxyMessaging.play(plugin, player, api.server().group()))) {
             return false;
         }
-        timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects, summary::returningIn));
+        timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects, summary::offerReturn, summary::returningIn));
         return true;
     }
 

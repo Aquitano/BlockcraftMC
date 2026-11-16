@@ -16,7 +16,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /**
- * The hotbar of the last seconds before everyone goes back to the lobby: another round in the first slot and the
+ * The hotbar of the wait between a round's result and the return to the lobby: another round in the first slot and the
  * lobby in the last, where the lobby and spectator hotbars keep their way out too. Nothing else stays in the hotbar,
  * so whatever the game or the spectators held there no longer answers.
  */

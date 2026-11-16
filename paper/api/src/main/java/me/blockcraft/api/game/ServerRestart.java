@@ -23,20 +23,27 @@ public final class ServerRestart {
 
     /** {@code beforeLeaving} runs right before everyone is sent away, for what the round still has to say. */
     public static Countdown start(Plugin plugin, Arena arena, int seconds, Runnable beforeLeaving) {
-        return start(plugin, arena, seconds, beforeLeaving, remaining -> { });
+        return start(plugin, arena, seconds, beforeLeaving, () -> { }, remaining -> { });
     }
 
-    /** {@code returningIn} counts down to the lobby transfer, before the shutdown's final grace second. */
-    public static Countdown start(Plugin plugin, Arena arena, int seconds, Runnable beforeLeaving, IntConsumer returningIn) {
+    /**
+     * {@code untilLobby} runs every second while everyone is still here, and {@code returningIn} counts down the last
+     * seconds to the lobby transfer, before the shutdown's final grace second.
+     */
+    public static Countdown start(Plugin plugin, Arena arena, int seconds, Runnable beforeLeaving, Runnable untilLobby,
+                                  IntConsumer returningIn) {
         int duration = Math.max(MINIMUM_SECONDS, seconds);
         arena.announceRestart(duration);
         return Countdown.start(plugin, duration, remaining -> {
             if (remaining >= 1 && remaining <= ANNOUNCE_FROM) {
                 arena.announceRestart(remaining);
             }
-            int untilLobby = remaining - 1;
-            if (untilLobby >= 1 && untilLobby <= RETURN_COUNTDOWN_SECONDS) {
-                returningIn.accept(untilLobby);
+            int secondsLeft = remaining - 1;
+            if (secondsLeft >= 1) {
+                untilLobby.run();
+            }
+            if (secondsLeft >= 1 && secondsLeft <= RETURN_COUNTDOWN_SECONDS) {
+                returningIn.accept(secondsLeft);
             }
             if (remaining == 1) {
                 beforeLeaving.run();

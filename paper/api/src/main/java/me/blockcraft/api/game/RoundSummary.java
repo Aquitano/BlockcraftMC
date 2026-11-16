@@ -39,8 +39,8 @@ import java.util.function.Consumer;
 /**
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
  * end; because every coin and every XP point of a round is handed out here, the result title names exactly what
- * was paid, the chat keeps the player's numbers and notes behind Details, and the last seconds before the lobby
- * offer another round or the lobby on the hotbar. Kill streaks
+ * was paid, the chat keeps the player's numbers and notes behind Details, and the wait before the lobby offers
+ * another round or the lobby on the hotbar. Kill streaks
  * are counted here too and announced at the lengths {@link Streaks} names. The recap is also stored for every
  * participant, so the lobby can show it on request. Their numbers go into the game's stats table in one write:
  * the coins as points, and a loss for everyone knocked out or
@@ -372,6 +372,14 @@ public final class RoundSummary {
                         Placeholder.unparsed("winner", String.join(", ", names)))), RESULT);
     }
 
+    /** Hands the way on out again every second, so a player who respawns or whose inventory the game resets keeps it. */
+    void offerReturn() {
+        if (closed || returnHotbar == null) {
+            return;
+        }
+        Bukkit.getOnlinePlayers().stream().filter(player -> !player.isDead()).forEach(returnHotbar::give);
+    }
+
     void returningIn(int seconds) {
         if (closed) {
             return;
@@ -382,9 +390,6 @@ public final class RoundSummary {
         Bukkit.getOnlinePlayers().forEach(player -> {
             api.notifications().important(player, title);
             Sounds.countdownTick(player, seconds);
-            if (returnHotbar != null && !player.isDead()) {
-                returnHotbar.give(player);
-            }
         });
     }
 
