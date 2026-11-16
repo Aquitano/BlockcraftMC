@@ -2,15 +2,14 @@ package me.blockcraft.lobby.activity;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
-import me.blockcraft.api.dialogue.Dialogue;
 import me.blockcraft.api.display.Cards;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.common.settings.PlayerSetting;
-import me.blockcraft.lobby.menu.ChangelogDialog;
+import me.blockcraft.lobby.ChatTalk;
+import me.blockcraft.lobby.SpotEntities;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -21,13 +20,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * The two boards at spawn, books lying at the map's {@code board-changelog} and {@code board-rules} spots under a
- * card that names them: the changelog shows in the dialogue panel, or as a dialog for a client whose pack has not
- * loaded, the rules come from the proxy's rules command, which holds the one copy of them. A returning player whose last seen changelog is older than {@code version} gets it shown
- * once on joining; a player without any network XP yet is new, sees the welcome instead and counts as up to date.
+ * card that names them. Both print in chat: the changelog from {@code changelog} in messages.yml, the rules from the
+ * proxy's rules command, which holds the one copy of them. A returning player whose last seen changelog is older than
+ * {@code version} gets it printed once on joining; a player without any network XP yet is new, sees the welcome
+ * instead and counts as up to date.
  */
 public final class NoticeBoards implements Listener, AutoCloseable {
 
@@ -35,27 +34,24 @@ public final class NoticeBoards implements Listener, AutoCloseable {
 
     private static final long SHOW_AFTER_JOIN_TICKS = 100L;
     private static final double CARD_HEIGHT = 1.6;
-    private static final Dialogue CHANGELOG = new Dialogue("changelog", Map.of("changelog",
-            new Dialogue.Line("changelog.speaker", "changelog.entries", Dialogue.Portrait.NOTE, "", List.of())));
 
     private final Plugin plugin;
     private final Locations<String> spots;
     private final Messages messages;
     private final String version;
     private final String rulesCommand;
-    private final ChangelogDialog changelog;
-    private final Messages changelogText;
+    private final ChatTalk talk;
     private final SpotEntities.Group<String> boards;
 
-    public NoticeBoards(Plugin plugin, SpotEntities entities, Locations<String> spots, Messages messages, String version, String rulesCommand) {
+    public NoticeBoards(Plugin plugin, SpotEntities entities, ChatTalk talk, Locations<String> spots, Messages messages, String version,
+                        String rulesCommand) {
         this.plugin = plugin;
         boards = entities.group(this::open);
         this.spots = spots;
         this.messages = messages;
         this.version = version;
         this.rulesCommand = rulesCommand;
-        this.changelog = new ChangelogDialog(messages, version);
-        changelogText = messages.with(Placeholder.unparsed("version", version));
+        this.talk = talk;
         refresh();
     }
 
@@ -72,6 +68,9 @@ public final class NoticeBoards implements Listener, AutoCloseable {
     }
 
     private void open(Player player, String board) {
+        if (!talk.ready(player, board)) {
+            return;
+        }
         Sounds.MENU_OPEN.play(player);
         if (board.equals("board-rules")) {
             ProxyMessaging.runOnProxy(plugin, player, rulesCommand);
@@ -98,7 +97,8 @@ public final class NoticeBoards implements Listener, AutoCloseable {
     }
 
     private void showChangelog(Player player) {
-        BlockcraftApi.get().dialogues().startOrElse(player, CHANGELOG, changelogText, ending -> { }, () -> changelog.open(player));
+        player.sendMessage(messages.get("changelog.title", Placeholder.unparsed("version", version)));
+        messages.getLines("changelog.entries").forEach(player::sendMessage);
     }
 
     private void seen(Player player) {

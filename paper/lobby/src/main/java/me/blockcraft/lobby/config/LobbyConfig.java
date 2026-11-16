@@ -39,7 +39,8 @@ public record LobbyConfig(
         int cosmeticPreviewTicks,
         int hudRefreshSeconds,
         Duration recapMaxAge,
-        long friendsTimeoutTicks
+        long friendsTimeoutTicks,
+        Duration talkCooldown
 ) {
 
     public static LobbyConfig fromYaml(Map<String, Object> root) {
@@ -96,7 +97,8 @@ public record LobbyConfig(
                 Math.clamp((int) number(effects, "preview-ticks", 60), 20, 200),
                 Math.max(1, (int) number(YamlFile.section(root, "hud"), "refresh-seconds", 5)),
                 Duration.ofMinutes((long) number(YamlFile.section(root, "recap"), "max-age-minutes", 10)),
-                Math.max(20L, (long) number(YamlFile.section(root, "friends"), "timeout-ticks", 200))
+                Math.max(20L, (long) number(YamlFile.section(root, "friends"), "timeout-ticks", 200)),
+                Duration.ofMillis(Math.max(0L, (long) number(YamlFile.section(root, "talk"), "cooldown-millis", 2000)))
         );
     }
 

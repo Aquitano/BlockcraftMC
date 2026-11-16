@@ -26,8 +26,8 @@ interaction hitboxes and do not acquire collision automatically.
 
 The six chest, crate, and cart items open persistent three-row storage. Lanterns and candle-bearing props emit
 level-12 light, including the candelabra and decorated grave markers. The ghost and scarecrow are decorations, with no AI or combat behavior.
-The quest board opens the lobby's configured quests. Selecting a quest uses the same progress checks and reward
-transaction as its existing quest giver. This interaction is available on the lobby server.
+The quest board prints the lobby's configured quests and their progress in chat. A finished quest's button uses the
+same progress checks and reward transaction as its quest giver. This interaction is available on the lobby server.
 
 For authored scenery, use an item ID in the existing `furniture.yml` placement format. Do not use the scenery lifecycle
 for storage containing valuables: scenery is removed and recreated during map saves and seasonal refreshes.

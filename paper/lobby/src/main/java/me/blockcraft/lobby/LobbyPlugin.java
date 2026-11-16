@@ -203,12 +203,13 @@ public final class LobbyPlugin extends JavaPlugin {
         var gameNpcs = new GameNpcs(this, spotEntities, activityLocations, GameNpcConfig.fromYaml(YamlFile.section(yaml, "game-npcs")),
                 config.navigatorGroups(), api.groups(), messages, api.messages());
         var boardSettings = YamlFile.section(yaml, "notice-boards");
-        var noticeBoards = new NoticeBoards(this, spotEntities, activityLocations, messages,
+        var talk = new ChatTalk(this, config.talkCooldown());
+        var noticeBoards = new NoticeBoards(this, spotEntities, talk, activityLocations, messages,
                 String.valueOf(boardSettings.getOrDefault("changelog-version", "1")),
                 String.valueOf(boardSettings.getOrDefault("rules-command", "regeln")));
-        var quests = new QuestGivers(spotEntities, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
+        var quests = new QuestGivers(spotEntities, talk, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
         me.blockcraft.api.scenery.FurnitureInteractions.register(this, java.util.Map.of("blockcraft_quest_board", quests::openBoard));
-        var daily = new DailyCourier(this, spotEntities, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
+        var daily = new DailyCourier(this, spotEntities, talk, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
         closables.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily));
         register(gameNpcs, ownPlacings, loreNotes, noticeBoards, daily);
         LobbyNews.start(this, messages, YamlFile.section(yaml, "news")).ifPresent(news -> {

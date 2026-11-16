@@ -59,6 +59,10 @@ jump-pad:
   max-length: 6.0
 player-hider:
   cooldown-millis: 3000
+# The courier, the quest givers and the boards answer a click in chat; the same player clicking the same one again
+# within cooldown-millis gets nothing, so a double click prints their lines once.
+talk:
+  cooldown-millis: 2000
 effects:
   kill-price: 500
   win-price: 500
@@ -604,8 +608,9 @@ lore-notes:
     bahnhof: MAP
     tagebuch: WRITABLE_BOOK
 
-# The boards at spawn, at board-changelog and board-rules (/lobbyset, looking at the block). The changelog opens once
-# for everyone who returns after version changes; the rules board runs the proxy's rules command.
+# The boards at spawn, at board-changelog and board-rules (/lobbyset, looking at the block). The changelog board prints
+# the changelog in chat, as does a returning player's first join after changelog-version changes; the rules board runs
+# the proxy's rules command, which prints them.
 notice-boards:
   changelog-version: "2026-10"
   rules-command: regeln
@@ -655,7 +660,7 @@ quests:
 # The daily login reward (/daily, a chat line on arrival, and a figure at the optional /lobbyset daily spot). One claim
 # per day in the network's calendar zone; consecutive days raise the streak, a missed day starts it again at day 1.
 # coins pays day 1, 2, ... of a streak, the last value every day after. preview-days is how many coming days the
-# dialog lists (0 to 7); skin is the figure's player name, empty for the default look.
+# courier's [Nächste Tage] lists (0 to 7, 0 drops the button); skin is the figure's player name, empty for the default look.
 daily-rewards:
   coins: [10, 15, 20, 25, 30, 40, 60]
   preview-days: 3
