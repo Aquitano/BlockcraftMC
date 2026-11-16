@@ -70,10 +70,6 @@ public final class UiFont {
     }
 
     /** The panel for a chest with {@code rows} rows, then {@code title} where the vanilla title would be. */
-    public static Component menuTitle(int rows, boolean toolbar, Component title) {
-        return menuTitle(rows, toolbar, false, title);
-    }
-
     public static Component menuTitle(int rows, boolean toolbar, boolean cards, Component title) {
         return screenWide(cards ? (char) (CARD_PANEL_BASE + rows) : panel(rows, toolbar), title);
     }

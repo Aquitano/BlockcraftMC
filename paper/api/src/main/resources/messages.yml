@@ -768,7 +768,6 @@ curiosity:
 # The waiting lobby and the round every game shares: the lobby hotbar, /start, /stats, the sidebar's frame, the lobby
 # vote, /forcemap and /setup. Their answers carry the game's prefix.
 stats-menu:
-  players: "<arrow><primary>Spieler hier"
   players-lore: "<muted>Die Stats aller Spieler auf diesem Server."
 hotbar:
   stats: "<arrow><primary>Stats"
