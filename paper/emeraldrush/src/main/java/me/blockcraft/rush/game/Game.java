@@ -298,9 +298,11 @@ public final class Game implements RoundConnections.Seating {
                     messages.get("shopping.title", Formatter.number("emeralds", emeralds(player))),
                     messages.get("shopping.subtitle"), titleTimes), Sounds.COUNTDOWN_GO);
             player.sendMessage(messages.get("shopping.info", Formatter.number("seconds", config.shoppingSeconds())));
-            player.sendMessage(messages.get("shopping.hint"));
             player.getInventory().clear();
             player.getInventory().setItem(4, GameItem.SHOP.build(MenuIcon.TOOL_SHOP.item().name(messages.get("item.shop"))));
+            if (player.getInventory().getItem(4) == null) {
+                player.sendMessage(messages.get("shopping.hint"));
+            }
             spawns.teleport(player, SpawnPoint.SHOPPING);
             lives.put(player.getUniqueId(), config.lives());
         }

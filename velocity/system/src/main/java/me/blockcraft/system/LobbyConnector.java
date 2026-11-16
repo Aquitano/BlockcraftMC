@@ -43,6 +43,12 @@ public final class LobbyConnector {
         return Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group));
     }
 
+    /** {@link #game} for the group {@code server} belongs to, or for its own name where it is in none. */
+    public TagResolver gameOn(RegisteredServer server) {
+        var name = server.getServerInfo().getName();
+        return game(directory.groupOf(name).orElse(name));
+    }
+
     public Set<String> groups() {
         var groups = new TreeSet<>(directory.groups());
         if (config.onDemand().enabled()) {

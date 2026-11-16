@@ -99,7 +99,7 @@ friends:
 premium:
   required:
     - "<prefix><muted>Dafür benötigst du <premium>Premium<muted>!"
-    - "<prefix><muted>Mehr erfahren <accent>/Premium"
+    - "<prefix><muted>Mehr erfahren: <click:run_command:'/premium'><hover:show_text:'<muted>Klicke, um /premium auszuführen.'><accent>/premium</hover></click>"
   entered: "<prefix><muted>Du betrittst den <premium>Premium <muted>Bereich."
 navigator:
   title: "<arrow><primary>Spielen"
@@ -132,7 +132,7 @@ navigator:
   jump: "<primary>JumpAndRun"
   description:
     knockbackffa:
-      - "<muted>Mit dem Knockback-Stick jeden von der Insel stoßen."
+      - "<muted>Mit dem Rückstoß-Stick jeden von der Insel stoßen."
       - "<muted>Sofort wieder einsteigen, alle paar Minuten ein neues Kit."
     archive:
       - "<muted>Alte Maps von Blockcraft 2015–16."
@@ -147,7 +147,7 @@ navigator:
       - "<dark>Der Villager akzeptiert keine Ratenzahlung."
     duell:
       - "<muted>Ein Gegner. Ihr bestimmt den Modus."
-      - "<muted>1vs1, SurvivalGames oder SuperJump."
+      - "<muted>1vs1, Survival Games oder SuperJump."
       - "<muted>Gewertet gegen gleich Starke: <accent>/ranked"
       - "<dark>Ausreden bitte erst nach dem Duell einreichen."
     mlgrush:
@@ -316,24 +316,24 @@ heads:
   title: "<arrow><primary>Köpfe"
   equipped: "<prefix><muted>Du hast einen Kopf aufgesetzt!"
   name:
-    capam: "<primary>Captain America's Kopf"
-    crump: "<primary>Crumpy Cat's Kopf"
-    hamburger: "<primary>Hamburger Kopf"
-    chest: "<primary>Kisten Kopf"
-    piston: "<primary>Piston Kopf"
-    command-block: "<primary>Command Kopf"
-    dispenser: "<primary>Dispenser Kopf"
-    rubber: "<primary>Gummi Kopf"
-    tnt: "<primary>TNT Kopf"
-    foot: "<primary>Football Kopf"
-    foots: "<primary>Ender Kopf"
-    marios: "<primary>SuperMario Kopf"
-    yoshi: "<primary>Yoshis Kopf"
-    yoshis: "<primary>Bowsers Kopf"
-    trooper: "<primary>Sturmtruppen Kopf"
-    boba: "<primary>Boba's Kopf"
-    chief: "<primary>Master Chief's Kopf"
-    iron: "<primary>Iron Man's Kopf"
+    capam: "<primary>Kopf von Captain America"
+    crump: "<primary>Grumpy-Cat-Kopf"
+    hamburger: "<primary>Hamburgerkopf"
+    chest: "<primary>Kistenkopf"
+    piston: "<primary>Kolbenkopf"
+    command-block: "<primary>Befehlsblock-Kopf"
+    dispenser: "<primary>Werferkopf"
+    rubber: "<primary>Gummikopf"
+    tnt: "<primary>TNT-Kopf"
+    foot: "<primary>Footballkopf"
+    foots: "<primary>Enderkopf"
+    marios: "<primary>Kopf von Super Mario"
+    yoshi: "<primary>Kopf von Yoshi"
+    yoshis: "<primary>Kopf von Bowser"
+    trooper: "<primary>Sturmtruppenkopf"
+    boba: "<primary>Kopf von Boba Fett"
+    chief: "<primary>Kopf von Master Chief"
+    iron: "<primary>Kopf von Iron Man"
 hats:
   title: "<arrow><primary>Hüte"
   equipped: "<prefix><muted>Du hast einen Hut aufgesetzt!"
@@ -359,10 +359,10 @@ premium-menu:
   area: "<arrow><premium>Zum Premiumbereich"
   area-lore: "<bullet><muted>Teleportiere dich zum Premiumbereich!"
   pets: "<arrow><primary>Haustiere"
-  pets-lore: "<bullet><muted>Spawne dein eigenes Pet!"
+  pets-lore: "<bullet><muted>Spawne dein eigenes Haustier!"
 pets:
   title: "<arrow><primary>Haustiere"
-  entity-name: "<player>'s Haustier"
+  entity-name: "Haustier von <player>"
   name:
     wolf: "<primary>Wolf"
     chicken: "<primary>Huhn"
@@ -374,15 +374,15 @@ pets:
     pig: "<bullet><muted>Spawne dein Schwein"
     rabbit: "<bullet><muted>Spawne deinen Hasen"
   chosen:
-    wolf: "<prefix><muted>Du hast das <white>Wolf <muted>Pet gewählt."
-    chicken: "<prefix><muted>Du hast das <white>Huhn <muted>Pet gewählt."
-    pig: "<prefix><muted>Du hast das <white>Schwein <muted>Pet gewählt."
-    rabbit: "<prefix><muted>Du hast das <white>Hasen <muted>Pet gewählt."
+    wolf: "<prefix><muted>Du hast den <white>Wolf <muted>als Haustier gewählt."
+    chicken: "<prefix><muted>Du hast das <white>Huhn <muted>als Haustier gewählt."
+    pig: "<prefix><muted>Du hast das <white>Schwein <muted>als Haustier gewählt."
+    rabbit: "<prefix><muted>Du hast den <white>Hasen <muted>als Haustier gewählt."
   removed:
-    wolf: "<prefix><muted>Dein <white>Wolf<muted> Haustier wurde entfernt."
-    chicken: "<prefix><muted>Dein <white>Huhn<muted> Haustier wurde entfernt."
-    pig: "<prefix><muted>Dein <white>Schwein<muted> Haustier wurde entfernt."
-    rabbit: "<prefix><muted>Dein <white>Hasen<muted> Haustier wurde entfernt."
+    wolf: "<prefix><muted>Dein Haustier <white>Wolf<muted> wurde entfernt."
+    chicken: "<prefix><muted>Dein Haustier <white>Huhn<muted> wurde entfernt."
+    pig: "<prefix><muted>Dein Haustier <white>Schwein<muted> wurde entfernt."
+    rabbit: "<prefix><muted>Dein Haustier <white>Hase<muted> wurde entfernt."
 recap:
   empty: "<prefix><muted>Für diese Sitzung ist keine aktuelle Runde vorhanden."
   available: "<prefix><muted>Letzte Runde <dark>· <details>"
@@ -412,7 +412,7 @@ extras:
   gadgets-lore: "<bullet><muted>Enterhaken, TNT-Sprung und mehr!"
   kill-effects: "<arrow><primary>Kill-Effekte"
   kill-effects-lore: "<bullet><muted>Effekte für deine Kills!"
-  win-effects: "<arrow><primary>Win-Effekte"
+  win-effects: "<arrow><primary>Sieges-Effekte"
   win-effects-lore: "<bullet><muted>Effekte für deine Siege!"
   premium: "<arrow><premium>Premium"
   premium-lore: "<bullet><muted>Spuren, Haustiere und der Premiumbereich"
@@ -427,11 +427,11 @@ weapons:
   lore:
     - "<muted>In BedWars, MLG Rush und Knockback FFA."
     - "<muted>Schaden und Rückstoß bleiben unverändert."
-    - "<muted>Ohne Ressourcenpaket siehst du einen Stick."
+    - "<muted>Ohne Ressourcenpaket siehst du den normalen Rückstoß-Stick."
   selected: "<prefix><success>Dein Stick-Aussehen gilt jetzt in allen unterstützten Spielen."
-  reset: "<prefix><muted>Dein Stick sieht wieder normal aus."
+  reset: "<prefix><muted>Dein Rückstoß-Stick sieht wieder normal aus."
   name:
-    stick: "<primary>Stick"
+    stick: "<primary>Rückstoß-Stick"
     bone: "<primary>Knochen"
     blaze-rod: "<primary>Lohenrute"
     feather: "<primary>Feder"
@@ -473,7 +473,7 @@ effects:
       soul: "<aqua>Seelen"
       stardust: "<primary>Sternenstaub"
   win:
-    title: "<arrow><primary>Win-Effekte"
+    title: "<arrow><primary>Sieges-Effekte"
     name:
       fireworks: "<red>Feuerwerk"
       storm: "<accent>Gewitter"
@@ -491,6 +491,7 @@ gadgets:
   title: "<arrow><primary>Gadgets"
   held-lore: "<bullet><right>Benutzen"
   cooldown: "<prefix><error>Warte noch <white><seconds> <error>Sekunden!"
+  cooldown-second: "<prefix><error>Warte noch <white>1 <error>Sekunde!"
   name:
     grappling-hook: "<arrow><primary>Enterhaken"
     tnt-jump: "<arrow><primary>TNT-Sprung"
@@ -523,16 +524,16 @@ trails:
     firework: "<arrow><primary>Feuerwerk"
   lore:
     snow: "<muted>Das Geschenk hinter Türchen 24."
-    witch: "<bullet><muted>Zauber Spuren!"
+    witch: "<bullet><muted>Zauberspuren!"
     note: "<bullet><muted>Hinterlasse Musik!"
     flame: "<bullet><muted>Laufe auf Feuer!"
     firework: "<bullet><muted>Party!"
   selected:
     snow: "<muted>Du hinterlässt jetzt Schneeflocken."
-    witch: "<prefix><muted>Du hast den <white>Zauber <muted>Effekt ausgewählt."
-    note: "<prefix><muted>Du hast den <white>Musik <muted>Effekt ausgewählt."
-    flame: "<prefix><muted>Du hast den <white>Feuer <muted>Effekt ausgewählt."
-    firework: "<prefix><muted>Du hast den <white>Feuerwerk <muted>Effekt ausgewählt."
+    witch: "<prefix><muted>Du hast den <white>Zaubereffekt <muted>ausgewählt."
+    note: "<prefix><muted>Du hast den <white>Musikeffekt <muted>ausgewählt."
+    flame: "<prefix><muted>Du hast den <white>Feuereffekt <muted>ausgewählt."
+    firework: "<prefix><muted>Du hast den <white>Feuerwerkseffekt <muted>ausgewählt."
 chat:
   cleared: "<prefix><muted>Der Chat wurde von <error><player><muted> geleert."
 setspawn:
@@ -573,7 +574,7 @@ holo:
     - "<success>Jetzt spielen <dark>· <primary>/play emeraldrush"
   duell:
     - "<dark>● <duell><bold>DUELL</bold> <dark>●"
-    - "<dark>- <muted>1vs1, SurvivalGames oder SuperJump. <dark>-"
+    - "<dark>- <muted>1vs1, Survival Games oder SuperJump. <dark>-"
     - "<success>Jetzt spielen <dark>· <primary>/play duell"
 
 konami:
@@ -626,7 +627,7 @@ activities:
   setup-jump: "<prefix><error>Der Navigator-Zielpunkt fehlt. Setze ihn mit /setspawn jump."
   setup-eggs: "<prefix><error>Nur <found> verschiedene Osterei-Verstecke gesetzt. Benötigt werden <required>."
   setup-egg-duplicate: "<prefix><error><location> teilt sich einen Block mit einem anderen Osterei-Versteck."
-  setup-ready: "<prefix><success>Die Aktivitätspositionen sind eingerichtet. Teste den Teich und den Parcours im Spiel und sichere die Karte mit /map save."
+  setup-ready: "<prefix><success>Die Aktivitätspositionen sind eingerichtet. Teste den Teich und den Parcours im Spiel und sichere die Map mit /map save."
   setup-problems: "<prefix><error>Die Prüfung meldet <count> Einrichtungsfehler."
 fishing:
   rod: "<primary>Teichangel"
@@ -692,20 +693,20 @@ seasonal:
   advent-hint: "<prefix><muted>Im <primary>Adventskalender <muted>in deinem Profil wartet heute Türchen <accent><day><muted>."
   christmas-hint: "<prefix><success>Frohe Weihnachten! <muted>Der <primary>Weihnachtsmann <muted>ist in der Lobby und hat ein Geschenk für dich."
   santa-name: "<accent>Weihnachtsmann"
-  santa-gift: "<prefix><accent>Weihnachtsmann: <success>Ho ho ho! <muted>Für dich: <accent>+<coins> Coins<muted>. Du warst dieses Jahr fast immer brav."
+  santa-gift: "<success>Ho ho ho! <muted>Für dich: <accent>+<coins> Coins<muted>. Du warst dieses Jahr fast immer brav."
   santa-talk:
-    - "<prefix><accent>Weihnachtsmann: <muted>Ho ho ho! Dein Geschenk ist schon abgehakt. Ich führe Listen, weißt du."
-    - "<prefix><accent>Weihnachtsmann: <muted>Noch eins? Die Rentiere streiken, wenn ich zweimal liefere."
-    - "<prefix><accent>Weihnachtsmann: <muted>Im Sack ist nur noch Kohle. Die willst du nicht."
-    - "<prefix><accent>Weihnachtsmann: <muted>Frohe Weihnachten! Grüß die Wichtel in den anderen Spielmodi."
+    - "Ho ho ho! Dein Geschenk ist schon abgehakt. Ich führe Listen, weißt du."
+    - "Noch eins? Die Rentiere streiken, wenn ich zweimal liefere."
+    - "Im Sack ist nur noch Kohle. Die willst du nicht."
+    - "Frohe Weihnachten! Grüß die Wichtel in den anderen Spielmodi."
   sleigh-announce: "<prefix><accent>Ho ho ho! <muted>Der <primary>Weihnachtsmann <muted>fliegt mit seinen Rentieren über die Lobby. Fang ein Geschenk!"
   sleigh-present: "<prefix><success>Gefangen! <accent>+<coins> Coins<muted>, frisch vom Schlitten."
   sleigh-greedy: "<prefix><muted>Ein Geschenk pro Flug. Rudolph zählt mit."
   sleigh-busy: "<prefix><error>Der Schlitten ist gerade unterwegs."
   santa-hurt:
-    - "<prefix><accent>Weihnachtsmann: <muted>Ho ho... nein. Das kommt auf die andere Liste."
-    - "<prefix><accent>Weihnachtsmann: <muted>Ich hab den Kamin von 2019 überlebt. Du schaffst mich nicht."
-    - "<prefix><accent>Weihnachtsmann: <muted>Rudolph hat das gesehen."
+    - "Ho ho... nein. Das kommt auf die andere Liste."
+    - "Ich hab den Kamin von 2019 überlebt. Du schaffst mich nicht."
+    - "Rudolph hat das gesehen."
   advent-title: "<arrow><primary>Adventskalender"
   advent-open: "<success>Heute öffnen"
   advent-closed: "<muted>Jedes Türchen öffnet nur an seinem Dezembertag."
@@ -715,19 +716,19 @@ seasonal:
   snow: "<prefix><muted>Die <primary>Schneespur <muted>wartet bei deinen Spuren. Frohe Weihnachten!"
 
 prisoner:
-  name: "<muted>Gefangener"
+  name: "<accent>Gefangener"
   talk:
-    - "<prefix><primary>Gefangener: <muted>Ich hab nur ein Bett abgebaut! Ein einziges! Und plötzlich war Hausfriedensbruch."
-    - "<prefix><primary>Gefangener: <muted>Seit 2016 sitze ich hier. Ist BedWars noch aktuell?"
-    - "<prefix><primary>Gefangener: <muted>Hast du einen Löffel? Ich grabe seit Jahren. Bisher nur Erde."
-    - "<prefix><primary>Gefangener: <muted>Sag dem Wärter, die Spinnweben waren schon da, als ich kam."
-    - "<prefix><primary>Gefangener: <muted>Ich wollte nur die Prinzessin retten. Falsches Schloss, sagen sie."
-    - "<prefix><primary>Gefangener: <muted>Die Leiter da oben? Gehört nicht mir. Ich darf nicht drauf."
-    - "<prefix><primary>Gefangener: <muted>Psst. Wenn du nachts in die Ferne schaust ... schau lieber nicht zu lange."
+    - "Ich hab nur ein Bett abgebaut! Ein einziges! Und plötzlich war Hausfriedensbruch."
+    - "Seit 2016 sitze ich hier. Ist BedWars noch aktuell?"
+    - "Hast du einen Löffel? Ich grabe seit Jahren. Bisher nur Erde."
+    - "Sag dem Wärter, die Spinnweben waren schon da, als ich kam."
+    - "Ich wollte nur die Prinzessin retten. Falsches Schloss, sagen sie."
+    - "Die Leiter da oben? Gehört nicht mir. Ich darf nicht drauf."
+    - "Psst. Wenn du nachts in die Ferne schaust ... schau lieber nicht zu lange."
   hurt:
-    - "<prefix><primary>Gefangener: <muted>Au! Auch Gefangene haben Rechte. Glaube ich."
-    - "<prefix><primary>Gefangener: <muted>Das sag ich dem Wärter. Der kommt allerdings nie."
-    - "<prefix><primary>Gefangener: <muted>Schlag lieber die Wand. Die hält mich hier fest, nicht ich."
+    - "Au! Auch Gefangene haben Rechte. Glaube ich."
+    - "Das sag ich dem Wärter. Der kommt allerdings nie."
+    - "Schlag lieber die Wand. Die hält mich hier fest, nicht ich."
 
 throw:
   snowball: "<arrow><primary>Schneeball <dark>· <muted>Werfen"

@@ -56,7 +56,7 @@ top:
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 
 kit:
-  selected: "<prefix><muted>Du hast das <white><kit><muted> ausgewählt!"
+  selected: "<white><kit> <success>ausgewählt"
   starter:
     name: "Starter-Kit"
     contents:

@@ -54,7 +54,9 @@ public final class Gadgets {
     public boolean tryUse(Player player) {
         int remaining = player.getCooldown(player.getInventory().getItemInMainHand());
         if (remaining > 0) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("gadgets.cooldown", Formatter.number("seconds", (remaining + 19L) / 20)));
+            long seconds = (remaining + 19L) / 20;
+            BlockcraftApi.get().notifications().feedback(player, messages.get(seconds == 1 ? "gadgets.cooldown-second" : "gadgets.cooldown",
+                    Formatter.number("seconds", seconds)));
             return false;
         }
         for (var gadget : Gadget.values()) {

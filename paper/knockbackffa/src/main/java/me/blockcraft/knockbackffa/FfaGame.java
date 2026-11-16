@@ -252,7 +252,8 @@ final class FfaGame implements Listener, AutoCloseable {
             if (--rotationIn <= 0) {
                 rotate();
             } else if (rotationIn == 30 || rotationIn <= 5) {
-                Bukkit.broadcast(messages.get("rotation.countdown", Formatter.number("seconds", rotationIn)));
+                Bukkit.broadcast(messages.get(rotationIn == 1 ? "rotation.countdown-second" : "rotation.countdown",
+                        Formatter.number("seconds", rotationIn)));
             }
         }
         if (!playing.isEmpty() && --kitIn <= 0) {
@@ -273,10 +274,12 @@ final class FfaGame implements Listener, AutoCloseable {
                 BlockcraftApi.get().notifications().status(player, messages.get("spawn.protected"));
             }
             if (kitIn <= config.kits().warningSeconds() && active(player)) {
-                BlockcraftApi.get().notifications().status(player, messages.get("kit.countdown", Formatter.number("seconds", kitIn)));
+                BlockcraftApi.get().notifications().status(player, messages.get(kitIn == 1 ? "kit.countdown-second" : "kit.countdown",
+                        Formatter.number("seconds", kitIn)));
             }
             if (config.launch() && launchIn <= config.kits().warningSeconds() && active(player)) {
-                BlockcraftApi.get().notifications().status(player, messages.get("launch.countdown", Formatter.number("seconds", launchIn)));
+                BlockcraftApi.get().notifications().status(player, messages.get(launchIn == 1 ? "launch.countdown-second" : "launch.countdown",
+                        Formatter.number("seconds", launchIn)));
             }
         }
     }
