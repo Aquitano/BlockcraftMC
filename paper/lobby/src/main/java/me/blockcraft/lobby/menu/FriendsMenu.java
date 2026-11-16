@@ -8,6 +8,8 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.network.ProxyMessage.FriendsReply;
 import me.blockcraft.common.network.ProxyMessage.FriendsRequest;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
@@ -166,7 +168,9 @@ final class FriendsMenu extends ListMenu<FriendsMenu.Row> {
     }
 
     private void addFriend(Player player) {
-        new AddFriendDialog(menus, "", (viewer, name) -> open(viewer, opened -> load(opened, FriendsRequest.Action.ADD, name)),
-                this::open).open(player);
+        var messages = menus.messages();
+        close(player, closed -> closed.sendMessage(messages.get("friends.add-hint")
+                .hoverEvent(HoverEvent.showText(messages.get("friends.add-hover")))
+                .clickEvent(ClickEvent.suggestCommand("/friend add "))));
     }
 }
