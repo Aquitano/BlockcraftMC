@@ -1,14 +1,14 @@
 # Resource pack layers
 
 The builder packages existing generated assets. It does not run art generators or change the proxy runtime.
-`blockcraft.zip` keeps the existing combined contents and credits for rollout compatibility.
-The four additional archives use the following stacks, listed from lowest to highest client priority.
+The base archive carries the pack's credits. The four archives use the following stacks, listed from lowest to highest
+client priority.
 
 | Destination | Archives |
 | --- | --- |
 | Lobby | `blockcraft-base.zip`, `blockcraft-lobby.zip` |
 | Other games | `blockcraft-base.zip`, `blockcraft-modes.zip` |
-| Sternenfront | `blockcraft-base.zip`, `blockcraft-starwars.zip` |
+| Sternenfront and story games | `blockcraft-base.zip`, `blockcraft-starwars.zip` |
 
 Minecraft replaces item definition files as a whole. Each profile contains the base selector cases and only its own model cases.
 The original vanilla fallback and item definition options survive in every profile.
@@ -19,8 +19,8 @@ A transition must remove the previous profile packs. Keeping an old pack loaded 
 ## Build and check
 
 Run `./gradlew :resourcepack:build` with Java 25 to check and package this checkout.
-The archives are in `resourcepack/build/split`; the combined archive is in `resourcepack/build`.
-Root `stagePlugins` stages all five ZIPs into `build/docker/velocity/blockcraft-system`.
+The archives are in `resourcepack/build/split`.
+Root `stagePlugins` stages the four ZIPs into `build/docker/velocity/blockcraft-system`.
 The split report stays in the build directory.
 
 To check another generated source tree without modifying it:
@@ -30,7 +30,7 @@ python3 resourcepack/split_pack.py --source /absolute/path/resourcepack/src --ch
 python3 resourcepack/split_pack.py --source /absolute/path/resourcepack/src --output /tmp/blockcraft-split
 ```
 
-Gradle also accepts `-PpackSource=/absolute/path/resourcepack/src` for both combined and split packaging.
+Gradle also accepts `-PpackSource=/absolute/path/resourcepack/src` for packaging.
 The focused Python unit tests use this checkout's source. `verifySplitPack` uses the selected `packSource`.
 Generation remains a separate explicit operation.
 
@@ -74,14 +74,13 @@ The verification client's `packs` command confirmed only base and the destinatio
 transfer. The source assets match the earlier accepted set byte-for-byte. An earlier integration run rendered an A280
 and the Star Wars HUD in a round, an ordinary pistol and pink boss bar in Duell, and ordinary lobby furniture.
 Refusal and timeout behavior have automated tests but were not exercised by these client runs.
-The proxy suite covers combined compatibility, split transfers, lobby return and Star Wars addon removal. Database integration was not enabled.
+The proxy suite covers transfers, lobby return and Star Wars addon removal. Database integration was not enabled.
 The lobby and ordinary games receive none of the Star Wars boss-bar blanks.
-The proxy implements these stacks behind `resource-pack.profiles.enabled` in its configuration. Each archive needs
-its own reachable URL under `resource-pack.profiles.archives`. The combined `BLOCKCRAFT_RESOURCE_PACK_URL` override
-does not replace those archive URLs. Enabling profiles requires the four core archives and every configured archive to be present.
+The proxy maps server groups to addons in `resource-pack.groups` and offers every archive at
+`resource-pack.base-url` plus its file name; `BLOCKCRAFT_RESOURCE_PACK_BASE_URL` overrides the base URL.
+Startup needs base and every addon the groups name.
 The base keeps the shared readiness UUID. Addons have separate UUIDs; configuration waits for every selected pack,
-and successful arrival removes obsolete addons. Profile delivery is required even if the legacy `required` flag is false.
-A failed download is retried up to `resource-pack.download-retries` times, once by default. Retries retain the original
+and successful arrival removes obsolete addons. A failed download is retried up to `resource-pack.download-retries` times, once by default. Retries retain the original
 loading deadline. Refusal, exhausted retries, a failed reload, or timeout blocks entry. Automatic lobby recovery is not implemented.
 Replay transfers carry the recording's original game to the proxy. The replay backend requests that game's profile
 and waits for acknowledgement before playback, including when switching recordings on the same backend.
@@ -89,13 +88,12 @@ An unknown replay origin remains blocked. Replay profile selection and bounded d
 The isolated Minecraft 26.3 client also opened a Sternenfront recording from the lobby, played it with
 only base and Star Wars loaded, and returned to the lobby. Switching between recordings of different modes on the
 same replay backend is covered by automated tests, but has not been exercised with this client.
-The combined archive remains the default while profile delivery is disabled.
 
 ## Production rollout
 
-`prod/resource-pack.yml` contains the production pack overrides. Merge its `resource-pack` section into the proxy's
-operator configuration, preserving other overrides. All four HTTPS endpoints must serve the staged ZIPs before
-players reconnect. The existing Caddy reverse proxy forwards every pack path to the proxy's HTTP port.
+The bundled `resource-pack` section is the production configuration; the proxy needs only
+`RESOURCE_PACK_BASE_URL` in `.env`. All four archives must be reachable under it before players reconnect.
+The existing Caddy reverse proxy forwards every pack path to the proxy's HTTP port.
 
 Stage a complete candidate with `./gradlew stagePlugins -PstageDirectory=/absolute/path/to/candidate -PnexoJar=/path/to/Nexo.jar`.
 The default staging directory remains `build/docker`. Validate the candidate before replacing deployed staging.

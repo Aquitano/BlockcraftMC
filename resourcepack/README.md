@@ -2,7 +2,7 @@
 
 How the proxy serves the pack is in the [root README](../README.md#resource-pack). This file is for changing what it draws.
 
-The [split pack prototype](SPLIT_PACK.md) documents the additional archives, client stack order, and rollout limits.
+The [pack layers](SPLIT_PACK.md) document the archives, client stack order, and rollout limits.
 
 The [presentation test guide](../paper/api/PRESENTATION.md) covers dialogue portraits, animated materials and text,
 screen effects, and the Sternenfront intro.

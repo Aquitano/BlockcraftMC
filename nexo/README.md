@@ -44,8 +44,8 @@ first matching occasion, otherwise `item` remains. Occasions follow `/event` and
 
 The stall and tree use real barrier hitboxes. Their placements also specify `fallback-block` and
 `fallback-height` so a client without the pack sees solid vanilla scenery at those hitboxes. Other models use
-their vanilla item material as a fallback. A client gets there only if its download failed or the proxy's
-`resource-pack.required` is off, because that setting kicks whoever declines. Both bench variants have seats.
+their vanilla item material as a fallback. A client sees them only before its pack has loaded, because the proxy
+kicks whoever declines or fails it. Both bench variants have seats.
 Nexo's model remains tracked while its rendering is hidden for players without the pack, so the seats still work.
 The definitions set `properties.cullable: false` because Nexo's culling would otherwise reset that visibility.
 

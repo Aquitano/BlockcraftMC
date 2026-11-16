@@ -133,7 +133,7 @@ docker compose up -d
 ```
 
 `.env` holds `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `FORWARDING_SECRET`, `WAKER_TOKEN`, `RESOURCE_PACK_PORT`,
-`RESOURCE_PACK_URL` and `NETWORK_*`; `.env.example` explains each. It also sets `COMPOSE_FILE`, so every `docker compose`
+`RESOURCE_PACK_BASE_URL` and `NETWORK_*`; `.env.example` explains each. It also sets `COMPOSE_FILE`, so every `docker compose`
 command in that directory works on the production setup, which is why `.env` never belongs on a dev machine.
 
 After the first start, [import the ranks](#importing-the-ranks) and set the first owner. Every game runs around the clock
@@ -142,8 +142,8 @@ until you enable [game servers on demand](#game-servers-on-demand).
 The lobby furniture needs the licensed Nexo jar, which stays outside git. Put its path in `BLOCKCRAFT_NEXO_JAR` or pass
 `-PnexoJar=...` before every `stagePlugins`, or the servers start without furniture ([Nexo setup](nexo/README.md)).
 
-With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_URL`
-`https://mc.example.net/blockcraft.zip`):
+With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_BASE_URL`
+`https://mc.example.net/`), which forwards every archive path to the proxy:
 
 ```
 mc.example.net {
@@ -151,9 +151,8 @@ mc.example.net {
 }
 ```
 
-The split-pack production overrides are in [prod/resource-pack.yml](prod/resource-pack.yml).
 The [pack rollout guide](resourcepack/SPLIT_PACK.md#production-rollout) describes staging a complete candidate with
-`-PstageDirectory` before replacing deployed files. The lobby uses its ordinary pack; Sternenfront uses its own.
+`-PstageDirectory` before replacing deployed files.
 
 ### Updating
 
@@ -185,7 +184,8 @@ same `BLOCKCRAFT_ADDRESS_SECRET`, which then replaces the file. Changing the sec
 1. Copy the jars from `build/libs` plus LuckPerms into `plugins/` of the respective server.
 2. Configure the `database` section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugin's
    `config.yml`.
-3. Put `blockcraft.zip` next to the proxy plugin's config, with `resource-pack.url` reachable from the internet.
+3. Put the four `blockcraft-*.zip` archives from `resourcepack/build/split` next to the proxy plugin's config, with
+   `resource-pack.base-url` reachable from the internet.
 4. Point LuckPerms on every server at the same database (`storage-method` and `data` in its `config.yml`).
 5. [Import the ranks](#importing-the-ranks).
 6. Point the Paper servers at the proxy with modern forwarding. They register themselves with it.
@@ -206,7 +206,7 @@ In containers, these replace the config edits.
 | `BLOCKCRAFT_REPLAY_DIRECTORY` | Where recordings are stored |
 | `BLOCKCRAFT_TTT_MODE` | `tasks` makes a TTT server play TTT 2 |
 | `BLOCKCRAFT_STORY_WORLDS` | Where a story game finds its [chapter worlds](paper/story/README.md#a-world-for-each-chapter), instead of its map bundle |
-| `BLOCKCRAFT_RESOURCE_PACK_URL` | The proxy's `resource-pack.url` |
+| `BLOCKCRAFT_RESOURCE_PACK_BASE_URL` | The proxy's `resource-pack.base-url` |
 | `BLOCKCRAFT_WAKER_TOKEN` | The proxy's `on-demand.token` |
 | `BLOCKCRAFT_ON_DEMAND_GROUPS` | Names the groups the proxy starts on demand; it has no config key |
 | `BLOCKCRAFT_ALERTS_WEBHOOK_URL` | The proxy's `alerts.webhook-url`; the compose files do not pass it |
@@ -486,24 +486,19 @@ The Discord bot lives outside this repository and shares the table `bc_discord_l
 
 ## Resource pack
 
-`resourcepack/src` holds the accepted client assets. `stagePlugins` packages the combined archive and the four
-[pack layers](resourcepack/SPLIT_PACK.md) next to the proxy plugin. Production enables the layers through
-[prod/resource-pack.yml](prod/resource-pack.yml). The lobby receives base and lobby, ordinary games receive base and
-modes, and Sternenfront receives base and Star Wars. Replays receive their recorded game's layers.
-The proxy hashes and serves each configured ZIP at startup. Changed layers need staging and a proxy restart.
-The client downloads a layer again when its hash changes. The combined `blockcraft.zip` remains the default when
-profile delivery is disabled.
+`resourcepack/src` holds the accepted client assets. `stagePlugins` packages the four
+[pack layers](resourcepack/SPLIT_PACK.md) next to the proxy plugin. The lobby receives base and lobby, ordinary games
+receive base and modes, and Sternenfront and story games receive base and Star Wars. Replays receive their recorded
+game's layers. `resource-pack.groups` in the proxy's `config.yml` holds this mapping.
+The proxy hashes and serves each `blockcraft-<name>.zip` at startup, and offers it at `resource-pack.base-url` plus that
+file name. Changed layers need staging and a proxy restart. The client downloads a layer again when its hash changes.
 
-The pack is required. A client whose server list entry turns packs off would decline an optional pack without asking,
-while a required one is prompted for and declining it kicks. A proxy whose `config.yml` still says `required: false`
-needs the edit by hand.
-
-A joining player stays on the loading screen until the client reports that the required pack was successfully applied.
-Downloading alone does not release the player. Declining, failing, discarding, or exceeding `resource-pack.wait-seconds`
-disconnects the client with reconnect instructions. The bundled deadline is 120 seconds; existing operator overrides
-still apply. A missing required ZIP or a failed HTTP listener also blocks entry. With `required: false`, failures and
-timeouts allow entry, and only the session's first offer waits. Only the proxy hears the client's answer, so it tells
-each backend on arrival over the `Pack` subchannel.
+The pack is required. A client whose server list entry turns packs off is still prompted, and declining kicks.
+A joining player stays on the loading screen until the client reports that every selected layer was successfully
+applied. Downloading alone does not release the player. Declining, failing, discarding, or exceeding
+`resource-pack.wait-seconds` disconnects the client with reconnect instructions. The bundled deadline is 120 seconds;
+existing operator overrides still apply. A missing ZIP or a failed HTTP listener also blocks entry. Only the proxy hears
+the client's answer, so it tells each backend on arrival over the `Pack` subchannel.
 
 To regenerate the assets after changing the art generators, adding an icon or model, or updating Minecraft, install
 Python 3, uv and FFmpeg and run the command below. Normal builds package the checked-in assets. Use a client jar matching

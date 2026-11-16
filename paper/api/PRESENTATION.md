@@ -184,6 +184,6 @@ Use the Java 25 version from `mise.toml`.
 python3 resourcepack/verify_shaders.py --client /path/to/26.3.jar --glslang /path/to/glslangValidator
 ```
 
-The pack is `resourcepack/build/blockcraft.zip`. Shader validation checks compilation and linking, not appearance
+The packs are in `resourcepack/build/split`. Shader validation checks compilation and linking, not appearance
 on a GPU. Automated tests cover dialogue sequencing, font metrics, camera interpolation, animation parsing, pack
 readiness, and post-effect ownership. Client checks above remain necessary.
