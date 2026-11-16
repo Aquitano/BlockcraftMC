@@ -3,7 +3,6 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.api.presentation.PresentationScope;
 import me.blockcraft.api.scene.SceneTimeline;
 import org.bukkit.SoundCategory;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -35,21 +34,22 @@ final class IntroAudio {
         this.scope = scope;
     }
 
-    List<SceneTimeline.Cue> cues(Faction faction, BattleIntro.IntroPath route, ConfigurationSection config, Runnable caption) {
-        if (!config.getBoolean("intro.audio.enabled")) return List.of();
+    List<SceneTimeline.Cue> cues(Faction faction, BattleIntro.IntroPath route, IntroConfig config, Runnable caption) {
+        var audio = config.audio();
+        if (!audio.enabled()) return List.of();
         int duration = route.camera().duration();
-        int fade = Math.clamp(config.getInt("intro.fade-ticks"), 1, duration / 2);
-        float voiceVolume = volume(config.getDouble("intro.audio.voice-volume"));
-        float effectsVolume = volume(config.getDouble("intro.audio.effects-volume"));
+        int fade = Math.clamp(config.fadeTicks(), 1, duration / 2);
+        float voiceVolume = audio.voiceVolume();
+        float effectsVolume = audio.effectsVolume();
         int speechStart = fade + 3;
-        int speechEnd = speechStart + Math.clamp(config.getInt("intro.audio.briefing-ticks"), 48, 200);
+        int speechEnd = speechStart + audio.briefingTicks();
         var cues = new ArrayList<SceneTimeline.Cue>();
-        if (config.getBoolean("intro.audio.briefing") && speechEnd + 4 <= duration - fade) {
+        if (audio.briefing() && speechEnd + 4 <= duration - fade) {
             cues.add(cue(fade, Sound.RADIO_OPEN, effectsVolume));
             cues.add(new SceneTimeline.Cue(speechStart, () -> {
                 if (scope.closed()) return;
                 play(faction == Faction.KOLONIEN ? Sound.KOLONIEN : Sound.HEGEMONIE, voiceVolume);
-                if (config.getBoolean("intro.audio.captions")) caption.run();
+                if (audio.captions()) caption.run();
             }));
             cues.add(cue(speechEnd, Sound.RADIO_CLOSE, effectsVolume));
         }
@@ -73,9 +73,5 @@ final class IntroAudio {
         var camera = player.getSpectatorTarget();
         player.playSound(camera == null ? player : camera, sound.key, sound.category, volume, 1);
         scope.own(() -> player.stopSound(sound.key, sound.category));
-    }
-
-    private static float volume(double value) {
-        return Double.isFinite(value) ? (float) Math.clamp(value, 0, 1) : 0;
     }
 }

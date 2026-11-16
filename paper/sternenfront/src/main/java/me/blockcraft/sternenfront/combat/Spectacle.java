@@ -70,7 +70,7 @@ public final class Spectacle {
 
     public Spectacle(SternenfrontGame game) {
         this.game = game;
-        config = PresentationConfig.from(game.plugin().getConfig());
+        config = game.presentationConfig();
         shipyard = new ShipyardEffects(game);
         sea = new SeaEffects(game);
         props = new YardProps(game);

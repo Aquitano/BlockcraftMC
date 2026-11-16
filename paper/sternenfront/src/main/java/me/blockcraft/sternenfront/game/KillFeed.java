@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.pack.HudPanel;
 import me.blockcraft.api.pack.HudPanel.Glyph;
 import me.blockcraft.api.pack.HudPanel.Tint;
@@ -47,7 +48,8 @@ final class KillFeed {
     }
 
     static KillFeed from(ConfigurationSection config) {
-        return new KillFeed(Math.clamp(config.getInt("kill-feed.seconds", 5), 1, 30) * SternenfrontGame.TICKS_PER_SECOND);
+        var read = BundledDefaults.strict(config);
+        return new KillFeed(Math.clamp(read.integer("kill-feed.seconds"), 1, 30) * SternenfrontGame.TICKS_PER_SECOND);
     }
 
     void add(UUID player, Kind kind, Optional<Named> opponent, long tick) {

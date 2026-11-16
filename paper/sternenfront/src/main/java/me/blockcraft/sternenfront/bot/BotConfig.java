@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.bot;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.EnumMap;
@@ -107,8 +108,13 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         Math.clamp(config.getInt("bots.squad.fall-back-ticks"), 40, 600),
                         Math.clamp(config.getInt("bots.squad.stand-ticks"), 60, 1200),
                         Math.clamp(config.getInt("bots.squad.idle-ticks"), 20, 2400)),
-                BotDifficulty.named(config.getString("bots.difficulty", "")).orElse(BotDifficulty.NORMAL),
+                difficulty(BundledDefaults.strict(config).text("bots.difficulty")),
                 Map.copyOf(profiles));
+    }
+
+    private static BotDifficulty difficulty(String name) {
+        return BotDifficulty.named(name).orElseThrow(() -> new IllegalStateException(
+                "config.yml: bots.difficulty must name a bot difficulty, not " + name));
     }
 
     public int needed(int humans) {

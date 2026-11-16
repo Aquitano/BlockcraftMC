@@ -105,7 +105,7 @@ public final class BattleEffects {
 
     public BattleEffects(SternenfrontGame game) {
         this.game = game;
-        config = PresentationConfig.from(game.plugin().getConfig());
+        config = game.presentationConfig();
         enabled = config.effects();
         flares = new Flares(config.liveEffects());
         scorches = new Flares(config.scorch().marks());

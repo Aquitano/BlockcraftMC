@@ -23,6 +23,7 @@ import static me.blockcraft.sternenfront.reinforcement.Reinforcement.ARC_TROOPER
 import static me.blockcraft.sternenfront.reinforcement.Reinforcement.COMMANDO_DROID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class ReinforcementLoadoutTest {
@@ -69,16 +70,18 @@ public class ReinforcementLoadoutTest {
     }
 
     @Test
-    public void overridesCanDisableAUnitAndInvalidBodyValuesStayFinite() {
+    public void overridesCanDisableAUnitClampItsBodyAndNotMakeItInfinite() {
         bundled.set("reinforcement-units.arc-trooper.cost", -10);
         bundled.set("reinforcement-units.arc-trooper.limit", -1);
-        bundled.set("reinforcement-units.arc-trooper.health", Double.NaN);
-        bundled.set("reinforcement-units.arc-trooper.speed", Double.POSITIVE_INFINITY);
+        bundled.set("reinforcement-units.arc-trooper.health", 500);
+        bundled.set("reinforcement-units.arc-trooper.speed", 0);
         var units = ReinforcementConfig.from(bundled);
         assertEquals(1, units.stats(ARC_TROOPER).cost());
         assertEquals(0, units.stats(ARC_TROOPER).limit());
-        assertTrue(Double.isFinite(units.stats(ARC_TROOPER).health()));
-        assertEquals(1, units.stats(ARC_TROOPER).speed(), 0);
+        assertEquals(100, units.stats(ARC_TROOPER).health(), 0);
+        assertEquals(0.1, units.stats(ARC_TROOPER).speed(), 0);
+        bundled.set("reinforcement-units.arc-trooper.health", Double.NaN);
+        assertThrows(IllegalStateException.class, () -> ReinforcementConfig.from(bundled));
         assertEquals(300, units.stats(COMMANDO_DROID).cost());
         assertEquals(26, units.stats(COMMANDO_DROID).health(), 0);
     }

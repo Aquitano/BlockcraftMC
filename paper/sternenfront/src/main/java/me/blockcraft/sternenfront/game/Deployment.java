@@ -228,7 +228,7 @@ public final class Deployment {
         var site = game.map().posts().get(index);
         var enemies = game.combatants().stream().filter(other -> game.factionOf(other).filter(faction.enemy()::equals).isPresent())
                 .map(org.bukkit.entity.LivingEntity::getLocation).toList();
-        double clearance = Math.clamp(game.plugin().getConfig().getDouble("respawn.enemy-clearance"), 0, 64);
+        double clearance = game.config().respawn().enemyClearance();
         return enemies.stream().noneMatch(site::contains) && SpawnSpots.hasClearSpawn(site.spawns(), enemies, clearance);
     }
 

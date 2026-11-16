@@ -56,8 +56,8 @@ public enum Blaster implements HotbarItem {
     public enum FireMode {
         AUTOMATIC, SINGLE;
 
-        public static FireMode of(String name, FireMode fallback) {
-            return name == null ? fallback : switch (name.toLowerCase(Locale.ROOT)) {
+        public static FireMode of(String name) {
+            return switch (name.toLowerCase(Locale.ROOT)) {
                 case "automatic" -> AUTOMATIC;
                 case "single" -> SINGLE;
                 default -> throw new IllegalArgumentException("Unknown fire mode " + name + ", expected automatic or single");

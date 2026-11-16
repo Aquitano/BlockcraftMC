@@ -192,7 +192,7 @@ final class DropshipLanding implements Listener, AutoCloseable {
      * leaves the player as they were. The assault's dropship already stands where its spawn lies, so nothing lands there.
      */
     boolean board(Player player, Faction faction, Spawn spawn, Location spot, Consumer<Location> land) {
-        if (!settings.enabled() || spawn instanceof Spawn.Dropship || !game.plugin().getConfig().getBoolean("presentation.effects")
+        if (!settings.enabled() || spawn instanceof Spawn.Dropship || !game.presentationConfig().effects()
                 || !BlockcraftApi.get().resourcePack().applied(player) || riding(player)) {
             return false;
         }

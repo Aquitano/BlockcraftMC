@@ -1,8 +1,10 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.Bukkit;
 import org.bukkit.SoundCategory;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -26,6 +28,16 @@ public final class BattleMusic {
         }
     }
 
+    /** The {@code music} section: cues switch to pressure once a side holds {@code pressureTickets} or fewer. */
+    record Settings(boolean enabled, float volume, int pressureTickets) {
+
+        static Settings from(ConfigurationSection section) {
+            var music = BundledDefaults.strict(section).section("music");
+            return new Settings(music.flag("enabled"), (float) Math.clamp(music.decimal("volume"), 0, 1),
+                    Math.max(1, music.integer("pressure-tickets")));
+        }
+    }
+
     private record Playing(Cue cue, long next) { }
 
     private final SternenfrontGame game;
@@ -34,11 +46,17 @@ public final class BattleMusic {
     private BukkitTask finaleRetry;
     private final boolean enabled;
     private final float volume;
+    private final int pressureTickets;
 
-    BattleMusic(SternenfrontGame game) {
+    BattleMusic(SternenfrontGame game, Settings settings) {
         this.game = game;
-        enabled = game.plugin().getConfig().getBoolean("music.enabled", true);
-        volume = (float) Math.clamp(game.plugin().getConfig().getDouble("music.volume", 0.35), 0, 1);
+        enabled = settings.enabled();
+        volume = settings.volume();
+        pressureTickets = settings.pressureTickets();
+    }
+
+    boolean enabled() {
+        return enabled;
     }
 
     static Cue cue(long tick, int secondsLeft, int lowestTickets, int pressureTickets, boolean lastStand) {
@@ -49,8 +67,7 @@ public final class BattleMusic {
         if (tick % 20 != 0 || !enabled || volume == 0) {
             return;
         }
-        int threshold = Math.max(1, game.plugin().getConfig().getInt("music.pressure-tickets", 35));
-        var wanted = cue(tick, secondsLeft, lowestTickets, threshold, lastStand);
+        var wanted = cue(tick, secondsLeft, lowestTickets, pressureTickets, lastStand);
         for (var player : Bukkit.getOnlinePlayers()) {
             // A cue sent while the client is still loading the pack is lost, and the next one is a whole cue away.
             if (!player.getWorld().equals(game.map().world()) || !BlockcraftApi.get().resourcePack().applied(player)) {

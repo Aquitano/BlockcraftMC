@@ -86,7 +86,7 @@ public final class DeployMenu extends Menu {
         this.viewer = viewer;
         this.shown = view();
         this.mapSlots = shown.map(view -> mapSlots(view.faction())).orElse(Map.of());
-        this.settleTicks = Math.clamp(game.plugin().getConfig().getInt("respawn.screen-settle-ticks"), 0, 200);
+        this.settleTicks = game.config().respawn().screenSettleTicks();
         CLASS_CARDS.forEach(slot -> area(slot, DeployScreen.CLASS_CARD_COLUMNS, DeployScreen.CLASS_CARD_ROWS));
         SPECIALS.forEach(slot -> area(slot, DeployScreen.SPECIAL_COLUMNS, 1));
         draw();

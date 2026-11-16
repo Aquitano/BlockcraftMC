@@ -40,6 +40,7 @@ import me.blockcraft.sternenfront.combat.Combat;
 import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.combat.CombatConfig;
 import me.blockcraft.sternenfront.combat.HitPush;
+import me.blockcraft.sternenfront.combat.PresentationConfig;
 import me.blockcraft.sternenfront.combat.ScopeGlint;
 import me.blockcraft.sternenfront.combat.Spectacle;
 import me.blockcraft.sternenfront.vehicle.Speeders;
@@ -148,6 +149,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final WeaponHandling handling;
     private final Bolts bolts;
     private final TriggerCells triggerCells = new TriggerCells();
+    private final PresentationConfig presentationConfig;
     private final BattleEffects effects;
     private final Spectacle spectacle;
     private final BattleMusic music;
@@ -228,10 +230,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 OptionalInt.of(config.fullSeconds()), player -> { });
         this.posts = new Posts(messages, map.posts(), config.captureSeconds());
         this.handling = WeaponHandling.from(plugin.getConfig().getConfigurationSection("combat.handling"));
+        this.presentationConfig = PresentationConfig.from(plugin.getConfig());
         this.bolts = new Bolts(this);
         this.effects = new BattleEffects(this);
         this.spectacle = new Spectacle(this);
-        this.music = new BattleMusic(this);
+        this.music = new BattleMusic(this, BattleMusic.Settings.from(plugin.getConfig()));
         this.radio = new BattleRadio(plugin, plugin.getConfig(), (player, call) -> {
             var transcript = Placeholder.component("speech", messages.get(call.message()));
             player.sendMessage(call.post() < 0 ? messages.get("radio.transcript", transcript)
@@ -255,7 +258,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.minimap = new Minimap(this, Minimap.Settings.from(plugin.getConfig()));
         this.killFeed = KillFeed.from(plugin.getConfig());
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
-        this.battlefield = new Battlefield(this);
+        this.battlefield = new Battlefield(this, Battlefield.Rules.from(plugin.getConfig()));
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak(), feel.botsPerStreakKill());
         this.career = new Career(plugin, messages, BlockcraftApi.get().database(), plugin.getConfig().getLongList("career.ranks"));
@@ -264,7 +267,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
         round.playArea(map.world(), map.playArea());
-        intro = new BattleIntro(this);
+        intro = new BattleIntro(this, IntroConfig.from(plugin.getConfig()));
     }
 
     public GamePhase phase() {
@@ -326,6 +329,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public BattleRadio radio() {
         return radio;
+    }
+
+    public PresentationConfig presentationConfig() {
+        return presentationConfig;
     }
 
     public BattleEffects effects() {
@@ -844,7 +851,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         relic = new Relic(this, map.relic(), config.relic().firstSeconds() * TICKS_PER_SECOND);
         posts.show();
         fieldObjectives.start();
-        posts.holograms(plugin);
+        if (presentationConfig.holographicPosts()) posts.holograms(plugin);
         var difficulties = List.of(BotDifficulty.values());
         boolean voted = difficulties.stream().anyMatch(difficulty -> botDifficultyVotes.votes(Optional.of(difficulty)) > 0);
         var difficulty = voted ? botDifficultyVotes.winner(difficulties, ThreadLocalRandom.current()).orElse(botConfig.difficulty())
@@ -871,7 +878,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             }
         }
         messages.getLines("round.start").forEach(Bukkit::broadcast);
-        if (plugin.getConfig().getBoolean("music.enabled", true)) {
+        if (music.enabled()) {
             round.players().forEach(player -> player.sendMessage(messages.get("round.music-credit")));
         }
         secondsLeft = config.roundSeconds();
@@ -940,7 +947,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private void second() {
         var field = new LinkedHashMap<LivingEntity, Faction>();
         combatants().forEach(entity -> factionOf(entity).ifPresent(faction -> field.put(entity, faction)));
-        int alertCooldown = Math.clamp(plugin.getConfig().getInt("posts.radio-cooldown-seconds", 15), 1, 120) * 20;
+        int alertCooldown = config.radioCooldownSeconds() * 20;
         var update = posts.second(field, tick, alertCooldown);
         update.changes().forEach(this::postChanged);
         update.alerts().forEach(alert -> round.players().stream()

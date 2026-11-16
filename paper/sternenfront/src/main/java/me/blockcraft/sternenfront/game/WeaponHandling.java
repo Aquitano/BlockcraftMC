@@ -1,10 +1,13 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.config.BundledDefaults;
+import me.blockcraft.common.config.StrictConfig;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.OptionalInt;
 
@@ -24,12 +27,10 @@ public record WeaponHandling(Map<Blaster, Factors> blasters, double falloffFrom,
      */
     public record Factors(double moving, double aiming, double airborne, double hot, int settleTicks, int sprintRecoveryTicks) {
 
-        static Factors from(ConfigurationSection section, Factors fallback) {
-            return new Factors(Math.max(1, section.getDouble("moving", fallback.moving())),
-                    Math.clamp(section.getDouble("aiming", fallback.aiming()), 0, 1),
-                    Math.max(1, section.getDouble("airborne", fallback.airborne())), Math.max(0, section.getDouble("hot", fallback.hot())),
-                    Math.max(1, section.getInt("settle-ticks", fallback.settleTicks())),
-                    Math.max(0, section.getInt("sprint-recovery-ticks", fallback.sprintRecoveryTicks())));
+        static Factors from(StrictConfig section) {
+            return new Factors(Math.max(1, section.decimal("moving")), Math.clamp(section.decimal("aiming"), 0, 1),
+                    Math.max(1, section.decimal("airborne")), Math.max(0, section.decimal("hot")),
+                    Math.max(1, section.integer("settle-ticks")), Math.max(0, section.integer("sprint-recovery-ticks")));
         }
     }
 
@@ -49,17 +50,21 @@ public record WeaponHandling(Map<Blaster, Factors> blasters, double falloffFrom,
         }
     }
 
-    public static WeaponHandling from(ConfigurationSection handling) {
-        var defaults = Factors.from(handling, new Factors(1, 1, 1, 0, 1, 0));
-        var overrides = handling.getConfigurationSection("blasters");
+    /** A blaster in {@code blasters}, or else its profile there, overrides the keys it sets for itself. */
+    public static WeaponHandling from(ConfigurationSection section) {
+        var handling = BundledDefaults.strict(section);
+        var overrides = handling.section("blasters");
         var blasters = new EnumMap<Blaster, Factors>(Blaster.class);
         for (var blaster : Blaster.values()) {
-            var own = overrides == null ? null : overrides.getConfigurationSection(blaster.key());
-            var section = own != null || overrides == null ? own : overrides.getConfigurationSection(blaster.profile().key());
-            blasters.put(blaster, section == null ? defaults : Factors.from(section, defaults));
+            var layered = new LinkedHashMap<>(handling.values());
+            var key = overrides.has(blaster.key()) ? blaster.key() : blaster.profile().key();
+            if (overrides.has(key)) {
+                layered.putAll(overrides.section(key).values());
+            }
+            blasters.put(blaster, Factors.from(new StrictConfig(handling.file(), handling.path(), layered)));
         }
-        return new WeaponHandling(Map.copyOf(blasters), Math.clamp(handling.getDouble("falloff-from"), 0, 1),
-                Math.clamp(handling.getDouble("falloff-minimum"), 0, 1));
+        return new WeaponHandling(Map.copyOf(blasters), Math.clamp(handling.decimal("falloff-from"), 0, 1),
+                Math.clamp(handling.decimal("falloff-minimum"), 0, 1));
     }
 
     public double spread(Blaster blaster, double base, Posture posture, double heat) {

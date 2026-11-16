@@ -34,7 +34,7 @@ final class ShipyardEffects {
         this.game = game;
         var config = game.plugin().getConfig();
         String path = "presentation.shipyard.";
-        enabled = config.getBoolean("presentation.effects") && config.getBoolean(path + "enabled");
+        enabled = game.presentationConfig().effects() && config.getBoolean(path + "enabled");
         rangeSquared = Math.pow(Math.clamp(config.getDouble(path + "range"), 1, 96), 2);
         steamInterval = Math.max(1, config.getInt(path + "steam-interval-ticks"));
         sparkInterval = Math.max(1, config.getInt(path + "spark-interval-ticks"));

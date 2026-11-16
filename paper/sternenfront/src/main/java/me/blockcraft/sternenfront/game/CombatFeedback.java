@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.presentation.ScreenEffects;
@@ -268,26 +269,27 @@ public final class CombatFeedback {
     public CombatFeedback(SternenfrontGame game) {
         this.game = game;
         var config = game.plugin().getConfig();
-        markerTicks = Math.clamp(config.getInt("combat-feedback.marker-ticks", 6), 1, 20);
-        rewardTicks = Math.clamp(config.getInt("combat-feedback.reward-ticks", 30), 1, 100);
-        heroReadyTicks = Math.clamp(config.getInt("combat-feedback.hero-ready-ticks", 60), 1, 200);
-        eliteReadyTicks = Math.clamp(config.getInt("combat-feedback.elite-ready-ticks"), 1, 200);
-        noticeTicks = Math.clamp(config.getInt("combat-feedback.notice-ticks"), 1, 100);
-        raisedTicks = Math.clamp(config.getInt("combat-feedback.raised-ticks"), 1, 40);
-        hotAt = Math.clamp(config.getDouble("heat.warning-level", 0.8), 0.1, 0.99);
-        hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
-        headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
-        killVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.kill", 1.0), 0, 1);
-        multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * SternenfrontGame.TICKS_PER_SECOND;
+        var read = BundledDefaults.strict(config);
+        markerTicks = Math.clamp(read.integer("combat-feedback.marker-ticks"), 1, 20);
+        rewardTicks = Math.clamp(read.integer("combat-feedback.reward-ticks"), 1, 100);
+        heroReadyTicks = Math.clamp(read.integer("combat-feedback.hero-ready-ticks"), 1, 200);
+        eliteReadyTicks = Math.clamp(read.integer("combat-feedback.elite-ready-ticks"), 1, 200);
+        noticeTicks = Math.clamp(read.integer("combat-feedback.notice-ticks"), 1, 100);
+        raisedTicks = Math.clamp(read.integer("combat-feedback.raised-ticks"), 1, 40);
+        hotAt = Math.clamp(read.decimal("heat.warning-level"), 0.1, 0.99);
+        hitVolume = (float) Math.clamp(read.decimal("combat-feedback.sound.hit"), 0, 1);
+        headshotVolume = (float) Math.clamp(read.decimal("combat-feedback.sound.headshot"), 0, 1);
+        killVolume = (float) Math.clamp(read.decimal("combat-feedback.sound.kill"), 0, 1);
+        multikillTicks = Math.clamp(read.integer("combat-feedback.multikill-seconds"), 1, 30) * SternenfrontGame.TICKS_PER_SECOND;
         handling = game.handling();
         spreadCrosshair = new SpreadCrosshair(config.getDoubleList("combat-feedback.spread-steps"));
-        nearMiss = new NearMiss(Math.clamp(config.getDouble("combat-feedback.near-miss.radius"), 0, 8),
-                (float) Math.clamp(config.getDouble("combat-feedback.near-miss.volume"), 0, 1),
-                Math.clamp(config.getDouble("combat-feedback.near-miss.suppression"), 0, 1),
-                Math.clamp(config.getDouble("combat-feedback.near-miss.max-suppression"), 0, 1),
-                Math.clamp(config.getInt("combat-feedback.near-miss.fade-ticks"), 1, 100));
-        rattle = new Rattle(Math.clamp(config.getInt("combat-feedback.headshot-rattle.ticks"), 0, 40),
-                (float) Math.clamp(config.getDouble("combat-feedback.headshot-rattle.volume"), 0, 1));
+        nearMiss = new NearMiss(Math.clamp(read.decimal("combat-feedback.near-miss.radius"), 0, 8),
+                (float) Math.clamp(read.decimal("combat-feedback.near-miss.volume"), 0, 1),
+                Math.clamp(read.decimal("combat-feedback.near-miss.suppression"), 0, 1),
+                Math.clamp(read.decimal("combat-feedback.near-miss.max-suppression"), 0, 1),
+                Math.clamp(read.integer("combat-feedback.near-miss.fade-ticks"), 1, 100));
+        rattle = new Rattle(Math.clamp(read.integer("combat-feedback.headshot-rattle.ticks"), 0, 40),
+                (float) Math.clamp(read.decimal("combat-feedback.headshot-rattle.volume"), 0, 1));
     }
 
     private PlayerFeedback state(Player player) {

@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.arena.FrontMap;
@@ -11,6 +12,7 @@ import org.bukkit.Sound;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Display;
@@ -20,6 +22,7 @@ import org.bukkit.entity.TextDisplay;
 import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +31,25 @@ import java.util.Map;
 public final class Battlefield {
 
     private enum Activation { ACTIVATED, COOLDOWN, BLOCKED }
+
+    /** The {@code battlefield} section: how long each kind of control warns, acts and rests, and what a vent burns. */
+    public record Rules(Map<FrontMap.Control, Timing> timings, double ventDamage) {
+
+        /** Only a vent warns before it acts. */
+        public record Timing(int warningTicks, int durationTicks, int cooldownTicks) { }
+
+        public static Rules from(ConfigurationSection section) {
+            var battlefield = BundledDefaults.strict(section).section("battlefield");
+            var timings = new EnumMap<FrontMap.Control, Timing>(FrontMap.Control.class);
+            for (var control : FrontMap.Control.values()) {
+                var site = battlefield.section(control.name().toLowerCase(Locale.ROOT));
+                timings.put(control, new Timing(
+                        control == FrontMap.Control.VENT ? Math.max(1, site.integer("warning-seconds")) * 20 : 0,
+                        Math.clamp(site.integer("seconds"), 1, 30) * 20, Math.max(1, site.integer("cooldown-seconds")) * 20));
+            }
+            return new Rules(Map.copyOf(timings), Math.max(0, battlefield.decimal("vent.damage")));
+        }
+    }
 
     private static final class State {
         private final FrontMap.ControlSite site;
@@ -43,10 +65,12 @@ public final class Battlefield {
     }
 
     private final SternenfrontGame game;
+    private final Rules rules;
     private final List<State> states = new ArrayList<>();
 
-    public Battlefield(SternenfrontGame game) {
+    public Battlefield(SternenfrontGame game, Rules rules) {
         this.game = game;
+        this.rules = rules;
     }
 
     public void start() {
@@ -116,13 +140,8 @@ public final class Battlefield {
         if (blocked(state)) {
             return Activation.BLOCKED;
         }
-        String path = "battlefield." + key(state) + ".";
-        var config = game.plugin().getConfig();
-        int warning = state.site.control() == FrontMap.Control.VENT
-                ? Math.max(1, config.getInt(path + "warning-seconds", 1)) * 20 : 0;
-        int duration = Math.clamp(config.getInt(path + "seconds", state.site.control() == FrontMap.Control.VENT ? 6 : 8), 1, 30) * 20;
-        int cooldown = Math.max(1, config.getInt(path + "cooldown-seconds", 20)) * 20;
-        state.cycle.trigger(game.tick(), warning, duration, cooldown);
+        var timing = rules.timings().get(state.site.control());
+        state.cycle.trigger(game.tick(), timing.warningTicks(), timing.durationTicks(), timing.cooldownTicks());
         if (state.site.control() != FrontMap.Control.VENT) {
             state.originals.keySet().forEach(block -> block.setType(closedMaterial(state.site.control()), false));
             changed(state);
@@ -165,7 +184,7 @@ public final class Battlefield {
 
     private void vent(State state) {
         var at = state.site.center();
-        double damage = Math.max(0, game.plugin().getConfig().getDouble("battlefield.vent.damage", 2));
+        double damage = rules.ventDamage();
         for (var target : game.targets()) {
             var here = target.getLocation();
             if (!here.getWorld().equals(at.getWorld()) || Math.abs(here.getX() - at.getX()) > 3

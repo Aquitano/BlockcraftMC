@@ -2,10 +2,11 @@ package me.blockcraft.sternenfront.combat;
 
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.util.BoundingBox;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -54,7 +55,7 @@ public class SaberSweepTest {
 
     @Test
     public void sweepCannotOutlastTheSwingCooldown() {
-        var config = new MemoryConfiguration();
+        var config = YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile());
         config.set("combat.melee.swing-ticks", 2);
         config.set("combat.melee.sweep-ticks", 8);
         assertEquals(2, CombatConfig.from(config).sweepTicks());

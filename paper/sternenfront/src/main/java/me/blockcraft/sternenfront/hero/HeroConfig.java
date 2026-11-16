@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.hero;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.Color;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
@@ -89,8 +90,7 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
                         Math.max(0, points.getInt("multikill"))),
                 Map.copyOf(healthByHero),
                 new Saber(Math.max(0, saber.getDouble("damage")), Math.clamp(saber.getDouble("blocked-share"), 0, 1),
-                        color(colors, "jedi", 0x3D8BFF), color(colors, "sith", 0xFF2A2A), color(colors, "white", 0xF4F8FF),
-                        color(colors, "relic", 0xF4F8FF),
+                        color(colors, "jedi"), color(colors, "sith"), color(colors, "white"), color(colors, "relic"),
                         Math.max(0, saber.getInt("ignite-ticks")), Math.max(10, saber.getInt("hum-ticks")),
                         Math.max(1, saber.getInt("leap-cooldown-seconds")), saber.getDouble("leap-forward"),
                         saber.getDouble("leap-up")),
@@ -123,12 +123,12 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
         return cooldownSeconds.get(ability) * TICKS_PER_SECOND;
     }
 
-    private static Color color(ConfigurationSection section, String key, int fallback) {
-        var value = section.getString(key, "");
+    private static Color color(ConfigurationSection section, String key) {
+        var value = BundledDefaults.strict(section).text(key);
         try {
             return Color.fromRGB(Integer.parseInt(value.replace("#", ""), 16));
         } catch (IllegalArgumentException invalid) {
-            return Color.fromRGB(fallback);
+            throw new IllegalStateException("config.yml: " + section.getCurrentPath() + "." + key + " must be a hex colour, not " + value, invalid);
         }
     }
 

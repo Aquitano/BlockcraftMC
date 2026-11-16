@@ -4,9 +4,10 @@ import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.hero.BattlePoints;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.hero.HeroRoster;
-import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 public class ReinforcementRosterTest {
 
     private final BattlePoints points = new BattlePoints();
-    private final ReinforcementConfig config = ReinforcementConfig.from(new MemoryConfiguration());
+    private final ReinforcementConfig config = ReinforcementConfig.from(YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile()));
     private final ReinforcementRoster roster = new ReinforcementRoster(config, points);
 
     @Test

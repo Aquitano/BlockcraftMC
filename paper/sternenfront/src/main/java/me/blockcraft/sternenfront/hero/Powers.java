@@ -194,8 +194,8 @@ public final class Powers {
         double halfAngle = Math.toRadians(push.angle() / 2);
         game.effects().push(eye, facing, push.range(), push.angle());
         SoundCue.FORCE_PUSH.play(eye, 1.5f);
-        if (game.plugin().getConfig().getBoolean("presentation.effects", true)) {
-            int effectTicks = Math.clamp(game.plugin().getConfig().getInt("presentation.gameplay.force-push-ticks", 12), 0, 200);
+        if (game.presentationConfig().effects()) {
+            int effectTicks = game.presentationConfig().gameplay().forcePushTicks();
             if (effectTicks > 0) BlockcraftApi.get().visuals().accent(player, ScreenEffects.Atmosphere.FOCUS, effectTicks);
         }
         for (var target : game.targets()) {
