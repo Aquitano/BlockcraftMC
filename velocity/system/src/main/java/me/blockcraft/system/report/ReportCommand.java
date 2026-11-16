@@ -6,32 +6,24 @@ import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.PlayerVisibility;
 
 import java.util.Locale;
 
-/** {@code /report}: the notification toggle for staff, and the report itself once the backend's dialog has a reason. */
+/** {@code /report}: the notification toggle for staff; the report itself is the backend's, which knows the reasons. */
 public final class ReportCommand {
 
-    private final Object plugin;
-    private final ProxyServer proxy;
     private final NotifyPreferences preferences;
     private final Messages messages;
     private final String staffPermission;
-    private final ReportService service;
     private final PlayerVisibility visibility;
 
-    public ReportCommand(Object plugin, ProxyServer proxy, NotifyPreferences preferences,
-                         Messages messages, String staffPermission, ReportService service, PlayerVisibility visibility) {
-        this.plugin = plugin;
-        this.proxy = proxy;
+    public ReportCommand(NotifyPreferences preferences, Messages messages, String staffPermission, PlayerVisibility visibility) {
         this.preferences = preferences;
         this.messages = messages;
         this.staffPermission = staffPermission;
-        this.service = service;
         this.visibility = visibility;
     }
 
@@ -54,13 +46,17 @@ public final class ReportCommand {
                                     .forEach(builder::suggest);
                             return builder.buildFuture();
                         })
-                        // Without a reason the backend opens its report dialog, which comes back here with one.
-                        .executes(context -> context.getSource() instanceof Player ? BrigadierCommand.FORWARD
-                                : asPlayer((player, ctx) -> player.sendMessage(messages.get("usage"))).run(context))
+                        .executes(this::forward)
                         .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.greedyString())
-                                .executes(asPlayer((player, context) -> proxy.getScheduler().buildTask(plugin, () -> service.submit(player,
-                                        StringArgumentType.getString(context, "player"),
-                                        StringArgumentType.getString(context, "reason"))).schedule())))));
+                                .executes(this::forward))));
+    }
+
+    private int forward(CommandContext<CommandSource> context) {
+        if (context.getSource() instanceof Player) {
+            return BrigadierCommand.FORWARD;
+        }
+        context.getSource().sendMessage(messages.get("player-only"));
+        return Command.SINGLE_SUCCESS;
     }
 
     private void toggle(Player player, boolean enabled) {

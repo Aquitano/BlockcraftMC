@@ -11,7 +11,7 @@ palette:
   bullet: "<dark_gray>● "
   arrow: "<dark_gray>» "
 player-only: "<error>Du musst ein Spieler sein!"
-usage: "<prefix>Nutze <error>/report [Spieler]"
+usage: "<prefix>Nutze <error>/report [Spieler] [Grund] [Details]"
 no-permission: "<prefix>Du hast nicht genügend Rechte!"
 notify:
   status-on: "<prefix>Notifies: <success>ON"
