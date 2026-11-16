@@ -2107,6 +2107,8 @@ public final class PackArt {
             }
             PackArt.write(classOverlay(false), textures.resolve("overlay_sternenfront_class.png"));
             PackArt.write(classOverlay(true), textures.resolve("overlay_sternenfront_class_with_bots.png"));
+            PackArt.write(factionOverlay(root.toAbsolutePath().resolveSibling("art")),
+                    textures.resolve("overlay_sternenfront_factions.png"));
         }
 
         static int rowY(int row) {
@@ -2142,6 +2144,33 @@ public final class PackArt {
             keyCap(image, 'F', columnX(3) - 10, rowY(5) + 4);
             keyCap(image, 'Q', columnX(5) - 10, rowY(5) + 4);
             return image;
+        }
+
+        /** Two cards of four columns by five rows under the toolbar's close button, each a faction's soldier and name. */
+        static BufferedImage factionOverlay(Path art) throws IOException {
+            var image = overlay(false);
+            PackArt.fill(image, columnX(3), rowY(0), 52, 16, PackArt.BODY);
+            PackArt.fill(image, 7, rowY(1) - 1, 162, 90, PackArt.BODY);
+            factionCard(image, art, "kolonien", "REPUBLIK", KOLONIEN, columnX(0) - 1);
+            factionCard(image, art, "hegemonie", "SEPARATISTEN", HEGEMONIE, columnX(5) - 1);
+            return image;
+        }
+
+        static void factionCard(BufferedImage image, Path art, String faction, String name, int accent, int x) throws IOException {
+            int y = rowY(1) - 1;
+            int width = 72;
+            int height = 90;
+            PackArt.fill(image, x, y, width, height, PackArt.BORDER);
+            PackArt.fill(image, x + 1, y + 1, width - 2, height - 2, 0xFF252E40);
+            var portrait = ImageIO.read(art.resolve("sternenfront/" + faction + "_soldier_dossier.png").toFile());
+            image.createGraphics().drawImage(portrait, x + 4, y + 4, null);
+            PackArt.fill(image, x + 1, y + 1, width - 2, 1, mix(accent, 0xFFFFFFFF, 0.7));
+            PackArt.fill(image, x + 4, y + 70, width - 8, 1, PackArt.EDGE);
+            int left = x + (width - name.length() * 4 + 1) / 2;
+            for (int index = 0; index < name.length(); index++) {
+                letter(image, name.charAt(index), left + index * 4, y + 76, PackArt.WHITE);
+            }
+            PackArt.fill(image, x + 1, y + height - 3, width - 2, 2, accent);
         }
 
         static void heading(BufferedImage image, String text, int y) {
