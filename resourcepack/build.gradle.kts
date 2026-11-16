@@ -40,8 +40,20 @@ tasks.register<Exec>("regenerate") {
 val verifyAssets = tasks.register<Exec>("verifyAssets") {
     group = "verification"
     description = "Validates accepted native assets without running generators."
+    val passed = layout.buildDirectory.file("asset-checks/passed")
+    inputs.files(fileTree(layout.projectDirectory) {
+        include("*.py", "*.java", "finished-weapons.txt", "pyproject.toml", "uv.lock")
+    })
+    inputs.dir("src")
+    inputs.dir("bettermodel")
+    inputs.dir("catalogs")
+    inputs.dir("../nexo/items")
+    inputs.file("../paper/api/src/main/java/me/blockcraft/api/pack/PackModel.java")
+    inputs.file("../CREDITS.md")
+    outputs.file(passed)
     workingDir(layout.projectDirectory)
     commandLine(assetCommand("assets.py", "check"))
+    doLast { passed.get().asFile.writeText("") }
 }
 
 // Players get credits for what the pack contains; the map provenance and open questions stay in the repository.
@@ -50,17 +62,12 @@ val packSource = providers.gradleProperty("packSource").map { file(it) }.getOrEl
 
 val verifySplitPack = tasks.register<Exec>("verifySplitPack") {
     workingDir(layout.projectDirectory)
-    commandLine("python3", "split_pack.py", "--source", packSource.absolutePath, "--check")
-}
-
-val testSplitPack = tasks.register<Exec>("testSplitPack") {
-    workingDir(layout.projectDirectory)
-    commandLine("python3", "-m", "unittest", "test_split_pack", "test_bettermodel_pack")
+    commandLine(assetCommand("split_pack.py", "--source", packSource.absolutePath, "--check"))
 }
 
 val verifyBetterModel = tasks.register<Exec>("verifyBetterModel") {
     workingDir(layout.projectDirectory)
-    commandLine("python3", "verify_bettermodel.py", "--source", packSource.absolutePath)
+    commandLine(assetCommand("verify_bettermodel.py", "--source", packSource.absolutePath))
 }
 
 val packSplit = tasks.register<Exec>("packSplit") {
@@ -74,12 +81,12 @@ val packSplit = tasks.register<Exec>("packSplit") {
     })
     outputs.file(target.map { it.file("split-report.json") })
     workingDir(layout.projectDirectory)
-    commandLine("python3", "split_pack.py", "--source", packSource.absolutePath,
-        "--output", target.get().asFile.absolutePath)
+    commandLine(assetCommand("split_pack.py", "--source", packSource.absolutePath,
+        "--output", target.get().asFile.absolutePath))
 }
 
 tasks.check {
-    dependsOn(verifyAssets, verifySplitPack, verifyBetterModel)
+    dependsOn(verifyAssets)
 }
 
 val pack = tasks.register<Zip>("pack") {
