@@ -126,7 +126,7 @@ public final class GameListener implements Listener {
             event.setCancelled(true);
             if (game.fighting(player) && player.getInventory().getItemInMainHand().getType() == Material.IRON_SWORD
                     && event.getEntity() instanceof Mob mob && game.tickNumber() >= knifeReady.getOrDefault(player.getUniqueId(), 0)) {
-                knifeReady.put(player.getUniqueId(), game.tickNumber() + Math.max(1, plugin.getConfig().getInt("combat.knife-cooldown-ticks", 10)));
+                knifeReady.put(player.getUniqueId(), game.tickNumber() + game.config().knifeCooldownTicks());
                 game.enemies().hit(player, mob, game.config().knifeDamage());
             }
         } else {

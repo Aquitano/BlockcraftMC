@@ -1,10 +1,12 @@
 package me.blockcraft.zombies.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.zombies.game.Perk;
 import me.blockcraft.zombies.game.EnemyKind;
 import me.blockcraft.zombies.game.WaveEvent;
 import me.blockcraft.zombies.game.WavePlan;
 import me.blockcraft.zombies.game.Weapon;
+import me.blockcraft.common.config.StrictConfig;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.Arrays;
@@ -18,7 +20,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int repairTicks, int breakTicks, int killCoins, int waveCoins, int winCoins,
                             int ammoPrice, int armorPrice, int upgradePrice, int mysteryPrice,
                             int powerPrice, int teamRevivePrice, double dropChance, int powerupTicks, int powerupsPerWave,
-                            int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
+                            int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int knifeCooldownTicks, int damageImmunityTicks,
                             double burnDamage, int burnTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
                             Inferno inferno,
@@ -169,30 +171,31 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     public record Presentation(boolean enabled, int outageAccentTicks, int ambientTicks, float ambientVolume,
                                int recoveryTicks, int ringPoints, double reviveRadius) { }
 
-    public static ZombiesConfig from(ConfigurationSection yaml) {
+    public static ZombiesConfig from(ConfigurationSection section) {
+        var yaml = BundledDefaults.strict(section);
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
-                positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.getDouble("waves.extra-player")),
-                Math.max(0, yaml.getDouble("waves.health-per-extra-player")),
-                Math.max(0, yaml.getDouble("waves.spawn-ticks-per-extra-player")),
-                Math.max(0, yaml.getDouble("waves.health-per-wave")), Math.max(0, yaml.getDouble("waves.damage-per-wave")),
+                positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.decimal("waves.extra-player")),
+                Math.max(0, yaml.decimal("waves.health-per-extra-player")),
+                Math.max(0, yaml.decimal("waves.spawn-ticks-per-extra-player")),
+                Math.max(0, yaml.decimal("waves.health-per-wave")), Math.max(0, yaml.decimal("waves.damage-per-wave")),
                 positive(yaml, "waves.spawn-ticks"),
-                Math.max(0, yaml.getDouble("waves.spawn-ticks-per-wave")), positive(yaml, "waves.minimum-spawn-ticks"),
+                Math.max(0, yaml.decimal("waves.spawn-ticks-per-wave")), positive(yaml, "waves.minimum-spawn-ticks"),
                 positive(yaml, "waves.max-alive"), positive(yaml, "waves.boss-every"),
-                new Late(positive(yaml, "waves.late.from"), Math.max(0, yaml.getDouble("waves.late.health-per-wave")),
-                        Math.max(0, yaml.getDouble("waves.late.health-per-extra-player")),
-                        Math.max(0, yaml.getDouble("waves.late.spawn-ticks-per-wave"))),
+                new Late(positive(yaml, "waves.late.from"), Math.max(0, yaml.decimal("waves.late.health-per-wave")),
+                        Math.max(0, yaml.decimal("waves.late.health-per-extra-player")),
+                        Math.max(0, yaml.decimal("waves.late.spawn-ticks-per-wave"))),
                 new Hounds(positive(yaml, "waves.hounds.first"), positive(yaml, "waves.hounds.every"),
-                        Math.clamp(yaml.getDouble("waves.hounds.share"), 0.1, 1)),
-                Math.max(0, yaml.getInt("waves.stragglers")), Math.clamp(yaml.getDouble("waves.straggler-speed"), 0.05, 0.6));
+                        Math.clamp(yaml.decimal("waves.hounds.share"), 0.1, 1)),
+                Math.max(0, yaml.integer("waves.stragglers")), Math.clamp(yaml.decimal("waves.straggler-speed"), 0.05, 0.6));
         var guns = new EnumMap<Weapon, Gun>(Weapon.class);
         for (var weapon : Weapon.values()) {
             String path = "weapons." + weapon.key() + ".";
-            guns.put(weapon, new Gun(Math.max(0, yaml.getInt(path + "price")), Math.max(0.1, yaml.getDouble(path + "damage")),
-                    Math.max(1, yaml.getDouble(path + "range")), Math.clamp(yaml.getInt(path + "pellets"), 1, 16),
-                    Math.clamp(yaml.getDouble(path + "spread"), 0, 0.5), positive(yaml, path + "clip"),
+            guns.put(weapon, new Gun(Math.max(0, (int) optional(yaml, path + "price")), Math.max(0.1, yaml.decimal(path + "damage")),
+                    Math.max(1, yaml.decimal(path + "range")), Math.clamp(yaml.integer(path + "pellets"), 1, 16),
+                    Math.clamp(yaml.decimal(path + "spread"), 0, 0.5), positive(yaml, path + "clip"),
                     positive(yaml, path + "reserve"), positive(yaml, path + "cooldown-ticks"), positive(yaml, path + "reload-ticks"),
-                    Math.max(1, yaml.getDouble(path + "upgrade-multiplier")), Math.max(0, yaml.getDouble(path + "burn-damage")),
-                    Math.max(0, yaml.getInt(path + "burn-seconds")) * 20, Math.max(0, yaml.getDouble(path + "mystery-weight"))));
+                    Math.max(1, yaml.decimal(path + "upgrade-multiplier")), Math.max(0, optional(yaml, path + "burn-damage")),
+                    Math.max(0, (int) optional(yaml, path + "burn-seconds")) * 20, Math.max(0, optional(yaml, path + "mystery-weight"))));
         }
         var perks = new EnumMap<Perk, Integer>(Perk.class);
         for (var perk : Perk.values()) {
@@ -201,85 +204,90 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
         var enemies = new EnumMap<EnemyKind, Enemy>(EnemyKind.class);
         for (var kind : EnemyKind.values()) {
             String path = "enemies." + kind.key() + ".";
-            enemies.put(kind, new Enemy(positive(yaml, path + "first-wave"), Math.max(1, yaml.getDouble(path + "health")),
-                    Math.max(1, yaml.getDouble(path + "damage")), Math.clamp(yaml.getDouble(path + "speed"), 0.05, 0.6),
-                    Math.max(0, yaml.getDouble(path + "weight")), Math.max(0, yaml.getDouble(path + "late-weight", yaml.getDouble(path + "weight"))),
-                    Math.max(0, yaml.getInt(path + "slow-seconds")) * 20, Math.clamp(yaml.contains(path + "scale") ? yaml.getDouble(path + "scale") : 1, 0.3, 3)));
+            enemies.put(kind, new Enemy(positive(yaml, path + "first-wave"), Math.max(1, yaml.decimal(path + "health")),
+                    Math.max(1, yaml.decimal(path + "damage")), Math.clamp(yaml.decimal(path + "speed"), 0.05, 0.6),
+                    Math.max(0, yaml.decimal(path + "weight")), Math.max(0, yaml.has(path + "late-weight") ? yaml.decimal(path + "late-weight") : yaml.decimal(path + "weight")),
+                    Math.max(0, (int) optional(yaml, path + "slow-seconds")) * 20, Math.clamp(yaml.has(path + "scale") ? yaml.decimal(path + "scale") : 1, 0.3, 3)));
         }
-        return new ZombiesConfig(Math.clamp(yaml.getInt("players.max", 4), 1, 4), positive(yaml, "gold.start"),
+        return new ZombiesConfig(Math.clamp(yaml.integer("players.max"), 1, 4), positive(yaml, "gold.start"),
                 positive(yaml, "countdown.intermission"), positive(yaml, "countdown.wave-limit"),
                 positive(yaml, "revive.bleed-seconds") * 20, positive(yaml, "revive.hold-seconds") * 20,
-                Math.clamp(yaml.getDouble("revive.radius", 2.5), 1, 5), positive(yaml, "revive.protection-seconds") * 20,
+                Math.clamp(yaml.decimal("revive.radius"), 1, 5), positive(yaml, "revive.protection-seconds") * 20,
                 positive(yaml, "gold.hit"), positive(yaml, "gold.kill"), positive(yaml, "gold.repair"),
                 positive(yaml, "gold.repair-limit-per-wave"), positive(yaml, "gold.wave-clear"),
                 positive(yaml, "barricades.repair-ticks"), positive(yaml, "barricades.break-ticks"),
-                Math.max(0, yaml.getInt("rewards.kill")), Math.max(0, yaml.getInt("rewards.wave")), Math.max(0, yaml.getInt("rewards.win")),
+                Math.max(0, yaml.integer("rewards.kill")), Math.max(0, yaml.integer("rewards.wave")), Math.max(0, yaml.integer("rewards.win")),
                 positive(yaml, "prices.ammo"), positive(yaml, "prices.armor"), positive(yaml, "prices.upgrade"),
                 positive(yaml, "prices.mystery"), positive(yaml, "prices.power"), positive(yaml, "prices.team-revive"),
-                Math.clamp(yaml.getDouble("powerups.drop-chance"), 0, 1), positive(yaml, "powerups.seconds") * 20, positive(yaml, "powerups.max-per-wave"),
-                Math.max(0, yaml.getInt("rewards.note")), positive(yaml, "regeneration.delay-seconds") * 20, Math.max(0, yaml.getDouble("perks.extra-health-bonus")),
-                Math.max(1, yaml.getDouble("combat.headshot-multiplier")), Math.max(1, yaml.getDouble("combat.knife-damage")),
+                Math.clamp(yaml.decimal("powerups.drop-chance"), 0, 1), positive(yaml, "powerups.seconds") * 20, positive(yaml, "powerups.max-per-wave"),
+                Math.max(0, yaml.integer("rewards.note")), positive(yaml, "regeneration.delay-seconds") * 20, Math.max(0, yaml.decimal("perks.extra-health-bonus")),
+                Math.max(1, yaml.decimal("combat.headshot-multiplier")), Math.max(1, yaml.decimal("combat.knife-damage")), Math.max(1, yaml.integer("combat.knife-cooldown-ticks")),
                 positive(yaml, "combat.damage-immunity-ticks"),
-                Math.max(0, yaml.getDouble("combat.burn-damage")), Math.max(0, yaml.getInt("combat.burn-seconds")) * 20,
+                Math.max(0, yaml.decimal("combat.burn-damage")), Math.max(0, yaml.integer("combat.burn-seconds")) * 20,
                 waves, Map.copyOf(guns), Map.copyOf(perks), Map.copyOf(enemies),
-                new Exploder(Math.clamp(yaml.getDouble("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
-                        Math.clamp(yaml.getDouble("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.getDouble("exploder.radius"), 1, 8),
-                        Math.max(0, yaml.getDouble("exploder.knockback"))),
-                new Inferno(Math.clamp(yaml.getDouble("inferno.blast-range"), 4, 64)),
+                new Exploder(Math.clamp(yaml.decimal("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
+                        Math.clamp(yaml.decimal("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.decimal("exploder.radius"), 1, 8),
+                        Math.max(0, yaml.decimal("exploder.knockback"))),
+                new Inferno(Math.clamp(yaml.decimal("inferno.blast-range"), 4, 64)),
                 events(yaml), abilities(yaml),
-                new Mystery(positive(yaml, "mystery.rise-ticks"), Math.clamp(yaml.getDouble("mystery.rise-height"), 0.2, 2),
+                new Mystery(positive(yaml, "mystery.rise-ticks"), Math.clamp(yaml.decimal("mystery.rise-height"), 0.2, 2),
                         positive(yaml, "mystery.roll-seconds") * 20, positive(yaml, "mystery.take-seconds") * 20,
-                        positive(yaml, "mystery.sink-ticks"), (float) Math.clamp(yaml.getDouble("mystery.scale"), 0.2, 2)),
-                new Armory(Math.clamp(yaml.getDouble("armory.height"), 0, 4), Math.clamp(yaml.getDouble("armory.radius"), 0, 2),
-                        (float) Math.clamp(yaml.getDouble("armory.scale"), 0.2, 2), positive(yaml, "armory.spin-seconds") * 20),
-                new Presentation(yaml.getBoolean("presentation.enabled"),
-                        Math.clamp(yaml.getInt("presentation.outage-accent-ticks"), 0, 60),
-                        Math.clamp(yaml.getInt("presentation.outage-ambient-ticks"), 20, 200),
-                        (float) Math.clamp(yaml.getDouble("presentation.outage-ambient-volume"), 0, 1),
-                        Math.clamp(yaml.getInt("presentation.recovery-ticks"), 0, 60),
-                        Math.clamp(yaml.getInt("presentation.ring-points"), 8, 32),
-                        Math.clamp(yaml.getDouble("presentation.revive-radius"), 0.3, 1.5)));
+                        positive(yaml, "mystery.sink-ticks"), (float) Math.clamp(yaml.decimal("mystery.scale"), 0.2, 2)),
+                new Armory(Math.clamp(yaml.decimal("armory.height"), 0, 4), Math.clamp(yaml.decimal("armory.radius"), 0, 2),
+                        (float) Math.clamp(yaml.decimal("armory.scale"), 0.2, 2), positive(yaml, "armory.spin-seconds") * 20),
+                new Presentation(yaml.flag("presentation.enabled"),
+                        Math.clamp(yaml.integer("presentation.outage-accent-ticks"), 0, 60),
+                        Math.clamp(yaml.integer("presentation.outage-ambient-ticks"), 20, 200),
+                        (float) Math.clamp(yaml.decimal("presentation.outage-ambient-volume"), 0, 1),
+                        Math.clamp(yaml.integer("presentation.recovery-ticks"), 0, 60),
+                        Math.clamp(yaml.integer("presentation.ring-points"), 8, 32),
+                        Math.clamp(yaml.decimal("presentation.revive-radius"), 0.3, 1.5)));
     }
 
-    private static Abilities abilities(ConfigurationSection yaml) {
-        double keepDistance = Math.clamp(yaml.getDouble("abilities.arsonist.keep-distance"), 2, 16);
+    private static Abilities abilities(StrictConfig yaml) {
+        double keepDistance = Math.clamp(yaml.decimal("abilities.arsonist.keep-distance"), 2, 16);
         return new Abilities(
-                new Arsonist(keepDistance, Math.clamp(yaml.getDouble("abilities.arsonist.throw-range"), keepDistance + 1, 24),
-                        positive(yaml, "abilities.arsonist.throw-ticks"), Math.clamp(yaml.getInt("abilities.arsonist.flight-ticks"), 5, 60),
-                        Math.clamp(yaml.getDouble("abilities.arsonist.fire-radius"), 0.5, 5), positive(yaml, "abilities.arsonist.fire-seconds") * 20,
+                new Arsonist(keepDistance, Math.clamp(yaml.decimal("abilities.arsonist.throw-range"), keepDistance + 1, 24),
+                        positive(yaml, "abilities.arsonist.throw-ticks"), Math.clamp(yaml.integer("abilities.arsonist.flight-ticks"), 5, 60),
+                        Math.clamp(yaml.decimal("abilities.arsonist.fire-radius"), 0.5, 5), positive(yaml, "abilities.arsonist.fire-seconds") * 20,
                         positive(yaml, "abilities.arsonist.pulse-ticks")),
-                new ShieldBearer(Math.clamp(yaml.getDouble("abilities.shield_bearer.front-angle"), 0, 180),
-                        Math.clamp(yaml.getDouble("abilities.shield_bearer.blocked-share"), 0, 1)),
-                new Breeder(Math.clamp(yaml.getInt("abilities.breeder.brood"), 0, 8)),
-                new Frost(Math.clamp(yaml.getDouble("abilities.frost.aura-radius"), 0, 8), Math.max(0, yaml.getInt("abilities.frost.aura-freeze-ticks")),
-                        Math.max(0, yaml.getInt("abilities.frost.touch-freeze-ticks")), Math.clamp(yaml.getInt("abilities.frost.slowness"), 0, 4)),
-                new Crawler(Math.clamp(yaml.getInt("abilities.crawler.pack"), 1, 6)),
-                new Electric(positive(yaml, "abilities.electric.zap-ticks"), Math.clamp(yaml.getDouble("abilities.electric.range"), 1, 24),
-                        Math.clamp(yaml.getInt("abilities.electric.jumps"), 0, 3), Math.clamp(yaml.getDouble("abilities.electric.jump-range"), 0, 8),
-                        Math.clamp(yaml.getDouble("abilities.electric.jump-share"), 0, 1)),
-                new Shadow(Math.clamp(yaml.getDouble("abilities.shadow.watch-angle"), 5, 90)));
+                new ShieldBearer(Math.clamp(yaml.decimal("abilities.shield_bearer.front-angle"), 0, 180),
+                        Math.clamp(yaml.decimal("abilities.shield_bearer.blocked-share"), 0, 1)),
+                new Breeder(Math.clamp(yaml.integer("abilities.breeder.brood"), 0, 8)),
+                new Frost(Math.clamp(yaml.decimal("abilities.frost.aura-radius"), 0, 8), Math.max(0, yaml.integer("abilities.frost.aura-freeze-ticks")),
+                        Math.max(0, yaml.integer("abilities.frost.touch-freeze-ticks")), Math.clamp(yaml.integer("abilities.frost.slowness"), 0, 4)),
+                new Crawler(Math.clamp(yaml.integer("abilities.crawler.pack"), 1, 6)),
+                new Electric(positive(yaml, "abilities.electric.zap-ticks"), Math.clamp(yaml.decimal("abilities.electric.range"), 1, 24),
+                        Math.clamp(yaml.integer("abilities.electric.jumps"), 0, 3), Math.clamp(yaml.decimal("abilities.electric.jump-range"), 0, 8),
+                        Math.clamp(yaml.decimal("abilities.electric.jump-share"), 0, 1)),
+                new Shadow(Math.clamp(yaml.decimal("abilities.shadow.watch-angle"), 5, 90)));
     }
 
-    private static Events events(ConfigurationSection yaml) {
+    private static Events events(StrictConfig yaml) {
         var weights = new EnumMap<WaveEvent.Kind, Double>(WaveEvent.Kind.class);
         for (var kind : WaveEvent.Kind.values()) {
-            weights.put(kind, Math.max(0, yaml.getDouble("events." + kind.key() + ".weight")));
+            weights.put(kind, Math.max(0, yaml.decimal("events." + kind.key() + ".weight")));
         }
-        double earliest = Math.clamp(yaml.getDouble("events.earliest-share"), 0, 0.9);
-        return new Events(positive(yaml, "events.from-wave"), Math.clamp(yaml.getDouble("events.chance"), 0, 1),
-                earliest, Math.clamp(yaml.getDouble("events.latest-share"), earliest, 0.9), Map.copyOf(weights),
-                new BloodMoon(Math.clamp(yaml.getDouble("events.blood_moon.speed-multiplier"), 1, 2),
+        double earliest = Math.clamp(yaml.decimal("events.earliest-share"), 0, 0.9);
+        return new Events(positive(yaml, "events.from-wave"), Math.clamp(yaml.decimal("events.chance"), 0, 1),
+                earliest, Math.clamp(yaml.decimal("events.latest-share"), earliest, 0.9), Map.copyOf(weights),
+                new BloodMoon(Math.clamp(yaml.decimal("events.blood_moon.speed-multiplier"), 1, 2),
                         positive(yaml, "events.blood_moon.gold-multiplier")),
                 new PowerOutage(positive(yaml, "events.power_outage.fix-seconds") * 20,
-                        Math.clamp(yaml.getDouble("events.power_outage.radius"), 1, 5), Math.max(0, yaml.getInt("events.power_outage.gold")),
-                        Math.max(0, yaml.getInt("events.power_outage.darkness-seconds")) * 20),
-                new Bounty(Math.max(0, yaml.getInt("events.bounty.gold")), positive(yaml, "events.bounty.seconds") * 20),
+                        Math.clamp(yaml.decimal("events.power_outage.radius"), 1, 5), Math.max(0, yaml.integer("events.power_outage.gold")),
+                        Math.max(0, yaml.integer("events.power_outage.darkness-seconds")) * 20),
+                new Bounty(Math.max(0, yaml.integer("events.bounty.gold")), positive(yaml, "events.bounty.seconds") * 20),
                 new ToxicFog(positive(yaml, "events.toxic_fog.warning-seconds") * 20, positive(yaml, "events.toxic_fog.seconds") * 20,
-                        positive(yaml, "events.toxic_fog.pulse-ticks"), Math.max(0, yaml.getDouble("events.toxic_fog.damage")),
-                        Math.max(0, yaml.getInt("events.toxic_fog.slow-seconds")) * 20));
+                        positive(yaml, "events.toxic_fog.pulse-ticks"), Math.max(0, yaml.decimal("events.toxic_fog.damage")),
+                        Math.max(0, yaml.integer("events.toxic_fog.slow-seconds")) * 20));
     }
 
-    private static int positive(ConfigurationSection yaml, String path) {
-        return Math.max(1, yaml.getInt(path));
+    /** A weapon or enemy leaves out a price, burn, mystery weight or slow it does not have. */
+    private static double optional(StrictConfig yaml, String path) {
+        return yaml.has(path) ? yaml.decimal(path) : 0;
+    }
+
+    private static int positive(StrictConfig yaml, String path) {
+        return Math.max(1, yaml.integer(path));
     }
 }
