@@ -2,6 +2,7 @@ package me.blockcraft.common.calendar;
 
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
 import me.blockcraft.common.calendar.NetworkCalendar.Window;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
 
@@ -86,8 +87,9 @@ public class NetworkCalendarTest {
     @Test
     public void foundedCountsWhetherOrNotYamlQuotesIt() {
         for (String founded : new String[]{"2018-06-03", "\"2018-06-03\""}) {
-            var calendar = NetworkCalendar.fromYaml(YamlFile.load(
-                    new ByteArrayInputStream(("founded: " + founded).getBytes(StandardCharsets.UTF_8))));
+            var section = YamlFile.section(YamlFile.load(NetworkCalendarTest.class.getResourceAsStream("/network.yml")), "calendar");
+            section.putAll(YamlFile.load(new ByteArrayInputStream(("founded: " + founded).getBytes(StandardCharsets.UTF_8))));
+            var calendar = NetworkCalendar.from(StrictConfig.of("network.yml", section));
 
             assertEquals(OptionalInt.of(8), calendar.age(LocalDate.of(2026, 6, 3)));
         }

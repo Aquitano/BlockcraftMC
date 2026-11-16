@@ -1,6 +1,7 @@
 package me.blockcraft.common.network;
 
 import me.blockcraft.common.calendar.NetworkCalendar;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.elo.EloFormula;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -42,14 +43,10 @@ public record NetworkConfig(Map<String, String> addresses, TagResolver tags, Net
                 YamlFile.section(root, "palette").entrySet().stream()
                         .map(entry -> Placeholder.parsed(entry.getKey(), String.valueOf(entry.getValue()))))
                 .toList());
-        var calendar = YamlFile.section(root, "calendar");
-        var elo = YamlFile.section(root, "elo");
-        return new NetworkConfig(Collections.unmodifiableMap(addresses), tags, NetworkCalendar.fromYaml(calendar),
-                Math.max(1, number(calendar, "poll-seconds", 5)),
-                new EloFormula(number(elo, "start-rating", 1000), number(elo, "k-factor", 32)));
-    }
-
-    private static int number(Map<String, Object> section, String key, int fallback) {
-        return section.get(key) instanceof Number value ? value.intValue() : fallback;
+        var strict = StrictConfig.of(FILE, root);
+        var calendar = strict.section("calendar");
+        return new NetworkConfig(Collections.unmodifiableMap(addresses), tags, NetworkCalendar.from(calendar),
+                Math.max(1, calendar.integer("poll-seconds")),
+                new EloFormula(strict.integer("elo.start-rating"), strict.integer("elo.k-factor")));
     }
 }
