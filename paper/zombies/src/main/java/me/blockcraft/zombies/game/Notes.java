@@ -1,12 +1,10 @@
 package me.blockcraft.zombies.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.dialogue.Dialogue;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.zombies.arena.ArenaMap;
-import me.blockcraft.zombies.menu.NoteDialog;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -16,15 +14,14 @@ import org.bukkit.entity.Player;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * The outpost's story, one note per room, read in the dialogue panel, or in a {@link NoteDialog} for a client whose pack
- * has not loaded. The first read of each note is a secret: an unlock that pays coins.
+ * The outpost's story, one note per room, read in chat under its title. The first read of each note is a secret: an
+ * unlock that pays coins.
  */
 public final class Notes {
 
@@ -44,8 +41,8 @@ public final class Notes {
 
     public void read(Player player, ArenaMap.Note note) {
         var prefix = "note." + note.id() + ".";
-        var text = new Dialogue("note", Map.of("note", new Dialogue.Line(prefix + "name", prefix + "body", Dialogue.Portrait.NOTE, "", List.of())));
-        BlockcraftApi.get().dialogues().startOrElse(player, text, messages, ending -> { }, () -> new NoteDialog(messages, note).show(player));
+        player.sendMessage(messages.get("note.title", Placeholder.component("note", messages.get(prefix + "name"))));
+        messages.getLines(prefix + "body").forEach(player::sendMessage);
         var uuid = player.getUniqueId();
         if (!read.computeIfAbsent(uuid, ignored -> new HashSet<>()).add(note.id())) {
             return;

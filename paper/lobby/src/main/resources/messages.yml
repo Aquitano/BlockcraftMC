@@ -1,4 +1,6 @@
 prefix: "<primary><ip> <dark>» <reset>"
+# A line a figure in the lobby says in chat: the courier, a quest giver.
+talk: "<prefix><speaker><dark>: <muted><line>"
 
 commands:
   parkour:
@@ -789,16 +791,15 @@ boards:
   board-changelog: "<accent><bold>Neuigkeiten</bold><newline><click>Lesen"
   board-rules: "<accent><bold>Regeln</bold><newline><click>Lesen"
 
-# What changed lately, shown once to everyone who comes back after changelog.version in config.yml changed: in the
-# dialogue panel under speaker, as plain text, or as a dialog under title for a client without the resource pack.
+# What changed lately, printed in chat by the changelog board and once to everyone who comes back after
+# changelog-version in config.yml changed: the title, then one line per entry.
 changelog:
-  title: "<arrow><primary>Neuigkeiten <dark>· <muted><version>"
-  speaker: "Neuigkeiten · <version>"
+  title: "<bullet><primary>NEUIGKEITEN <dark>· <muted><version> <dark>●"
   entries:
-    - "<accent>Neue Spielmodi<dark>: <muted>EnderGames, TTT und SkyWars sind da."
-    - "<accent>EnderGames<dark>: <muted>acht ausgesuchte Welten statt Zufall."
-    - "<accent>Lobby<dark>: <muted>Figuren vor jedem Spielbereich, Notizen zum Finden und Aufgaben zum Erledigen."
-    - "<accent>Bestenlisten<dark>: <muted>mit Köpfen, dem Ersten auf dem Podest und deinem eigenen Platz."
+    - "<arrow><accent>Neue Spielmodi<dark>: <muted>EnderGames, TTT und SkyWars sind da."
+    - "<arrow><accent>EnderGames<dark>: <muted>acht ausgesuchte Welten statt Zufall."
+    - "<arrow><accent>Lobby<dark>: <muted>Figuren vor jedem Spielbereich, Notizen zum Finden und Aufgaben zum Erledigen."
+    - "<arrow><accent>Bestenlisten<dark>: <muted>mit Köpfen, dem Ersten auf dem Podest und deinem eigenen Platz."
 
 # The boss bar over the lobby (news in config.yml), one line after the other.
 news:
@@ -808,68 +809,52 @@ news:
     - "<muted>Die Leute in der Lobby haben <accent>Aufgaben <muted>für dich"
     - "<muted>Mehr Infos auf <accent><website>"
 
-# The quest givers (quests in config.yml): their name, the dialog's title, what they say and what they ask.
+# The quest givers (quests in config.yml) and the quest board, in chat: a giver's name, what they say and their task.
 quests:
-  board-title: "<arrow><primary>Auftragstafel"
-  board-description: "<muted>Wähle einen Auftrag, um deinen Fortschritt zu sehen und deine Belohnung abzuholen."
-  claim: "<success>Belohnung abholen <dark>(<accent><coins> Coins<dark>)"
+  board-title: "<prefix><primary>Auftragstafel"
+  board-line: "<prefix><name><dark>: <muted><task> <dark>· <status>"
+  task-line: "<prefix><accent>Aufgabe<dark>: <muted><task>"
+  status-line: "<prefix><status>"
   status-open: "<muted>Fortschritt<dark>: <white><have><dark>/<white><need>"
-  status-done: "<success>Erledigt! Hol dir deine <accent><coins> Coins<success>."
-  status-claimed: "<muted>Danke nochmal! Mehr habe ich gerade nicht für dich."
+  status-done: "<success>Erledigt! <claim>"
+  status-claimed: "<muted>Abgeschlossen"
+  claim: "<success>[Belohnung abholen (<coins> Coins)]"
+  claim-hover: "<muted>Zahlt dir <accent><coins> Coins <muted>für diese Aufgabe aus."
+  thanks: "Danke nochmal! Mehr habe ich gerade nicht für dich."
   claimed: "<prefix><success>Aufgabe erledigt! <muted>+<accent><coins> Coins"
   claim-failed: "<prefix><error>Das hat nicht geklappt. Ist die Aufgabe wirklich erledigt?"
-  # A quest giver in the dialogue panel, plain text: after their talk come the task and its status from above.
-  talk:
-    progress:
-      - "<task>"
-      - "<status>"
-    later: "Später."
-    later-reply: "Ich warte hier. Komm wieder, wenn du so weit bist."
   archivarin:
     name: "<accent>Die Archivarin"
-    title: "<arrow><primary>Die Archivarin"
     talk:
-      - "<muted>Ach, du schon wieder. Oder doch nicht?"
-      - "<muted>Mir sind ein paar Notizen davongeflogen. Sie liegen irgendwo in der Lobby herum."
-    task: "<accent>Aufgabe<dark>: <muted>Finde 3 Notizen in der Lobby."
+      - "Ach, du schon wieder. Oder doch nicht?"
+      - "Mir sind ein paar Notizen davongeflogen. Sie liegen irgendwo in der Lobby herum."
+    task: "Finde 3 Notizen in der Lobby."
   laeuferin:
     name: "<accent>Die Läuferin"
-    title: "<arrow><primary>Die Läuferin"
     talk:
-      - "<muted>Ich laufe den Parcours jeden Morgen. Zweimal."
-      - "<muted>Schaffst du ihn wenigstens einmal?"
-    task: "<accent>Aufgabe<dark>: <muted>Schließe den Parcours ab."
+      - "Ich laufe den Parcours jeden Morgen. Zweimal."
+      - "Schaffst du ihn wenigstens einmal?"
+    task: "Schließe den Parcours ab."
   kundschafter:
     name: "<accent>Der Kundschafter"
-    title: "<arrow><primary>Der Kundschafter"
     talk:
-      - "<muted>Hast du schon von SkyWars gehört? Inseln im Nichts, und unten wartet nichts."
-      - "<muted>Spiel eine Runde und erzähl mir, wie es war."
-    task: "<accent>Aufgabe<dark>: <muted>Spiele eine Runde SkyWars."
+      - "Hast du schon von SkyWars gehört? Inseln im Nichts, und unten wartet nichts."
+      - "Spiel eine Runde und erzähl mir, wie es war."
+    task: "Spiele eine Runde SkyWars."
 
 daily:
   name: "<accent>Der Postbote"
-  title: "<arrow><primary>Tägliche Belohnung"
-  streak-open: "<muted>Heute ist Tag <accent><streak> <muted>deiner Serie."
-  streak-claimed: "<muted>Du bist bei Tag <accent><streak> <muted>deiner Serie."
-  today: "<muted>Heutige Belohnung<dark>: <accent><coins> Coins"
-  next-in: "<muted>Die nächste Belohnung gibt es in <white><hours> Std. <minutes> Min.<muted>."
-  upcoming: "<muted>Die nächsten Tage<dark>:"
-  upcoming-day: "<bullet><muted>Tag <white><day><dark>: <accent><coins> Coins"
-  missed: "<muted>Verpasst du einen Tag, beginnt deine Serie wieder bei Tag 1."
-  claim: "<success>Abholen <dark>(<accent><coins> Coins<dark>)"
+  offer: "Post für dich! Heute ist Tag <accent><streak> <muted>deiner Serie, dafür gibt es <accent><coins> Coins<muted>."
+  done: "Heute habe ich nichts mehr für dich. Du bist bei Tag <accent><streak> <muted>deiner Serie, die nächste Post kommt in <white><hours> Std. <minutes> Min."
+  upcoming: "<days>. Verpasst du einen Tag, fängt deine Serie wieder bei Tag 1 an."
+  upcoming-day: "Tag <white><day><muted>: <accent><coins> Coins<muted>"
+  actions: "<prefix><buttons>"
+  take: "<success>[Abholen (<coins> Coins)]"
+  take-hover: "<muted>Holt deine <accent><coins> Coins <muted>für Tag <accent><streak> <muted>deiner Serie ab."
+  upcoming-button: "<primary>[Nächste Tage]"
+  upcoming-hover: "<muted>Was dir die nächsten Tage deiner Serie bringen."
   claimed: "<prefix><success>Tägliche Belohnung abgeholt! <muted>+<accent><coins> Coins <dark>· <muted>Tag <accent><streak> <muted>deiner Serie"
   already-claimed: "<prefix><error>Deine heutige Belohnung hast du schon abgeholt."
   available: "<prefix><muted>Deine tägliche Belohnung wartet<dark>: <accent><coins> Coins <dark>· <claim>"
   claim-button: "<success>[Abholen]"
   claim-hover: "<muted>Serie und Belohnung ansehen."
-  # The courier in the dialogue panel, plain text; the panel with the pack, the dialog above without it.
-  talk:
-    offer: "Post für dich! Heute ist Tag <streak> deiner Serie, dafür gibt es <coins> Coins."
-    claim: "Abholen (<coins> Coins)"
-    ask-upcoming: "Was gibt es die nächsten Tage?"
-    upcoming: "<days>. Verpasst du einen Tag, fängt deine Serie wieder bei Tag 1 an."
-    upcoming-day: "Tag <day>: <coins> Coins"
-    later: "Später."
-    later-reply: "Ich bin den ganzen Tag hier. Deine Post wartet bis Mitternacht."
-    claimed: "Heute habe ich nichts mehr für dich. Du bist bei Tag <streak> deiner Serie. Die nächste Post kommt in <hours> Std. <minutes> Min."

@@ -8,9 +8,6 @@
     {"type":"bitmap","file":"blockcraft:gui/dialogue/pilot_happy.png","ascent":7,"height":48,"chars":["\ue611"]},
     {"type":"bitmap","file":"blockcraft:gui/dialogue/pilot_worried.png","ascent":7,"height":48,"chars":["\ue612"]},
     {"type":"bitmap","file":"blockcraft:gui/dialogue/droid.png","ascent":7,"height":48,"chars":["\ue613"]},
-    {"type":"bitmap","file":"blockcraft:gui/dialogue/droid_alert.png","ascent":7,"height":48,"chars":["\ue614"]},
-    {"type":"bitmap","file":"blockcraft:gui/dialogue/courier.png","ascent":7,"height":48,"chars":["\ue615"]},
-    {"type":"bitmap","file":"blockcraft:gui/dialogue/local.png","ascent":7,"height":48,"chars":["\ue616"]},
-    {"type":"bitmap","file":"blockcraft:gui/dialogue/note.png","ascent":7,"height":48,"chars":["\ue617"]}
+    {"type":"bitmap","file":"blockcraft:gui/dialogue/droid_alert.png","ascent":7,"height":48,"chars":["\ue614"]}
   ]
 }
