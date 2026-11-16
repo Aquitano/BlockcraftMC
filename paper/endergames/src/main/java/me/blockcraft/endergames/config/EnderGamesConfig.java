@@ -84,7 +84,7 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                 new Rewards(Math.max(0, rewards.integer("kill")), Math.max(0, rewards.integer("win"))),
                 CombatStyle.from(yaml),
                 CompassTracker.Settings.from(yaml),
-                KitCatalog.from(section(yaml, "kits"), Kit.class, Kit::defaultPrice),
+                KitCatalog.from(section(yaml, "kits"), Kit.class),
                 new Abilities(
                         Math.max(1, abilities.decimal("headshot-multiplier")),
                         Math.max(1, abilities.integer("lumberjack-max-logs")),

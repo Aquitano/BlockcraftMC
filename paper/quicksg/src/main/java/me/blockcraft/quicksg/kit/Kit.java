@@ -10,26 +10,26 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Locale;
 
 public enum Kit implements UnlockableKit {
-    STARTER(Material.WOODEN_SWORD, 0) {
+    STARTER(Material.WOODEN_SWORD) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.WOODEN_SWORD));
         }
     },
-    BOW(Material.BOW, 200) {
+    BOW(Material.BOW) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.BOW), ItemStack.of(Material.ARROW, 12));
         }
     },
-    HEARTS(Material.REDSTONE, 200) {
+    HEARTS(Material.REDSTONE) {
         @Override
         public void apply(Player player) {
             player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
             player.setHealth(20.0);
         }
     },
-    CHAIN(Material.CHAINMAIL_CHESTPLATE, 200) {
+    CHAIN(Material.CHAINMAIL_CHESTPLATE) {
         @Override
         public void apply(Player player) {
             player.getInventory().setHelmet(ItemStack.of(Material.CHAINMAIL_HELMET));
@@ -37,7 +37,7 @@ public enum Kit implements UnlockableKit {
             player.getInventory().setBoots(ItemStack.of(Material.CHAINMAIL_BOOTS));
         }
     },
-    DIAMOND(Material.DIAMOND_CHESTPLATE, 200) {
+    DIAMOND(Material.DIAMOND_CHESTPLATE) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.WOODEN_SWORD));
@@ -49,11 +49,9 @@ public enum Kit implements UnlockableKit {
 
     public static final String ITEM_PREFIX = "qsg.kit.";
     private final Material icon;
-    private final int defaultPrice;
 
-    Kit(Material icon, int defaultPrice) {
+    Kit(Material icon) {
         this.icon = icon;
-        this.defaultPrice = defaultPrice;
     }
 
     public abstract void apply(Player player);
@@ -74,9 +72,6 @@ public enum Kit implements UnlockableKit {
         return icon;
     }
 
-    public int defaultPrice() {
-        return defaultPrice;
-    }
 
     public String messageKey() {
         return "kit." + key();

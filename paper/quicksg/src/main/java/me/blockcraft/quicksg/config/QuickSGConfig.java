@@ -49,7 +49,7 @@ public record QuickSGConfig(
                         border.getDouble("ingame-radius", 60)),
                 CompassTracker.Settings.from(config),
                 new Rewards(rewards.getInt("kill", 5), rewards.getInt("death", 2), rewards.getInt("win", 15)),
-                KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice),
+                KitCatalog.from(section(config, "kits"), Kit.class),
                 LootTable.fromYaml(chest),
                 CombatStyle.from(config));
     }

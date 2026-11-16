@@ -45,7 +45,7 @@ public record SkyWarsConfig(int maxPlayers, Countdowns countdowns, Arena arena, 
                         table(chests, "semi-middle"), table(chests, "middle")),
                 new Rewards(Math.max(0, rewards.getInt("kill", 5)), Math.max(0, rewards.getInt("win", 20))),
                 CombatStyle.from(config),
-                KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice));
+                KitCatalog.from(section(config, "kits"), Kit.class));
     }
 
     private static LootTable table(ConfigurationSection chests, String key) {

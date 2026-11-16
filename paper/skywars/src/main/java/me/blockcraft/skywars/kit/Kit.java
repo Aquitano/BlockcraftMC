@@ -15,50 +15,50 @@ import java.util.Locale;
  * holds are {@code kit.<key>} in messages.yml, its price {@code kits.<key>} in config.yml.
  */
 public enum Kit implements UnlockableKit {
-    STANDARD(Material.WOODEN_SWORD, 0) {
+    STANDARD(Material.WOODEN_SWORD) {
         @Override
         public void equip(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.WOODEN_SWORD), ItemStack.of(Material.WOODEN_PICKAXE));
         }
     },
-    BAUARBEITER(Material.BRICKS, 300) {
+    BAUARBEITER(Material.BRICKS) {
         @Override
         public void equip(Player player) {
             player.getInventory().addItem(PackModel.SKYWARS_HAMMER.item().build(), ItemStack.of(Material.BRICKS, 64));
         }
     },
-    BOGENSCHUETZE(Material.BOW, 400) {
+    BOGENSCHUETZE(Material.BOW) {
         @Override
         public void equip(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.BOW), ItemStack.of(Material.ARROW, 12));
         }
     },
-    RITTER(Material.CHAINMAIL_CHESTPLATE, 500) {
+    RITTER(Material.CHAINMAIL_CHESTPLATE) {
         @Override
         public void equip(Player player) {
             player.getInventory().setChestplate(ItemStack.of(Material.CHAINMAIL_CHESTPLATE));
             player.getInventory().setLeggings(ItemStack.of(Material.CHAINMAIL_LEGGINGS));
         }
     },
-    ENDERMAN(Material.ENDER_PEARL, 500) {
+    ENDERMAN(Material.ENDER_PEARL) {
         @Override
         public void equip(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.ENDER_PEARL, 2));
         }
     },
-    BOMBER(Material.TNT, 400) {
+    BOMBER(Material.TNT) {
         @Override
         public void equip(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.TNT, 3), ItemStack.of(Material.FLINT_AND_STEEL));
         }
     },
-    FISCHER(Material.FISHING_ROD, 300) {
+    FISCHER(Material.FISHING_ROD) {
         @Override
         public void equip(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.FISHING_ROD), ItemStack.of(Material.SNOWBALL, 16));
         }
     },
-    HEILER(Material.GOLDEN_APPLE, 500) {
+    HEILER(Material.GOLDEN_APPLE) {
         @Override
         public void equip(Player player) {
             player.getInventory().addItem(healing(), healing(), ItemStack.of(Material.GOLDEN_APPLE));
@@ -68,11 +68,9 @@ public enum Kit implements UnlockableKit {
     private static final String ITEM_PREFIX = "skywars.kit.";
 
     private final Material icon;
-    private final int defaultPrice;
 
-    Kit(Material icon, int defaultPrice) {
+    Kit(Material icon) {
         this.icon = icon;
-        this.defaultPrice = defaultPrice;
     }
 
     public abstract void equip(Player player);
@@ -92,9 +90,6 @@ public enum Kit implements UnlockableKit {
         return icon;
     }
 
-    public int defaultPrice() {
-        return defaultPrice;
-    }
 
     private static ItemStack healing() {
         var potion = ItemStack.of(Material.SPLASH_POTION);
