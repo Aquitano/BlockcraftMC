@@ -1,7 +1,6 @@
 package me.blockcraft.lobby;
 
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
-import me.blockcraft.api.BlockcraftApi;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -19,8 +18,7 @@ import java.util.function.BiConsumer;
 /**
  * Entities the lobby stands at its named spots, in groups, one per feature: a group keeps its spots' chunks loaded,
  * since entities that are never saved vanish with their chunk, turns a click or hit on any of its entities into its
- * reactions and removes them all on {@link Group#close}. Riders are removed with what they ride. While a player reads
- * a dialogue, their clicks and hits on these entities do nothing, so a click on a figure cannot start another one.
+ * reactions and removes them all on {@link Group#close}. Riders are removed with what they ride.
  */
 public final class SpotEntities implements Listener {
 
@@ -50,7 +48,7 @@ public final class SpotEntities implements Listener {
         var group = groups.get(event.getRightClicked());
         if (group != null) {
             event.setCancelled(true);
-            if (event.getHand() == EquipmentSlot.HAND && !reading(event.getPlayer())) {
+            if (event.getHand() == EquipmentSlot.HAND) {
                 group.click(event.getPlayer(), event.getRightClicked());
             }
         }
@@ -61,14 +59,8 @@ public final class SpotEntities implements Listener {
         var group = groups.get(event.getAttacked());
         if (group != null) {
             event.setCancelled(true);
-            if (!reading(event.getPlayer())) {
-                group.hit(event.getPlayer(), event.getAttacked());
-            }
+            group.hit(event.getPlayer(), event.getAttacked());
         }
-    }
-
-    private static boolean reading(Player player) {
-        return BlockcraftApi.get().dialogues().holds(player);
     }
 
     public final class Group<K> implements AutoCloseable {

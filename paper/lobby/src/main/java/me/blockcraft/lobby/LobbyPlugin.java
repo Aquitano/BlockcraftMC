@@ -130,7 +130,6 @@ public final class LobbyPlugin extends JavaPlugin {
         var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
         var parkour = new Parkour(this, activityLocations, activities, messages);
         closables.add(parkour);
-        closables.add(api.dialogues().unavailableWhen(parkour::running));
         var throwFight = new LobbyThrows(this, messages, api.calendar(), ThrowFight.Settings.fromYaml(YamlFile.section(yaml, "throw-fight")),
                 parkour::running);
         closables.add(throwFight);
