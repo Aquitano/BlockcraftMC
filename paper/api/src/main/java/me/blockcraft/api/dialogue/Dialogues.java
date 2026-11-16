@@ -27,10 +27,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -41,16 +39,6 @@ import java.util.function.Predicate;
 public final class Dialogues implements Listener, AutoCloseable {
     private record Viewing(DialogueSession session, Messages text, Consumer<String> completed, long expires, PresentationScope scope,
                            boolean holds) {}
-    private record Drawn(Component bar, long at) {}
-
-    /** Undoes a registration; closing it cannot fail. */
-    public interface Handle extends AutoCloseable {
-        @Override
-        void close();
-    }
-
-    /** How long an unchanged panel stays sent before it is sent again, well inside the time the client keeps showing it. */
-    private static final long REFRESH_TICKS = 20;
 
     private final Plugin plugin;
     private final Messages messages;
@@ -61,8 +49,6 @@ public final class Dialogues implements Listener, AutoCloseable {
     private final int readTicks;
     private final Map<UUID, Viewing> viewers = new HashMap<>();
     private final Map<UUID, Long> readSince = new HashMap<>();
-    private final Map<UUID, Drawn> drawn = new HashMap<>();
-    private final List<Function<Player, Optional<Component>>> beside = new ArrayList<>();
     private BukkitTask task;
     private final List<Predicate<Player>> unavailable = new ArrayList<>();
 
@@ -86,22 +72,12 @@ public final class Dialogues implements Listener, AutoCloseable {
         return () -> unavailable.remove(predicate);
     }
 
-    /**
-     * Draws what {@code panel} gives for the player, a {@link me.blockcraft.api.pack.HudPanel} line that takes no room,
-     * beside the dialogue: the dialogue holds the action bar while it shows, and a game's own corner panel rides on it
-     * too. Closing the handle drops it.
-     */
-    public Handle beside(Function<Player, Optional<Component>> panel) {
-        beside.add(panel);
-        return () -> beside.remove(panel);
-    }
-
     public boolean active(Player player) {
         return viewers.containsKey(player.getUniqueId());
     }
 
     /** Whether the player's dialogue asks something and so keeps their clicks, scrolling and hits for itself. */
-    public boolean holds(Player player) {
+    private boolean holds(Player player) {
         var viewing = viewers.get(player.getUniqueId());
         return viewing != null && viewing.holds();
     }
@@ -121,15 +97,6 @@ public final class Dialogues implements Listener, AutoCloseable {
 
     public boolean start(Player player, Dialogue dialogue, Messages text, Consumer<String> completed) {
         return start(player, dialogue, text, new PresentationScope(plugin), completed);
-    }
-
-    /** The panel draws only with the pack, and a client can be in the world before it loads; such a client gets {@code withoutPack}. */
-    public boolean startOrElse(Player player, Dialogue dialogue, Messages text, Consumer<String> completed, Runnable withoutPack) {
-        if (!packs.applied(player)) {
-            withoutPack.run();
-            return false;
-        }
-        return start(player, dialogue, text, completed);
     }
 
     public boolean start(Player player, Dialogue dialogue, Messages text, PresentationScope scope, Consumer<String> completed) {
@@ -174,20 +141,18 @@ public final class Dialogues implements Listener, AutoCloseable {
         if (scope.closed()) return false;
         player.closeInventory();
         var session = new DialogueSession(dialogue, key -> DialogueView.plain(text, key));
-        var viewing = new Viewing(session, text, completed, now() + timeoutTicks, scope, dialogue.asks());
-        viewers.put(player.getUniqueId(), viewing);
+        viewers.put(player.getUniqueId(), new Viewing(session, text, completed, now() + timeoutTicks, scope, dialogue.asks()));
         scope.own(() -> {
             var current = viewers.get(player.getUniqueId());
             if (current != null && current.scope() == scope) stop(player);
         });
-        draw(player, viewing);
+        player.sendActionBar(DialogueView.draw(session, text, messages));
         if (task == null) task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         return true;
     }
 
     public void stop(Player player) {
         readSince.remove(player.getUniqueId());
-        drawn.remove(player.getUniqueId());
         var viewing = viewers.remove(player.getUniqueId());
         if (viewing == null) return;
         try {
@@ -201,7 +166,6 @@ public final class Dialogues implements Listener, AutoCloseable {
         for (UUID id : java.util.List.copyOf(viewers.keySet())) {
             var player = Bukkit.getPlayer(id);
             if (player == null) {
-                drawn.remove(id);
                 var removed = viewers.remove(id);
                 if (removed != null) removed.scope().close();
                 continue;
@@ -213,13 +177,16 @@ public final class Dialogues implements Listener, AutoCloseable {
                 player.sendMessage(messages.get("dialogue.cancelled"));
                 continue;
             }
+            boolean revealing = !viewing.session().revealed();
             viewing.session().reveal(charactersPerTick);
             if (!viewing.holds() && viewing.session().revealed()
                     && now() - readSince.computeIfAbsent(id, ignored -> now()) >= readTicks) {
                 advance(player);
                 continue;
             }
-            draw(player, viewing);
+            if (revealing || now() % 20 == 0) {
+                player.sendActionBar(DialogueView.draw(viewing.session(), viewing.text(), messages));
+            }
         }
         if (viewers.isEmpty() && task != null) {
             task.cancel();
@@ -236,7 +203,7 @@ public final class Dialogues implements Listener, AutoCloseable {
             stop(player);
             viewing.completed().accept(viewing.session().lineId());
         } else {
-            draw(player, viewing);
+            player.sendActionBar(DialogueView.draw(viewing.session(), viewing.text(), messages));
         }
     }
 
@@ -244,7 +211,7 @@ public final class Dialogues implements Listener, AutoCloseable {
         var viewing = viewers.get(player.getUniqueId());
         if (viewing != null) {
             viewing.session().select(delta);
-            draw(player, viewing);
+            player.sendActionBar(DialogueView.draw(viewing.session(), viewing.text(), messages));
         }
     }
 
@@ -312,19 +279,6 @@ public final class Dialogues implements Listener, AutoCloseable {
         }
         for (var viewing : java.util.List.copyOf(viewers.values())) viewing.scope().close();
         viewers.clear();
-        drawn.clear();
-    }
-
-    /** Sends the panel with whatever is drawn beside it whenever either changes, and again before the client lets it fade. */
-    private void draw(Player player, Viewing viewing) {
-        var bar = Component.text().append(DialogueView.draw(viewing.session(), viewing.text(), messages));
-        for (var panel : beside) panel.apply(player).ifPresent(bar::append);
-        var line = bar.build();
-        var last = drawn.get(player.getUniqueId());
-        if (last == null || !last.bar().equals(line) || now() - last.at() >= REFRESH_TICKS) {
-            player.sendActionBar(line);
-            drawn.put(player.getUniqueId(), new Drawn(line, now()));
-        }
     }
 
     private static long now() { return Integer.toUnsignedLong(Bukkit.getCurrentTick()); }
