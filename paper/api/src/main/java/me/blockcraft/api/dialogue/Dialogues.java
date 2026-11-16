@@ -23,7 +23,9 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -40,7 +42,7 @@ public final class Dialogues implements Listener, AutoCloseable {
     private final int timeoutTicks;
     private final Map<UUID, Viewing> viewers = new HashMap<>();
     private BukkitTask task;
-    private Predicate<Player> unavailable = ignored -> false;
+    private final List<Predicate<Player>> unavailable = new ArrayList<>();
 
     public Dialogues(Plugin plugin, Messages messages, ResourcePacks packs, Map<String, Object> config) {
         this.plugin = plugin;
@@ -55,8 +57,10 @@ public final class Dialogues implements Listener, AutoCloseable {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    public void unavailableWhen(Predicate<Player> predicate) {
-        unavailable = predicate;
+    /** Refuses a dialogue while {@code predicate} holds for the player, on top of the others; closing the handle drops it. */
+    public AutoCloseable unavailableWhen(Predicate<Player> predicate) {
+        unavailable.add(predicate);
+        return () -> unavailable.remove(predicate);
     }
 
     public boolean active(Player player) {
@@ -80,6 +84,15 @@ public final class Dialogues implements Listener, AutoCloseable {
         return start(player, dialogue, text, new PresentationScope(plugin), completed);
     }
 
+    /** The panel draws only with the pack, and a client can be in the world before it loads; such a client gets {@code withoutPack}. */
+    public boolean startOrElse(Player player, Dialogue dialogue, Messages text, Consumer<String> completed, Runnable withoutPack) {
+        if (!packs.applied(player)) {
+            withoutPack.run();
+            return false;
+        }
+        return start(player, dialogue, text, completed);
+    }
+
     public boolean start(Player player, Dialogue dialogue, Messages text, PresentationScope scope, Consumer<String> completed) {
         boolean started = false;
         try {
@@ -97,7 +110,7 @@ public final class Dialogues implements Listener, AutoCloseable {
         if (scope.closed() || !player.isOnline() || player.isDead()) {
             return false;
         }
-        if (unavailable.test(player)) {
+        if (unavailable.stream().anyMatch(predicate -> predicate.test(player))) {
             player.sendMessage(messages.get("presentation.busy"));
             return false;
         }
@@ -202,7 +215,8 @@ public final class Dialogues implements Listener, AutoCloseable {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    /** Games and the lobby lock swapping hands, so ending a dialogue cannot wait for an uncancelled swap. */
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onSwap(PlayerSwapHandItemsEvent event) {
         if (!active(event.getPlayer())) return;
         event.setCancelled(true);
@@ -210,7 +224,8 @@ public final class Dialogues implements Listener, AutoCloseable {
         event.getPlayer().sendMessage(messages.get("dialogue.cancelled"));
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    /** First, so that hotbar items which skip a denied use stay still while the player reads. */
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onInteract(PlayerInteractEvent event) {
         if (active(event.getPlayer())) event.setCancelled(true);
     }
