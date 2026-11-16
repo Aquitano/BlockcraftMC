@@ -36,30 +36,28 @@ Generation remains a separate explicit operation.
 
 ## Content boundaries
 
-Base contains network icons, cosmetics, menus, shared dialogue and presentation assets, UI sounds, and the shared item and text effects.
+Base contains network icons, cosmetics, menus, shared dialogue and presentation assets, UI sounds, the shared item and text effects,
+and the text shader's corner HUD panels, so every stack can draw a `HudPanel`.
 Menu atlases and mode preview tiles stay shared because network menus use them.
 These images can include Sternenfront previews. They do not activate its HUD.
 
 Lobby contains furniture under `props`, including imported market, Halloween, and quest sets.
 The `props/starwars` subtree belongs to Star Wars.
-Modes contains TTT, Zombies, and other gameplay weapons under `weapons`.
+Modes contains TTT, Zombies, and other gameplay weapons under `weapons`, and the fonts and font textures under a `zombies` directory.
 Star Wars contains all `sternenfront`, `deploy`, and `battle` subtrees, imported Star Wars props, and BetterModel assets.
 New `sternenfront/objectives` models, item routes, and textures follow this rule without enumeration.
 All current BetterModel output is Sternenfront or imported Star Wars creatures. A future non-Star-Wars rig needs a new ownership rule.
 
 The builder partitions mixed `sounds.json` events and shared bitmap font providers.
 Star Wars font definitions preserve the base providers. Base providers exclude combat, minimap, ability, and deployment textures.
-Star Wars owns the boss-bar blanks, trigger-cell line shader, target outline pipeline, and HUD panel include.
-The base text vertex shader keeps text effects but removes the HUD include and panel positioning block.
-That transformation fails if its expected source block changes.
-The original text shader overlays it in Star Wars, preserving shared text effects there too.
+Star Wars owns the boss-bar blanks, trigger-cell line shader, target outline pipeline and Sternenfront's panel fonts.
 Shared inventory slot highlight blanks remain in base.
 
 ## Validation and rollout limits
 
 Every source file must occur in at least one split archive.
 Checks resolve item models, model parents and textures, bitmap and reference fonts, sound files, shader includes, post-effect shaders, and texture metadata against each effective stack.
-They reject missing custom dependencies, forbidden profile files, changed vanilla item fallbacks, lost selector cases, and Sternenfront HUD code in base or modes.
+They reject missing custom dependencies, forbidden profile files, changed vanilla item fallbacks, lost selector cases, and boss-bar blanks or rigs in base or modes.
 `split-report.json` lists unresolved vanilla resources separately. The builder lists them separately. The current integration audit also resolved all 303 against the installed Minecraft 26.3 client JAR.
 Model texture variables and renderer semantics still depend on Minecraft.
 
@@ -77,7 +75,7 @@ transfer. The source assets match the earlier accepted set byte-for-byte. An ear
 and the Star Wars HUD in a round, an ordinary pistol and pink boss bar in Duell, and ordinary lobby furniture.
 Refusal and timeout behavior have automated tests but were not exercised by these client runs.
 The proxy suite covers combined compatibility, split transfers, lobby return and Star Wars addon removal. Database integration was not enabled.
-The lobby and ordinary games receive none of the Star Wars global HUD overrides.
+The lobby and ordinary games receive none of the Star Wars boss-bar blanks.
 The proxy implements these stacks behind `resource-pack.profiles.enabled` in its configuration. Each archive needs
 its own reachable URL under `resource-pack.profiles.archives`. The combined `BLOCKCRAFT_RESOURCE_PACK_URL` override
 does not replace those archive URLs. Enabling profiles requires the four core archives and every configured archive to be present.

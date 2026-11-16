@@ -36,11 +36,11 @@ def owner(path):
         return 'starwars'
     if kind == 'textures' and '/misc/' in path:
         return 'starwars'
-    if 'target_outline' in name or name == 'hud_panel.glsl':
+    if 'target_outline' in name:
         return 'starwars'
     if 'props' in parts:
         return 'lobby'
-    if kind in ('models', 'textures', 'items') and any(
+    if kind in ('models', 'textures', 'items', 'font') and any(
             part in ('ttt', 'zombies', 'weapons') for part in parts[3:]):
         return 'modes'
     return 'base'
@@ -102,17 +102,6 @@ def references(path, data):
                 yield resource(render_pass[key], 'shaders', suffix)
 
 
-def shared_text_shader(data):
-    text = data.decode()
-    include = '#include <blockcraft:hud_panel.glsl>\n'
-    start = '#ifdef IS_GUI\n    int panelTint = blockcraft_panel_tint(marker);'
-    if text.count(include) != 1 or text.count(start) != 1:
-        raise ValueError('Text shader HUD block changed; review split transformation')
-    begin = text.index(start)
-    end = text.index('#endif', begin) + len('#endif\n')
-    return (text[:begin] + text[end:]).replace(include, '').encode()
-
-
 def build(source):
     files = {p.relative_to(source).as_posix(): p.read_bytes()
              for p in sorted(source.rglob('*')) if p.is_file()}
@@ -147,9 +136,6 @@ def build(source):
                 packs['starwars'][path] = data
         else:
             packs[owner(path)][path] = data
-    text_path = 'assets/minecraft/shaders/core/text.vsh'
-    packs['base'][text_path] = shared_text_shader(files[text_path])
-    packs['starwars'][text_path] = files[text_path]
     for profile in PROFILES:
         packs[profile]['pack.mcmeta'] = files['pack.mcmeta']
     return files, packs
@@ -183,7 +169,6 @@ def verify(files, packs):
                 model = dict(expected['model'], cases=cases) if cases else expected['model']['fallback']
                 assert actual['model'] == model, f'{profile}: lost item cases or fallback in {path}'
         if profile in ('base', 'modes'):
-            assert b'blockcraft_panel_' not in effective['assets/minecraft/shaders/core/text.vsh']
             assert not any('/boss_bar/' in p or '/bettermodel/' in p for p in effective)
             for path, data in effective.items():
                 if path.endswith('/sounds.json'):
