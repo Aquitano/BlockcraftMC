@@ -13,7 +13,6 @@ join:
   next-match: "<prefix><muted>Ein Platz ist frei. Du spielst im nächsten Match mit."
 round:
   map: "<prefix><muted>Map: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."
-  cancelled: "<prefix><muted>Der Countdown wurde abgebrochen. Es werden zwei Spieler benötigt."
   start: "<prefix><muted>Los geht's auf <accent><map><muted>! Wer zuerst <accent><target> Punkte <muted>erreicht, gewinnt."
   point: "<prefix><accent><player> <muted>punktet! <red>Rot <red_score> <dark>· <blue>Blau <blue_score>"
   forfeit: "<prefix><accent><player> <muted>hat das Match verlassen. Der Gegner gewinnt."

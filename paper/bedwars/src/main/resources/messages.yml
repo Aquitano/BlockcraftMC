@@ -57,9 +57,10 @@ team:
 teams-list:
   header: "<white>▆▆▆▆▆▆▆▆▆▆ <accent><bold>Teams</bold> <white>▆▆▆▆▆▆▆▆▆▆"
   team: "<white>▆ Team <team><white>: <accent><players>"
+  chat: "<prefix><muted>Dein Team liest deine Nachrichten. Mit <accent>@ <muted>vor der Nachricht schreibst du allen."
 
 team-chest:
-  title: "<bedwars>Team Inventar"
+  title: "<bedwars>Teaminventar"
   not-yours: "<prefix><error>Diese Teamkiste gehört nicht deinem Team!"
   destroyed: "<prefix><error>Eine Teamkiste wurde zerstört."
 

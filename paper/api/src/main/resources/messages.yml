@@ -150,7 +150,7 @@ purchase:
   confirm-missing: "<error>Dir fehlen <coins> Coins."
   bought: "<prefix><item> <success>für <accent><coins> Coins <success>freigeschaltet."
   balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
-  too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."
+  too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins<error>, um dir das zu kaufen."
   unavailable: "<error>Du kannst hier gerade nichts kaufen."
 
 login:

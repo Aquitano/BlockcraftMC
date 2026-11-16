@@ -673,6 +673,9 @@ public final class Game implements RoundConnections.Seating {
             Bukkit.broadcast(messages.get("teams-list.team", teamName(team), Placeholder.unparsed("players", names)));
         }
         Bukkit.broadcast(header);
+        if (config.playersPerTeam() > 1) {
+            Bukkit.broadcast(messages.get("teams-list.chat"));
+        }
     }
 
     private void announceOut(Team team) {

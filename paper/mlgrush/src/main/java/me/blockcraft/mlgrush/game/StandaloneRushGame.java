@@ -173,7 +173,7 @@ public final class StandaloneRushGame {
             boolean running = countdown.isRunning();
             countdown.cancel();
             if (running) {
-                Bukkit.broadcast(messages.get("round.cancelled"));
+                Bukkit.broadcast(BlockcraftApi.get().messages().prefixedLike(messages).get("arena.cancelled"));
             }
             var players = round.players();
             for (int slot = 0; slot < players.size(); slot++) {
