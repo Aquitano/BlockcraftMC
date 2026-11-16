@@ -27,7 +27,6 @@ generateAssets("generateKitActors", "actors")
 generateAssets("generateHud", "hud")
 generateAssets("generateStationArt", "stations")
 generateAssets("generateBattle", "battle")
-generateAssets("generateDialogue", "dialogue")
 generateAssets("generateStoryArt", "story")
 generateAssets("generatePresentation", "presentation")
 

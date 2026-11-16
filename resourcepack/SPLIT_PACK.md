@@ -36,7 +36,7 @@ Generation remains a separate explicit operation.
 
 ## Content boundaries
 
-Base contains network icons, cosmetics, menus, shared dialogue and presentation assets, UI sounds, the shared item and text effects,
+Base contains network icons, cosmetics, menus, shared presentation assets, UI sounds, the shared item and text effects,
 and the text shader's corner HUD panels, so every stack can draw a `HudPanel`.
 Menu atlases and mode preview tiles stay shared because network menus use them.
 These images can include Sternenfront previews. They do not activate its HUD.

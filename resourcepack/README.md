@@ -4,8 +4,8 @@ How the proxy serves the pack is in the [root README](../README.md#resource-pack
 
 The [split pack prototype](SPLIT_PACK.md) documents the additional archives, client stack order, and rollout limits.
 
-The [presentation test guide](../paper/api/PRESENTATION.md) covers dialogue portraits, animated materials and text,
-screen effects, and the Sternenfront intro.
+The [presentation test guide](../paper/api/PRESENTATION.md) covers screen effects, gameplay accents, and the Sternenfront
+intro.
 
 ## Edit and validate assets
 
@@ -78,7 +78,7 @@ must verify changed translucency, item framing and physical behavior. [AGENTS.md
   `blockcraft:text` or a deploy line font. `PackArt` writes the letters' advances to
   `paper/api/src/main/resources/text-glyphs.properties`, which `UiFont.width` counts with.
 - **Wide glyphs.** The client packs font glyphs into atlases 256 pixels across and draws a glyph wider than that as a
-  missing-glyph box. `StoryArt` and `DialogueArt` therefore draw their dialogue's 300-pixel panels as left and right halves.
+  missing-glyph box. `StoryArt` therefore draws the story dialogue's 300-pixel panel as left and right halves.
 - **Crosshair marks.** The client centres a subtitle by the advances it measures from each glyph's last inked column, and
   draws a font pixel there two GUI pixels wide. `HudArt` therefore draws the marks, arcs, spread ticks and readiness
   marks at twice the resolution, centred between the middle texels, with a nearly clear texel in each cell's last
@@ -236,18 +236,16 @@ The software contact sheet does not reproduce Minecraft's item renderer.
 
 ## Presentation assets
 
-`DialogueArt.java` generates the original portraits, panel, fonts, and matching Java glyph metrics.
-`PresentationArt.java` generates three effect models and the named post-processing chains. Run
-`:resourcepack:generateDialogue` and `:resourcepack:generatePresentation` to regenerate only those assets.
+`PresentationArt.java` generates the named post-processing chains. Run `:resourcepack:generatePresentation` to
+regenerate only those assets.
 
 The item and text shader overrides preserve Minecraft 26.3's ordinary rendering branches. Exact color markers opt
 into effects. Item markers use RGB `(233, mode, 197)`, where modes 1, 2, and 3 select hologram, plasma, and pulse.
 Each affected model face needs `tintindex: 0`, and each element needs `shade: false` to preserve the marker bytes.
-`VisualEffects.model` supplies that color through the first custom-model-data color. These models are viewer-only.
-Their textures live under `textures/item/presentation`, which Minecraft 26.3 includes in its item atlas.
+`VisualEffects.MaterialEffect` supplies that color through the first custom-model-data color.
 
-Text markers use RGB `(231, mode, 197)`. `TextMotion` selects float, shake, brightness pulse, rainbow, or shine.
-Marked text shadows are suppressed.
+Text markers use RGB `(231, mode, 197)` and select float, shake, brightness pulse, rainbow, or shine. Marked text
+shadows are suppressed. No plugin writes them at present, and the colours stay reserved.
 
 GUI text can also be a HUD panel, which the text shader moves into a corner of the screen and colours from its tint
 table. The table at the top of `hud_panel.glsl` lists every colour the text shader reserves, for panels and text effects
@@ -261,9 +259,8 @@ holds other text, so the server places that panel at the line's middle; `Ability
 check the widths involved. The bottom-right corner lies `HudPanel.BOTTOM_RIGHT_HEIGHT` above the screen's bottom, a full
 column of four tiles, which `HudPanelTest` checks against the shader and `AbilityPanelTest` against the column. Its art has twice the texels of its GUI size, so it keeps detail from GUI scale 2 up; `HudArt`
 writes every icon, ready and recharging, to `build/hud/ability-icons.png` for judging the set.
-Both dialogue panels use the bottom-centre space, which ends `HudPanel.BOTTOM_CENTRE_BOTTOM` above the screen's bottom,
-just over the hearts. The shared panel from `DialogueArt` is 56 or 66 pixels tall, so at the smallest GUI, 240 pixels
-tall, its top stays below the crosshair; `DialogueAssetsTest` checks that and the 256-pixel limit.
+The story dialogue panel uses the bottom-centre space, which ends `HudPanel.BOTTOM_CENTRE_BOTTOM` above the screen's
+bottom, just over the hearts.
 Zombies' weapon panel uses the same corner with `HudArt`'s `blockcraft:zombies/weapon` font, which the modes pack
 carries. It stands on the corner's margin below the column's top, and `WeaponPanelTest` checks its glyphs against the
 font. `HudArt` draws each gun's icon from its pack model in flat colours of the vanilla blocks the model uses, so a
@@ -285,7 +282,7 @@ edge when a later surface overwrites its depth. The comparison stays conservativ
 Atmospheric presets change screen color and distortion. They do not add world lighting, weather simulation, or video
 playback. Cleanup removes only Blockcraft's presentation post-effects and preserves other namespaces.
 Gameplay accents use eight intensity levels under `presentation/accent`. `VisualEffects.accent` controls their
-duration, fade, and cooldown without suspending normal HUD updates. It clears them when a cinematic or dialogue starts.
+duration, fade, and cooldown without suspending normal HUD updates. It clears them when a cinematic starts.
 
 `verify_shaders.py --client <26.3-client.jar> --glslang <validator>` compiles the core variants and post-effect pairs.
 It needs Python 3 and glslangValidator. It does not download dependencies or change the pack. A new Minecraft version
