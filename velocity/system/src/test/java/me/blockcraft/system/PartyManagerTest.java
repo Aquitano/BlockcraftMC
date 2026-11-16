@@ -81,6 +81,21 @@ public class PartyManagerTest {
     }
 
     @Test
+    public void aDeniedInvitationTellsTheLeaderAndCannotBeAcceptedLater() {
+        var leader = proxy.join("Leader");
+        var invited = proxy.join("Invited");
+        choices.set(invited, PlayerSetting.PARTY_INVITES, PlayerSetting.value(true));
+
+        parties.invite(leader, invited);
+        parties.deny(invited);
+
+        assertEquals(messages.get("party.denied"), proxy.received(invited).getLast());
+        assertEquals(messages.get("party.denied-by", Placeholder.unparsed("player", "Invited")), proxy.received(leader).getLast());
+        parties.accept(invited);
+        assertFalse(parties.isInParty(invited.getUniqueId()));
+    }
+
+    @Test
     public void aRefusedInvitationDoesNotCreateAPartyOrSendACreationMessage() {
         var inviter = proxy.join("Inviter");
         var target = proxy.join("Target");

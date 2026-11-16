@@ -33,6 +33,7 @@ public final class PartyCommand {
                 .then(BrigadierCommand.literalArgumentBuilder("list").executes(support.asPlayer((player, context) -> parties.list(player))))
                 .then(BrigadierCommand.literalArgumentBuilder("leave").executes(support.asPlayer((player, context) -> parties.leave(player))))
                 .then(BrigadierCommand.literalArgumentBuilder("accept").executes(support.asPlayer((player, context) -> parties.accept(player))))
+                .then(BrigadierCommand.literalArgumentBuilder("deny").executes(support.asPlayer((player, context) -> parties.deny(player))))
                 .then(BrigadierCommand.literalArgumentBuilder("join")
                         .executes(support.usage("party.join-usage"))
                         .then(support.playerArgument("leader")

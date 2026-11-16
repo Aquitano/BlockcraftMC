@@ -6,6 +6,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ProxyMessage.FriendsReply;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.sound.FeedbackSound;
+import me.blockcraft.system.RequestButtons;
 import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerLookup;
@@ -302,9 +303,9 @@ public final class FriendManager {
         if (choices.enabled(invitee, PlayerSetting.SOUNDS)) {
             invitee.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(invitee)));
         }
-        invitee.sendMessage(messages.get("friends.request-accept", name)
-                .clickEvent(ClickEvent.runCommand("/friend accept " + shownName(requester)))
-                .hoverEvent(HoverEvent.showText(messages.get("friends.request-accept-hover", name))));
+        invitee.sendMessage(RequestButtons.line(messages, "friends.request-buttons",
+                new RequestButtons.Answer("/friend accept " + shownName(requester), messages.get("friends.request-accept-hover", name)),
+                new RequestButtons.Answer("/friend deny " + shownName(requester), messages.get("friends.request-deny-hover", name))));
     }
 
     /** Tells the sender when nobody goes by that name, so every caller can act on a hit alone. */
