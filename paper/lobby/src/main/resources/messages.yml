@@ -132,7 +132,7 @@ navigator:
   jump: "<primary>JumpAndRun"
   description:
     knockbackffa:
-      - "<muted>Mit dem Knockback-Stick jeden von der Insel stoßen."
+      - "<muted>Mit dem Rückstoß-Stick jeden von der Insel stoßen."
       - "<muted>Sofort wieder einsteigen, alle paar Minuten ein neues Kit."
     archive:
       - "<muted>Alte Maps von Blockcraft 2015–16."
@@ -147,7 +147,7 @@ navigator:
       - "<dark>Der Villager akzeptiert keine Ratenzahlung."
     duell:
       - "<muted>Ein Gegner. Ihr bestimmt den Modus."
-      - "<muted>1vs1, SurvivalGames oder SuperJump."
+      - "<muted>1vs1, Survival Games oder SuperJump."
       - "<muted>Gewertet gegen gleich Starke: <accent>/ranked"
       - "<dark>Ausreden bitte erst nach dem Duell einreichen."
     mlgrush:
@@ -359,7 +359,7 @@ premium-menu:
   area: "<arrow><premium>Zum Premiumbereich"
   area-lore: "<bullet><muted>Teleportiere dich zum Premiumbereich!"
   pets: "<arrow><primary>Haustiere"
-  pets-lore: "<bullet><muted>Spawne dein eigenes Pet!"
+  pets-lore: "<bullet><muted>Spawne dein eigenes Haustier!"
 pets:
   title: "<arrow><primary>Haustiere"
   entity-name: "<player>'s Haustier"
@@ -412,7 +412,7 @@ extras:
   gadgets-lore: "<bullet><muted>Enterhaken, TNT-Sprung und mehr!"
   kill-effects: "<arrow><primary>Kill-Effekte"
   kill-effects-lore: "<bullet><muted>Effekte für deine Kills!"
-  win-effects: "<arrow><primary>Win-Effekte"
+  win-effects: "<arrow><primary>Sieges-Effekte"
   win-effects-lore: "<bullet><muted>Effekte für deine Siege!"
   premium: "<arrow><premium>Premium"
   premium-lore: "<bullet><muted>Spuren, Haustiere und der Premiumbereich"
@@ -427,11 +427,11 @@ weapons:
   lore:
     - "<muted>In BedWars, MLG Rush und Knockback FFA."
     - "<muted>Schaden und Rückstoß bleiben unverändert."
-    - "<muted>Ohne Ressourcenpaket siehst du einen Stick."
+    - "<muted>Ohne Ressourcenpaket siehst du den normalen Rückstoß-Stick."
   selected: "<prefix><success>Dein Stick-Aussehen gilt jetzt in allen unterstützten Spielen."
-  reset: "<prefix><muted>Dein Stick sieht wieder normal aus."
+  reset: "<prefix><muted>Dein Rückstoß-Stick sieht wieder normal aus."
   name:
-    stick: "<primary>Stick"
+    stick: "<primary>Rückstoß-Stick"
     bone: "<primary>Knochen"
     blaze-rod: "<primary>Lohenrute"
     feather: "<primary>Feder"
@@ -473,7 +473,7 @@ effects:
       soul: "<aqua>Seelen"
       stardust: "<primary>Sternenstaub"
   win:
-    title: "<arrow><primary>Win-Effekte"
+    title: "<arrow><primary>Sieges-Effekte"
     name:
       fireworks: "<red>Feuerwerk"
       storm: "<accent>Gewitter"
@@ -573,7 +573,7 @@ holo:
     - "<success>Jetzt spielen <dark>· <primary>/play emeraldrush"
   duell:
     - "<dark>● <duell><bold>DUELL</bold> <dark>●"
-    - "<dark>- <muted>1vs1, SurvivalGames oder SuperJump. <dark>-"
+    - "<dark>- <muted>1vs1, Survival Games oder SuperJump. <dark>-"
     - "<success>Jetzt spielen <dark>· <primary>/play duell"
 
 konami:
@@ -626,7 +626,7 @@ activities:
   setup-jump: "<prefix><error>Der Navigator-Zielpunkt fehlt. Setze ihn mit /setspawn jump."
   setup-eggs: "<prefix><error>Nur <found> verschiedene Osterei-Verstecke gesetzt. Benötigt werden <required>."
   setup-egg-duplicate: "<prefix><error><location> teilt sich einen Block mit einem anderen Osterei-Versteck."
-  setup-ready: "<prefix><success>Die Aktivitätspositionen sind eingerichtet. Teste den Teich und den Parcours im Spiel und sichere die Karte mit /map save."
+  setup-ready: "<prefix><success>Die Aktivitätspositionen sind eingerichtet. Teste den Teich und den Parcours im Spiel und sichere die Map mit /map save."
   setup-problems: "<prefix><error>Die Prüfung meldet <count> Einrichtungsfehler."
 fishing:
   rod: "<primary>Teichangel"

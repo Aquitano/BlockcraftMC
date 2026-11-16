@@ -119,7 +119,7 @@ shop:
     pickaxe-1: "<accent>Spitzhacke I"
     pickaxe-2: "<accent>Spitzhacke II"
     pickaxe-3: "<accent>Spitzhacke III"
-    stick: "<error>Knüppel"
+    stick: "<error>Rückstoß-Stick"
     sword-1: "<error>Schwert I"
     sword-2: "<error>Schwert II"
     sword-3: "<error>Schwert III"
@@ -219,7 +219,7 @@ perks:
   chosen: "<prefix><muted>Du hast das Perk <success><perk> <muted>ausgewählt."
   was-reset: "<prefix><muted>Dein Perk <success><group> <muted>wurde zurückgesetzt."
   groups:
-    stick: "<accent>Knüppel"
+    stick: "<accent>Rückstoß-Stick"
     bed-sound: "<accent>Bettabbau-Sound"
     kill-sound: "<accent>Kill-Sound"
     arrow-trail: "<accent>Bogen-Partikel"

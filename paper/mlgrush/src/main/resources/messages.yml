@@ -12,7 +12,7 @@ join:
   spectator: "<prefix><muted>Du schaust diesem Match zu."
   next-match: "<prefix><muted>Ein Platz ist frei. Du spielst im nächsten Match mit."
 round:
-  map: "<prefix><muted>Karte: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."
+  map: "<prefix><muted>Map: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."
   cancelled: "<prefix><muted>Der Countdown wurde abgebrochen. Es werden zwei Spieler benötigt."
   start: "<prefix><muted>Los geht's auf <accent><map><muted>! Wer zuerst <accent><target> Punkte <muted>erreicht, gewinnt."
   point: "<prefix><accent><player> <muted>punktet! <red>Rot <red_score> <dark>· <blue>Blau <blue_score>"
@@ -49,7 +49,7 @@ stats:
     - "<arrow><primary>Siege<dark>: <muted><wins>"
     - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
     - "<arrow><primary>Stürze<dark>: <muted><deaths>"
-    - "<arrow><primary>Münzen<dark>: <muted><points>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
 top:
   separator: "<muted><strikethrough>---------------------------------"
   first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
@@ -62,7 +62,7 @@ menu:
       - "<arrow><primary>Siege<dark>: <muted><wins>"
       - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
       - "<arrow><primary>Stürze<dark>: <muted><deaths>"
-      - "<arrow><primary>Münzen<dark>: <muted><points>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
     global: "<arrow><primary>Globale Stats"
   global-stats:
     title: "<arrow><mlgrush>MLG Rush <dark>· <muted>Globale Stats"
@@ -70,4 +70,4 @@ menu:
     deaths: "<arrow><primary>Stürze"
     kills: "<arrow><primary>Kills"
     losses: "<arrow><primary>Niederlagen"
-    points: "<arrow><primary>Münzen"
+    points: "<arrow><primary>Punkte"
