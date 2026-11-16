@@ -3,8 +3,8 @@ package me.blockcraft.api.notification;
 import me.blockcraft.api.pack.DisplayFont;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.xp.LevelUpEvent;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -21,8 +21,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Predicate;
-import java.util.function.Consumer;
 
 import static me.blockcraft.api.notification.NoticeQueue.Priority;
 
@@ -72,8 +70,6 @@ public final class Notifications implements Listener {
     private final Timing timing;
     private final Map<UUID, State> players = new HashMap<>();
     private BukkitTask task;
-    private Predicate<Player> suspended = ignored -> false;
-    private Consumer<Player> levelUpEffect = ignored -> {};
 
     public Notifications(Plugin plugin, Messages messages, ResourcePacks resourcePacks, Timing timing) {
         this.plugin = plugin;
@@ -81,19 +77,6 @@ public final class Notifications implements Listener {
         this.resourcePacks = resourcePacks;
         this.timing = timing;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    }
-
-    public void suspendWhile(Predicate<Player> predicate) {
-        suspended = predicate;
-    }
-
-    public void levelUpEffect(Consumer<Player> effect) {
-        levelUpEffect = effect;
-    }
-
-    @EventHandler
-    public void onLevelUp(LevelUpEvent event) {
-        levelUpEffect.accept(event.getPlayer());
     }
 
     public void status(Player player, Component message) {
@@ -105,7 +88,7 @@ public final class Notifications implements Listener {
     }
 
     public void feedbackNow(Player player, Component message, long ticks) {
-        if (player.isOnline() && !suspended.test(player)) {
+        if (player.isOnline() && !Scenes.isViewing(player)) {
             var state = state(player);
             long now = now();
             boolean unchanged = message.equals(state.instantBar) && now < state.instantUntil && now - state.barSent < BAR_REFRESH_TICKS;
@@ -120,7 +103,7 @@ public final class Notifications implements Listener {
     }
 
     public void markerNow(Player player, Component marker, long ticks) {
-        if (!player.isOnline() || suspended.test(player)) return;
+        if (!player.isOnline() || Scenes.isViewing(player)) return;
         var state = state(player);
         long now = now();
         state.marker = new Marker(marker, now + Math.clamp(ticks, 1, 1200));
@@ -131,7 +114,7 @@ public final class Notifications implements Listener {
         var state = players.get(player.getUniqueId());
         if (state == null || state.marker == null) return;
         state.marker = null;
-        if (player.isOnline() && !suspended.test(player)) showTitle(player, state, now());
+        if (player.isOnline() && !Scenes.isViewing(player)) showTitle(player, state, now());
         else state.shownMarker = null;
     }
 
@@ -221,7 +204,7 @@ public final class Notifications implements Listener {
                     rewardSound(player, Sounds.LEVEL_UP);
                 }
             }
-            if (suspended.test(player)) {
+            if (Scenes.isViewing(player)) {
                 state.shownBar = null;
                 state.shownTitle = null;
                 state.marker = null;

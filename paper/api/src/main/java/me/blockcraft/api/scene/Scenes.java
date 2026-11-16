@@ -110,12 +110,7 @@ public final class Scenes implements Listener, AutoCloseable {
     private boolean start(Player player, SceneTimeline timeline, PresentationScope resources, Consumer<End> completion) {
         if (resources.closed()) return false;
         if (closed || isViewing(player) || player.isDead() || !player.isOnline() || player.isInsideVehicle()) return false;
-        var api = BlockcraftApi.get();
-        if (api.dialogues().active(player) || api.visuals().active(player)) {
-            player.sendMessage(api.messages().get("presentation.busy"));
-            return false;
-        }
-        api.visuals().clearAccent(player);
+        BlockcraftApi.get().visuals().clearAccent(player);
         var saved = Saved.capture(player);
         var at = timeline.camera().sample(0).in(timeline.world());
         var session = new Session(player, timeline, completion, saved, resources, new PresentationScope(plugin));

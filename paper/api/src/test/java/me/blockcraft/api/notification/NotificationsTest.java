@@ -102,9 +102,6 @@ public class NotificationsTest {
             tick.set(50);
             frame.get().run();
             assertEquals(null, current.get());
-            notices.suspendWhile(ignored -> true);
-            notices.markerNow(player, hit, 6);
-            assertEquals(null, current.get());
             notices.close();
         } finally {
             serverField.set(null, previous);
@@ -160,9 +157,6 @@ public class NotificationsTest {
             frame.get().run();
             assertEquals(hud, bars.getLast());
             assertEquals(List.of(objective), titles);
-            notices.suspendWhile(ignored -> true);
-            notices.feedbackNow(player, hit, 6);
-            assertEquals(hud, bars.getLast());
             notices.close();
         } finally {
             serverField.set(null, previous);
