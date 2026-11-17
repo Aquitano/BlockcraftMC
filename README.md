@@ -489,10 +489,10 @@ The Discord bot lives outside this repository and shares the table `bc_discord_l
 
 ## Resource pack
 
-`resourcepack/src` holds the accepted client assets. `stagePlugins` packages the four
-[pack layers](resourcepack/SPLIT_PACK.md) next to the proxy plugin. The lobby receives base and lobby, ordinary games
-receive base and modes, and Sternenfront and story games receive base and Star Wars. Replays receive their recorded
-game's layers. `resource-pack.groups` in the proxy's `config.yml` holds this mapping.
+`resourcepack/src` holds the accepted client assets. `stagePlugins` packages the two
+[pack layers](resourcepack/SPLIT_PACK.md) next to the proxy plugin. The lobby and ordinary games receive base, so moving
+between them loads nothing, and Sternenfront and story games add Star Wars. Replays receive their recorded game's
+layers. `resource-pack.groups` in the proxy's `config.yml` holds this mapping.
 The proxy hashes and serves each `blockcraft-<name>.zip` at startup, and offers it at `resource-pack.base-url` plus that
 file name. Changed layers need staging and a proxy restart. The client downloads a layer again when its hash changes.
 

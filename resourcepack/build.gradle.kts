@@ -74,7 +74,7 @@ val packSplit = tasks.register<Exec>("packSplit") {
     inputs.dir(packSource)
     inputs.file("split_pack.py")
     inputs.files(fileTree(packSource.parentFile.parentFile) { include("CREDITS.md") })
-    outputs.files(listOf("base", "lobby", "modes", "starwars").map {
+    outputs.files(listOf("base", "starwars").map {
         target.map { directory -> directory.file("blockcraft-$it.zip") }
     })
     outputs.file(target.map { it.file("split-report.json") })

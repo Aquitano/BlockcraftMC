@@ -68,7 +68,6 @@ public final class NetworkPack {
     private final Duration wait;
     private final int downloadRetries;
     private final Map<String, List<String>> groups;
-    private final List<String> defaultAddons;
     private final Function<String, Optional<String>> groupOf;
     private final Messages messages;
     private final Logger logger;
@@ -81,7 +80,6 @@ public final class NetworkPack {
         this.wait = Duration.ofSeconds(config.waitSeconds());
         this.downloadRetries = config.downloadRetries();
         this.groups = config.groups();
-        this.defaultAddons = config.defaultAddons();
         this.groupOf = groupOf;
         this.messages = messages;
         this.logger = logger;
@@ -96,7 +94,6 @@ public final class NetworkPack {
             }
             var names = new LinkedHashSet<String>();
             names.add("base");
-            names.addAll(config.defaultAddons());
             config.groups().values().forEach(names::addAll);
             if (names.stream().anyMatch(name -> !name.matches("[a-z][a-z0-9-]*"))) {
                 throw new IllegalArgumentException("Resource pack names must be lowercase letters, digits and dashes");
@@ -168,16 +165,15 @@ public final class NetworkPack {
     }
 
     private Optional<Set<UUID>> selection(String destination, Client client) {
-        return groupOf.apply(destination).flatMap(group -> {
-            var names = groups.getOrDefault(group, defaultAddons);
+        return groupOf.apply(destination).map(group -> {
+            var names = groups.getOrDefault(group, List.of());
             if (names.isEmpty() && group.equals(client.replayGroup) && !group.equals(client.replayGame)) {
-                names = groups.getOrDefault(client.replayGame, defaultAddons);
+                names = groups.getOrDefault(client.replayGame, List.of());
             }
-            if (names.isEmpty()) return Optional.empty();
             var ids = new LinkedHashSet<UUID>();
             ids.add(ID);
             names.forEach(name -> ids.add(packId(name)));
-            return Optional.of(java.util.Collections.unmodifiableSet(ids));
+            return java.util.Collections.unmodifiableSet(ids);
         });
     }
 

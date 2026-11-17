@@ -83,13 +83,13 @@ public class NetworkPackTest {
     @Test
     public void aJoiningPlayerWaitsUntilTheirClientHasLoadedEveryPack() throws Exception {
         var pack = pack(60);
-        var joined = configure(pack, "lobby");
+        var joined = configure(pack, "sternenfront");
         pack.onStatus(new PlayerResourcePackStatusEvent(player, PACK, Status.ACCEPTED, null));
         pack.onStatus(new PlayerResourcePackStatusEvent(player, PACK, Status.DOWNLOADED, null));
         pack.onStatus(new PlayerResourcePackStatusEvent(player, UUID.randomUUID(), Status.SUCCESSFUL, null));
         success(pack, PACK);
-        assertFalse("still loading the lobby addon", joined.get());
-        success(pack, addon("lobby"));
+        assertFalse("still loading the Star Wars addon", joined.get());
+        success(pack, addon("starwars"));
         assertTrue("loaded", joined.get());
     }
 
@@ -145,7 +145,6 @@ public class NetworkPackTest {
         var pack = pack(1);
         var joined = configure(pack, "lobby");
         success(pack, PACK);
-        success(pack, addon("lobby"));
         assertTrue(joined.get());
         var closed = pack(1);
         var released = configure(closed, "lobby");
@@ -156,10 +155,8 @@ public class NetworkPackTest {
 
     @Test
     public void aMissingArchiveBlocksEntry() throws Exception {
-        for (var name : List.of("base", "lobby", "modes")) {
-            Files.writeString(folder.getRoot().toPath().resolve("blockcraft-" + name + ".zip"), name);
-        }
-        configure(start(config(60, 0, List.of("lobby"), 0)), "lobby");
+        Files.writeString(folder.getRoot().toPath().resolve("blockcraft-base.zip"), "base");
+        configure(start(config(60, 0, 0)), "lobby");
         assertTrue(disconnected.isDone());
         assertEquals(0, offers.get());
     }
@@ -181,40 +178,28 @@ public class NetworkPackTest {
         assertFalse("the active session is still loading its pack", joined.get());
 
         success(pack, PACK);
-        success(pack, addon("lobby"));
         assertTrue("the active session loaded its pack", joined.get());
     }
 
     @Test
-    public void lobbyAndModesRemoveOnlyUnneededAddonsAfterArrival() throws Exception {
+    public void lobbyAndOrdinaryGamesShareTheBasePackWithoutLoadingAgain() throws Exception {
         var pack = pack(60);
         var joined = configure(pack, "lobby");
-        assertEquals(List.of(PACK, addon("lobby")), offered);
-        for (var name : List.of("base", "lobby")) {
-            var info = offeredPacks.get(name.equals("base") ? PACK : addon(name));
-            assertEquals("http://localhost/blockcraft-" + name + ".zip", info.getUrl());
-            assertArrayEquals(java.security.MessageDigest.getInstance("SHA-1").digest(name.getBytes(StandardCharsets.UTF_8)),
-                    info.getHash());
-        }
+        assertEquals(List.of(PACK), offered);
+        var info = offeredPacks.get(PACK);
+        assertEquals("http://localhost/blockcraft-base.zip", info.getUrl());
+        assertArrayEquals(java.security.MessageDigest.getInstance("SHA-1").digest("base".getBytes(StandardCharsets.UTF_8)),
+                info.getHash());
         success(pack, PACK);
-        success(pack, addon("lobby"));
         assertTrue(joined.get());
         arrive(pack, "lobby");
-        var modes = configure(pack, "bedwars");
-        assertTrue(removed.isEmpty());
-        success(pack, addon("modes"));
-        assertTrue(modes.get());
+        assertTrue(configure(pack, "bedwars").get());
         arrive(pack, "bedwars");
-        assertEquals(java.util.Set.of(addon("lobby")), java.util.Set.copyOf(removed));
+        assertEquals(List.of(PACK), offered);
+        assertTrue(removed.isEmpty());
         pack.onStatus(new PlayerResourcePackStatusEvent(player, addon("starwars"), Status.DISCARDED, null));
         pack.onStatus(new PlayerResourcePackStatusEvent(player, addon("starwars"), Status.SUCCESSFUL, null));
         assertFalse(disconnected.isDone());
-        var returning = configure(pack, "lobby");
-        pack.onStatus(new PlayerResourcePackStatusEvent(player, addon("lobby"), Status.DISCARDED, null));
-        assertFalse(disconnected.isDone());
-        assertFalse(returning.get());
-        success(pack, addon("lobby"));
-        assertTrue(returning.get());
     }
 
     @Test
@@ -231,35 +216,29 @@ public class NetworkPackTest {
         assertTrue(configure(pack, "sternenfront-2").get());
         assertEquals(List.of(PACK, addon("starwars")), offered);
         arrive(pack, "sternenfront-2");
-        var lobby = configure(pack, "lobby");
-        success(pack, addon("lobby"));
-        assertTrue(lobby.get());
+        assertTrue(configure(pack, "lobby").get());
         arrive(pack, "lobby");
         assertEquals(List.of(addon("starwars")), removed);
-        assertEquals(List.of(PACK, addon("starwars"), addon("lobby")), offered);
         var backToStarWars = configure(pack, "sternenfront");
         assertFalse(backToStarWars.get());
         success(pack, addon("starwars"));
         assertTrue(backToStarWars.get());
         arrive(pack, "sternenfront");
-        assertEquals(List.of(addon("starwars"), addon("lobby")), removed);
-        var returning = configure(pack, "lobby");
-        success(pack, addon("lobby"));
-        assertTrue(returning.get());
+        assertEquals(List.of(addon("starwars")), removed);
+        assertTrue(configure(pack, "lobby").get());
         arrive(pack, "lobby");
-        assertEquals(List.of(PACK, addon("starwars"), addon("lobby"), addon("starwars"), addon("lobby")), offered);
+        assertEquals(List.of(addon("starwars"), addon("starwars")), removed);
+        assertEquals(List.of(PACK, addon("starwars"), addon("starwars")), offered);
     }
 
     @Test
     public void lobbyRemovesStarWarsOnlyAfterArrival() throws Exception {
-        var pack = pack(60, 0, List.of("lobby"));
+        var pack = pack(60);
         configure(pack, "sternenfront");
         success(pack, PACK);
         success(pack, addon("starwars"));
         arrive(pack, "sternenfront");
-        var lobby = configure(pack, "lobby");
-        success(pack, addon("lobby"));
-        assertTrue(lobby.get());
+        assertTrue(configure(pack, "lobby").get());
         assertTrue(removed.isEmpty());
         arrive(pack, "lobby");
         assertEquals(List.of(addon("starwars")), removed);
@@ -272,7 +251,6 @@ public class NetworkPackTest {
         var latest = configure(pack, "bedwars");
         assertTrue(old.get());
         success(pack, PACK);
-        success(pack, addon("modes"));
         assertTrue(latest.get());
         arrive(pack, "sternenfront");
         assertTrue(removed.isEmpty());
@@ -314,35 +292,36 @@ public class NetworkPackTest {
     }
 
     @Test
-    public void splitReplayEntryIsExplicitlyBlockedUntilItsOriginIsKnown() throws Exception {
+    public void aReplayWithoutAKnownOriginLoadsTheBasePack() throws Exception {
         var pack = pack(60);
-        assertTrue(configure(pack, "replay").get());
-        assertTrue(disconnected.isDone());
-        assertTrue(offered.isEmpty());
+        var joined = configure(pack, "replay");
+        assertEquals(List.of(PACK), offered);
+        success(pack, PACK);
+        assertTrue(joined.get());
+        assertFalse(disconnected.isDone());
     }
 
     @Test
     public void replayLoadsItsRecordedGameAndCanSwitchProfilesBeforePlayback() throws Exception {
         var pack = pack(60);
-        pack.replay(player, "replay", "sternenfront");
+        pack.replay(player, "replay", "bedwars");
         var joined = configure(pack, "replay");
-        assertEquals(List.of(PACK, addon("starwars")), offered);
+        assertEquals(List.of(PACK), offered);
         success(pack, PACK);
-        success(pack, addon("starwars"));
         assertTrue(joined.get());
         arrive(pack, "replay");
-        var next = pack.prepareReplay(player, "bedwars");
+        var next = pack.prepareReplay(player, "sternenfront");
         assertFalse(next.isDone());
-        assertTrue(removed.isEmpty());
-        success(pack, addon("modes"));
+        success(pack, addon("starwars"));
         assertTrue(next.get());
+        assertEquals(List.of(PACK, addon("starwars")), offered);
+        assertTrue(pack.prepareReplay(player, "bedwars").get());
         assertEquals(List.of(addon("starwars")), removed);
-        assertEquals(List.of(PACK, addon("starwars"), addon("modes")), offered);
     }
 
     @Test
     public void transientDownloadFailureRetriesWithoutReleasingEntry() throws Exception {
-        var pack = pack(60, 0, List.of("lobby"), 1);
+        var pack = pack(60, 0, 1);
         var joined = configure(pack, "sternenfront");
         success(pack, PACK);
         pack.onStatus(new PlayerResourcePackStatusEvent(player, addon("starwars"), Status.FAILED_DOWNLOAD, null));
@@ -355,7 +334,7 @@ public class NetworkPackTest {
 
     @Test
     public void repeatedDownloadFailureStopsAtTheConfiguredRetryLimit() throws Exception {
-        var pack = pack(60, 0, List.of("lobby"), 1);
+        var pack = pack(60, 0, 1);
         configure(pack, "sternenfront");
         var failed = new PlayerResourcePackStatusEvent(player, addon("starwars"), Status.FAILED_DOWNLOAD, null);
         pack.onStatus(failed);
@@ -372,7 +351,7 @@ public class NetworkPackTest {
         }
         var pack = pack(60, port);
         try (var client = java.net.http.HttpClient.newHttpClient()) {
-            for (var name : List.of("base", "lobby", "modes", "starwars")) {
+            for (var name : List.of("base", "starwars")) {
                 var request = java.net.http.HttpRequest.newBuilder(java.net.URI.create(
                         "http://localhost:" + port + "/blockcraft-" + name + ".zip")).build();
                 var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -389,24 +368,19 @@ public class NetworkPackTest {
     }
 
     private NetworkPack pack(int waitSeconds, int port) throws Exception {
-        return pack(waitSeconds, port, List.of("lobby"));
+        return pack(waitSeconds, port, 0);
     }
 
-    private NetworkPack pack(int waitSeconds, int port, List<String> lobbyPacks) throws Exception {
-        return pack(waitSeconds, port, lobbyPacks, 0);
-    }
-
-    private NetworkPack pack(int waitSeconds, int port, List<String> lobbyAddons, int retries) throws Exception {
-        for (var name : List.of("base", "lobby", "modes", "starwars")) {
+    private NetworkPack pack(int waitSeconds, int port, int retries) throws Exception {
+        for (var name : List.of("base", "starwars")) {
             Files.writeString(folder.getRoot().toPath().resolve("blockcraft-" + name + ".zip"), name);
         }
-        return start(config(waitSeconds, port, lobbyAddons, retries));
+        return start(config(waitSeconds, port, retries));
     }
 
-    private static SystemConfig.ResourcePack config(int waitSeconds, int port, List<String> lobbyAddons, int retries) {
+    private static SystemConfig.ResourcePack config(int waitSeconds, int port, int retries) {
         return new SystemConfig.ResourcePack(java.net.URI.create("http://localhost/"), port, waitSeconds, retries,
-                Map.of("lobby", lobbyAddons, "sternenfront", List.of("starwars"), "replay", List.of()),
-                List.of("modes"));
+                Map.of("sternenfront", List.of("starwars"), "replay", List.of()));
     }
 
     private static UUID addon(String name) {

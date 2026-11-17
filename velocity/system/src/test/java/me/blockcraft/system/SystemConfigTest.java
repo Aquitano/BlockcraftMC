@@ -29,9 +29,8 @@ public class SystemConfigTest {
         var file = folder.getRoot().toPath().resolve("config.yml");
         var defaults = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml")).resourcePack();
         assertEquals(URI.create("http://localhost:8080/"), defaults.baseUrl());
-        assertEquals(Map.of("lobby", List.of("lobby"), "sternenfront", List.of("starwars"), "story", List.of("starwars"),
-                "replay", List.of()), defaults.groups());
-        assertEquals(List.of("modes"), defaults.defaultAddons());
+        assertEquals(Map.of("sternenfront", List.of("starwars"), "story", List.of("starwars"), "replay", List.of()),
+                defaults.groups());
         var production = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"),
                 Map.of("BLOCKCRAFT_RESOURCE_PACK_BASE_URL", "https://mc.example.net/packs")).resourcePack();
         assertEquals(URI.create("https://mc.example.net/packs/"), production.baseUrl());

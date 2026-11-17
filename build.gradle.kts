@@ -177,7 +177,7 @@ tasks.register<Sync>("stagePlugins") {
         into("velocity/luckperms")
     }
     from(project(":resourcepack").tasks.named("packSplit")) {
-        include("blockcraft-base.zip", "blockcraft-lobby.zip", "blockcraft-modes.zip", "blockcraft-starwars.zip")
+        include("blockcraft-base.zip", "blockcraft-starwars.zip")
         into("velocity/blockcraft-system")
     }
     from(project(":waker").tasks.named("jar")) {

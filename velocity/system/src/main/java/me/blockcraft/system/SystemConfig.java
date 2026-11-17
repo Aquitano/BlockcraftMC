@@ -76,12 +76,13 @@ public final class SystemConfig {
     }
 
     /**
-     * Clients load the base archive and their server group's addons, each {@code blockcraft-<name>.zip} in the plugin
-     * directory and at {@code baseUrl}; {@code port} 0 serves nothing. A group with no addons (replay) takes those of
-     * the recorded game's group. A joining player waits at most {@code waitSeconds} for their client to load them.
+     * Clients load the base archive and the addons {@code groups} lists for their server group, each
+     * {@code blockcraft-<name>.zip} in the plugin directory and at {@code baseUrl}; {@code port} 0 serves nothing. A
+     * group listed with no addons (replay) takes those of the recorded game's group. A joining player waits at most
+     * {@code waitSeconds} for their client to load them.
      */
     public record ResourcePack(URI baseUrl, int port, int waitSeconds, int downloadRetries,
-                               Map<String, List<String>> groups, List<String> defaultAddons) {
+                               Map<String, List<String>> groups) {
     }
 
     /** {@code groups} are the server groups that see a first join announced and count greetings for it. */
@@ -175,8 +176,7 @@ public final class SystemConfig {
         this.resourcePack = new ResourcePack(URI.create(packBaseUrl.endsWith("/") ? packBaseUrl : packBaseUrl + "/"),
                 resourcePack.integer("port"), Math.max(1, resourcePack.integer("wait-seconds")),
                 Math.clamp(resourcePack.integer("download-retries"), 0, 3),
-                packGroups.keys().stream().collect(Collectors.toUnmodifiableMap(group -> group, packGroups::texts)),
-                resourcePack.texts("default-addons"));
+                packGroups.keys().stream().collect(Collectors.toUnmodifiableMap(group -> group, packGroups::texts)));
         this.maxWarns = root.integer("max-warns");
         this.maxStrikes = root.integer("max-strikes");
         this.autoBroadcastMinutes = root.integer("auto-broadcast-minutes");

@@ -22,10 +22,9 @@ class SplitPackTest(unittest.TestCase):
             effective = {key: value for layer in stack for key, value in self.packs[layer].items()}
             actual = json.loads(effective[path])
             self.assertEqual(actual['model'].get('fallback', actual['model']), original['model']['fallback'])
-        self.assertEqual(STACKS['lobby'], ('base', 'lobby'))
 
     def test_empty_selectors_use_vanilla_fallback(self):
-        path = 'assets/minecraft/items/blaze_rod.json'
+        path = 'assets/minecraft/items/netherite_sword.json'
         original = json.loads(self.files[path])
         self.assertEqual(json.loads(self.packs['base'][path])['model'], original['model']['fallback'])
 
@@ -50,17 +49,17 @@ class SplitPackTest(unittest.TestCase):
     def test_new_objectives_and_imported_furniture_follow_profile(self):
         for kind in ('models/item', 'items', 'textures/item'):
             self.assertEqual(owner(f'assets/blockcraft/{kind}/sternenfront/objectives/comms_console.json'), 'starwars')
-            self.assertEqual(owner(f'assets/blockcraft/{kind}/props/imported/halloween/new_prop.json'), 'lobby')
-        self.assertEqual(owner('assets/blockcraft/font/zombies/weapon.json'), 'modes')
+            self.assertEqual(owner(f'assets/blockcraft/{kind}/props/imported/halloween/new_prop.json'), 'base')
+        self.assertEqual(owner('assets/blockcraft/font/zombies/weapon.json'), 'base')
 
-    def test_lobby_and_starwars_selectors_keep_only_their_own_cases(self):
+    def test_starwars_selectors_add_their_cases_to_the_base_ones(self):
         item = 'assets/minecraft/items/paper.json'
         shader = 'assets/minecraft/shaders/core/text.vsh'
         fixtures = {'pack.mcmeta': self.files['pack.mcmeta'], shader: self.files[shader]}
         fixtures.update({path: data for path, data in self.files.items()
                          if '/shaders/include/' in path})
         cases = []
-        for name, model in (('base', 'item/shared'), ('lobby', 'item/props/market/test'),
+        for name, model in (('base', 'item/shared'), ('props', 'item/props/market/test'),
                             ('starwars', 'item/sternenfront/objectives/test')):
             fixtures[f'assets/blockcraft/models/{model}.json'] = encoded({'parent': 'minecraft:item/generated'})
             cases.append({'when': f'blockcraft:{name}/test', 'model': {
@@ -76,9 +75,8 @@ class SplitPackTest(unittest.TestCase):
                 target.write_bytes(data)
             files, packs = build(source)
         verify(files, packs)
-        self.assertEqual(json.loads(packs['lobby'][item])['model']['cases'], cases[:2])
-        self.assertEqual(json.loads(packs['starwars'][item])['model']['cases'], [cases[0], cases[2]])
-        self.assertEqual(json.loads(packs['base'][item])['model']['cases'], [cases[0]])
+        self.assertEqual(json.loads(packs['base'][item])['model']['cases'], cases[:2])
+        self.assertEqual(json.loads(packs['starwars'][item])['model']['cases'], cases)
 
 
 if __name__ == '__main__':

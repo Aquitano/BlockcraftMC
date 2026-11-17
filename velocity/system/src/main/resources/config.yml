@@ -62,7 +62,7 @@ alerts:
   lag-polls: 6
 
 # The network resource pack (README "Resource pack"): every client loads base and the addons its server group lists
-# under groups, or default-addons for any other group. Each archive is blockcraft-<name>.zip in this plugin's
+# under groups; a group not listed loads base alone. Each archive is blockcraft-<name>.zip in this plugin's
 # directory, hashed at startup and served at http://<this proxy>:<port>/<file>; base-url is where clients reach those
 # files, or wherever else the same files are hosted, then port 0 serves nothing. BLOCKCRAFT_RESOURCE_PACK_BASE_URL
 # overrides base-url. Every selected archive must finish applying before entry; declining, failing or exceeding
@@ -75,11 +75,9 @@ resource-pack:
   download-retries: 1
   # A replay's empty list takes the addons of the recorded game's group.
   groups:
-    lobby: [lobby]
     sternenfront: [starwars]
     story: [starwars]
     replay: []
-  default-addons: [modes]
 
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100

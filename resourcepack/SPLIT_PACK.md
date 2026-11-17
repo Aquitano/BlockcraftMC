@@ -1,26 +1,26 @@
 # Resource pack layers
 
 The builder packages existing generated assets. It does not run art generators or change the proxy runtime.
-The base archive carries the pack's credits. The four archives use the following stacks, listed from lowest to highest
+The base archive carries the pack's credits. The two archives use the following stacks, listed from lowest to highest
 client priority.
 
 | Destination | Archives |
 | --- | --- |
-| Lobby | `blockcraft-base.zip`, `blockcraft-lobby.zip` |
-| Other games | `blockcraft-base.zip`, `blockcraft-modes.zip` |
+| Lobby and the other games | `blockcraft-base.zip` |
 | Sternenfront and story games | `blockcraft-base.zip`, `blockcraft-starwars.zip` |
 
-Minecraft replaces item definition files as a whole. Each profile contains the base selector cases and only its own model cases.
-The original vanilla fallback and item definition options survive in every profile.
-The lobby archive resolves without the Star Wars archive.
-Loading modes together with lobby or Star Wars is unsupported.
-A transition must remove the previous profile packs. Keeping an old pack loaded can retain its shaders and item routes.
+A client moving between the lobby and the other games keeps its pack, so only entering or leaving a Sternenfront or story
+game reloads the client's resources.
+Minecraft replaces item definition files as a whole. The Star Wars archive's item definitions contain the base selector
+cases and its own. The original vanilla fallback and item definition options survive in both.
+The base archive resolves without the Star Wars archive.
+Leaving a Star Wars game must remove its archive. Keeping it loaded can retain its shaders and item routes.
 
 ## Build and check
 
 Run `./gradlew :resourcepack:build` with Java 25 to check and package this checkout.
 The archives are in `resourcepack/build/split`.
-Root `stagePlugins` stages the four ZIPs into `build/docker/velocity/blockcraft-system`.
+Root `stagePlugins` stages both ZIPs into `build/docker/velocity/blockcraft-system`.
 The split report stays in the build directory.
 
 To check another generated source tree without modifying it:
@@ -40,10 +40,10 @@ Base contains network icons, cosmetics, menus, shared presentation assets, UI so
 and the text shader's corner HUD panels, so every stack can draw a `HudPanel`.
 Menu atlases and mode preview tiles stay shared because network menus use them.
 These images can include Sternenfront previews. They do not activate its HUD.
+Base also contains the furniture under `props`, including imported market, Halloween, and quest sets, since the shared
+waiting lobby places some of it, and TTT, Zombies and the other gameplay weapons.
 
-Lobby contains furniture under `props`, including imported market, Halloween, and quest sets.
 The `props/starwars` subtree belongs to Star Wars.
-Modes contains TTT, Zombies, and other gameplay weapons under `weapons`, and the fonts and font textures under a `zombies` directory.
 Star Wars contains all `sternenfront`, `deploy`, and `battle` subtrees, imported Star Wars props, and BetterModel assets.
 New `sternenfront/objectives` models, item routes, and textures follow this rule without enumeration.
 All current BetterModel output is Sternenfront or imported Star Wars creatures. A future non-Star-Wars rig needs a new ownership rule.
@@ -57,7 +57,7 @@ Shared inventory slot highlight blanks remain in base.
 
 Every source file must occur in at least one split archive.
 Checks resolve item models, model parents and textures, bitmap and reference fonts, sound files, shader includes, post-effect shaders, and texture metadata against each effective stack.
-They reject missing custom dependencies, forbidden profile files, changed vanilla item fallbacks, lost selector cases, and boss-bar blanks or rigs in base or modes.
+They reject missing custom dependencies, forbidden profile files, changed vanilla item fallbacks, lost selector cases, and boss-bar blanks or rigs in base.
 `split-report.json` lists unresolved vanilla resources separately.
 Model texture variables and renderer semantics still depend on Minecraft.
 
@@ -70,7 +70,7 @@ Nexo and BetterModel server configuration remain staged through their existing t
 No art, imported source files, or rig files are regenerated.
 
 The lobby and ordinary games receive none of the Star Wars boss-bar blanks.
-The proxy maps server groups to addons in `resource-pack.groups` and offers every archive at
+The proxy maps server groups to addons in `resource-pack.groups`, where a group not listed loads base alone, and offers every archive at
 `resource-pack.base-url` plus its file name; `BLOCKCRAFT_RESOURCE_PACK_BASE_URL` overrides the base URL.
 Startup needs base and every addon the groups name.
 The base keeps the shared readiness UUID. Addons have separate UUIDs; configuration waits for every selected pack,
@@ -78,12 +78,12 @@ and successful arrival removes obsolete addons. A failed download is retried up 
 loading deadline. Refusal, exhausted retries, a failed reload, or timeout blocks entry. Automatic lobby recovery is not implemented.
 Replay transfers carry the recording's original game to the proxy. The replay backend requests that game's profile
 and waits for acknowledgement before playback, including when switching recordings on the same backend.
-An unknown replay origin remains blocked.
+A replay whose origin is unknown loads base alone.
 
 ## Production rollout
 
 The bundled `resource-pack` section is the production configuration; the proxy needs only
-`RESOURCE_PACK_BASE_URL` in `.env`. All four archives must be reachable under it before players reconnect.
+`RESOURCE_PACK_BASE_URL` in `.env`. Both archives must be reachable under it before players reconnect.
 The existing Caddy reverse proxy forwards every pack path to the proxy's HTTP port.
 
 Stage a complete candidate with `./gradlew stagePlugins -PstageDirectory=/absolute/path/to/candidate -PnexoJar=/path/to/Nexo.jar`.

@@ -261,7 +261,7 @@ column of four tiles, which `HudPanelTest` checks against the shader and `Abilit
 writes every icon, ready and recharging, to `build/hud/ability-icons.png` for judging the set.
 The story dialogue panel uses the bottom-centre space, which ends `HudPanel.BOTTOM_CENTRE_BOTTOM` above the screen's
 bottom, just over the hearts.
-Zombies' weapon panel uses the same corner with `HudArt`'s `blockcraft:zombies/weapon` font, which the modes pack
+Zombies' weapon panel uses the same corner with `HudArt`'s `blockcraft:zombies/weapon` font, which the base pack
 carries. It stands on the corner's margin below the column's top, and `WeaponPanelTest` checks its glyphs against the
 font. `HudArt` draws each gun's icon from its pack model in flat colours of the vanilla blocks the model uses, so a
 changed gun model needs `assets.py generate hud`.

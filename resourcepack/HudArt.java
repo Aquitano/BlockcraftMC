@@ -891,7 +891,7 @@ public final class HudArt {
     }
 
     /**
-     * Zombies' weapon panel in the modes pack's {@code blockcraft:zombies/weapon} font: a backing and a frame the shader
+     * Zombies' weapon panel in the base pack's {@code blockcraft:zombies/weapon} font: a backing and a frame the shader
      * tints, each gun's side drawn from its pack model at twice the resolution, the clip in the cooldown's digits, the
      * reserve in the stored uses' digits after a slash, and the magazine bar's track and fills. Every glyph hangs from
      * the line's top, and Zombies' {@code WeaponPanel} counts the widths written here.

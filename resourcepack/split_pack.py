@@ -6,9 +6,8 @@ import re
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
-PROFILES = ('base', 'lobby', 'modes', 'starwars')
-STACKS = {'base': ('base',), 'lobby': ('base', 'lobby'),
-          'modes': ('base', 'modes'), 'starwars': ('base', 'starwars')}
+PROFILES = ('base', 'starwars')
+STACKS = {'base': ('base',), 'starwars': ('base', 'starwars')}
 HUD_TEXTURES = ('ability_', 'minimap_', 'combat_', 'crosshair_', 'damage_arcs',
                 'readiness', 'spread_ticks', 'objective_pips', 'hits', 'overlay_sternenfront_')
 
@@ -38,11 +37,6 @@ def owner(path):
         return 'starwars'
     if 'target_outline' in name:
         return 'starwars'
-    if 'props' in parts:
-        return 'lobby'
-    if kind in ('models', 'textures', 'items', 'font') and any(
-            part in ('ttt', 'zombies', 'weapons') for part in parts[3:]):
-        return 'modes'
     return 'base'
 
 
@@ -168,7 +162,7 @@ def verify(files, packs):
                          if {owner(ref) for ref in references(path, encoded({'model': case['model']}))} <= allowed]
                 model = dict(expected['model'], cases=cases) if cases else expected['model']['fallback']
                 assert actual['model'] == model, f'{profile}: lost item cases or fallback in {path}'
-        if profile in ('base', 'modes'):
+        if profile == 'base':
             assert not any('/boss_bar/' in p or '/bettermodel/' in p for p in effective)
             for path, data in effective.items():
                 if path.endswith('/sounds.json'):
