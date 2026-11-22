@@ -102,8 +102,7 @@ public final class TttPlugin extends JavaPlugin {
     /**
      * Schattenbach and every imported map of the pool. Schattenbach is built now, because building it takes seconds
      * that a round start must not stall for; the imported maps are only copied into place, and loading one takes a
-     * fraction of that. A map whose copy fails stays out of the vote. TTT 2 plays only Schattenbach, the one map with
-     * chores.
+     * fraction of that. A map whose copy fails stays out of the vote. TTT 2 plays only the maps with chores.
      */
     private List<MapVote.Choice> choices(TttConfig config, TttMode mode) {
         var choices = new ArrayList<MapVote.Choice>();
@@ -113,15 +112,15 @@ public final class TttPlugin extends JavaPlugin {
         playable(builtWorld, config);
         var built = TownBuilder.build(builtWorld);
         choices.add(new MapVote.Choice(TownBuilder.KEY, built.name(), List.of(), Material.BELL, () -> built));
-        if (mode == TttMode.TASKS) {
-            return choices;
-        }
         var pool = new TownMaps(BlockcraftApi.get().map().file(this, "maps"), getSLF4JLogger());
         var arenas = new TemplateDimensions(NAMESPACE, world -> {
             Worlds.settle(world);
             playable(world, config);
         });
         for (var map : pool.maps()) {
+            if (mode == TttMode.TASKS && map.tasks().isEmpty()) {
+                continue;
+            }
             try {
                 arenas.copy(pool.world(map.key()), map.key());
                 choices.add(new MapVote.Choice(map.key(), map.name(), map.builders(), map.icon(), () -> map.in(arenas.load(map.key()))));

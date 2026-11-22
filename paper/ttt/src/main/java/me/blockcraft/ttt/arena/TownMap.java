@@ -14,15 +14,17 @@ import java.util.Optional;
 
 /**
  * An imported map of the pool, as its {@code map.yml} describes it: what the vote shows, where players start and
- * spectators watch, the square the world border keeps everyone in, and the parts of its tester. The map's chests
- * and ender chests need no entry, because every one of them takes part.
+ * spectators watch, the square the world border keeps everyone in, the parts of its tester, its traitor doors and,
+ * for TTT 2, its chores. The map's chests and ender chests need no entry, because every one of them takes part, and
+ * neither do the wooden doors and lights a sabotage reaches, which are every one inside the border.
  */
 public record TownMap(String key, String name, List<String> builders, Material icon, List<Point> spawns,
-                      Point spectator, Border border, TesterParts tester) {
+                      Point spectator, Border border, TesterParts tester, List<Spot> traitorDoors, Optional<TaskParts> tasks) {
 
     public TownMap {
         builders = List.copyOf(builders);
         spawns = List.copyOf(spawns);
+        traitorDoors = List.copyOf(traitorDoors);
     }
 
     /** A square of {@code size} blocks round {@code x}/{@code z}. */
@@ -52,6 +54,65 @@ public record TownMap(String key, String name, List<String> builders, Material i
     public record TrapParts(Spot button, Box floor) {
     }
 
+    /** TTT 2's chores on this map and the {@code generator} where a blackout is mended. */
+    public record TaskParts(Spot generator, List<ChoreParts> chores) {
+
+        public TaskParts {
+            chores = List.copyOf(chores);
+            if (chores.isEmpty()) {
+                throw new IllegalArgumentException("no chores");
+            }
+        }
+    }
+
+    /** A {@link Chore} by the spots of its blocks; a puzzle names its {@code game} because several maps may share one. */
+    public sealed interface ChoreParts {
+
+        Chore in(World world);
+
+        record Hold(String key, Spot station, boolean visible) implements ChoreParts {
+            @Override
+            public Chore in(World world) {
+                return new Chore.Hold(key, station.in(world), visible);
+            }
+        }
+
+        record Fetch(String key, Spot station, Spot destination, Material cargo, boolean visible) implements ChoreParts {
+            @Override
+            public Chore in(World world) {
+                return new Chore.Fetch(key, station.in(world), destination.in(world), cargo, visible);
+            }
+        }
+
+        record Puzzle(String key, String game, Spot station, boolean visible) implements ChoreParts {
+            @Override
+            public Chore in(World world) {
+                return new Chore.Puzzle(key, game, station.in(world), visible);
+            }
+        }
+
+        private static ChoreParts parse(Map<?, ?> values) {
+            if (!(values.get("key") instanceof String key)) {
+                throw new IllegalArgumentException("a chore without a key: " + values);
+            }
+            boolean visible = Boolean.TRUE.equals(values.get("visible"));
+            if (values.get("hold") instanceof Map<?, ?> station) {
+                return new Hold(key, Spot.parse(station), visible);
+            }
+            if (values.get("puzzle") instanceof Map<?, ?> station) {
+                return new Puzzle(key, values.get("game") instanceof String game ? game : key, Spot.parse(station), visible);
+            }
+            if (values.get("fetch") instanceof Map<?, ?> station && values.get("to") instanceof Map<?, ?> destination) {
+                var cargo = Material.matchMaterial(String.valueOf(values.get("cargo")));
+                if (cargo == null) {
+                    throw new IllegalArgumentException("chore " + key + " carries no item: " + values.get("cargo"));
+                }
+                return new Fetch(key, Spot.parse(station), Spot.parse(destination), cargo, visible);
+            }
+            throw new IllegalArgumentException("chore " + key + " is neither hold, puzzle nor fetch with a to");
+        }
+    }
+
     public record Spot(int x, int y, int z) {
 
         static Spot parse(Map<?, ?> values) {
@@ -78,11 +139,15 @@ public record TownMap(String key, String name, List<String> builders, Material i
         var trap = Optional.ofNullable(yaml.getConfigurationSection("tester.trap"))
                 .map(section -> new TrapParts(Spot.parse(section(section, "button")), Box.parse(section(section, "floor"))));
         var icon = Material.matchMaterial(yaml.getString("icon", "paper"));
+        var tasks = Optional.ofNullable(yaml.getConfigurationSection("tasks"))
+                .map(section -> new TaskParts(Spot.parse(section(section, "generator")),
+                        section.getMapList("chores").stream().map(ChoreParts::parse).toList()));
         return new TownMap(key, yaml.getString("name", key), yaml.getStringList("builders"),
                 icon == null ? Material.PAPER : icon, spawns, Point.parse(section(yaml, "spectator")),
                 new Border(Point.number(border, "x"), Point.number(border, "z"), Point.number(border, "size")),
                 new TesterParts(Box.parse(section(yaml, "tester.zone")), Spot.parse(section(yaml, "tester.button")),
-                        Box.parse(section(yaml, "tester.entrance")), lamps, trap));
+                        Box.parse(section(yaml, "tester.entrance")), lamps, trap),
+                yaml.getMapList("traitor-doors").stream().map(Spot::parse).toList(), tasks);
     }
 
     /** The round's town in {@code world}, this map's loaded copy, with the world border drawn. */
@@ -93,8 +158,13 @@ public record TownMap(String key, String name, List<String> builders, Material i
         var room = new TesterRoom(tester.zone(), tester.button().in(world), tester.entrance().blocks(world),
                 tester.lamps().stream().map(lamp -> lamp.in(world)).toList(),
                 tester.trap().map(trap -> new TesterRoom.Trap(trap.button().in(world), trap.floor().blocks(world))));
+        var layout = tasks.map(parts -> {
+            var fittings = Fittings.inside(world, border);
+            return new TaskLayout(parts.chores().stream().map(chore -> chore.in(world)).toList(), fittings.doors(),
+                    fittings.lights(), parts.generator().in(world));
+        });
         return new Town(name, world, spawns.stream().map(point -> point.in(world)).toList(), room, spectator.in(world),
-                List.of(), Optional.empty());
+                traitorDoors.stream().map(door -> door.in(world)).toList(), layout);
     }
 
     private static Map<String, Object> section(ConfigurationSection parent, String path) {

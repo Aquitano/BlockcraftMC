@@ -74,6 +74,12 @@ What its keys mean:
 - `tester.zone` is the box whose occupants are tested, and `tester.entrance` is shut with glass during a test.
   `tester.lamps` can be any blocks; they turn red or lime while the result shows.
 - `tester.trap` is optional: its `button`, and the `floor` that opens over the pit.
+- `traitor-doors` is optional: the lower half of each iron door that opens only for living traitors.
+- `tasks` is optional and makes the map playable in TTT 2: the `generator` where a blackout is mended, and `chores`,
+  each with a `key` for its texts under `tasks.chores.<key>` in messages.yml, `visible: true` for a chore others see
+  done, and one of `hold: <spot>`, `puzzle: <spot>` with an optional `game` (one of `task/game`, the key by default),
+  or `fetch: <spot>` with `to: <spot>` and a `cargo` item. A sabotage reaches every wooden door and every torch,
+  lantern and lit block inside the border, so these need no entry.
 
 The server's template is `worlds/ttt`. Its overworld, ClayMC's old TTT waiting island, is the lobby only when
 `BLOCKCRAFT_WAITING_TEMPLATE` is unset, as Compose and `:paper:runServer` both set it. `/setup lobby` moves that
@@ -92,8 +98,8 @@ as the owner's kill, even once the owner is dead; so do the bear trap's and a po
 ## TTT 2
 
 A server whose `BLOCKCRAFT_TTT_MODE` is `tasks` plays TTT 2. The compose service `ttt2` does, in its own group, so the
-two modes fill their own rounds; both share the stats, karma and the lobby. TTT 2 plays only maps whose `Town` has
-a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are under `tasks` in config.yml.
+two modes fill their own rounds; both share the stats, karma and the lobby. TTT 2 plays Schattenbach and every imported map
+whose `map.yml` has `tasks`. The settings are under `tasks` in config.yml.
 
 - No name shows above a head on the `ttt2` server, so players know each other only by skin. Detectives wear a blue
   cap that cannot come off instead of a blue name; the tab list still names and colours everyone.
