@@ -128,9 +128,12 @@ room:
   workshop: "Werkstatt"
   power: "Generatorraum"
   clinic: "Krankenstation"
+  # The name of a door between two rooms, in their label and in room.linked.
+  pair: "<room> <dark>· <zombies><other>"
   label: "<zombies><room>\n<accent><price> Gold <dark>· <muted>Tor anklicken"
   open-label: "<zombies><room>\n<success>Geöffnet"
   opened: "<prefix><primary><player> <muted>hat <zombies><room> <muted>für das Team geöffnet."
+  linked: "<prefix><primary><player> <muted>hat den Durchgang <zombies><room> <muted>geöffnet."
 station:
   armory: "Waffen & Munition"
   armor: "Rüstung"

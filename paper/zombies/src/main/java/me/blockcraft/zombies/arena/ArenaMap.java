@@ -3,6 +3,7 @@ package me.blockcraft.zombies.arena;
 import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.zombies.game.Perk;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -31,7 +32,15 @@ import java.util.Set;
 
 public final class ArenaMap {
 
-    public record Room(String id, BlockBox bounds, BlockBox door, int price) { }
+    public record Room(String id, BlockBox bounds) { }
+    /** A room's own door unlocks it; a door in {@code doors} joins two rooms and unlocks whichever is still closed. */
+    public record Door(String id, BlockBox box, int price, List<String> rooms) {
+        public Component name(Messages messages) {
+            var first = messages.get("room." + rooms.getFirst());
+            return rooms.size() == 1 ? first : messages.get("room.pair", Placeholder.component("room", first),
+                    Placeholder.component("other", messages.get("room." + rooms.getLast())));
+        }
+    }
     public record Window(String id, String room, BlockBox boards, Location spawn, Location entry, Optional<BlockBox> bay) {
         public Location approach() {
             var direction = spawn.toVector().subtract(entry.toVector()).setY(0).normalize();
@@ -57,6 +66,8 @@ public final class ArenaMap {
     private final World world;
     private final YamlConfiguration yaml;
     private final Map<String, Room> rooms = new LinkedHashMap<>();
+    private final List<Door> doors = new ArrayList<>();
+    private final Set<Door> opened = new HashSet<>();
     private final List<Window> windows = new ArrayList<>();
     private final List<Station> stations = new ArrayList<>();
     private final List<Note> notes = new ArrayList<>();
@@ -65,8 +76,8 @@ public final class ArenaMap {
     private final List<BlockState> originals = new ArrayList<>();
     private final List<TextDisplay> labels = new ArrayList<>();
     private final Map<Station, TextDisplay> stationLabels = new LinkedHashMap<>();
-    private record DoorLabel(TextDisplay display, net.kyori.adventure.text.Component opened) { }
-    private final Map<String, DoorLabel> doorLabels = new LinkedHashMap<>();
+    private record DoorLabel(TextDisplay display, Component opened) { }
+    private final Map<Door, DoorLabel> doorLabels = new LinkedHashMap<>();
     private Plugin chunkOwner;
     private org.bukkit.block.data.BlockData windowData;
 
@@ -75,8 +86,16 @@ public final class ArenaMap {
         this.world = world;
         this.yaml = YamlConfiguration.loadConfiguration(file.toFile());
         for (String id : section("rooms").getKeys(false)) {
-            rooms.put(id, new Room(id, box("rooms." + id + ".bounds"), box("rooms." + id + ".door"),
-                    Math.max(0, yaml.getInt("rooms." + id + ".price"))));
+            rooms.put(id, new Room(id, box("rooms." + id + ".bounds")));
+            if (!id.equals("yard") && yaml.isConfigurationSection("rooms." + id + ".door")) {
+                doors.add(new Door(id, box("rooms." + id + ".door"), Math.max(0, yaml.getInt("rooms." + id + ".price")), List.of(id)));
+            }
+        }
+        if (yaml.isConfigurationSection("doors")) {
+            for (String id : section("doors").getKeys(false)) {
+                String path = "doors." + id + ".";
+                doors.add(new Door(id, box(path + "box"), Math.max(0, yaml.getInt(path + "price")), List.copyOf(yaml.getStringList(path + "rooms"))));
+            }
         }
         for (String id : section("windows").getKeys(false)) {
             String path = "windows." + id + ".";
@@ -122,6 +141,8 @@ public final class ArenaMap {
     public List<Window> windows() { return List.copyOf(windows); }
     public List<Station> stations() { return List.copyOf(stations); }
     public List<Room> rooms() { return List.copyOf(rooms.values()); }
+    public List<Door> doors() { return List.copyOf(doors); }
+    public boolean opened(Door door) { return opened.contains(door); }
     public List<Note> notes() { return List.copyOf(notes); }
     public List<Block> lights() { return List.copyOf(lights); }
     public boolean unlocked(String room) { return unlocked.contains(room); }
@@ -134,8 +155,8 @@ public final class ArenaMap {
         return rooms.values().stream().filter(room -> room.bounds().contains(location)).findFirst();
     }
 
-    public Optional<Room> doorAt(Block block) {
-        return rooms.values().stream().filter(room -> !room.id().equals("yard") && room.door().contains(block.getLocation())).findFirst();
+    public Optional<Door> doorAt(Block block) {
+        return doors.stream().filter(door -> door.box().contains(block.getLocation())).findFirst();
     }
 
     public Optional<Station> stationAt(Block block) {
@@ -191,7 +212,8 @@ public final class ArenaMap {
             }
             var bounds = new BlockBox(origin.getInt("x") - radius, origin.getInt("y") - 1, origin.getInt("z") - radius,
                     origin.getInt("x") + radius, origin.getInt("y") + height, origin.getInt("z") + radius);
-            boolean contained = rooms.values().stream().allMatch(room -> bounds.contains(room.bounds()) && bounds.contains(room.door()))
+            boolean contained = rooms.values().stream().allMatch(room -> bounds.contains(room.bounds()))
+                    && doors.stream().allMatch(door -> bounds.contains(door.box()))
                     && windows.stream().allMatch(window -> bounds.contains(window.boards()) && window.bay().map(bounds::contains).orElse(true))
                     && stations.stream().allMatch(station -> bounds.contains(station.location().clone().add(0, -1, 0))
                             && bounds.contains(station.location().clone().add(0, 5, 0)));
@@ -209,14 +231,10 @@ public final class ArenaMap {
         }
         var doorData = org.bukkit.Bukkit.createBlockData(yaml.getString("door-block-data", "minecraft:waxed_cut_copper"));
         windowData = org.bukkit.Bukkit.createBlockData(yaml.getString("window-block-data", "minecraft:oak_slab[type=top,waterlogged=false]"));
-        for (var room : rooms.values()) {
-            if (!room.id().equals("yard")) {
-                room.door().blocks(world).forEach(block -> {
-                    block.setBlockData(doorData, false);
-                    originals.add(block.getState());
-                });
-            }
-        }
+        doors.forEach(door -> door.box().blocks(world).forEach(block -> {
+            block.setBlockData(doorData, false);
+            originals.add(block.getState());
+        }));
         windows.forEach(window -> window.boards().blocks(world).forEach(block -> {
             block.setBlockData(windowData, false);
             originals.add(block.getState());
@@ -238,7 +256,8 @@ public final class ArenaMap {
 
     private boolean validLayout() {
         return rooms.containsKey("yard") && windows.stream().anyMatch(window -> window.room().equals("yard"))
-                && rooms.values().stream().allMatch(room -> room.id().equals("yard") || room.door().blocks(world).size() <= 64)
+                && doors.stream().allMatch(door -> door.box().blocks(world).size() <= 64 && List.of(1, 2).contains(door.rooms().size())
+                        && rooms.keySet().containsAll(door.rooms()))
                 && windows.stream().allMatch(window -> rooms.containsKey(window.room())
                         && rooms.get(window.room()).bounds().contains(window.entry())
                         && window.bay().map(bay -> bay.contains(window.spawn()) && !bay.contains(window.entry())).orElse(true))
@@ -255,16 +274,17 @@ public final class ArenaMap {
                 && point("spawn").clone().add(0, -1, 0).getBlock().getType().isSolid();
     }
 
-    /** Unlocks the room and returns its door from the bottom row up; the caller clears the rows. */
-    public List<List<Block>> open(Room room) {
-        unlocked.add(room.id());
-        var label = doorLabels.get(room.id());
+    /** Unlocks the door's rooms and returns its blocks from the bottom row up; the caller clears the rows. */
+    public List<List<Block>> open(Door door) {
+        opened.add(door);
+        unlocked.addAll(door.rooms());
+        var label = doorLabels.get(door);
         if (label != null) {
             label.display().text(label.opened());
         }
-        var door = room.door();
-        return java.util.stream.IntStream.rangeClosed(door.minY(), door.maxY())
-                .mapToObj(y -> door.blocks(world).stream().filter(block -> block.getY() == y).toList()).toList();
+        var box = door.box();
+        return java.util.stream.IntStream.rangeClosed(box.minY(), box.maxY())
+                .mapToObj(y -> box.blocks(world).stream().filter(block -> block.getY() == y).toList()).toList();
     }
 
     public static void lit(Block block, boolean lit) {
@@ -289,22 +309,22 @@ public final class ArenaMap {
             stationLabels.put(station, label(station.location().clone().add(0.5, 1.5, 0.5), messages.get("station.label",
                     Placeholder.component("station", messages.get(station.nameKey())))));
         }
-        rooms.values().stream().filter(room -> !room.id().equals("yard")).forEach(room -> {
-            var location = new Location(world, (room.door().minX() + room.door().maxX() + 1) / 2.0,
-                    room.door().maxY() + 1.0, (room.door().minZ() + room.door().maxZ() + 1) / 2.0);
+        doors.forEach(door -> {
+            var box = door.box();
+            var location = new Location(world, (box.minX() + box.maxX() + 1) / 2.0, box.maxY() + 1.0, (box.minZ() + box.maxZ() + 1) / 2.0);
             var towardYard = point("spawn").toVector().subtract(location.toVector()).setY(0);
             if (towardYard.lengthSquared() > 0) {
                 location.add(towardYard.normalize().multiply(0.65));
             }
-            var roomName = Placeholder.component("room", messages.get("room." + room.id()));
+            var roomName = Placeholder.component("room", door.name(messages));
             var display = label(location, messages.get("room.label", roomName,
-                    net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("price", room.price())));
-            doorLabels.put(room.id(), new DoorLabel(display, messages.get("room.open-label", roomName)));
+                    net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("price", door.price())));
+            doorLabels.put(door, new DoorLabel(display, messages.get("room.open-label", roomName)));
         });
     }
 
     /** Tells everyone the stations of this kind have nothing left to sell, as the door labels do for an opened room. */
-    public void relabelStations(StationKind kind, net.kyori.adventure.text.Component text) {
+    public void relabelStations(StationKind kind, Component text) {
         stationLabels.forEach((station, display) -> {
             if (station.kind() == kind) {
                 display.text(text);
@@ -321,7 +341,7 @@ public final class ArenaMap {
         });
     }
 
-    private TextDisplay label(Location location, net.kyori.adventure.text.Component text) {
+    private TextDisplay label(Location location, Component text) {
         var display = world.spawn(location, TextDisplay.class, entity -> {
             entity.text(text);
             entity.setBillboard(Display.Billboard.CENTER);

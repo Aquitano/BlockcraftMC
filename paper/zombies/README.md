@@ -55,7 +55,10 @@ Change `origin` before generation if that region is occupied. Set `starter.build
 Edit `rooms`, `windows`, `stations`, and `notes` in the map-owned file to change the layout:
 
 - Window, station and note locations must lie in their named room.
-- The `yard` room starts unlocked. Each other room has a gold price and a door box.
+- The `yard` room starts unlocked. Each other room has a gold price and a door box, or is reached through `doors`.
+- An entry in `doors` names two `rooms`, a `price` and a door `box`. Buying it opens that door and unlocks whichever of
+  the two rooms was still closed, so several doors can lead into one room and rooms can form loops. Its label names
+  both rooms.
 - Keep at least one window in `yard`, so the first wave can spawn before players buy a door.
 - Door and window block data define the blocks the plugin resets at startup and shutdown.
 - A `PERKS` station with a `perk` sells that one; without one it sells them all. A station added to the file after the
