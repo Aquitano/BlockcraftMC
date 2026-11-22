@@ -20,12 +20,12 @@ import java.util.function.Supplier;
 
 /**
  * Which map the round is played on: the lobby votes among the maps or leaves it to chance until the round starts,
- * unless staff forced one with /forcemap. A map is loaded or built only once it is chosen, and the server restarts
- * after its one round, so the vote is never held twice.
+ * unless staff forced one with /forcemap. A map is loaded only once it is chosen. Every round that follows on the
+ * same server holds the vote anew.
  */
 public final class MapVote {
 
-    /** A map the lobby can vote for; {@code town} loads or builds it for the round. */
+    /** A map the lobby can vote for; {@code town} loads a fresh copy of it for the round. */
     public record Choice(String key, String name, List<String> builders, Material icon, Supplier<Town> town) {
 
         public Choice {
@@ -37,7 +37,7 @@ public final class MapVote {
     private final List<Choice> choices;
     private final Logger logger;
     private final Random random = new Random();
-    private final Ballot<String> ballot = new Ballot<>();
+    private Ballot<String> ballot = new Ballot<>();
     private Optional<Choice> forced = Optional.empty();
 
     public MapVote(Messages messages, List<Choice> choices, Logger logger) {
@@ -70,6 +70,12 @@ public final class MapVote {
         var choice = choice(key);
         choice.ifPresent(chosen -> forced = Optional.of(chosen));
         return choice.map(chosen -> Component.text(chosen.name()));
+    }
+
+    /** The next round's vote starts empty, and a map forced for the last one no longer counts. */
+    public void reset() {
+        ballot = new Ballot<>();
+        forced = Optional.empty();
     }
 
     /** Loads the chosen map, falling back to the first, already-built map if loading fails. */

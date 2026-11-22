@@ -6,15 +6,18 @@ players:
   round-minimum: 3
 
 # After the lobby, everyone loots for countdown.preparation seconds without being able to hurt anyone; then the roles
-# are drawn and the round runs countdown.round seconds, after which the innocents win. The server restarts
-# countdown.restart seconds after the round.
+# are drawn and the round runs countdown.round seconds, after which the innocents win. countdown.reopen seconds after
+# the round, the lobby opens again on the same server for the next one. After rounds-before-restart rounds the
+# server restarts instead, countdown.restart seconds after the last; at 1 it restarts after every round.
 countdown:
   lobby: 60
   start: 10
   full: 15
   preparation: 30
   round: 600
+  reopen: 10
   restart: 20
+rounds-before-restart: 10
 idle-restart-minutes: 50
 timer-bar: true
 global-stats-head: Kevos

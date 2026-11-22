@@ -141,11 +141,15 @@ public final class Round implements Listener {
     }
 
     private void seat(Player player) {
+        takeSeat(player);
+        arena.welcome(player, players.size(), capacity);
+    }
+
+    private void takeSeat(Player player) {
         players.add(player.getUniqueId());
         // Whoever is online still hides this account if it watched here before and rejoined.
         spectators.release(player);
         summary.join(player);
-        arena.welcome(player, players.size(), capacity);
     }
 
     /**
@@ -462,6 +466,22 @@ public final class Round implements Listener {
         players().forEach(summary::join);
         spectators.clearTargets();
         enter(GamePhase.LOBBY);
+        return true;
+    }
+
+    /**
+     * As {@link #reopen}, for a game whose next round is open to everyone still here: whoever watched or was out of
+     * the last round plays in the next one while there is room, unless they are vanished. Nobody is announced again.
+     */
+    public boolean reopenToAll(RoundSummary nextSummary) {
+        if (!reopen(nextSummary)) {
+            return false;
+        }
+        for (var spectator : spectators.list()) {
+            if (!full() && !api.isVanished(spectator)) {
+                takeSeat(spectator);
+            }
+        }
         return true;
     }
 

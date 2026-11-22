@@ -20,6 +20,11 @@ Every number named below as a key is in [config.yml](src/main/resources/config.y
    blue. How many traitors there are is never announced.
 4. The innocents and detectives win when no traitor is left or the time runs out; the traitors win when nobody else is
    left. The whole side wins, dead members included.
+5. The result shows for `countdown.reopen` seconds, then the lobby opens again on the same server and the vote starts
+   anew. Everyone still there plays the next round, those who watched the last one included, unless they are
+   vanished. The world of the last round is unloaded and copied anew from its map, so every round starts on a fresh
+   copy. After `rounds-before-restart` rounds the server restarts instead, `countdown.restart` seconds after the last,
+   and an empty server restarts after `idle-restart-minutes`.
 
 Nobody hears who killed whom: the round keeps its kills secret (`RoundSummary.keepKillsSecret`), so no streak is
 announced, no kill effect plays, the victim's title names nobody and nobody pays respects with an F. The dead lie where
@@ -50,7 +55,7 @@ elsewhere. Only a living traitor can press it, once per round. Lava and fire dea
 presser's kills unless combat credits another player. Escaping the pit leaves no trap attribution.
 
 **Schattenbach** is an abbey village `TownBuilder` puts into an empty world at every start (vote and `/forcemap` key
-`schattenbach`); the decoration draws from a fixed seed, so it looks the same every time. `Abbey`, `Village`, `Mill` and
+`schattenbach`) and keeps in `ttt-built-maps/` of the server as the template its later rounds are copied from; the decoration draws from a fixed seed, so it looks the same every time. `Abbey`, `Village`, `Mill` and
 `Outskirts` hold the buildings. Barriers fill the strip between the hedge and the world border, so nobody drops out of
 the village. The tester stands in the town hall, over a lava pit that shows through a grate in the Ratskeller below,
 where the trap's button hides behind the kegs. Two passages open only for living traitors, behind iron doors at both
@@ -71,7 +76,7 @@ is something to look through rather than a wall. Barriers fill the edge above th
 **Vineyard**, **Minecraft** and **Raid** are imported maps from ClayMC (see [the import](../../worlds/README.md#ttt)).
 They live in the TTT map bundle, `worlds/ttt/blockcraft/TTT/maps/<key>/`, each as a `map.yml` and the dimension
 folder of its world, `world/`. At startup, the server copies every imported map into place and adds it to the vote;
-a round loads only the chosen one. A map whose `map.yml` lacks something a round needs is skipped and named in the
+a round loads only the chosen one, and copies it anew once the round is over. A map whose `map.yml` lacks something a round needs is skipped and named in the
 log. Invalid world borders are rejected before voting. If the chosen world fails to load at round start, the
 round uses Schattenbach and announces it.
 
@@ -145,5 +150,5 @@ heal. Combat is 1.8-style (`pvp.legacy-combat`). A team kill pays nothing.
 picks the map): the vote, roles and titles, a chest and the ender chest, the tester on every map with and without a
 traitor and with a spoofer, the traitor trap, a traitor door, a corpse identified and scanned, every shop item (the
 mask, lighter, defibrillator and crime camera on corpses, the bomb defused and set off, the jammer next to a radar and
-the tester), a team kill's karma, and both endings. TTT 2 needs the same on the `ttt2` server, plus each chore kind,
+the tester), a team kill's karma, both endings, and a second round on the same server. TTT 2 needs the same on the `ttt2` server, plus each chore kind,
 each of the six chore games, the win by chores and each sabotage with its repair.

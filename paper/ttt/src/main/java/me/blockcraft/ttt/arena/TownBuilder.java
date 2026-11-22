@@ -55,10 +55,15 @@ public final class TownBuilder {
         site.chore(new Chore.Fetch("stone", outskirts.stonecutter(), abbey.brokenWall(), Material.COBBLESTONE, false));
         site.chore(new Chore.Fetch("horseshoe", village.anvil(), outskirts.stableGate(), Material.IRON_INGOT, false));
 
-        world.getWorldBorder().setCenter(0.5, 0.5);
-        world.getWorldBorder().setSize(BORDER_SIZE);
+        drawBorder(world);
         var tasks = new TaskLayout(site.chores(), site.doors(), site.lights(), mill.generator());
         var spectator = new Location(world, 0.5, GROUND + 32, 40.5, 180, 35);
         return new Town(NAME, world, village.spawns(), village.tester(), spectator, site.traitorDoors(), Optional.of(tasks));
+    }
+
+    /** The world border round the village, which a copy of its world needs drawn again. */
+    public static void drawBorder(World world) {
+        world.getWorldBorder().setCenter(0.5, 0.5);
+        world.getWorldBorder().setSize(BORDER_SIZE);
     }
 }
