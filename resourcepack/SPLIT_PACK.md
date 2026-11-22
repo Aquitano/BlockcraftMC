@@ -46,7 +46,9 @@ waiting lobby places some of it, and TTT, Zombies and the other gameplay weapons
 The `props/starwars` subtree belongs to Star Wars.
 Star Wars contains all `sternenfront`, `deploy`, and `battle` subtrees, imported Star Wars props, and BetterModel assets.
 New `sternenfront/objectives` models, item routes, and textures follow this rule without enumeration.
-All current BetterModel output is Sternenfront or imported Star Wars creatures. A future non-Star-Wars rig needs a new ownership rule.
+BetterModel output belongs to Star Wars, except the creatures Zombies draws: the Nexu and its cub, the Acklay, the Reek
+and the womp rat, with their textures and the Sand Beast's head, listed in `ZOMBIES_CREATURES`. A rig another base game
+draws needs its paths added there.
 
 The builder partitions mixed `sounds.json` events and shared bitmap font providers.
 Star Wars font definitions preserve the base providers. Base providers exclude combat, minimap, ability, and deployment textures.
@@ -57,7 +59,7 @@ Shared inventory slot highlight blanks remain in base.
 
 Every source file must occur in at least one split archive.
 Checks resolve item models, model parents and textures, bitmap and reference fonts, sound files, shader includes, post-effect shaders, and texture metadata against each effective stack.
-They reject missing custom dependencies, forbidden profile files, changed vanilla item fallbacks, lost selector cases, and boss-bar blanks or rigs in base.
+They reject missing custom dependencies, forbidden profile files, changed vanilla item fallbacks, lost selector cases, and boss-bar blanks in base.
 `split-report.json` lists unresolved vanilla resources separately.
 Model texture variables and renderer semantics still depend on Minecraft.
 

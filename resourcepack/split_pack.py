@@ -10,11 +10,21 @@ PROFILES = ('base', 'starwars')
 STACKS = {'base': ('base',), 'starwars': ('base', 'starwars')}
 HUD_TEXTURES = ('ability_', 'minimap_', 'combat_', 'crosshair_', 'damage_arcs',
                 'readiness', 'spread_ticks', 'objective_pips', 'hits', 'overlay_sternenfront_')
+# Zombies draws these Star Wars creatures, and its players load only the base archive.
+ZOMBIES_CREATURES = tuple(f'assets/{path}' for path in (
+    'bettermodel/items/model/sw_nexu_', 'bettermodel/items/model/sw_acklay_', 'bettermodel/items/model/sw_reek_',
+    'bettermodel/items/model/kit_womp_rat_',
+    'blockcraft/models/item/props/starwars/rig/nexu/', 'blockcraft/models/item/props/starwars/rig/nexu_cub/',
+    'blockcraft/models/item/props/starwars/rig/acklay/', 'blockcraft/models/item/props/starwars/rig/reek/',
+    'blockcraft/textures/item/props/starwars/monsters_', 'blockcraft/textures/item/props/starwars/nexu_',
+    'blockcraft/models/item/sternenfront/kits/actors/womp_rat/rig/',
+    'blockcraft/textures/item/sternenfront/kits/actors/desert.png',
+    'blockcraft/models/item/sternenfront/sand_beast.json'))
 
 
 def owner(path):
     parts = path.split('/')
-    if len(parts) < 4 or parts[0] != 'assets':
+    if len(parts) < 4 or parts[0] != 'assets' or path.startswith(ZOMBIES_CREATURES):
         return 'base'
     namespace, kind = parts[1:3]
     name = parts[-1]
@@ -163,7 +173,7 @@ def verify(files, packs):
                 model = dict(expected['model'], cases=cases) if cases else expected['model']['fallback']
                 assert actual['model'] == model, f'{profile}: lost item cases or fallback in {path}'
         if profile == 'base':
-            assert not any('/boss_bar/' in p or '/bettermodel/' in p for p in effective)
+            assert not any('/boss_bar/' in p for p in effective)
             for path, data in effective.items():
                 if path.endswith('/sounds.json'):
                     assert not any(key.startswith('sternenfront.') for key in json.loads(data))

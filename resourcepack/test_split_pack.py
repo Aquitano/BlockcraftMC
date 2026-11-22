@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from split_pack import STACKS, build, encoded, owner, verify
+from split_pack import STACKS, ZOMBIES_CREATURES, build, encoded, owner, verify
 
 SOURCE = Path(__file__).parent / 'src'
 
@@ -40,11 +40,14 @@ class SplitPackTest(unittest.TestCase):
         self.assertIn('assets/blockcraft/shaders/include/hud_panel.glsl', self.packs['base'])
         self.assertNotIn(shader, self.packs['starwars'])
 
-    def test_boss_bar_blanks_and_rigs_are_starwars_only(self):
+    def test_boss_bar_blanks_and_rigs_are_starwars_only_except_the_zombies_creatures(self):
         for path in self.files:
-            if '/boss_bar/' in path or '/bettermodel/' in path:
+            if '/boss_bar/' in path or '/bettermodel/' in path and not path.startswith(ZOMBIES_CREATURES):
                 self.assertIn(path, self.packs['starwars'])
                 self.assertNotIn(path, self.packs['base'])
+        for rig in ('sw_nexu_head', 'sw_acklay_head', 'sw_reek_head', 'kit_womp_rat_head'):
+            self.assertIn(f'assets/bettermodel/items/model/{rig}.json', self.packs['base'])
+        self.assertNotIn('assets/bettermodel/items/model/sw_rancor_head.json', self.packs['base'])
 
     def test_new_objectives_and_imported_furniture_follow_profile(self):
         for kind in ('models/item', 'items', 'textures/item'):
