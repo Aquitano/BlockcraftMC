@@ -25,8 +25,9 @@ public class CreatureBodyTest {
     }
 
     @Test
-    public void onlyTheFrontOfTheBodyIsItsHead() {
+    public void onlyTheUpperFrontOfTheBodyIsItsHead() {
         assertTrue(BODY.isHead(FEET, SOUTH, 1, new Vector(10, 65, 11.5)));
+        assertFalse(BODY.isHead(FEET, SOUTH, 1, new Vector(10, 64.4, 11.5)));
         assertFalse(BODY.isHead(FEET, SOUTH, 1, new Vector(10, 65, 10.5)));
         assertFalse(BODY.isHead(FEET, SOUTH, 1, new Vector(10, 65, 8.5)));
         assertTrue(BODY.isHead(FEET, EAST, 1, new Vector(11.5, 65, 10)));

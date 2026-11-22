@@ -721,7 +721,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     private void hud() {
         for (var player : fighters()) {
-            if (reviving.contains(player.getUniqueId()) || events.holding(player)) {
+            if (reviving.contains(player.getUniqueId()) || events.holding(player) || enemies.abilities().pinned(player)) {
                 continue;
             }
             var held = weapons.held(player);
