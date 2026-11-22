@@ -537,26 +537,26 @@ ambient-motes-1:
 quest-archivarin:
   ==: org.bukkit.Location
   world: world
-  x: -945.5
-  y: 24.0
-  z: 1618.5
-  yaw: -90.0
+  x: -955.5
+  y: 25.0
+  z: 1698.5
+  yaw: 180.0
   pitch: 0.0
 quest-laeuferin:
   ==: org.bukkit.Location
   world: world
-  x: -938.5
-  y: 24.0
-  z: 1615.5
-  yaw: 90.0
+  x: -700.5
+  y: 8.0
+  z: 1578.5
+  yaw: 180.0
   pitch: 0.0
 quest-kundschafter:
   ==: org.bukkit.Location
   world: world
-  x: -943.5
-  y: 23.0
-  z: 1604.5
-  yaw: 180.0
+  x: -890.5
+  y: 35.5
+  z: 1635.5
+  yaw: -90.0
   pitch: 0.0
 board-rules:
   ==: org.bukkit.Location
