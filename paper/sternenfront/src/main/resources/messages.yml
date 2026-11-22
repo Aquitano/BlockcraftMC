@@ -27,6 +27,15 @@ item:
   faction: "<arrow><primary>Fraktion wählen"
   class: "<arrow><primary>Klasse & Bot-Stärke"
 
+vote:
+  item: "<arrow><primary>Abstimmung"
+  title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Abstimmung"
+  map: "<arrow><primary><map>"
+  builders: "<bullet><muted>Erbaut von <accent><builders>"
+  chance: "den Zufall"
+  result:
+    - "<prefix><muted>Gekämpft wird auf <accent><map><muted>."
+
 faction:
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Fraktion"
   size: "<bullet><muted><players><dark>/<muted><max> Spieler"
@@ -505,6 +514,7 @@ menu:
 
 scoreboard:
   title: "<sternenfront><bold>Clone Wars"
+  map-vote: "Abstimmung läuft"
   faction: "<muted><icon:mode> FRAKTION"
   no-faction: "<muted>Keine Fraktion"
   class: "<muted><icon:kit> KLASSE"

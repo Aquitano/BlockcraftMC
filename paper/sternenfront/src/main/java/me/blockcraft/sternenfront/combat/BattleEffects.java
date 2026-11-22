@@ -96,7 +96,7 @@ public final class BattleEffects {
     private final PresentationConfig config;
     private final Flares flares;
     private final Flares scorches;
-    private final Ambience ambience;
+    private Ambience ambience;
     private final HeldBlasters blasters;
     private final List<Tether> tethers = new ArrayList<>();
     private final Map<UUID, Long> nextSaberMark = new HashMap<>();
@@ -115,6 +115,10 @@ public final class BattleEffects {
 
     public PresentationConfig config() {
         return config;
+    }
+
+    public void mapChanged() {
+        ambience = new Ambience(game.map(), config.ambient());
     }
 
     public Flares flares() {

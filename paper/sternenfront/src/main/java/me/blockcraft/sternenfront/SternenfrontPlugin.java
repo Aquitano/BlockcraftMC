@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.ForceMapCommand;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameServices;
@@ -10,11 +11,9 @@ import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
-import me.blockcraft.api.world.Worlds;
-import me.blockcraft.sternenfront.arena.FrontMap;
-import me.blockcraft.sternenfront.arena.ArenaFile;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.appearance.TargetOutlines;
+import me.blockcraft.sternenfront.arena.FrontChoice;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.Faction;
@@ -27,8 +26,6 @@ import me.blockcraft.sternenfront.listener.CombatListener;
 import me.blockcraft.sternenfront.secret.Secrets;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.Difficulty;
-import org.bukkit.GameRules;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.EnumSet;
@@ -51,23 +48,11 @@ public final class SternenfrontPlugin extends JavaPlugin {
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "bc_sternenfront_stats");
         var messages = services.messages();
-        var world = Bukkit.getWorlds().getFirst();
-        Worlds.settle(world);
-        // Hurt players heal through the round's own regeneration and the medics, not through hunger.
-        world.setDifficulty(Difficulty.NORMAL);
-        world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
-        var map = ArenaFile.load(world, api.map().file(this, ArenaFile.FILE));
-        if (map.rain()) {
-            world.setStorm(true);
-            world.setWeatherDuration(Integer.MAX_VALUE);
-        }
-        map.time().ifPresent(ticks -> Worlds.setTime(world, ticks));
-        keepLoaded(map);
-        border(map);
-        var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(map.lobbySpawn());
+        var maps = new FrontChoice(this, messages);
+        var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(maps.main().lobbySpawn());
         lobby.getWorld().setSpawnLocation(lobby);
         game = new SternenfrontGame(this, gameConfig, config, HeroConfig.from(getConfig()), FeelConfig.from(getConfig()),
-                messages, map, lobby, services.stats(), services.menus());
+                messages, maps, read.integer("countdown.vote-closes-at"), lobby, services.stats(), services.menus());
         api.presence().maxPlayers(config.capacity());
         var riggedSides = EnumSet.noneOf(Faction.class);
         if (read.flag("appearance.droids")) {
@@ -99,29 +84,13 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
         services.commands(commands -> {
             commands.register(StartCommand.of(game.countdown()).build());
+            commands.register(ForceMapCommand.create(messages, maps.vote()::keys,
+                    () -> game.phase() == GamePhase.LOBBY && maps.vote().open(), maps.vote()::force));
             commands.register(botDebug.command());
             commands.register(game.intro().command());
         });
 
         Bukkit.getOnlinePlayers().forEach(game::join);
-    }
-
-    /** The whole basin stays in memory: bots walk it and posts recolour it wherever the players are. */
-    private void keepLoaded(FrontMap map) {
-        var area = map.playArea();
-        for (int x = (int) area.getMinX() >> 4; x <= (int) area.getMaxX() >> 4; x++) {
-            for (int z = (int) area.getMinZ() >> 4; z <= (int) area.getMaxZ() >> 4; z++) {
-                map.world().addPluginChunkTicket(x, z, this);
-            }
-        }
-    }
-
-    /** The border can include distant scenery; the map's own cliffs are the playable edge. */
-    private static void border(FrontMap map) {
-        var area = map.playArea();
-        var border = map.world().getWorldBorder();
-        border.setCenter(area.getCenterX(), area.getCenterZ());
-        border.setSize(map.worldBorderSize());
     }
 
     @Override

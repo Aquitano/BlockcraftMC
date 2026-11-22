@@ -63,7 +63,7 @@ public final class Spectacle {
     private final PresentationConfig config;
     private final ShipyardEffects shipyard;
     private final SeaEffects sea;
-    private final YardProps props;
+    private YardProps props;
     private Ship ship;
     private Storm storm;
     private long nextLightning;
@@ -73,6 +73,11 @@ public final class Spectacle {
         config = game.presentationConfig();
         shipyard = new ShipyardEffects(game);
         sea = new SeaEffects(game);
+        props = new YardProps(game);
+    }
+
+    public void mapChanged() {
+        props.clear();
         props = new YardProps(game);
     }
 

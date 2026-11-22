@@ -32,6 +32,7 @@ import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
+import me.blockcraft.sternenfront.arena.FrontChoice;
 import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.sternenfront.bot.BotConfig;
 import me.blockcraft.sternenfront.bot.BotDifficulty;
@@ -129,13 +130,16 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     /** What a sprint adds to the vanilla walking pace. */
     private static final double SPRINT_BOOST = 0.3;
     private static final int BANNER_TICKS = 55;
+    private static final String FIELD_OBJECTIVES = "field-objectives.yml";
 
     private record Burst(Player shooter, Blaster blaster, long at) { }
 
     private final Plugin plugin;
     private final SternenfrontConfig config;
     private final Messages messages;
-    private final FrontMap map;
+    private final FrontChoice maps;
+    private final int voteClosesAt;
+    private FrontMap map;
     private final Location lobby;
     private final Teams teams;
     private final Loadouts loadouts;
@@ -145,7 +149,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final LobbyHotbar hotbar;
     private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
-    private final Posts posts;
+    private Posts posts;
     private final WeaponHandling handling;
     private final Bolts bolts;
     private final TriggerCells triggerCells = new TriggerCells();
@@ -206,23 +210,26 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private Optional<Faction> winner = Optional.empty();
 
     public SternenfrontGame(JavaPlugin plugin, GameConfig gameConfig, SternenfrontConfig config, HeroConfig heroConfig,
-                            FeelConfig feel, Messages messages, FrontMap map, Location lobby, StatsRepository stats,
-                            StatsMenus statsMenus) {
+                            FeelConfig feel, Messages messages, FrontChoice maps, int voteClosesAt, Location lobby,
+                            StatsRepository stats, StatsMenus statsMenus) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
-        this.map = map;
+        this.maps = maps;
+        this.voteClosesAt = voteClosesAt;
+        this.map = maps.main();
         this.lobby = lobby;
         this.teams = new Teams(config.playersPerTeam());
         this.loadouts = new Loadouts(messages, config);
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         this.botConfig = BotConfig.from(plugin.getConfig(), config.playersPerTeam());
-        this.countdown = new LobbyCountdown(plugin, round, gameConfig, botConfig.enabled() ? 1 : 2, remaining -> { }, this::start);
+        this.countdown = new LobbyCountdown(plugin, round, gameConfig, botConfig.enabled() ? 1 : 2, this::lobbySecond, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(
                 new LobbyHotbar.Choice(MenuIcon.TEAM, messages.get("item.faction"),
                         player -> new TeamMenu(messages, teams, config.playersPerTeam(), this::chooseFaction).open(player)),
-                new LobbyHotbar.Choice(MenuIcon.LOADOUT, messages.get("item.class"), this::openClassMenu)),
+                new LobbyHotbar.Choice(MenuIcon.LOADOUT, messages.get("item.class"), this::openClassMenu),
+                maps.vote().hotbarChoice(() -> phase() == GamePhase.LOBBY)),
                 statsMenus, countdown);
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobby),
@@ -254,7 +261,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.spawnSpots = new SpawnSpots(this);
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
-        this.fieldObjectives = new FieldObjectives(this, BlockcraftApi.get().map().file(plugin, "field-objectives.yml"));
+        this.fieldObjectives = new FieldObjectives(this, maps.file(FIELD_OBJECTIVES));
         this.minimap = new Minimap(this, Minimap.Settings.from(plugin.getConfig()));
         this.killFeed = KillFeed.from(plugin.getConfig());
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
@@ -286,6 +293,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public FrontMap map() {
         return map;
+    }
+
+    /** Whether the round's map is known: always with one map, with several once the lobby's vote closed. */
+    public boolean mapChosen() {
+        return maps.chosen().isPresent();
     }
 
     public Messages messages() {
@@ -623,6 +635,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         music.forget(player);
         radio.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
+        maps.vote().withdraw(player);
         standDown(player);
         deployment.forget(player);
         minimap.forget(player);
@@ -811,6 +824,27 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         deployment.refreshMenu(player);
     }
 
+    private void lobbySecond(int remaining) {
+        if (remaining <= voteClosesAt && maps.vote().open()) {
+            maps.decide();
+            round.players().forEach(hotbar::refreshChoices);
+            refreshAll();
+        }
+    }
+
+    /** Moves the round onto the chosen map, whose posts, scenery and devices replace the main world's. */
+    private void play(FrontMap chosen) {
+        if (chosen == map) {
+            return;
+        }
+        map = chosen;
+        posts = new Posts(messages, map.posts(), config.captureSeconds());
+        effects.mapChanged();
+        spectacle.mapChanged();
+        fieldObjectives.load(maps.file(FIELD_OBJECTIVES));
+        round.playArea(map.world(), map.playArea());
+    }
+
     private void start() {
         teams.assignRest(round.players().stream().map(Player::getUniqueId).toList()).forEach((id, faction) -> {
             var player = Bukkit.getPlayer(id);
@@ -828,6 +862,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             BlockcraftApi.get().visuals().clearAccent(player);
             intro.cancel(player);
         }
+        play(maps.decide());
         round.enter(GamePhase.INGAME);
         secondsLeft = config.roundSeconds();
         for (var player : round.players()) {
@@ -1854,7 +1889,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void show(Player player) {
         var icons = GameSidebar.icons(player);
-        var mapName = Component.text(map.name());
+        var mapName = maps.chosen().<Component>map(chosen -> Component.text(chosen.name()))
+                .orElseGet(() -> messages.get("scoreboard.map-vote"));
         switch (phase()) {
             case LOBBY -> sidebar.lobby(player, config.capacity(), mapName, List.of(
                     new GameSidebar.Section(messages.get("scoreboard.faction", icons), GameSidebar.value(factionOf(player)

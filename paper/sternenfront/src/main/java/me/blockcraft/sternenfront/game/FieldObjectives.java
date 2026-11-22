@@ -64,6 +64,14 @@ public final class FieldObjectives implements Listener {
         this.game = game;
         channelTicks = Math.max(1, Math.round(game.plugin().getConfig().getDouble("field-objectives.channel-seconds") * 20));
         overrideTicks = Math.max(1, game.plugin().getConfig().getLong("field-objectives.override-seconds") * 20);
+        load(file);
+    }
+
+    /** Reads the devices of the game's map, which {@code file} belongs to, in place of any read before. */
+    void load(Path file) {
+        clear();
+        circuits.clear();
+        devices.clear();
         var yaml = YamlConfiguration.loadConfiguration(file.toFile());
         var listed = yaml.getConfigurationSection("circuits");
         if (listed != null) for (var id : listed.getKeys(false)) {
