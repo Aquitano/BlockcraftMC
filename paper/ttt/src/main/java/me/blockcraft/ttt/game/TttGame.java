@@ -26,6 +26,7 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.TesterRoom;
@@ -358,6 +359,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             secondsLeft = remaining;
             if (stage == Stage.PLAYING) {
                 round.announceEnd(remaining);
+                if (mode == TttMode.TASKS) {
+                    town.ifPresent(built -> Worlds.setTime(built.world(), config.tasks().dusk().at(remaining, seconds)));
+                }
             }
             if (mode == TttMode.TASKS || round.clockOnSidebar()) {
                 refreshAll();

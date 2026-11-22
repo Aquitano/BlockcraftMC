@@ -111,6 +111,8 @@ whose `map.yml` has `tasks`. The settings are under `tasks` in config.yml.
 
 - No name shows above a head on the `ttt2` server, so players know each other only by skin. Detectives wear a blue
   cap that cannot come off instead of a blue name; the tab list still names and colours everyone.
+- The sun goes down over the round: noon when the roles are drawn, midnight when the time runs out
+  (`tasks.dusk`), so the map's lights matter more the longer a round lasts.
 - Each innocent and detective receives a suggested route of chores. Those assignments form a fixed team pool that
   any living innocent or detective can finish. Deaths, disconnects, and revivals leave the target and progress unchanged.
 - The navigation book in hotbar slot eight selects a task. Traitors can find stations but cannot complete tasks.
