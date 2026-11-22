@@ -23,7 +23,8 @@ import java.util.function.IntConsumer;
  * The waiting-lobby countdown every game shares: the {@link Arena} announces it in chat, the remaining seconds are
  * shown in a boss bar, the last five count down as a title and tick a note higher each second, and while fewer
  * than {@code players.min} are there the clock stays at its full value instead of running out. /start runs it down
- * to {@code countdown.start} seconds regardless, but a round never starts with fewer than {@link #ROUND_MINIMUM}.
+ * to {@code countdown.start} seconds regardless, but a round never starts with fewer than {@link #ROUND_MINIMUM},
+ * unless the /start that ran it down asked for a lower minimum.
  */
 public final class LobbyCountdown implements Listener {
 
@@ -44,6 +45,7 @@ public final class LobbyCountdown implements Listener {
     private final IntConsumer onSecond;
     private final Runnable onStart;
     private boolean forced;
+    private int startMinimum;
     private BossBar bar;
 
     public LobbyCountdown(Plugin plugin, Round round, GameConfig config, Runnable onStart) {
@@ -61,6 +63,7 @@ public final class LobbyCountdown implements Listener {
         this.seconds = config.lobbySeconds();
         this.minPlayers = config.minPlayers();
         this.roundMinimum = Math.max(1, roundMinimum);
+        this.startMinimum = this.roundMinimum;
         this.startSeconds = config.startSeconds();
         this.onSecond = onSecond;
         this.onStart = onStart;
@@ -78,15 +81,19 @@ public final class LobbyCountdown implements Listener {
 
     /** /start: the clock runs down to {@code countdown.start} seconds, and the requester hears whether it did. */
     public void forceStart(Player requester) {
+        forceStart(requester, roundMinimum);
+    }
+
+    /** /start that lets this round begin with as few as {@code minimum} players, such as staff trying a map alone. */
+    public void forceStart(Player requester, int minimum) {
         String outcome;
         if (round.phase() != GamePhase.LOBBY) {
             outcome = "start.running";
-        } else if (round.playerCount() < roundMinimum) {
+        } else if (round.playerCount() < minimum) {
             outcome = "start.too-few";
-        } else if (shorten(startSeconds)) {
-            outcome = "start.shortened";
         } else {
-            outcome = "start.too-late";
+            startMinimum = Math.max(1, minimum);
+            outcome = shorten(startSeconds) ? "start.shortened" : "start.too-late";
         }
         round.arena().tell(requester, outcome);
     }
@@ -133,6 +140,7 @@ public final class LobbyCountdown implements Listener {
 
     public void cancel() {
         forced = false;
+        startMinimum = roundMinimum;
         countdown.cancel();
         hideBar();
     }
@@ -190,8 +198,10 @@ public final class LobbyCountdown implements Listener {
     /** A forced countdown may run out after players left; below the round's minimum it waits again. */
     private void finish() {
         forced = false;
+        int minimum = startMinimum;
+        startMinimum = roundMinimum;
         hideBar();
-        if (round.playerCount() < roundMinimum) {
+        if (round.playerCount() < minimum) {
             round.arena().announceCancelled();
             start();
             return;

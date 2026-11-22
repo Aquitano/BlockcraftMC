@@ -1,5 +1,7 @@
 package me.blockcraft.bedwars;
 
+import com.mojang.brigadier.Command;
+import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
@@ -58,7 +60,12 @@ public final class BedWarsPlugin extends JavaPlugin {
                 new TeamChat(() -> game.phase() == GamePhase.INGAME, game::sameTeam, messages, config.playersPerTeam() == 1));
 
         services.commands(commands -> {
-            commands.register(StartCommand.of(game.lobbyCountdown()).build());
+            commands.register(StartCommand.of(game.lobbyCountdown())
+                    .then(Commands.literal("solo").executes(context -> {
+                        game.lobbyCountdown().forceStart(context.getSource().getPlayerOrThrow(), 1);
+                        return Command.SINGLE_SUCCESS;
+                    }))
+                    .build());
             commands.register(ForceMapCommand.create(messages, game::playableMaps, game::mapForceable, game::forceMap));
             commands.register(BedWarsSetup.create(pool, arenas, layout, config.teams(), messages, game::playsOn));
         });
