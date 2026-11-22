@@ -53,7 +53,7 @@ rating. `/elo` keeps the past seasons' tables.
 
 ## Challenges
 
-Around the lobby's Duell spot (`/setspawn duell`, radius in the lobby's `duel-zone`) players hold a challenge sword.
+In the lobby's Duell area, the box between `/lobbyset duel-zone-a` and `duel-zone-b`, players hold a challenge sword.
 Striking another player there, or `/duel <player>` anywhere in a lobby, opens the rules: mode, best of 1 or 3, and the
 combat style. The invited player accepts by striking back or with the chat button. Only then does the proxy reserve an
 empty Duell server, waking it if it sleeps, and send both there; the server draws one of the mode's playable maps and

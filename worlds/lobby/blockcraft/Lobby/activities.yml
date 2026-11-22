@@ -574,3 +574,19 @@ board-changelog:
   z: 1634.0
   yaw: -33.690067
   pitch: 0.0
+duel-zone-a:
+  ==: org.bukkit.Location
+  world: world
+  x: -933.0
+  y: 30.0
+  z: 1547.0
+  yaw: 0.0
+  pitch: 0.0
+duel-zone-b:
+  ==: org.bukkit.Location
+  world: world
+  x: -915.0
+  y: 40.0
+  z: 1571.0
+  yaw: 0.0
+  pitch: 0.0

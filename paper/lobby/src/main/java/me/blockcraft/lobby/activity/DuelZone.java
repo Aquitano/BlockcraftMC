@@ -9,7 +9,6 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.item.LobbyItem;
 import me.blockcraft.lobby.menu.DuelChallengeMenu;
 import org.bukkit.Location;
@@ -20,29 +19,33 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.BoundingBox;
 
 import java.util.List;
 
 /**
- * Around the Duell spot everyone holds a challenge sword. Striking another player there opens the rules for a
- * challenge, and striking back the one who challenged you accepts it; the proxy decides which of the two it was.
+ * In the Duell area, the box between the spots {@link #CORNERS}, everyone holds a challenge sword. Striking another
+ * player there opens the rules for a challenge, and striking back the one who challenged you accepts it; the proxy
+ * decides which of the two it was.
  */
 public final class DuelZone implements Listener {
 
-    public record Settings(double radius, int strikeCooldownTicks, List<String> modes) {
+    public static final List<String> CORNERS = List.of("duel-zone-a", "duel-zone-b");
+
+    public record Settings(int strikeCooldownTicks, List<String> modes) {
         public static Settings from(StrictConfig section) {
-            return new Settings(section.decimal("radius"), section.integer("strike-cooldown-ticks"), section.texts("modes"));
+            return new Settings(section.integer("strike-cooldown-ticks"), section.texts("modes"));
         }
     }
 
     private final Plugin plugin;
-    private final Locations<LobbyLocation> locations;
+    private final Locations<String> spots;
     private final Messages messages;
     private final Settings settings;
 
-    public DuelZone(Plugin plugin, Locations<LobbyLocation> locations, Messages messages, Settings settings) {
+    public DuelZone(Plugin plugin, Locations<String> spots, Messages messages, Settings settings) {
         this.plugin = plugin;
-        this.locations = locations;
+        this.spots = spots;
         this.messages = messages;
         this.settings = settings;
     }
@@ -91,7 +94,11 @@ public final class DuelZone implements Listener {
     }
 
     private boolean inside(Location location) {
-        return locations.get(LobbyLocation.DUELL).filter(spot -> spot.getWorld().equals(location.getWorld()))
-                .filter(spot -> spot.distanceSquared(location) <= settings.radius() * settings.radius()).isPresent();
+        var a = spots.get(CORNERS.getFirst());
+        var b = spots.get(CORNERS.getLast());
+        if (a.isEmpty() || b.isEmpty() || !a.get().getWorld().equals(location.getWorld())) {
+            return false;
+        }
+        return BoundingBox.of(a.get().getBlock(), b.get().getBlock()).contains(location.toVector());
     }
 }

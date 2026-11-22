@@ -226,6 +226,7 @@ public final class LobbyPlugin extends JavaPlugin {
         leaderboards.names().stream().map(Podiums::spot).sorted().forEach(optionalSpots::add);
         optionalSpots.addAll(quests.spots());
         optionalSpots.add(DailyCourier.SPOT);
+        optionalSpots.addAll(DuelZone.CORNERS);
         optionalSpots.addAll(scenes.spots());
         optionalSpots.addAll(ambience.spots());
         var optionalBlocks = new ArrayList<>(loreNotes.spots());
@@ -240,7 +241,7 @@ public final class LobbyPlugin extends JavaPlugin {
         closables.add(hud::stop);
         register(previews, hud, parkour, quirks, seasons, decor, snowfall, sleigh, throwFight, mapSecrets, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets, throwFight::item),
-                new DuelZone(this, locations, messages, DuelZone.Settings.from(yaml.section("duel-zone"))),
+                new DuelZone(this, activityLocations, messages, DuelZone.Settings.from(yaml.section("duel-zone"))),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
                 new RoundRecapListener(this, messages, config),
