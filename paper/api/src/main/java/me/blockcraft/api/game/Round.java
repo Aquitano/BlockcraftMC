@@ -471,11 +471,19 @@ public final class Round implements Listener {
 
     /**
      * As {@link #reopen}, for a game whose next round is open to everyone still here: whoever watched or was out of
-     * the last round plays in the next one while there is room, unless they are vanished. Nobody is announced again.
+     * the last round plays in the next one while there is room, unless they are vanished, and whoever vanished since
+     * watches instead. Nobody is announced again.
      */
     public boolean reopenToAll(RoundSummary nextSummary) {
         if (!reopen(nextSummary)) {
             return false;
+        }
+        for (var seated : players()) {
+            if (api.isVanished(seated)) {
+                players.remove(seated.getUniqueId());
+                summary.forget(seated);
+                watch(seated);
+            }
         }
         for (var spectator : spectators.list()) {
             if (!full() && !api.isVanished(spectator)) {

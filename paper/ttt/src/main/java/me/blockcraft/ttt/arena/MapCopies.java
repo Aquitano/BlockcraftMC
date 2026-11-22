@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * Every map's world, a copy of its template under the map's key. A world a round played in is unloaded afterwards
@@ -42,9 +43,16 @@ public final class MapCopies {
         templates.put(key, template);
     }
 
-    /** The world of the map {@code key}; throws if its copy failed. */
+    /** The world of the map {@code key}; a background copy that failed is tried once more here, and throws if it fails again. */
     public World load(String key) {
-        copies.getOrDefault(key, DONE).join();
+        var copy = copies.getOrDefault(key, DONE);
+        try {
+            copy.join();
+        } catch (CompletionException failed) {
+            plugin.getSLF4JLogger().warn("Copying the TTT map {} failed; trying once more", key, failed.getCause());
+            copies.remove(key);
+            dimensions.copy(templates.get(key), key);
+        }
         return dimensions.load(key);
     }
 
