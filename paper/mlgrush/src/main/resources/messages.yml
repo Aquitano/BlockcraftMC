@@ -35,9 +35,18 @@ rematch:
   request: "<prefix><accent><player> <muted>möchte eine Revanche. <accept>"
   accept: "<success>[Annehmen]"
   accept-hover: "<muted>Klicke, um gleich noch einmal gegen <white><player> <muted>anzutreten."
-  starting: "<prefix><muted>Revanche auf <accent><map> <muted>in <accent><seconds> Sekunden<muted>!"
+  starting: "<prefix><muted>Revanche in <accent><seconds> Sekunden<muted>!"
+vote:
+  item: "<arrow><primary>Abstimmung"
+  title: "<arrow><mlgrush>MLG Rush <dark>· <muted>Abstimmung"
+  map: "<arrow><primary><map>"
+  builders: "<bullet><muted>Erbaut von <accent><builders>"
+  chance: "den Zufall"
+  result:
+    - "<prefix><muted>Gespielt wird <accent><map><muted>."
 scoreboard:
   title: "<mlgrush><bold>MLG Rush"
+  map-vote: "Abstimmung läuft"
   score: "<muted><icon:kills> PUNKTE"
   red: "<arrow><red>Rot <dark>· <white><player> <dark>· <white><score>"
   blue: "<arrow><blue>Blau <dark>· <white><player> <dark>· <white><score>"
