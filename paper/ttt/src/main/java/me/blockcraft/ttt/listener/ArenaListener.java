@@ -13,6 +13,8 @@ import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
@@ -31,6 +33,8 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -128,6 +132,8 @@ public final class ArenaListener implements Listener {
                 case SHOP -> game.openShop(player);
                 case TASKS -> game.openTasks(player);
             }
+        } else if (HotbarItem.of(hand, TaskItem.class).isPresent()) {
+            event.setUseItemInHand(Event.Result.DENY);
         } else if (hand != null && game.rolesDrawn()
                 && game.equipment().use(player, hand, Optional.ofNullable(block), event.getBlockFace())) {
             event.setUseItemInHand(Event.Result.DENY);
@@ -181,6 +187,30 @@ public final class ArenaListener implements Listener {
                 game.inspect(player, clicked, player.getInventory().getItemInMainHand());
             }
         } else if (inRound() && game.isPlaying(player) && game.equipment().clickGadget(player, clicked)) {
+            event.setCancelled(true);
+        } else if (inRound() && clicked instanceof Hanging) {
+            event.setCancelled(true);
+        }
+    }
+
+    /** A map's armour stands, item frames and paintings are scenery, like its blocks: nobody takes or breaks them. */
+    @EventHandler(ignoreCancelled = true)
+    public void onArmorStand(PlayerArmorStandManipulateEvent event) {
+        if (inRound()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSceneryHit(EntityDamageEvent event) {
+        if (inRound() && (event.getEntity() instanceof ArmorStand || event.getEntity() instanceof Hanging)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onHangingBreak(HangingBreakEvent event) {
+        if (inRound()) {
             event.setCancelled(true);
         }
     }

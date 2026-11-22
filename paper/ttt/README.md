@@ -37,8 +37,9 @@ seconds and stay shut for everyone else.
 ## The maps
 
 On every map, a right-click on any chest removes it and gives one item from `chests.loot`, picked by weight. Every
-ender chest holds the round's one iron sword, given once and only after the preparation. Nothing can be broken, and
-nothing placed but the shop's landmines, fake chests and heal stations.
+ender chest holds the round's one iron sword, given once and only after the preparation. Nothing can be broken or
+taken, a map's armour stands, item frames and paintings included, and nothing placed but the shop's landmines, fake
+chests and heal stations. A chore's cargo cannot be used, so a bottle cannot be filled nor a fish eaten on the way.
 
 The **traitor tester** works the same way on every map. Pressing its button from inside closes the doorway with glass.
 After a delay the lamps turn red if a traitor stands inside, lime otherwise, and then the lamps and doorway return to the
