@@ -273,4 +273,5 @@ ready:
   opponent: "<prefix><accent><player> <success>ist bereit. <muted>Klicke auf Bereit, um zu starten."
   opponent-not: "<prefix><accent><player> <muted>ist nicht mehr bereit."
 challenge:
+  unplayable: "<prefix><muted>Der gewählte Modus hat hier keine spielbare Map, deshalb wird ein anderer Modus gespielt."
   locked: "<prefix><muted>Die Regeln dieser Herausforderung stehen fest. Mit /hub kannst du das Duell verlassen."

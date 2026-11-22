@@ -162,7 +162,8 @@ public final class DuelChallenges {
 
     private void request(Player sender, Player target) {
         var current = pending.get(sender.getUniqueId());
-        if (current != null && current.sender == target && current.invited() && !current.accepted) {
+        if (current != null && current.sender == target && current.invited() && !current.accepted
+                && clock.instant().isBefore(current.expires)) {
             accept(current);
             return;
         }
@@ -177,7 +178,8 @@ public final class DuelChallenges {
         }
         var challenge = new Challenge(sender, target, clock.instant().plusSeconds(settings.setupSeconds()));
         cooldowns.put(sender.getUniqueId(), clock.instant().plusSeconds(settings.cooldownSeconds()));
-        challenge.players.forEach(id -> pending.put(id, challenge));
+        // The target only becomes part of the challenge once an invitation reaches them.
+        pending.put(sender.getUniqueId(), challenge);
         ProxyChannel.send(sender, new ProxyMessage.DuelSetup(challenge.ticket, target.getUniqueId(), visibility.shownName(target)));
         onDemand.ifPresent(servers -> servers.wake(group));
     }
@@ -230,10 +232,15 @@ public final class DuelChallenges {
         var challenge = pending.get(sender.getUniqueId());
         if (challenge == null || challenge.sender != sender || !challenge.ticket.equals(invitation.ticket())
                 || challenge.invited() || !clock.instant().isBefore(challenge.expires)
-                || !available(sender) || !available(challenge.target) || !reachable(sender, challenge.target)) {
+                || !available(sender) || !reachable(sender, challenge.target)) {
             sender.sendMessage(messages.get("duel.expired"));
             return;
         }
+        if (!available(challenge.target) || pending.containsKey(challenge.target.getUniqueId())) {
+            cancel(challenge, messages.get("duel.target-busy", Placeholder.unparsed("player", visibility.shownName(challenge.target))), null);
+            return;
+        }
+        pending.put(challenge.target.getUniqueId(), challenge);
         var rules = invitation.rules();
         challenge.rules = rules;
         challenge.expires = clock.instant().plusSeconds(settings.inviteSeconds());
@@ -292,7 +299,8 @@ public final class DuelChallenges {
         if (challenge.server != null && challenge.transfers == 0) directory.releaseDuel(challenge.server, challenge.players);
         for (var player : new Player[]{challenge.sender, challenge.target}) {
             if (player.isActive()) {
-                player.sendMessage(player == challenge.sender ? toSender : toTarget);
+                var notice = player == challenge.sender ? toSender : challenge.invited() ? toTarget : null;
+                if (notice != null) player.sendMessage(notice);
                 returnToLobby(challenge, player);
             }
         }
@@ -308,7 +316,9 @@ public final class DuelChallenges {
     public synchronized void tick() {
         cooldowns.values().removeIf(until -> !clock.instant().isBefore(until));
         for (var challenge : new HashSet<>(pending.values())) {
-            if (!clock.instant().isBefore(challenge.expires) || !challenge.sender.isActive() || !challenge.target.isActive()
+            if (challenge.accepted && challenge.server == null && !clock.instant().isBefore(challenge.expires)) {
+                cancel(challenge, messages.get("duel.no-arena"), messages.get("duel.no-arena"));
+            } else if (!clock.instant().isBefore(challenge.expires) || !challenge.sender.isActive() || !challenge.target.isActive()
                     || !reachable(challenge.sender, challenge.target) || visibility.isVanished(challenge.sender) || visibility.isVanished(challenge.target)
                     || parties.isInParty(challenge.sender.getUniqueId()) || parties.isInParty(challenge.target.getUniqueId())
                     || ranked.isWaiting(challenge.sender.getUniqueId()) || ranked.isWaiting(challenge.target.getUniqueId())) {

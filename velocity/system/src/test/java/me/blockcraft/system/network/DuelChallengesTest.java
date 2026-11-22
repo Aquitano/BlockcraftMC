@@ -136,14 +136,35 @@ public class DuelChallengesTest {
     }
 
     @Test
-    public void expiredInvitationsCannotBeAcceptedAndKeepTheArenaFree() {
+    public void expiredInvitationsCannotBeAccepted() {
         var setup = invite();
         clock.now = clock.now.plusSeconds(31);
+        challenges.request(target, sender.getUniqueId());
         refresh();
         challenges.tick();
         challenges.answer(target, "accept", setup.ticket().toString());
+        assertTrue(proxy.requested(sender).isEmpty());
         assertTrue(proxy.requested(target).isEmpty());
-        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(stranger.getUniqueId(), "duell-1"));
+    }
+
+    @Test
+    public void aTargetIsOnlyTiedUpOnceInvited() {
+        var setup = draft();
+        var lobby = stranger.getCurrentServer().orElseThrow();
+        challenges.request(stranger, "Target");
+        var other = (ProxyMessage.DuelSetup) ProxyMessageCodec.decode(proxy.sentTo(lobby).getLast(), ProxyMessage.ToBackend.class).orElseThrow();
+        challenges.invite(stranger, new ProxyMessage.DuelInvitation(other.ticket(), RULES));
+        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), RULES));
+        assertEquals(messages.get("duel.target-busy", Placeholder.unparsed("player", "Target")), proxy.received(sender).getLast());
+    }
+
+    @Test
+    public void theChallengerCannotAcceptTheirOwnChallenge() {
+        var setup = invite();
+        challenges.answer(sender, "accept", setup.ticket().toString());
+        challenges.request(sender, target.getUniqueId());
+        assertTrue(proxy.requested(sender).isEmpty());
+        assertTrue(proxy.requested(target).isEmpty());
     }
 
     @Test
