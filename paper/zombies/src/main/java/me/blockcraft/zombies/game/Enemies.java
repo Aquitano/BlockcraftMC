@@ -223,6 +223,9 @@ public final class Enemies {
 
     private EnemyKind choose() {
         var weights = game.config().mix(plan.wave());
+        if (!game.powered()) {
+            weights.remove(EnemyKind.SCAVENGER);
+        }
         double total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
         if (total <= 0) {
             return EnemyKind.WALKER;

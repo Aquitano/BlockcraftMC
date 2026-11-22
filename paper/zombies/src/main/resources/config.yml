@@ -137,7 +137,8 @@ enemies:
   # A zombie taller than scale 1.02 no longer fits through the arena's two-block windows.
   breeder: {first-wave: 21, health: 120, damage: 7, speed: 0.15, weight: 0.8, late-weight: 2}
   shadow: {first-wave: 23, health: 36, damage: 6, speed: 0.36, weight: 1, late-weight: 2.5}
-  scavenger: {first-wave: 9, health: 10, damage: 2, speed: 0.31, weight: 0.8, late-weight: 1.5}
+  # Only while the power is on, since cutting it is all it does.
+  scavenger: {first-wave: 9, health: 10, damage: 2, speed: 0.31, weight: 0.25, late-weight: 0.5}
   # Its damage is what a pinned fighter takes every pulse.
   pouncer: {first-wave: 14, health: 70, damage: 3, speed: 0.24, weight: 0.8, late-weight: 2, scale: 0.45}
   ram: {first-wave: 16, health: 110, damage: 9, speed: 0.19, weight: 0.6, late-weight: 1.8, scale: 0.6}
@@ -232,10 +233,10 @@ abilities:
     stunned-multiplier: 2
     knockback: 1.3
     cooldown-ticks: 80
-  # Comes in packs and, while the power is on, runs for the generator instead of the fighters. Once scavengers within
+  # Comes in packs once the power is on and runs for the generator instead of the fighters. Once scavengers within
   # gnaw-radius of it have gnawed for gnaw-seconds together, the power fails as in the outage event.
   scavenger:
-    pack: 3
+    pack: 2
     gnaw-radius: 2.5
     gnaw-seconds: 8
 # From from-wave something lives under the floor. A fighter who stays within radius blocks of one spot hears it after
