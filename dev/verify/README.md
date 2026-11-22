@@ -81,6 +81,8 @@ The client draws too slowly to walk, so these scenarios move the player with `tp
 `arena.yml`, builds them from an endless flat sea on a bare server and saves the result to `worlds/sturmwerft`. The generator
 stops if the arena would place a fighter inside a block. To play a map on this network, start it with `VERIFY_MAP=sturmwerft`,
 then use the scenarios, `tour` above all. Scenarios and `restart` follow the map the server is running, and each report names it.
+`verify.py map silo7` builds the Zombies map Silo 7 the same way into `worlds/silo7`; `VERIFY_GAME=zombies VERIFY_MAP=silo7`
+plays it. The mapbuilder alone needs up to 3 GB and no client.
 
 ## Replays
 
