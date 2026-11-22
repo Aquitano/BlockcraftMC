@@ -41,8 +41,9 @@ On first start, MLG Rush writes `plugins/MLGRush/maps.yml` with six procedural m
 in the data folder. Bundled maps missing from it are added to the loaded pool, and existing definitions, disabled flags
 and the selection are kept. Set a bundled map's `enabled` to false to exclude it.
 
-`selection: random` chooses one enabled map at backend start and between matches. For repeatable testing, set `selection`
-to an enabled key and restart the backend. The log records the chosen key.
+With `selection: random` the lobby votes among the enabled maps before each match, or leaves the map to chance, and staff
+decide with `/forcemap <key>`. For repeatable testing, set `selection` to an enabled key and restart the backend; that map
+plays every match and there is no vote.
 
 The generated void dimension starts as `mlgrush:<key>` and stays loaded when another map replaces its layout.
 

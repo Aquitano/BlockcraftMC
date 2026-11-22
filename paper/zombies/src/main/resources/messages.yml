@@ -13,6 +13,14 @@ commands:
     description: "Erklärt Zombies und seine Steuerung"
 join:
   introduction: "<prefix><muted>Überlebe allein oder im Team <max-waves> Wellen. <accent>/zombies <muted>erklärt dir die Steuerung."
+vote:
+  item: "<arrow><primary>Abstimmung"
+  title: "<arrow><zombies>Zombies <dark>· <muted>Abstimmung"
+  map: "<arrow><primary><map>"
+  builders: "<bullet><muted>Erbaut von <accent><builders>"
+  chance: "den Zufall"
+  result:
+    - "<prefix><muted>Gespielt wird <accent><map><muted>."
 guide:
   item: "<arrow><zombies>Spielanleitung"
   title: "<arrow><zombies>Zombies <dark>· <muted>Spielanleitung"
@@ -349,6 +357,7 @@ powerup:
   collected: "<prefix><powerup> <muted>für das ganze Team!"
 scoreboard:
   title: "<zombies><bold>Zombies"
+  map-vote: "Abstimmung läuft"
   squad: "<muted><icon:mode> VERTEIDIGUNG"
   event: "<muted><icon:time> EREIGNIS"
   wave: "<arrow><muted>Welle <primary><wave>/<total>"

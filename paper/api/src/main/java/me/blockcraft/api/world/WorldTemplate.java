@@ -19,9 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
-import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
 /**
@@ -49,8 +47,8 @@ public final class WorldTemplate {
      */
     private static final String DIMENSIONS = "dimensions";
     private static final String VANILLA_DIMENSIONS = "minecraft";
-
-    private static String picked;
+    private static final String OVERWORLD = "overworld";
+    private static final String BUNDLE = "blockcraft";
 
     private final Path directory;
 
@@ -63,22 +61,25 @@ public final class WorldTemplate {
     }
 
     /**
-     * {@code BLOCKCRAFT_WORLD_TEMPLATE}, else {@code world.template} of the config; empty when neither names a directory.
-     * Several comma-separated directories rotate maps: one is picked at random and kept for as long as this server runs,
-     * so a game server that restarts after each round plays another map next time.
+     * The main world's template: the first of {@link #rotation}, which the bootstrap restores at every start and
+     * {@code /map save} publishes to.
      */
     public static Optional<WorldTemplate> configured(StrictConfig config) {
-        String env = System.getenv(ENV);
-        String path = env != null && !env.isBlank() ? env : config.text("world.template");
-        if (picked == null) {
-            pick(path, ThreadLocalRandom.current()).ifPresent(choice -> picked = choice);
-        }
-        return Optional.ofNullable(picked).map(choice -> at(Path.of(choice)));
+        return rotation(config).stream().findFirst();
     }
 
-    static Optional<String> pick(String paths, RandomGenerator random) {
-        var choices = Arrays.stream(paths.split(",")).map(String::strip).filter(choice -> !choice.isEmpty()).toList();
-        return choices.isEmpty() ? Optional.empty() : Optional.of(choices.get(random.nextInt(choices.size())));
+    /**
+     * {@code BLOCKCRAFT_WORLD_TEMPLATE}, else {@code world.template} of the config, as comma-separated directories; empty
+     * when neither names one. A game that names several lets its lobby choose among them ({@link MapRotation}).
+     */
+    public static List<WorldTemplate> rotation(StrictConfig config) {
+        String env = System.getenv(ENV);
+        return paths(env != null && !env.isBlank() ? env : config.text("world.template")).stream()
+                .map(path -> at(Path.of(path))).toList();
+    }
+
+    static List<String> paths(String paths) {
+        return Arrays.stream(paths.split(",")).map(String::strip).filter(path -> !path.isEmpty()).toList();
     }
 
     public Path directory() {
@@ -100,6 +101,31 @@ public final class WorldTemplate {
             });
         } catch (IOException e) {
             throw new UncheckedIOException("Could not copy " + directory + " to " + world, e);
+        }
+    }
+
+    /**
+     * Copies only the map's overworld into a dimension folder of another level, with the map's {@code blockcraft/}
+     * bundle beside its regions, so that the map plays as one world among others.
+     */
+    public void restoreDimension(Path dimension) {
+        try {
+            exclusively(() -> {
+                repair();
+                Path overworld = directory.resolve(DIMENSIONS).resolve(VANILLA_DIMENSIONS).resolve(OVERWORLD);
+                if (!Files.isDirectory(overworld)) {
+                    throw new IOException("No overworld in " + directory);
+                }
+                Files.createDirectories(dimension);
+                clear(dimension, name -> true);
+                copyContents(overworld, dimension, name -> true);
+                Path bundle = directory.resolve(BUNDLE);
+                if (Files.isDirectory(bundle)) {
+                    copyRecursively(bundle, dimension.resolve(BUNDLE));
+                }
+            });
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not copy " + directory + " to " + dimension, e);
         }
     }
 

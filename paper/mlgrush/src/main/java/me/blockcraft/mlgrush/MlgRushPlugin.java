@@ -3,8 +3,10 @@ package me.blockcraft.mlgrush;
 import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.ForceMapCommand;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GameServices;
+import me.blockcraft.api.game.MapVote;
 import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.game.rush.RushArena;
 import me.blockcraft.api.game.rush.MapPool;
@@ -13,9 +15,11 @@ import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.mlgrush.game.StandaloneRushGame;
 import me.blockcraft.mlgrush.listener.ConnectionListener;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Files;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class MlgRushPlugin extends JavaPlugin {
@@ -43,12 +47,18 @@ public final class MlgRushPlugin extends JavaPlugin {
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "mlgrush_stats");
         var arena = new RushArena(map);
-        game = new StandaloneRushGame(this, gameConfig, config, winCoins, services.messages(), arena, maps, services.stats(), services.menus());
+        var vote = new MapVote(services.messages(), maps.maps().stream()
+                .filter(candidate -> maps.selection().equals("random") || candidate.key().equals(maps.selection()))
+                .map(candidate -> new MapVote.Choice(candidate.key(), candidate.name(), List.of())).toList(), Material.SANDSTONE);
+        game = new StandaloneRushGame(this, gameConfig, config, winCoins, services.messages(), arena, maps, vote, services.stats(), services.menus());
         services.listen(new ConnectionListener(game),
                 new ArenaProtection(() -> false),
                 WorldProtection.during(() -> !game.isIngame(), api.buildMode()).rescue(game::lobbySpawn),
                 game.hotbar());
-        services.commands(commands -> commands.register(StartCommand.of(game.countdown()).build()));
+        services.commands(commands -> {
+            commands.register(StartCommand.of(game.countdown()).build());
+            commands.register(ForceMapCommand.create(services.messages(), vote::keys, () -> game.isLobby() && vote.open(), vote::force));
+        });
         Bukkit.getOnlinePlayers().forEach(game::join);
         game.refreshPresence();
     }

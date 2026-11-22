@@ -119,7 +119,7 @@ public class DuelSeriesTest {
         var votes = new DuelVote();
         votes.cast(FIRST, new DuelVote.Choice(DuelMode.VS, OptionalInt.of(3)));
         votes.cast(SECOND, new DuelVote.Choice(DuelMode.SG, OptionalInt.of(2)));
-        votes.force(DuelMode.SUMO);
+        votes.force(new DuelVote.Choice(DuelMode.SUMO, OptionalInt.empty()));
 
         assertEquals(new HashSet<>(List.of(new DuelVote.Outcome(DuelMode.VS, 3),
                         new DuelVote.Outcome(DuelMode.SG, 2), new DuelVote.Outcome(DuelMode.SUMO, 1))),

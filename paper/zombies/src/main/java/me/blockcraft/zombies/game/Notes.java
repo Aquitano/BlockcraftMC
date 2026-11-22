@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * The outpost's story, one note per room, read in chat under its title. The first read of each note is a secret: an
@@ -27,12 +28,12 @@ public final class Notes {
 
     private static final Title.Times TITLE_TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(500));
     private final Messages messages;
-    private final ArenaMap arena;
+    private final Supplier<ArenaMap> arena;
     private final int coins;
     private final UnlockRewards rewards;
     private final Map<UUID, Set<String>> read = new HashMap<>();
 
-    public Notes(Messages messages, ArenaMap arena, int coins) {
+    public Notes(Messages messages, Supplier<ArenaMap> arena, int coins) {
         this.messages = messages;
         this.arena = arena;
         this.coins = coins;
@@ -54,7 +55,7 @@ public final class Notes {
                 return OptionalLong.empty();
             }
             var owned = api.unlocks().owned(uuid, ArenaMap.Note.ITEM_PREFIX);
-            return OptionalLong.of(arena.notes().stream().filter(each -> owned.contains(each.item())).count());
+            return OptionalLong.of(arena.get().notes().stream().filter(each -> owned.contains(each.item())).count());
         }, found -> found.ifPresent(count -> celebrate(player, note, count)), failed -> forget(failed, note));
     }
 
@@ -68,7 +69,7 @@ public final class Notes {
 
     private void celebrate(Player player, ArenaMap.Note note, long found) {
         var tags = TagResolver.resolver(Formatter.number("coins", coins), Formatter.number("found", found),
-                Formatter.number("total", arena.notes().size()),
+                Formatter.number("total", arena.get().notes().size()),
                 Placeholder.component("note", messages.get("note." + note.id() + ".name")));
         BlockcraftApi.get().notifications().reward(player,
                 Title.title(messages.get("note.found-title", tags), messages.get("note.found-subtitle", tags), TITLE_TIMES), Sounds.SECRET);

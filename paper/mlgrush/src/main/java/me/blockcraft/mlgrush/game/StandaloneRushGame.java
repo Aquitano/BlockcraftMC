@@ -9,6 +9,7 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
+import me.blockcraft.api.game.MapVote;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundSummary;
@@ -44,7 +45,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 
 public final class StandaloneRushGame {
 
@@ -55,6 +55,7 @@ public final class StandaloneRushGame {
     private final int winCoins;
     private final GameConfig gameConfig;
     private final MapPool maps;
+    private final MapVote vote;
     private final StatsRepository stats;
     private final Messages messages;
     private final RushArena arena;
@@ -75,12 +76,13 @@ public final class StandaloneRushGame {
     private BukkitTask resetTask;
 
     public StandaloneRushGame(Plugin plugin, GameConfig gameConfig, RushConfig config, int winCoins, Messages messages,
-                    RushArena arena, MapPool maps, StatsRepository stats, StatsMenus statsMenus) {
+                    RushArena arena, MapPool maps, MapVote vote, StatsRepository stats, StatsMenus statsMenus) {
         this.plugin = plugin;
         this.config = config;
         this.winCoins = winCoins;
         this.gameConfig = gameConfig;
         this.maps = maps;
+        this.vote = vote;
         this.stats = stats;
         this.messages = messages;
         this.arena = arena;
@@ -93,7 +95,8 @@ public final class StandaloneRushGame {
                 new LobbyHotbar.Choice(MenuIcon.MLGRUSH, messages.get("item.layout"),
                         player -> new RushLayoutMenu(kit, messages, "layout.", player).open(player)),
                 new LobbyHotbar.Choice(MenuIcon.DUELL, messages.get("item.rematch"), () -> round.phase() == GamePhase.ENDING,
-                        player -> requestRematch(player, identity))), statsMenus, countdown);
+                        player -> requestRematch(player, identity)),
+                vote.hotbarChoice(this::isLobby)), statsMenus, countdown);
         sidebar = new GameSidebar(messages.get("scoreboard.title"), GameSidebar.Headcount.of(round), () -> false);
         voidRecovery = Bukkit.getScheduler().runTaskTimer(plugin, this::recoverWaitingPlayers, 1L, 1L);
     }
@@ -118,6 +121,10 @@ public final class StandaloneRushGame {
         return isIngame() ? arena.spectatorSpawn() : lobbySpawn().orElseGet(arena::spectatorSpawn);
     }
 
+    public boolean isLobby() {
+        return round.phase() == GamePhase.LOBBY;
+    }
+
     public boolean isIngame() {
         return round.phase() == GamePhase.INGAME;
     }
@@ -135,7 +142,7 @@ public final class StandaloneRushGame {
         } else {
             player.teleport(spectatorSpawn());
         }
-        player.sendMessage(messages.get("round.map", Placeholder.unparsed("map", arena.name())));
+        player.sendMessage(messages.get("round.map", Placeholder.component("map", mapName())));
         refreshPresence();
         refresh();
     }
@@ -149,6 +156,7 @@ public final class StandaloneRushGame {
     }
 
     public void quit(Player player) {
+        vote.withdraw(player);
         boolean participant = round.leave(player);
         if (round.phase() == GamePhase.LOBBY) {
             updateLobby();
@@ -196,6 +204,8 @@ public final class StandaloneRushGame {
         countdown.cancel();
         participants = players.stream().map(Player::getUniqueId).toList();
         winnerName = Optional.empty();
+        var chosen = vote.decide().key();
+        arena.selectMap(maps.maps().stream().filter(map -> map.key().equals(chosen)).findFirst().orElseThrow());
         round.playArea(arena.world(), arena.bounds());
         round.enter(GamePhase.INGAME);
         var started = identity;
@@ -334,7 +344,7 @@ public final class StandaloneRushGame {
 
     private void reopen(boolean rematch) {
         cancelReset();
-        arena.selectMap(maps.choose(ThreadLocalRandom.current()));
+        vote.reopen();
         identity = new Object();
         Arrays.fill(previousScores, 0);
         rematches.clear();
@@ -351,8 +361,7 @@ public final class StandaloneRushGame {
         }
         round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
         if (rematch) {
-            Bukkit.broadcast(messages.get("rematch.starting", Formatter.number("seconds", gameConfig.startSeconds()),
-                    Placeholder.unparsed("map", arena.name())));
+            Bukkit.broadcast(messages.get("rematch.starting", Formatter.number("seconds", gameConfig.startSeconds())));
             countdown.shorten(gameConfig.startSeconds());
         } else {
             seatWaitingPlayers();
@@ -371,7 +380,7 @@ public final class StandaloneRushGame {
     }
 
     public void refresh() {
-        var map = Component.text(arena.name());
+        var map = mapName();
         var winners = winnerName.stream().<Component>map(Component::text).toList();
         for (var viewer : Bukkit.getOnlinePlayers()) {
             var icons = GameSidebar.icons(viewer);
@@ -384,6 +393,11 @@ public final class StandaloneRushGame {
                 case ENDING -> sidebar.end(viewer, winners);
             }
         }
+    }
+
+    /** The map of the match, or that the lobby still votes on it. */
+    private Component mapName() {
+        return vote.open() && isLobby() ? messages.get("scoreboard.map-vote") : Component.text(arena.name());
     }
 
     private List<Component> scores() {

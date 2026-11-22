@@ -11,6 +11,7 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * The guns an armory sells, turning in a ring above it so they read from across the yard. Each one faces outwards
@@ -24,12 +25,12 @@ final class WeaponRacks {
 
     private record Shown(ItemDisplay display, double offset) { }
 
-    private final ArenaMap arena;
+    private final Supplier<ArenaMap> arena;
     private final ZombiesConfig.Armory config;
     private final List<Weapon> guns;
     private final List<Shown> shown = new ArrayList<>();
 
-    WeaponRacks(ArenaMap arena, ZombiesConfig.Armory config, List<Weapon> guns) {
+    WeaponRacks(Supplier<ArenaMap> arena, ZombiesConfig.Armory config, List<Weapon> guns) {
         this.arena = arena;
         this.config = config;
         this.guns = guns;
@@ -37,7 +38,7 @@ final class WeaponRacks {
 
     void show(int tick) {
         clear();
-        for (var station : arena.stations()) {
+        for (var station : arena.get().stations()) {
             if (station.kind() != StationKind.ARMORY) {
                 continue;
             }
@@ -45,7 +46,7 @@ final class WeaponRacks {
             for (int index = 0; index < guns.size(); index++) {
                 var gun = guns.get(index);
                 double offset = FULL_TURN * index / guns.size();
-                var display = arena.world().spawn(centre, ItemDisplay.class, spawned -> {
+                var display = arena.get().world().spawn(centre, ItemDisplay.class, spawned -> {
                     spawned.setItemStack(gun.model().item().build());
                     spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
                     spawned.setTransformation(pose(spin(tick) + offset));

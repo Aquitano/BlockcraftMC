@@ -5,12 +5,14 @@ import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.ForceMapCommand;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GameServices;
 import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.SetupCommand;
 import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.world.WorldProtection;
+import me.blockcraft.zombies.arena.ArenaChoice;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import me.blockcraft.zombies.game.ZombiesGame;
@@ -45,7 +47,7 @@ public final class ZombiesPlugin extends JavaPlugin {
         var api = BlockcraftApi.get();
         var config = ZombiesConfig.from(getConfig());
         var gameConfig = GameConfig.from(getConfig(), 1);
-        var arenaFile = api.map().file(this, "arena.yml");
+        var arenaFile = api.map().file(this, ArenaChoice.FILE);
         if (Files.notExists(arenaFile)) {
             try (var bundled = getResource("arena.yml")) {
                 if (bundled == null) {
@@ -60,17 +62,23 @@ public final class ZombiesPlugin extends JavaPlugin {
         if (!arena.prepare()) {
             throw new IllegalStateException("Zombies arena is not ready. Starter generation needs an empty region; configure " + arenaFile);
         }
-        arena.keepLoaded(this);
         var services = GameServices.load(this, gameConfig, "bc_zombies_stats");
         var messages = services.messages().with(
                 Formatter.number("max-waves", config.waves().total()),
                 Formatter.number("heal-delay", config.healthRegenTicks() / 20));
-        game = new ZombiesGame(this, gameConfig, config, messages, arena, services.stats(), services.menus());
+        var maps = new ArenaChoice(this, messages, arena);
+        if (!maps.rotates()) {
+            arena.keepLoaded(this);
+        }
+        game = new ZombiesGame(this, gameConfig, config, messages, maps,
+                BundledDefaults.strict(getConfig()).integer("countdown.vote-closes-at"), services.stats(), services.menus());
         api.presence().maxPlayers(config.maxPlayers());
         services.listen(new RoundConnections(game), new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
                 WorldProtection.during(() -> !game.running(), api.buildMode()).rescue(() -> java.util.Optional.of(game.lobbySpawn())));
         services.commands(commands -> {
             commands.register(StartCommand.of(game.lobbyCountdown()).build());
+            commands.register(ForceMapCommand.create(messages, maps.vote()::keys, () -> game.isLobby() && maps.vote().open(),
+                    maps.vote()::force));
             var setup = SetupCommand.root().executes(context -> {
                 context.getSource().getSender().sendMessage(messages.get("setup.help"));
                 return Command.SINGLE_SUCCESS;

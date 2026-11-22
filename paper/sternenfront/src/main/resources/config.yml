@@ -245,9 +245,11 @@ battlefield:
   vent: {warning-seconds: 1, seconds: 6, cooldown-seconds: 20, damage: 2}
   bulkhead: {seconds: 8, cooldown-seconds: 20}
   shutters: {seconds: 8, cooldown-seconds: 20}
+# With several maps the lobby votes until countdown.vote-closes-at seconds before the start, when the chosen map loads.
 countdown:
   lobby: 60
   start: 10
+  vote-closes-at: 10
   full: 20
   round: 1200
   restart: 30

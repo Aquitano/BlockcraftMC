@@ -23,6 +23,7 @@ import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.zombies.arena.ArenaChoice;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.config.ZombiesConfig;
@@ -77,7 +78,9 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private final Plugin plugin;
     private final ZombiesConfig config;
     private final Messages messages;
-    private final ArenaMap arena;
+    private final ArenaChoice maps;
+    private final int voteClosesAt;
+    private ArenaMap arena;
     private final Round round;
     private final RoundSummary summary;
     private final LobbyCountdown lobbyCountdown;
@@ -115,30 +118,34 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private int instantKillUntil;
     private boolean powered;
 
+    /** The vote among the maps closes {@code voteClosesAt} seconds before the start, when the chosen one loads. */
     public ZombiesGame(Plugin plugin, GameConfig gameConfig, ZombiesConfig config, Messages messages,
-                       ArenaMap arena, StatsRepository stats, StatsMenus statsMenus) {
+                       ArenaChoice maps, int voteClosesAt, StatsRepository stats, StatsMenus statsMenus) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
-        this.arena = arena;
+        this.maps = maps;
+        this.voteClosesAt = voteClosesAt;
+        this.arena = maps.main();
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.maxPlayers(), gameConfig);
         round.playArea(arena.world(), arena.bounds());
-        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, 1, remaining -> { }, this::begin);
+        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, 1, this::lobbySecond, this::begin);
         this.lobbyHotbar = new LobbyHotbar(plugin,
-                List.of(new LobbyHotbar.Choice(MenuIcon.ZOMBIES, messages.get("guide.item"), player -> new GuideDialog(messages).show(player))),
+                List.of(new LobbyHotbar.Choice(MenuIcon.ZOMBIES, messages.get("guide.item"), player -> new GuideDialog(messages).show(player)),
+                        maps.vote().hotbarChoice(this::isLobby)),
                 statsMenus, lobbyCountdown);
         this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, () -> Optional.of(lobbySpawn()),
                 () -> Optional.of(isLobby() ? lobbySpawn() : arena.point("spectator")), OptionalInt.empty(), player -> { });
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.weapons = new Weapons(this);
         this.enemies = new Enemies(this);
-        this.effects = new ArenaEffects(plugin, arena);
+        this.effects = new ArenaEffects(plugin, this::arena);
         this.presentation = new ZombiesPresentation(this, plugin, config.presentation());
-        this.notes = new Notes(messages, arena, config.noteCoins());
+        this.notes = new Notes(messages, this::arena, config.noteCoins());
         this.events = new WaveEvents(this, effects, config.events());
         this.mysteryBox = new MysteryBox(this);
-        this.racks = new WeaponRacks(arena, config.armory(), config.forSale());
+        this.racks = new WeaponRacks(this::arena, config.armory(), config.forSale());
         this.burrower = new Burrower(this, config.burrower());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
@@ -149,7 +156,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     public ArenaMap arena() { return arena; }
     public Location lobbySpawn() {
         return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn)
-                .orElseGet(() -> arena.point("lobby"));
+                .orElseGet(() -> maps.main().point("lobby"));
     }
     public LobbyCountdown lobbyCountdown() { return lobbyCountdown; }
     public LobbyHotbar lobbyHotbar() { return lobbyHotbar; }
@@ -211,6 +218,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     @Override
     public void quit(Player player) {
         presentation.forget(player);
+        maps.vote().withdraw(player);
         var survivor = survivors.remove(player.getUniqueId());
         boolean participated = survivor != null;
         notes.forget(player);
@@ -233,7 +241,16 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }
     }
 
+    private void lobbySecond(int remaining) {
+        if (remaining <= voteClosesAt && maps.vote().open()) {
+            maps.decide();
+            round.players().forEach(lobbyHotbar::refreshChoices);
+            refreshSidebar();
+        }
+    }
+
     private void begin() {
+        play(maps.decide());
         round.enter(GamePhase.INGAME);
         phase = Phase.INTERMISSION;
         teamSize = round.playerCount();
@@ -249,6 +266,15 @@ public final class ZombiesGame implements RoundConnections.Seating {
         racks.show(tick);
         broadcast("game.started", Formatter.number("players", teamSize), Formatter.number("waves", config.waves().total()));
         intermission();
+    }
+
+    private void play(ArenaMap chosen) {
+        if (chosen == arena) {
+            return;
+        }
+        arena = chosen;
+        round.playArea(arena.world(), arena.bounds());
+        arena.labels(messages);
     }
 
     private void nextWave() {
@@ -745,7 +771,8 @@ public final class ZombiesGame implements RoundConnections.Seating {
     public void refreshSidebar() {
         for (var player : Bukkit.getOnlinePlayers()) {
             if (isLobby()) {
-                sidebar.lobby(player, config.maxPlayers(), Component.text(arena.name()), List.of());
+                sidebar.lobby(player, config.maxPlayers(), maps.chosen().<Component>map(chosen -> Component.text(chosen.name()))
+                        .orElseGet(() -> messages.get("scoreboard.map-vote")), List.of());
             } else if (phase == Phase.ENDING) {
                 sidebar.end(player, summary.winnerNames().stream().<Component>map(Component::text).toList());
             } else {

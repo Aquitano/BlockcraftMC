@@ -54,7 +54,16 @@ public final class TemplateDimensions {
     }
 
     /** Blocking file work, run before {@link #load}; only an unloaded dimension may be replaced. */
-    public synchronized void copy(Path template, String name) {
+    public void copy(Path template, String name) {
+        copy(name, WorldTemplate.at(template)::restore);
+    }
+
+    /** {@link #copy} for a whole level's template, of which only the overworld and the map's bundle are played. */
+    public void copyLevel(WorldTemplate level, String name) {
+        copy(name, level::restoreDimension);
+    }
+
+    private synchronized void copy(String name, Consumer<Path> into) {
         if (!copyingOrLoading.add(name)) {
             throw new IllegalStateException("The world is being copied or loaded: " + name);
         }
@@ -62,7 +71,7 @@ public final class TemplateDimensions {
             if (loaded(name).isPresent()) {
                 throw new IllegalStateException("Cannot copy into a loaded world: " + name);
             }
-            WorldTemplate.at(template).restore(folder(name));
+            into.accept(folder(name));
         } finally {
             copyingOrLoading.remove(name);
         }
@@ -98,7 +107,7 @@ public final class TemplateDimensions {
         WorldTemplate.at(template).publish(folder(name));
     }
 
-    private Path folder(String name) {
+    Path folder(String name) {
         var level = Bukkit.getWorlds().getFirst().getName();
         return Bukkit.getWorldContainer().toPath().resolve(level).resolve("dimensions").resolve(namespace).resolve(name);
     }

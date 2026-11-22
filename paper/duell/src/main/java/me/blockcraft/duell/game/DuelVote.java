@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/** What the participants chose in the lobby, counted once when the round starts. Staff may force the mode. */
+/** What the participants chose in the lobby, counted once when the round starts. Staff may force the mode and a map. */
 public final class DuelVote {
 
     /** A vote for {@code mode}, and for one of its maps unless the voter left that to chance. */
@@ -33,7 +33,7 @@ public final class DuelVote {
     private final Map<UUID, DuelSeries.Format> formats = new HashMap<>();
     private final Map<UUID, DuelRating> ratings = new HashMap<>();
     private final Map<UUID, CombatStyle> combats = new HashMap<>();
-    private Optional<DuelMode> forced = Optional.empty();
+    private Optional<Choice> forced = Optional.empty();
 
     public DuelVote() {
         this(Map.of());
@@ -106,13 +106,13 @@ public final class DuelVote {
         return choices.values().stream().map(Choice::mode).distinct().sorted().toList();
     }
 
-    /** The mode is settled whatever the votes say; the votes for its maps still count. */
-    void force(DuelMode mode) {
-        forced = Optional.of(mode);
+    /** The mode, and the map if one is given, are settled whatever the votes say; else the votes for its maps count. */
+    void force(Choice choice) {
+        forced = Optional.of(choice);
     }
 
     public Optional<DuelMode> forced() {
-        return forced;
+        return forced.map(Choice::mode);
     }
 
     void clearForced() {
@@ -140,7 +140,10 @@ public final class DuelVote {
      * it if one is; none while nobody voted or the modes are tied.
      */
     public Optional<Choice> leader() {
-        var modes = forced.map(List::of).orElseGet(() -> mostVoted(choices.values().stream().map(Choice::mode)));
+        if (forced.filter(choice -> choice.map().isPresent()).isPresent()) {
+            return forced;
+        }
+        var modes = forced().map(List::of).orElseGet(() -> mostVoted(choices.values().stream().map(Choice::mode)));
         if (modes.size() != 1) {
             return Optional.empty();
         }
@@ -161,7 +164,7 @@ public final class DuelVote {
                 .map(Map.Entry::getKey)
                 .sorted()
                 .toList();
-        var modes = forced.map(List::of).orElseGet(() -> mostVoted(choices.values().stream().map(Choice::mode)
+        var modes = forced().map(List::of).orElseGet(() -> mostVoted(choices.values().stream().map(Choice::mode)
                 .filter(mode -> available.isEmpty() || available.contains(mode))));
         if (modes.isEmpty()) {
             modes = available;
@@ -171,6 +174,11 @@ public final class DuelVote {
     }
 
     Outcome tally(DuelMode mode, List<Integer> maps, Random random) {
+        var forcedMap = forced.filter(choice -> choice.mode() == mode).stream()
+                .flatMapToInt(choice -> choice.map().stream()).filter(maps::contains).findFirst();
+        if (forcedMap.isPresent()) {
+            return new Outcome(mode, forcedMap.getAsInt());
+        }
         var votedMaps = mostVoted(mapVotes(mode).filter(maps::contains));
         var preset = mapPresets.get(mode);
         if (votedMaps.isEmpty() && preset != null && maps.contains(preset)) {

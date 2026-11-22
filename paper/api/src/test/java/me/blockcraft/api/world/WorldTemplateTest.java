@@ -9,8 +9,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Optional;
-import java.util.Random;
+import java.util.List;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
@@ -24,19 +23,32 @@ public class WorldTemplateTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void aSingleDirectoryIsAlwaysPicked() {
-        assertEquals(Optional.of("/worlds/a"), WorldTemplate.pick("/worlds/a", new Random()));
+    public void aListNamesEachDirectoryInOrder() {
+        assertEquals(List.of("/worlds/a", "/worlds/b"), WorldTemplate.paths("/worlds/a, /worlds/b,"));
     }
 
     @Test
-    public void aListPicksOneOfItsDirectories() {
-        var picked = WorldTemplate.pick("/worlds/a, /worlds/b,", new Random()).orElseThrow();
-        assertTrue(picked, picked.equals("/worlds/a") || picked.equals("/worlds/b"));
+    public void onlySeparatorsNameNothing() {
+        assertEquals(List.of(), WorldTemplate.paths(" , ,"));
     }
 
     @Test
-    public void onlySeparatorsPickNothing() {
-        assertEquals(Optional.empty(), WorldTemplate.pick(" , ,", new Random()));
+    public void aMapPlaysAsADimensionWithItsBundle() throws IOException {
+        Path directory = folder.newFolder("template").toPath();
+        write(directory, "level.dat", "level");
+        write(directory, "dimensions/minecraft/overworld/region/r.0.0.mca", "map");
+        write(directory, "dimensions/minecraft/the_nether/region/r.0.0.mca", "nether");
+        write(directory, "blockcraft/Zombies/arena.yml", "arena");
+        Path dimension = folder.newFolder("dimension").toPath();
+        write(dimension, "region/r.1.1.mca", "last round");
+
+        WorldTemplate.at(directory).restoreDimension(dimension);
+
+        assertEquals("map", Files.readString(dimension.resolve("region/r.0.0.mca")));
+        assertEquals("arena", Files.readString(dimension.resolve("blockcraft/Zombies/arena.yml")));
+        assertFalse(Files.exists(dimension.resolve("region/r.1.1.mca")));
+        assertFalse(Files.exists(dimension.resolve("level.dat")));
+        assertFalse(Files.exists(dimension.resolve("dimensions")));
     }
 
     @Test
