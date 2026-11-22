@@ -456,18 +456,39 @@ public final class Duel {
         refreshScoreboards();
     }
 
-    /** What /forcemap offers: the modes with a playable map. */
+    /** What /forcemap offers: the modes with a playable map, and each mode followed by one of its maps where it has several. */
     public List<String> forcibleModes() {
-        return forcible().map(DuelMode::configKey).toList();
+        return forcible().flatMap(this::forcibleChoices).map(this::forceOption).toList();
     }
 
-    /** /forcemap: the mode is settled, its map still comes from the votes; empty for a mode that cannot be forced. */
-    public Optional<Component> forceMode(String key) {
-        return forcible().filter(mode -> mode.configKey().equalsIgnoreCase(key)).findFirst().map(mode -> {
-            votes.force(mode);
-            refreshScoreboards();
-            return modeName(mode);
-        });
+    /**
+     * /forcemap: the mode is settled, and so is its map when one follows it, else the map still comes from the votes;
+     * empty for a mode or map that cannot be forced.
+     */
+    public Optional<Component> forceMode(String option) {
+        return forcible().flatMap(this::forcibleChoices).filter(choice -> option.equalsIgnoreCase(forceOption(choice)))
+                .findFirst().map(choice -> {
+                    votes.force(choice);
+                    refreshScoreboards();
+                    return choice.map().isEmpty() ? modeName(choice.mode()) : messages.get("vote.option",
+                            Placeholder.component("mode", modeName(choice.mode())),
+                            Placeholder.component("map", Component.text(mapName(choice.mode(), choice.map().getAsInt()))));
+                });
+    }
+
+    private Stream<DuelVote.Choice> forcibleChoices(DuelMode mode) {
+        return Stream.concat(Stream.of(new DuelVote.Choice(mode, OptionalInt.empty())),
+                forcibleMaps(mode).stream().map(map -> new DuelVote.Choice(mode, OptionalInt.of(map))));
+    }
+
+    private String forceOption(DuelVote.Choice choice) {
+        return choice.map().stream().mapToObj(map -> choice.mode().configKey() + " " + mapName(choice.mode(), map)).findFirst()
+                .orElse(choice.mode().configKey());
+    }
+
+    private List<Integer> forcibleMaps(DuelMode mode) {
+        var maps = playableMaps(mode);
+        return maps.size() > 1 ? maps : List.of();
     }
 
     /** The modes the vote offers: a seasonal one only while its season lasts. */

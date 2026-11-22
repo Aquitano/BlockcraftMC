@@ -2,7 +2,7 @@
 
 `paper/duell` runs 1v1 games in the `duell` group: VS, SG, SuperJump, Sumo and MLG Rush. It resets gameplay between
 matches without restarting the server. `/forcemap` decides the mode here, and `/forcemap sumo` forces Sumo for the next
-duel.
+duel. A map may follow a mode that has several, as in `/forcemap vs Tippy`; without one the votes still pick the map.
 
 ## Sumo
 

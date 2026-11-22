@@ -63,7 +63,7 @@ public class DuelVoteTest {
         var games = new DuelGames(null, null, null, null, null, null, null, pool, null, null);
         var vote = new DuelVote(games.mapPresets());
         var playable = Map.of(DuelMode.MLGRUSH, games.rushMaps(), DuelMode.VS, List.of(1), DuelMode.SUMO, List.of(1));
-        vote.force(DuelMode.MLGRUSH);
+        vote.force(new DuelVote.Choice(DuelMode.MLGRUSH, OptionalInt.empty()));
 
         for (var format : DuelSeries.Format.values()) {
             assertTrue(DuelSeries.plan(format, vote, playable, LAST).contains(new DuelVote.Outcome(DuelMode.MLGRUSH, 2)));
@@ -123,9 +123,19 @@ public class DuelVoteTest {
         vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(1)));
         vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(1)));
         vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SG, OptionalInt.of(1)));
-        vote.force(DuelMode.SG);
+        vote.force(new DuelVote.Choice(DuelMode.SG, OptionalInt.empty()));
 
         assertEquals(new DuelVote.Outcome(DuelMode.SG, 1), vote.tally(PLAYABLE, LAST));
+    }
+
+    @Test
+    public void aForcedMapOutvotesTheVotesForItsMode() {
+        var vote = new DuelVote();
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SG, OptionalInt.of(1)));
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SG, OptionalInt.of(1)));
+        vote.force(new DuelVote.Choice(DuelMode.SG, OptionalInt.of(3)));
+
+        assertEquals(new DuelVote.Outcome(DuelMode.SG, 3), vote.tally(PLAYABLE, LAST));
     }
 
     @Test
@@ -231,7 +241,7 @@ public class DuelVoteTest {
         vote.chooseFormat(second, DuelSeries.Format.TOUR);
         vote.chooseRating(first, DuelRating.RATED);
         vote.chooseRating(second, DuelRating.RATED);
-        vote.force(DuelMode.SG);
+        vote.force(new DuelVote.Choice(DuelMode.SG, OptionalInt.empty()));
 
         vote.clearRatings();
         vote.clearForced();
