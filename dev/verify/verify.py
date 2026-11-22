@@ -1105,13 +1105,23 @@ def build_map(name="sturmwerft"):
         time.sleep(3)
     say = lambda command: print(rcon(command, "mapbuilder")[:140])
     compose("cp", str(built / "datapack"), f"mapbuilder:/data/world/datapacks/{name}")
-    compose("exec", "-T", "mapbuilder", "mkdir", "-p", "/data/world/blockcraft/Sternenfront")
-    compose("cp", str(built / "arena.yml"), "mapbuilder:/data/world/blockcraft/Sternenfront/arena.yml")
-    compose("cp", str(built / "map.yml"), "mapbuilder:/data/world/blockcraft/map.yml")
+    # A generator either writes the world's files under files/, or Sternenfront's arena.yml and map.yml beside its functions.
+    files = built / "files"
+    placed = {path.relative_to(files): path for path in sorted(files.rglob("*")) if path.is_file()} if files.is_dir() else {
+        Path("blockcraft/Sternenfront/arena.yml"): built / "arena.yml", Path("blockcraft/map.yml"): built / "map.yml"}
+    for target, source in placed.items():
+        compose("exec", "-T", "mapbuilder", "mkdir", "-p", f"/data/world/{target.parent}")
+        compose("cp", str(source), f"mapbuilder:/data/world/{target}")
     say("reload")
     time.sleep(8)
     say(f"datapack enable \"file/{name}\"")
     time.sleep(8)
+    # One unknown block makes the server skip that whole function, which would save a half-built map.
+    failed = [line for line in compose("logs", "--no-log-prefix", "mapbuilder", capture=True).stdout.splitlines()
+              if "Failed to load function" in line or "Whilst parsing command" in line]
+    if failed:
+        compose("--profile", "mapgen", "stop", "mapbuilder")
+        raise RuntimeError("The map's functions did not load:\n" + "\n".join(failed))
     for area in (built / "forceload.txt").read_text().split("\n"):
         if area:
             say(f"forceload add {area}")
@@ -1136,7 +1146,7 @@ def build_map(name="sturmwerft"):
         compose("cp", f"mapbuilder:/data/world/{part}", str(staging / part))
     if (template / "datapacks").is_dir():
         shutil.copytree(template / "datapacks", staging / "datapacks")
-    if not (staging / "blockcraft/Sternenfront/arena.yml").is_file():
+    if not all((staging / target).is_file() for target in placed):
         raise RuntimeError(f"The export in {staging} is incomplete; {template} is untouched")
     template.rename(previous)
     staging.rename(template)
@@ -1189,7 +1199,8 @@ def main():
     command = commands.add_parser("rcon")
     command.add_argument("text")
     commands.add_parser("join")
-    commands.add_parser("map", help="generate Sturmwerft and save it to worlds/sturmwerft")
+    generate = commands.add_parser("map", help="generate a map from dev/mapgen and save it to worlds/<name>")
+    generate.add_argument("name", nargs="?", default="sturmwerft", choices=["sturmwerft", "silo7"])
     commands.add_parser("models", help="after changing a body: regenerate its models and pack, and serve them")
     round_ = commands.add_parser("round", help="start a round and deploy")
     round_.add_argument("--watch-intro", action="store_true")
@@ -1220,7 +1231,7 @@ def main():
     elif args.action == "rcon":
         print(rcon(args.text))
     elif args.action == "map":
-        build_map()
+        build_map(args.name)
     elif args.action == "models":
         refresh_models()
     elif args.action == "join":

@@ -217,6 +217,7 @@ services:
       - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/zombies:/worlds/zombies
+      - ./worlds/silo7:/worlds/silo7
       - zombies:/data
       - replays:/replays
 

@@ -18,5 +18,10 @@
     "name": "Wrack von Tessar",
     "start-pos": { "x": 0, "z": 0 },
     "render-mask": [{ "min-x": -100, "max-x": 100, "min-z": -74, "max-z": 74 }]
+  },
+  "silo7": {
+    "name": "Silo 7",
+    "start-pos": { "x": 0, "z": 0 },
+    "render-mask": [{ "min-x": -110, "max-x": 110, "min-z": -110, "max-z": 110 }]
   }
 }

@@ -93,6 +93,7 @@ services:
         condition: service_completed_successfully
     environment:
       BLOCKCRAFT_SERVER_GROUP: lobby
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/${VERIFY_MAP:-zombies}
     volumes:
       - ${VERIFY_ZOMBIES_CONFIG:-./dev/verify/zombies-overrides.yml}:/data/plugins/Zombies/config.yml:ro
 

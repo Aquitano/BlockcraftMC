@@ -145,9 +145,16 @@ room:
   workshop: "Werkstatt"
   power: "Generatorraum"
   clinic: "Krankenstation"
+  radio_tower: "Funkturm"
+  greenhouse: "Gewächshaus"
+  cold_store: "Kühlhaus"
+  silo: "Silo"
+  # The name of a door between two rooms, in their label and in room.linked.
+  pair: "<room> <dark>· <zombies><other>"
   label: "<zombies><room>\n<accent><price> Gold <dark>· <muted>Tor anklicken"
   open-label: "<zombies><room>\n<success>Geöffnet"
   opened: "<prefix><primary><player> <muted>hat <zombies><room> <muted>für das Team geöffnet."
+  linked: "<prefix><primary><player> <muted>hat den Durchgang <zombies><room> <muted>geöffnet."
 station:
   armory: "Waffen & Munition"
   armor: "Rüstung"
@@ -286,6 +293,55 @@ note:
       - "<muted>Die Leichenhalle ist verriegelt. Die Fächer sind von innen zerkratzt."
       - "<muted>Wer das findet: Haltet die Fenster zu und bleibt zusammen."
       - "<dark>Dr. E. Vogt"
+  silo_yard:
+    name: "Wachbuch Silo 7"
+    body:
+      - "<muted>02:10 Uhr. Schläge unter dem Deckel. Der Schichtleiter sagt, das ist der Druckausgleich."
+      - "<muted>02:40 Uhr. Der Deckel hat einen Riss. Durch das Glas sieht man Licht im Schacht, und etwas bewegt sich darin."
+      - "<muted>03:05 Uhr. Sie kommen nicht durch den Riss. Sie kommen über die Lüftungsschächte an den Mauern."
+      - "<dark>Wache Hof, Posten 2"
+  silo_workshop:
+    name: "Reparaturauftrag"
+    body:
+      - "<muted>Lastenaufzug Schacht B: Seilwinde gerissen, Steuerplatine durchgebrannt. Plattform steht unten."
+      - "<muted>Ersatzteile angefordert. Ohne Strom fährt er ohnehin nicht, und ohne ihn kommt nichts Schweres mehr hinunter."
+      - "<muted>Nachtrag: Die Leitung will den Aufzug nicht mehr repariert haben. Ich frage nicht mehr, warum."
+      - "<dark>Werkmeister H. Lenz"
+  silo_tower:
+    name: "Funkprotokoll"
+    body:
+      - "<muted>An alle Stationen: Silo 7 meldet Eindämmungsbruch. Exemplar 7 ist nicht entkommen. Die Brut schon."
+      - "<muted>Keine Antwort vom Festland seit zwei Tagen. Der Mast sendet weiter, solange der Generator läuft."
+      - "<muted>Wer zuhört: Kommt nicht über die Bucht. Der Hof ist nicht mehr unserer."
+      - "<dark>Funkerin A. Roth"
+  silo_greenhouse:
+    name: "Versuchsreihe 12"
+    body:
+      - "<muted>Die Pflanzen aus Kammer 7 wachsen auch ohne Licht. Ihre Wurzeln suchen nach unten, zum Schacht."
+      - "<muted>Die Sporen beruhigen die Brut. Wir haben mehr ausgesät, als genehmigt war."
+      - "<muted>Gestern hat Beet 4 gezuckt, als ich vorbeiging. Ich gieße es nicht mehr."
+      - "<dark>Dr. L. Sander, Botanik"
+  silo_cold:
+    name: "Lagerliste"
+    body:
+      - "<muted>Futterlieferung für Kammer 7: zwölf Paletten, Kühlung auf minus 18 Grad. Nicht anfassen."
+      - "<muted>Exemplar 7 frisst jetzt die doppelte Menge. Die Liste reicht noch für vier Tage."
+      - "<muted>Seit gestern fehlen Paletten. Die Tür war von innen verriegelt."
+      - "<dark>Lagerist P. Kuhn"
+  silo_power:
+    name: "Schaltanweisung"
+    body:
+      - "<muted>Generator A versorgt die Anlage, Generator B nur das Feld vor Kammer 7. Niemals beide abschalten."
+      - "<muted>Fällt das Feld aus, hält nur noch das Tor. Das Tor ist für sechs Meter gebaut. Exemplar 7 misst jetzt sechs Meter."
+      - "<muted>Die Schleuse zum Silo öffnet nur von hier oben."
+      - "<dark>Schichtingenieur M. Haas"
+  silo_lab:
+    name: "Laborbuch Kammer 7"
+    body:
+      - "<muted>Tag 212. Exemplar 7 hat die Glaswand der Kammer zweimal getestet. Danach lag es still und hat uns beobachtet."
+      - "<muted>Die Brut schlüpft schneller, je wärmer es im Schacht ist. Sie ist klein, schnell und lernt die Wege."
+      - "<muted>Wenn jemand das liest, ist das Tor noch zu. Lasst es so. Fahrt mit dem Aufzug nur hinunter, wenn ihr es beenden wollt."
+      - "<dark>Dr. K. Winter, Leitung Silo 7"
 powerup:
   max_ammo: "<success>Volle Munition"
   double_gold: "<accent>Doppeltes Gold"

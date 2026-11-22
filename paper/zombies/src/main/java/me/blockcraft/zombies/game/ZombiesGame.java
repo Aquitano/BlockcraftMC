@@ -609,16 +609,18 @@ public final class ZombiesGame implements RoundConnections.Seating {
         return true;
     }
 
-    public void buyDoor(Player player, ArenaMap.Room room) {
-        if (!fighting(player) || arena.unlocked(room.id())) {
+    public void buyDoor(Player player, ArenaMap.Door door) {
+        if (!fighting(player) || arena.opened(door)) {
             return;
         }
-        if (!survivor(player).spend(room.price())) {
+        if (!survivor(player).spend(door.price())) {
             feedback(player, "shop.not-enough");
             return;
         }
-        effects.openDoor(room);
-        broadcast("room.opened", Placeholder.unparsed("player", player.getName()), Placeholder.component("room", messages.get("room." + room.id())));
+        var reached = door.rooms().stream().filter(room -> !arena.unlocked(room)).findFirst();
+        effects.openDoor(door);
+        broadcast(reached.isPresent() ? "room.opened" : "room.linked", Placeholder.unparsed("player", player.getName()),
+                Placeholder.component("room", reached.map(room -> messages.get("room." + room)).orElseGet(() -> door.name(messages))));
         Sounds.PURCHASE.playToAll();
     }
 

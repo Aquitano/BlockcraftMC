@@ -90,7 +90,7 @@ public final class GameListener implements Listener {
         if (event.getAction().isRightClick()) {
             var block = event.getClickedBlock();
             if (block != null) {
-                var door = game.arena().doorAt(block).filter(room -> !game.arena().unlocked(room.id()));
+                var door = game.arena().doorAt(block).filter(each -> !game.arena().opened(each));
                 if (door.isPresent()) {
                     game.buyDoor(player, door.get());
                     return;

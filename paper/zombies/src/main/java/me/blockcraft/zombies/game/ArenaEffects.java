@@ -33,9 +33,9 @@ final class ArenaEffects {
         this.world = arena.world();
     }
 
-    void openDoor(ArenaMap.Room room) {
-        var rows = arena.open(room);
-        var door = room.door();
+    void openDoor(ArenaMap.Door opened) {
+        var rows = arena.open(opened);
+        var door = opened.box();
         var center = new Location(world, (door.minX() + door.maxX() + 1) / 2.0, door.minY() + 1.5, (door.minZ() + door.maxZ() + 1) / 2.0);
         world.playSound(center, Sound.BLOCK_PISTON_CONTRACT, 1, 0.6f);
         for (int row = 0; row < rows.size(); row++) {
