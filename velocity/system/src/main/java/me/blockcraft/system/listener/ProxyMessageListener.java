@@ -75,6 +75,7 @@ public final class ProxyMessageListener {
             return null;
         }
         switch (message.get()) {
+            case ProxyMessage.DuelRequest request -> challenges.request(player, request.target());
             case ProxyMessage.DuelInvitation invitation -> challenges.invite(player, invitation);
             case ProxyMessage.DuelCancel cancel -> challenges.cancel(player, cancel.ticket());
             case ProxyMessage.PackRequest _ -> pack.get().ifPresentOrElse(networkPack -> networkPack.retry(player),

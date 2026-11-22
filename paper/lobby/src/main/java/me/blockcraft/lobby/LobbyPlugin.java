@@ -20,6 +20,7 @@ import me.blockcraft.lobby.activity.MapSecrets;
 import me.blockcraft.lobby.activity.NoticeBoards;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.command.ParkourCommand;
+import me.blockcraft.lobby.activity.DuelZone;
 import me.blockcraft.lobby.activity.PondFishing;
 import me.blockcraft.lobby.activity.Prisoner;
 import me.blockcraft.lobby.activity.Props;
@@ -239,6 +240,7 @@ public final class LobbyPlugin extends JavaPlugin {
         closables.add(hud::stop);
         register(previews, hud, parkour, quirks, seasons, decor, snowfall, sleigh, throwFight, mapSecrets, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets, throwFight::item),
+                new DuelZone(this, locations, messages, DuelZone.Settings.from(yaml.section("duel-zone"))),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
                 new RoundRecapListener(this, messages, config),

@@ -51,14 +51,23 @@ The proxy and the Duell servers rate with the same `elo` section of `network.yml
 Seasons last three months (`Season`), so every January, April, July and October everyone starts again at the start
 rating. `/elo` keeps the past seasons' tables.
 
-## Direct challenges
+## Challenges
 
-`/duel <player>` reserves a private Duell server and moves the challenger there to choose the rules. Both players must
-start in lobbies, outside parties and the ranked queue. Ranked selection is available only when the Duell server enables
-rated play. Other players cannot join that arena while it is reserved. Accepted rules also apply to rematches.
+Around the lobby's Duell spot (`/setspawn duell`, radius in the lobby's `duel-zone`) players hold a challenge sword.
+Striking another player there, or `/duel <player>` anywhere in a lobby, opens the rules: mode, best of 1 or 3, and the
+combat style. The invited player accepts by striking back or with the chat button. Only then does the proxy reserve an
+empty Duell server, waking it if it sleeps, and send both there; the server draws one of the mode's playable maps and
+starts as soon as both stand on it. Both players must start in lobbies, outside parties and the ranked queue, and other
+players cannot join that arena while it is reserved. The rules also apply to rematches. Challenges are unrated; the
+ranked queue is the way to a rated series.
 
 The proxy's `duels` section sets the setup, invitation and transfer durations and the request cooldown. Failed or cancelled
 transfers return players already on the private server to the lobby.
+
+## Random pairs
+
+Two players who meet through `/play duell` vote as before, but the lobby countdown only runs once both have clicked the
+ready item, so nobody is rushed into a fight. A ranked pair starts without it.
 
 ## MLG Rush
 

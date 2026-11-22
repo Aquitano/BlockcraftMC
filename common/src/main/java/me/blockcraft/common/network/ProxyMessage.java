@@ -18,9 +18,13 @@ import java.util.UUID;
  */
 public sealed interface ProxyMessage {
 
+    /** The player struck {@code target} with the lobby's challenge sword: a challenge, or the answer to theirs. */
+    record DuelRequest(UUID target) implements ToProxy { }
+    /** Opens the challenge rules on the challenger's lobby. */
     record DuelSetup(UUID ticket, UUID opponent, String name) implements ToBackend { }
-    record DuelInvitation(UUID ticket, DuelRules rules, String mapName) implements ToProxy { }
-    record DuelAccepted(UUID ticket) implements ToBackend { }
+    record DuelInvitation(UUID ticket, DuelRules rules) implements ToProxy { }
+    /** Sent to each duellist as they reach the private Duell server, which starts once both are there. */
+    record DuelMatch(UUID ticket, UUID opponent, DuelRules rules) implements ToBackend { }
     record DuelCancelled(UUID ticket) implements ToBackend { }
     record DuelCancel(UUID ticket) implements ToProxy { }
 

@@ -39,7 +39,7 @@ public final class LobbyItemListener implements Listener {
                 case PLAYER_HIDER -> toggleHider(player);
                 case PROFILE -> menus.openProfile(player);
                 case FRIENDS -> menus.openFriends(player);
-                case GADGET, POND_ROD, THROW -> {
+                case GADGET, POND_ROD, THROW, DUEL_SWORD -> {
                 }
             }
         });

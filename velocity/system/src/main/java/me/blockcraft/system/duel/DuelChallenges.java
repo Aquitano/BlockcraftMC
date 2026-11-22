@@ -8,6 +8,7 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import me.blockcraft.common.duel.DuelRules;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ProxyMessage;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -46,10 +47,10 @@ public final class DuelChallenges {
         final Player sender;
         final Player target;
         final Set<UUID> players;
+        final Set<UUID> arrived = new HashSet<>();
         Instant expires;
+        DuelRules rules;
         String server;
-        boolean opened;
-        boolean invited;
         boolean accepted;
         boolean cancelled;
         int transfers;
@@ -59,6 +60,14 @@ public final class DuelChallenges {
             this.target = target;
             this.players = Set.of(sender.getUniqueId(), target.getUniqueId());
             this.expires = expires;
+        }
+
+        boolean invited() {
+            return rules != null;
+        }
+
+        Player other(Player player) {
+            return player == sender ? target : sender;
         }
     }
 
@@ -97,7 +106,8 @@ public final class DuelChallenges {
     }
 
     public BrigadierCommand command(CommandSupport support) {
-        var root = BrigadierCommand.literalArgumentBuilder("duel").executes(support.asPlayer((player, context) -> openSetup(player)));
+        var root = BrigadierCommand.literalArgumentBuilder("duel").executes(support.asPlayer((player, context) ->
+                player.sendMessage(messages.get("duel.usage"))));
         for (String action : new String[]{"accept", "decline", "cancel"}) {
             root.then(BrigadierCommand.literalArgumentBuilder(action)
                     .executes(support.asPlayer((player, context) -> answerCurrent(player, action)))
@@ -107,14 +117,6 @@ public final class DuelChallenges {
         root.then(support.playerArgument("player").executes(support.asPlayer((player, context) ->
                 request(player, StringArgumentType.getString(context, "player")))));
         return new BrigadierCommand(root);
-    }
-
-    private synchronized void openSetup(Player player) {
-        var challenge = pending.get(player.getUniqueId());
-        if (challenge != null && challenge.sender == player && challenge.opened && !challenge.invited
-                && here(player).filter(server -> server.equals(challenge.server)).isPresent()) {
-            ProxyChannel.send(player, new ProxyMessage.DuelSetup(challenge.ticket, challenge.target.getUniqueId(), visibility.shownName(challenge.target)));
-        } else player.sendMessage(messages.get("duel.usage"));
     }
 
     private synchronized void answerCurrent(Player player, String action) {
@@ -150,7 +152,24 @@ public final class DuelChallenges {
             sender.sendMessage(messages.get(candidates.isEmpty() ? "player-unknown" : "player-ambiguous", Placeholder.unparsed("player", name)));
             return;
         }
-        var target = candidates.getFirst();
+        request(sender, candidates.getFirst());
+    }
+
+    /** {@code /duel <player>} or a strike with the lobby's challenge sword: answers the target's challenge if there is one. */
+    public synchronized void request(Player sender, UUID target) {
+        proxy.getPlayer(target).filter(player -> visibility.canSee(sender, player)).ifPresent(player -> request(sender, player));
+    }
+
+    private void request(Player sender, Player target) {
+        var current = pending.get(sender.getUniqueId());
+        if (current != null && current.sender == target && current.invited() && !current.accepted) {
+            accept(current);
+            return;
+        }
+        if (current != null && current.sender == sender && current.target == target && !current.invited()) {
+            ProxyChannel.send(sender, new ProxyMessage.DuelSetup(current.ticket, target.getUniqueId(), visibility.shownName(target)));
+            return;
+        }
         var refusal = refusal(sender, target);
         if (refusal.isPresent()) {
             sender.sendMessage(refusal.get());
@@ -159,8 +178,8 @@ public final class DuelChallenges {
         var challenge = new Challenge(sender, target, clock.instant().plusSeconds(settings.setupSeconds()));
         cooldowns.put(sender.getUniqueId(), clock.instant().plusSeconds(settings.cooldownSeconds()));
         challenge.players.forEach(id -> pending.put(id, challenge));
-        sender.sendMessage(messages.get("duel.preparing"));
-        prepare(challenge);
+        ProxyChannel.send(sender, new ProxyMessage.DuelSetup(challenge.ticket, target.getUniqueId(), visibility.shownName(target)));
+        onDemand.ifPresent(servers -> servers.wake(group));
     }
 
     /** Whether the target ignores the sender or turned invites off stays hidden behind the vague {@code duel.unavailable}. */
@@ -188,7 +207,9 @@ public final class DuelChallenges {
             return;
         }
         challenge.server = server.get().getServerInfo().getName();
+        challenge.expires = clock.instant().plusSeconds(settings.transferSeconds());
         transfer(challenge, challenge.sender, server.get());
+        transfer(challenge, challenge.target, server.get());
     }
 
     private void transfer(Challenge challenge, Player player, RegisteredServer server) {
@@ -208,20 +229,17 @@ public final class DuelChallenges {
     public synchronized void invite(Player sender, ProxyMessage.DuelInvitation invitation) {
         var challenge = pending.get(sender.getUniqueId());
         if (challenge == null || challenge.sender != sender || !challenge.ticket.equals(invitation.ticket())
-                || !here(sender).filter(server -> server.equals(challenge.server)).isPresent()
-                || challenge.invited || !clock.instant().isBefore(challenge.expires)
-                || !available(challenge.target) || !reachable(sender, challenge.target)) {
+                || challenge.invited() || !clock.instant().isBefore(challenge.expires)
+                || !available(sender) || !available(challenge.target) || !reachable(sender, challenge.target)) {
             sender.sendMessage(messages.get("duel.expired"));
             return;
         }
-        challenge.invited = true;
-        challenge.expires = clock.instant().plusSeconds(settings.inviteSeconds());
         var rules = invitation.rules();
+        challenge.rules = rules;
+        challenge.expires = clock.instant().plusSeconds(settings.inviteSeconds());
         challenge.target.sendMessage(messages.get("duel.invitation", Placeholder.unparsed("player", visibility.shownName(sender)),
                 Placeholder.component("mode", messages.get("duel.mode." + rules.mode())),
-                Placeholder.unparsed("map", invitation.mapName()),
                 Placeholder.component("combat", messages.get(rules.legacy() ? "duel.legacy" : "duel.modern")),
-                Placeholder.component("rating", messages.get(rules.rated() ? "duel.rated" : "duel.unrated")),
                 Formatter.number("games", rules.bestOf()), Formatter.number("seconds", settings.inviteSeconds())));
         challenge.target.sendMessage(RequestButtons.line(messages, "duel.buttons",
                 new RequestButtons.Answer("/duel accept " + challenge.ticket, messages.get("duel.accept-hover")),
@@ -241,18 +259,21 @@ public final class DuelChallenges {
         } else if (action.equals("decline") && challenge.target == player) {
             cancel(challenge, messages.get("duel.declined", Placeholder.unparsed("player", visibility.shownName(player))),
                     messages.get("duel.you-declined"));
-        } else if (action.equals("accept") && challenge.target == player && challenge.invited && !challenge.accepted
-                && available(player) && reachable(challenge.sender, player) && here(challenge.sender).filter(challenge.server::equals).isPresent()) {
-            challenge.accepted = true;
-            challenge.expires = clock.instant().plusSeconds(settings.transferSeconds());
-            var server = proxy.getServer(challenge.server);
-            if (server.isEmpty() || directory.enter(player.getUniqueId(), challenge.server) != ServerDirectory.Entry.SEATED) {
-                cancel(challenge);
-                return;
-            }
-            ProxyChannel.send(challenge.sender, new ProxyMessage.DuelAccepted(challenge.ticket));
-            transfer(challenge, player, server.get());
+        } else if (action.equals("accept") && challenge.target == player && challenge.invited() && !challenge.accepted) {
+            accept(challenge);
         }
+    }
+
+    private void accept(Challenge challenge) {
+        if (!available(challenge.sender) || !available(challenge.target) || !reachable(challenge.sender, challenge.target)) {
+            cancel(challenge);
+            return;
+        }
+        challenge.accepted = true;
+        challenge.expires = clock.instant().plusSeconds(settings.setupSeconds());
+        challenge.sender.sendMessage(messages.get("duel.accepted", Placeholder.unparsed("player", visibility.shownName(challenge.target))));
+        challenge.target.sendMessage(messages.get("duel.you-accepted"));
+        prepare(challenge);
     }
 
     public synchronized void cancel(Player sender, UUID ticket) {
@@ -279,7 +300,7 @@ public final class DuelChallenges {
 
     private void returnToLobby(Challenge challenge, Player player) {
         if (player.isActive() && here(player).filter(server -> server.equals(challenge.server)).isPresent()) {
-            if (player == challenge.sender) ProxyChannel.send(player, new ProxyMessage.DuelCancelled(challenge.ticket));
+            ProxyChannel.send(player, new ProxyMessage.DuelCancelled(challenge.ticket));
             lobby.send(player);
         }
     }
@@ -292,26 +313,29 @@ public final class DuelChallenges {
                     || parties.isInParty(challenge.sender.getUniqueId()) || parties.isInParty(challenge.target.getUniqueId())
                     || ranked.isWaiting(challenge.sender.getUniqueId()) || ranked.isWaiting(challenge.target.getUniqueId())) {
                 cancel(challenge);
-            } else if (challenge.server == null) {
-                if (available(challenge.sender) && available(challenge.target)) prepare(challenge);
-                else cancel(challenge);
+            } else if (challenge.server == null && (!available(challenge.sender) || !available(challenge.target))) {
+                cancel(challenge);
+            } else if (challenge.accepted && challenge.server == null) {
+                prepare(challenge);
             }
         }
     }
 
     @Subscribe
     public synchronized void onConnect(ServerPostConnectEvent event) {
-        var challenge = pending.get(event.getPlayer().getUniqueId());
+        var player = event.getPlayer();
+        var challenge = pending.get(player.getUniqueId());
         if (challenge == null || challenge.server == null) return;
-        if (event.getPlayer() == challenge.sender && !challenge.opened && here(challenge.sender).filter(challenge.server::equals).isPresent()) {
-            challenge.opened = true;
-            ProxyChannel.send(challenge.sender, new ProxyMessage.DuelSetup(challenge.ticket, challenge.target.getUniqueId(), visibility.shownName(challenge.target)));
-        } else if (event.getPlayer() == challenge.target && challenge.accepted && here(challenge.target).filter(challenge.server::equals).isPresent()) {
+        if (!here(player).filter(challenge.server::equals).isPresent()) {
+            cancel(challenge);
+            return;
+        }
+        ProxyChannel.send(player, new ProxyMessage.DuelMatch(challenge.ticket, challenge.other(player).getUniqueId(), challenge.rules));
+        challenge.arrived.add(player.getUniqueId());
+        if (challenge.arrived.equals(challenge.players)) {
             pending.remove(challenge.sender.getUniqueId(), challenge);
             pending.remove(challenge.target.getUniqueId(), challenge);
             directory.releaseDuel(challenge.server, challenge.players);
-        } else if (event.getPlayer() == challenge.sender || !here(challenge.target).filter(directory::isLobby).isPresent()) {
-            cancel(challenge);
         }
     }
 

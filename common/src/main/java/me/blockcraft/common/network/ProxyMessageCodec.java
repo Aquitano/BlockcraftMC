@@ -45,12 +45,13 @@ public final class ProxyMessageCodec {
     private static final int RANKED_MATCH = 19;
     private static final int DUEL_SETUP = 20;
     private static final int DUEL_INVITATION = 21;
-    private static final int DUEL_ACCEPTED = 22;
+    private static final int DUEL_MATCH = 22;
     private static final int DUEL_CANCEL = 23;
     private static final int DUEL_CANCELLED = 24;
     private static final int REPLAY_PLAY = 25;
     private static final int PROFILE_REQUEST = 26;
     private static final int PROFILE_READY = 27;
+    private static final int DUEL_REQUEST = 28;
 
     private ProxyMessageCodec() {
     }
@@ -66,20 +67,20 @@ public final class ProxyMessageCodec {
                     uuid(out, setup.opponent());
                     out.writeUTF(setup.name());
                 }
+                case ProxyMessage.DuelRequest request -> {
+                    out.writeByte(DUEL_REQUEST);
+                    uuid(out, request.target());
+                }
                 case ProxyMessage.DuelInvitation invitation -> {
                     out.writeByte(DUEL_INVITATION);
                     uuid(out, invitation.ticket());
-                    var rules = invitation.rules();
-                    out.writeUTF(rules.mode());
-                    out.writeInt(rules.map());
-                    out.writeBoolean(rules.legacy());
-                    out.writeBoolean(rules.rated());
-                    out.writeInt(rules.bestOf());
-                    out.writeUTF(invitation.mapName());
+                    rules(out, invitation.rules());
                 }
-                case ProxyMessage.DuelAccepted accepted -> {
-                    out.writeByte(DUEL_ACCEPTED);
-                    uuid(out, accepted.ticket());
+                case ProxyMessage.DuelMatch match -> {
+                    out.writeByte(DUEL_MATCH);
+                    uuid(out, match.ticket());
+                    uuid(out, match.opponent());
+                    rules(out, match.rules());
                 }
                 case ProxyMessage.DuelCancelled cancelled -> {
                     out.writeByte(DUEL_CANCELLED);
@@ -233,9 +234,9 @@ public final class ProxyMessageCodec {
     private static ProxyMessage read(DataInputStream in) throws IOException {
         return switch (in.readUnsignedByte()) {
             case DUEL_SETUP -> new ProxyMessage.DuelSetup(uuid(in), uuid(in), in.readUTF());
-            case DUEL_INVITATION -> new ProxyMessage.DuelInvitation(uuid(in), new DuelRules(
-                    in.readUTF(), in.readInt(), in.readBoolean(), in.readBoolean(), in.readInt()), in.readUTF());
-            case DUEL_ACCEPTED -> new ProxyMessage.DuelAccepted(uuid(in));
+            case DUEL_REQUEST -> new ProxyMessage.DuelRequest(uuid(in));
+            case DUEL_INVITATION -> new ProxyMessage.DuelInvitation(uuid(in), rules(in));
+            case DUEL_MATCH -> new ProxyMessage.DuelMatch(uuid(in), uuid(in), rules(in));
             case DUEL_CANCELLED -> new ProxyMessage.DuelCancelled(uuid(in));
             case DUEL_CANCEL -> new ProxyMessage.DuelCancel(uuid(in));
             case PLAY -> new ProxyMessage.Play(in.readUTF());
@@ -291,6 +292,16 @@ public final class ProxyMessageCodec {
             requests.add(in.readUTF());
         }
         return new ProxyMessage.FriendsReply(id, status, List.copyOf(friends), List.copyOf(requests));
+    }
+
+    private static void rules(DataOutputStream out, DuelRules rules) throws IOException {
+        out.writeUTF(rules.mode());
+        out.writeBoolean(rules.legacy());
+        out.writeInt(rules.bestOf());
+    }
+
+    private static DuelRules rules(DataInputStream in) throws IOException {
+        return new DuelRules(in.readUTF(), in.readBoolean(), in.readInt());
     }
 
     private static int count(DataInputStream in) throws IOException {

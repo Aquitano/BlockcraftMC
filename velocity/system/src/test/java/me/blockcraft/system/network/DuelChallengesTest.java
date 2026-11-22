@@ -84,34 +84,42 @@ public class DuelChallengesTest {
                 new ServerStatus(ServerState.LOBBY, 0, capacity, 20, 5), 0);
     }
 
+    private static final DuelRules RULES = new DuelRules("sumo", true, 3);
+
     private ProxyMessage.DuelSetup draft() {
+        var lobby = sender.getCurrentServer().orElseThrow();
         challenges.request(sender, "Target");
-        assertEquals("duell-1", proxy.requested(sender).getLast().getServerInfo().getName());
-        var old = sender.getCurrentServer().orElseThrow();
-        var connection = proxy.connect(sender, "duell-1");
-        directory.onServerPostConnect(new ServerPostConnectEvent(sender, old.getServer()));
-        challenges.onConnect(new ServerPostConnectEvent(sender, old.getServer()));
-        return (ProxyMessage.DuelSetup) ProxyMessageCodec.decode(proxy.sentTo(connection).getLast(), ProxyMessage.ToBackend.class).orElseThrow();
+        assertTrue(proxy.requested(sender).isEmpty());
+        return (ProxyMessage.DuelSetup) ProxyMessageCodec.decode(proxy.sentTo(lobby).getLast(), ProxyMessage.ToBackend.class).orElseThrow();
+    }
+
+    private ProxyMessage.DuelSetup invite() {
+        var setup = draft();
+        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), RULES));
+        return setup;
+    }
+
+    private ProxyMessage.ToBackend arrive(Player player) {
+        var old = player.getCurrentServer().orElseThrow();
+        var connection = proxy.connect(player, "duell-1");
+        directory.onServerPostConnect(new ServerPostConnectEvent(player, old.getServer()));
+        challenges.onConnect(new ServerPostConnectEvent(player, old.getServer()));
+        return ProxyMessageCodec.decode(proxy.sentTo(connection).getLast(), ProxyMessage.ToBackend.class).orElseThrow();
     }
 
     @Test
-    public void onlyTheInvitedPlayerCanAcceptAndDuplicateAcceptsDoNotTransferAgain() {
-        var setup = draft();
-        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(stranger.getUniqueId(), "duell-1"));
-        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), new DuelRules("sumo", 1, true, true, 3), "Sumo"));
+    public void onlyTheInvitedPlayerCanAcceptAndBothArriveWithTheRules() {
+        var setup = invite();
         challenges.answer(stranger, "accept", setup.ticket().toString());
-        assertTrue(proxy.requested(stranger).isEmpty());
-        assertTrue(proxy.requested(target).isEmpty());
         challenges.answer(target, "accept", UUID.randomUUID().toString());
         assertTrue(proxy.requested(target).isEmpty());
         challenges.answer(target, "accept", setup.ticket().toString());
         challenges.answer(target, "accept", setup.ticket().toString());
-        assertEquals(1, proxy.requested(target).size());
-        assertEquals("duell-1", proxy.requested(target).getFirst().getServerInfo().getName());
-        var old = target.getCurrentServer().orElseThrow();
-        proxy.connect(target, "duell-1");
-        directory.onServerPostConnect(new ServerPostConnectEvent(target, old.getServer()));
-        challenges.onConnect(new ServerPostConnectEvent(target, old.getServer()));
+        assertEquals(List.of("duell-1"), proxy.requested(sender).stream().map(server -> server.getServerInfo().getName()).toList());
+        assertEquals(List.of("duell-1"), proxy.requested(target).stream().map(server -> server.getServerInfo().getName()).toList());
+        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(stranger.getUniqueId(), "duell-1"));
+        assertEquals(new ProxyMessage.DuelMatch(setup.ticket(), target.getUniqueId(), RULES), arrive(sender));
+        assertEquals(new ProxyMessage.DuelMatch(setup.ticket(), sender.getUniqueId(), RULES), arrive(target));
         clock.now = clock.now.plusSeconds(61);
         refresh();
         challenges.tick();
@@ -120,42 +128,32 @@ public class DuelChallengesTest {
     }
 
     @Test
-    public void expiredInvitationsReturnTheChallengerAndReleaseThePrivateArena() {
-        var setup = draft();
-        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), new DuelRules("sumo", 1, true, false, 1), "Sumo"));
+    public void strikingTheChallengerBackAcceptsTheChallenge() {
+        var setup = invite();
+        challenges.request(target, sender.getUniqueId());
+        assertEquals("duell-1", proxy.requested(target).getLast().getServerInfo().getName());
+        assertEquals(new ProxyMessage.DuelMatch(setup.ticket(), sender.getUniqueId(), RULES), arrive(target));
+    }
+
+    @Test
+    public void expiredInvitationsCannotBeAcceptedAndKeepTheArenaFree() {
+        var setup = invite();
         clock.now = clock.now.plusSeconds(31);
         refresh();
         challenges.tick();
-        assertEquals("lobby-1", proxy.requested(sender).getLast().getServerInfo().getName());
         challenges.answer(target, "accept", setup.ticket().toString());
         assertTrue(proxy.requested(target).isEmpty());
         assertEquals(ServerDirectory.Entry.SEATED, directory.enter(stranger.getUniqueId(), "duell-1"));
     }
 
     @Test
-    public void expiredSetupKeepsItsReservationAndReturnsTheLateChallenger() {
-        var transfer = proxy.deferNextConnection(sender);
-        challenges.request(sender, "Target");
-        clock.now = clock.now.plusSeconds(61);
-        refresh();
-        challenges.tick();
-        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(stranger.getUniqueId(), "duell-1"));
-        var old = sender.getCurrentServer().orElseThrow();
-        proxy.connect(sender, "duell-1");
-        directory.onServerPostConnect(new ServerPostConnectEvent(sender, old.getServer()));
-        challenges.onConnect(new ServerPostConnectEvent(sender, old.getServer()));
-        transfer.complete(true);
-        assertEquals("lobby-1", proxy.requested(sender).getLast().getServerInfo().getName());
-        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(stranger.getUniqueId(), "duell-1"));
-    }
-
-    @Test
     public void cancellingAnAcceptedTransferReturnsTheLateOpponent() {
-        var setup = draft();
-        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), new DuelRules("sumo", 1, true, false, 1), "Sumo"));
+        var setup = invite();
         var transfer = proxy.deferNextConnection(target);
         challenges.answer(target, "accept", setup.ticket().toString());
+        arrive(sender);
         challenges.cancel(sender, setup.ticket());
+        assertEquals("lobby-1", proxy.requested(sender).getLast().getServerInfo().getName());
         assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(stranger.getUniqueId(), "duell-1"));
         var old = target.getCurrentServer().orElseThrow();
         proxy.connect(target, "duell-1");
@@ -166,22 +164,12 @@ public class DuelChallengesTest {
     }
 
     @Test
-    public void theInvitationKeepsBothSeatsBeyondTheOrdinarySeatTimeout() {
-        var setup = draft();
-        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), new DuelRules("sumo", 1, true, false, 1), "Sumo"));
-        clock.now = clock.now.plusSeconds(20);
-        refresh();
-        challenges.answer(target, "accept", setup.ticket().toString());
-        assertEquals(1, proxy.requested(target).size());
-        assertEquals("duell-1", proxy.requested(target).getFirst().getServerInfo().getName());
-    }
-
-    @Test
     public void theChallengerLearnsWhyNoDuelStartsAndHowLongTheCooldownLasts() {
         challenges.request(sender, "Sender");
         assertEquals(messages.get("duel.self"), proxy.received(sender).getLast());
         var setup = draft();
         challenges.cancel(sender, setup.ticket());
+        proxy.connect(sender, "duell-1");
         challenges.request(sender, "Target");
         assertEquals(messages.get("duel.busy.not-in-lobby"), proxy.received(sender).getLast());
         proxy.connect(sender, "lobby-1");
@@ -192,8 +180,7 @@ public class DuelChallengesTest {
 
     @Test
     public void aDeclineTellsTheChallengerWhoDeclined() {
-        var setup = draft();
-        challenges.invite(sender, new ProxyMessage.DuelInvitation(setup.ticket(), new DuelRules("sumo", 1, true, false, 1), "Sumo"));
+        var setup = invite();
         challenges.answer(target, "decline", setup.ticket().toString());
         assertTrue(proxy.received(sender).contains(messages.get("duel.declined", Placeholder.unparsed("player", "Target"))));
         assertEquals(messages.get("duel.you-declined"), proxy.received(target).getLast());

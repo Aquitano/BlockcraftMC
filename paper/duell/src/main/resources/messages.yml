@@ -136,6 +136,7 @@ top:
 item:
   vote: "<arrow><primary>Abstimmung"
   rematch: "<arrow><duell>Revanche"
+  ready: "<arrow><success>Bereit"
   vs-kit:
     helmet: "<primary>Helm"
     chestplate: "<primary>Harnisch"
@@ -266,25 +267,10 @@ rematch:
 mirror:
   familiar: "<prefix><muted>Den Kampfstil von <accent><opponent> <muted>kennst du schon. Willkommen zur nächsten Begegnung."
   inspection: "<prefix><muted>Zweimal unentschieden? Der Schiedsrichter verlangt eine Spiegelkontrolle. Euer Tag <dark>[<primary>SPIEGEL<dark>] <muted>wartet in den Lobby-Extras."
+ready:
+  you: "<prefix><success>Du bist bereit. <muted>Das Duell beginnt, sobald dein Gegner auch bereit ist."
+  you-not: "<prefix><muted>Du bist nicht mehr bereit."
+  opponent: "<prefix><accent><player> <success>ist bereit. <muted>Klicke auf Bereit, um zu starten."
+  opponent-not: "<prefix><accent><player> <muted>ist nicht mehr bereit."
 challenge:
-  title: "<arrow><primary>Duell gegen <player>"
-  opponent: "<primary>Gegner: <accent><player>"
-  cancel: "<error>Abbrechen und zur Lobby"
-  choose: "<click>Auswählen"
-  toggle: "<click>Wechseln"
-  legacy-only: "<muted>MLG Rush verwendet immer 1.8-PvP."
-  mode: "<primary>Spielmodus: <mode>"
-  map: "<primary>Map: <accent><map>"
-  modes: "<primary>Spielmodus auswählen"
-  maps: "<primary>Map auswählen"
-  series: "<primary>Best of <games>"
-  rating: "<muted>Gewertete Duelle verändern eure Elo. Der Gegner bestätigt diese Einstellung."
-  rating-disabled: "<muted>Gewertete Duelle sind hier deaktiviert."
-  send: "<success>Einladung senden"
-  summary:
-    - "<muted>Modus: <mode>"
-    - "<muted>Map: <accent><map>"
-    - "<muted>Kampf: <combat>"
-    - "<muted>Wertung: <rating>"
-    - "<muted>Serie: <accent>Best of <games>"
   locked: "<prefix><muted>Die Regeln dieser Herausforderung stehen fest. Mit /hub kannst du das Duell verlassen."

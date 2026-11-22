@@ -573,6 +573,13 @@ herobrine:
 
 # During these occasions everyone holds the season's throwable in the fourth slot (snowballs, pumpkins at Halloween,
 # eggs at Easter) and pushes whoever they hit by knockback; cooldown-ticks pass between two throws.
+# Around the Duell spot (/setspawn duell) players get a challenge sword: a strike opens the challenge rules, a strike
+# back accepts. modes are the ones the challenge menu offers, in its order.
+duel-zone:
+  radius: 12
+  strike-cooldown-ticks: 20
+  modes: [vs, sg, superjump, sumo, mlgrush]
+
 throw-fight:
   during: [winter, halloween, easter]
   knockback: 0.5

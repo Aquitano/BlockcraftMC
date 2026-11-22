@@ -1,8 +1,7 @@
 package me.blockcraft.duell.listener;
 
 import me.blockcraft.api.game.DuelCancelledEvent;
-import me.blockcraft.api.game.DuelSetupEvent;
-import me.blockcraft.api.game.DuelAcceptedEvent;
+import me.blockcraft.api.game.DuelMatchEvent;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.ranked.RankedMatchEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
@@ -47,13 +46,8 @@ public final class ConnectionListener implements Listener {
     }
 
     @EventHandler
-    public void onDuelSetup(DuelSetupEvent event) {
-        duel.setupChallenge(event.getPlayer(), event.setup());
-    }
-
-    @EventHandler
-    public void onDuelAccepted(DuelAcceptedEvent event) {
-        duel.acceptChallenge(event.getPlayer(), event.ticket());
+    public void onDuelMatch(DuelMatchEvent event) {
+        duel.match(event.getPlayer(), event.match());
     }
 
     @EventHandler

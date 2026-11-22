@@ -13,7 +13,8 @@ public enum LobbyItem implements HotbarItem {
     GADGET(5),
     PROFILE(8),
     POND_ROD(3),
-    THROW(3);
+    THROW(3),
+    DUEL_SWORD(4);
 
     private final int slot;
 

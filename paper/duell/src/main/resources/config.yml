@@ -2,7 +2,7 @@ players:
   min: 2
 global-stats-head: Kevos
 countdown:
-  lobby: 10
+  lobby: 5
   start: 3
   freeze: 3
   round: 600

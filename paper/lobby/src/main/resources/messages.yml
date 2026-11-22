@@ -629,6 +629,27 @@ activities:
   setup-egg-duplicate: "<prefix><error><location> teilt sich einen Block mit einem anderen Osterei-Versteck."
   setup-ready: "<prefix><success>Die Aktivitätspositionen sind eingerichtet. Teste den Teich und den Parcours im Spiel und sichere die Map mit /map save."
   setup-problems: "<prefix><error>Die Prüfung meldet <count> Einrichtungsfehler."
+duel-zone:
+  sword: "<duell>Herausforderungsschwert"
+  sword-lore: "<muted>Schlag einen Spieler, um ihn zum Duell herauszufordern. Wer dich herausgefordert hat, nimmst du mit einem Schlag zurück an."
+  arrived: "<duell>Duellbereich <muted>· Schlag jemanden mit dem Schwert, um ihn herauszufordern."
+duel-challenge:
+  title: "<arrow><primary>Duell gegen <player>"
+  opponent: "<primary>Gegner: <accent><player>"
+  cancel: "<error>Abbrechen"
+  toggle: "<click>Wechseln"
+  legacy-only: "<muted>MLG Rush verwendet immer 1.8-PvP."
+  mode: "<primary>Spielmodus: <mode>"
+  series: "<primary>Best of <games>"
+  legacy: "<primary>Kampf: <accent>1.8-PvP"
+  modern: "<primary>Kampf: <accent>Modernes PvP"
+  send: "<success>Herausforderung senden"
+  modes:
+    vs: "<duell>1vs1"
+    sg: "<duell>Survival Games"
+    superjump: "<duell>SuperJump"
+    sumo: "<duell>Sumo"
+    mlgrush: "<duell>MLG Rush"
 fishing:
   rod: "<primary>Teichangel"
   rod-lore: "<muted>Für Fische, Fundsachen und unwahrscheinliche Geschichten."
