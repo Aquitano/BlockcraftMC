@@ -57,6 +57,14 @@ ends: one from the mausoleum to the crypt, one from the inn's cellar to the mill
 hatches, at the bottom of the open grave (which has a ladder back up) and among the crates in the lane beside the mill,
 and walk the passages, but only a traitor opens their iron doors.
 
+**Novigrad** is the harbour of Elysium Fire's Novigrad, cut from the [Zeitkapsel exhibit](../../worlds/README.md)
+and the map TTT 2 is built for. Its round starts at the fish market on the canal. The tester stands in the customs
+house on stilts east of the quay, over a lava pit in the sand, and the trap's button hides on the house's seaward
+wall. Two traitor passages run under the town at y 2 and 3, from the fish market to the cathedral square and from
+the tanners' lane to the quay beside the customs house; their hatches lie in the street. The blackout is mended in the
+vaulted cellar north of the harbour. `dev/mapgen/novigrad.py` writes these fittings and the map's `map.yml`, and its
+`--apply` builds them into a fresh import (see its docstring).
+
 **Vineyard**, **Minecraft** and **Raid** are imported maps from ClayMC (see [the import](../../worlds/README.md#ttt)).
 They live in the TTT map bundle, `worlds/ttt/blockcraft/TTT/maps/<key>/`, each as a `map.yml` and the dimension
 folder of its world, `world/`. At startup, the server copies every imported map into place and adds it to the vote;

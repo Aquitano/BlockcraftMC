@@ -393,6 +393,64 @@ tasks:
       where: "Schmiede"
       destination: "Stall"
       cargo: "Hufeisen"
+    anker:
+      name: "Anker schmieden"
+      where: "Kanalschmiede"
+    trank:
+      name: "Heiltrank brauen"
+      where: "Alchimistenstube"
+    spielwerk:
+      name: "Glockenspiel stimmen"
+      where: "Musikzimmer"
+    seekarten:
+      name: "Seekarten ordnen"
+      where: "Kartenkammer"
+    zollbuch:
+      name: "Zollbuch prüfen"
+      where: "Zollhaus"
+    kran:
+      name: "Lastkran einstellen"
+      where: "Lagerhaus"
+    leuchtfeuer:
+      name: "Leuchtfeuer entzünden"
+      where: "Hafenfestung"
+    glocke:
+      name: "Hafenglocke läuten"
+      where: "Kathedralenplatz"
+    netze:
+      name: "Netze flicken"
+      where: "Fischerkai"
+    kerzen:
+      name: "Kerzen anzünden"
+      where: "Kathedrale"
+    raeuchern:
+      name: "Fisch räuchern"
+      where: "Räucherei"
+    fracht:
+      name: "Fracht ins Lagerhaus bringen"
+      where: "Ostkai"
+      destination: "Lagerhaus"
+      cargo: "Frachtfass"
+    fang:
+      name: "Fang in die Räucherei bringen"
+      where: "Fischersteg"
+      destination: "Räucherhaus"
+      cargo: "Frischer Fang"
+    brief:
+      name: "Zollbrief zustellen"
+      where: "Schreibstube"
+      destination: "Kontor"
+      cargo: "Zollbrief"
+    wein:
+      name: "Wein in die Schenke bringen"
+      where: "Gewölbekeller"
+      destination: "Schankraum"
+      cargo: "Weinflasche"
+    seil:
+      name: "Tauwerk zum Nordkai bringen"
+      where: "Seilerei"
+      destination: "Poller am Nordkai"
+      cargo: "Tauwerk"
   bar: "<success>Aufgaben der Innocents <dark>● <white><percent>%"
   focus: "<accent><name><newline><navigation>"
   navigation:
@@ -503,5 +561,5 @@ tasks:
       blackout: "<accent>Generator reparieren"
       tester: "<accent>Tester reparieren"
     where:
-      blackout: "Mühle"
-      tester: "Rathaus"
+      blackout: "Generator"
+      tester: "Tester"
