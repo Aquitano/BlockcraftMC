@@ -120,13 +120,13 @@ services:
   lobby:
     <<: *paper
     hostname: lobby
-    # On 2026-11-15 the lobby heap held about 230 MB and the replay heap about 80 MB of 1 GB. The limits leave room for
-    # memory outside the heap, which came to about 460 MB on the lobby.
-    mem_limit: 1280m
+    # On 2026-11-22 the lobby held 472 MB live and about 540 MB outside the heap. A 512 MB heap ran a full GC every 12 s
+    # with ~700 ms pauses. From 1792 MB the JVM also picks G1 instead of the Serial collector.
+    mem_limit: 1792m
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: lobby
-      MEMORY: 512M
+      MEMORY: 1G
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/lobby
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
