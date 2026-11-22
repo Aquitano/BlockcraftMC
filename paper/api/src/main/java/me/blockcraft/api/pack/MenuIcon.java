@@ -134,6 +134,15 @@ public enum MenuIcon {
                 .edit(meta -> meta.getPersistentDataContainer().set(MARKER, PersistentDataType.STRING, key()));
     }
 
+    /**
+     * Marks an item so a menu draws it as the pack's {@code items/<model>.json} to a client wearing the pack and as
+     * itself to everyone else. Unlike {@link #mark}, nothing outside a menu reads the mark, so the pack needs no override
+     * of the item's material.
+     */
+    public static Items.Builder picture(Items.Builder item, String model) {
+        return item.edit(meta -> meta.getPersistentDataContainer().set(MARKER, PersistentDataType.STRING, model));
+    }
+
     public static Optional<Key> modelOf(ItemStack item) {
         if (!item.hasItemMeta()) {
             return Optional.empty();

@@ -1,6 +1,5 @@
 package me.blockcraft.ttt.task.game;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -31,13 +30,13 @@ public final class ForgeGame extends ChoreGame {
     private int steps;
 
     public ForgeGame(Plugin plugin, Messages messages, Component title, Runnable solved) {
-        super(plugin, 4, messages, title, solved);
+        super(plugin, "forge", 4, messages, title, solved);
         for (int i = 0; i < SLOTS; i++) {
             set(BAND_ROW + i, i >= BAND_START && i <= BAND_END
-                    ? gauge(Material.LIME_STAINED_GLASS_PANE, "band")
-                    : gauge(Material.GRAY_STAINED_GLASS_PANE, "band"));
+                    ? gauge(Material.LIME_STAINED_GLASS_PANE, "band", "band")
+                    : gauge(Material.GRAY_STAINED_GLASS_PANE, "band", "band_off"));
         }
-        set(BELLOWS, Items.of(Material.LEATHER).name(messages.get("tasks.games.forge.bellows")).glow().build());
+        set(BELLOWS, piece(Material.LEATHER, "bellows").name(messages.get("tasks.games.forge.bellows")).glow().build());
         draw();
     }
 
@@ -84,15 +83,16 @@ public final class ForgeGame extends ChoreGame {
     private void draw() {
         for (int i = 0; i < SLOTS; i++) {
             set(HEAT_ROW + i, i < heat
-                    ? gauge(i >= BAND_START && i <= BAND_END ? Material.ORANGE_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE, "heat")
-                    : gauge(Material.GRAY_STAINED_GLASS_PANE, "heat"));
+                    ? gauge(i >= BAND_START && i <= BAND_END ? Material.ORANGE_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE, "heat",
+                            i < BAND_START ? "heat_low" : i > BAND_END ? "heat_high" : "heat")
+                    : gauge(Material.GRAY_STAINED_GLASS_PANE, "heat", "heat_off"));
             set(i, i < steps
-                    ? gauge(Material.LIME_STAINED_GLASS_PANE, "progress")
-                    : gauge(Material.BLACK_STAINED_GLASS_PANE, "progress"));
+                    ? gauge(Material.LIME_STAINED_GLASS_PANE, "progress", "ember")
+                    : gauge(Material.BLACK_STAINED_GLASS_PANE, "progress", "ember_off"));
         }
     }
 
-    private ItemStack gauge(Material material, String name) {
-        return Items.of(material).name(messages.get("tasks.games.forge." + name)).build();
+    private ItemStack gauge(Material material, String name, String part) {
+        return piece(material, part).name(messages.get("tasks.games.forge." + name)).build();
     }
 }

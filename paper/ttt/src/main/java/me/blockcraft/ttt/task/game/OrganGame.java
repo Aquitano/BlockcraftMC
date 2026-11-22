@@ -1,6 +1,5 @@
 package me.blockcraft.ttt.task.game;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -40,7 +39,7 @@ public final class OrganGame extends ChoreGame {
     private int lit = -1;
 
     public OrganGame(Plugin plugin, Messages messages, Component title, Runnable solved) {
-        super(plugin, 3, messages, title, solved);
+        super(plugin, "organ", 3, messages, title, solved);
         for (int key = 0; key < DIM.length; key++) {
             show(key, false);
         }
@@ -136,13 +135,13 @@ public final class OrganGame extends ChoreGame {
     }
 
     private void show(int key, boolean on) {
-        set(FIRST_KEY_SLOT + key, Items.of((on ? LIT : DIM)[key]).name(messages.get("tasks.games.organ.key")).build());
+        set(FIRST_KEY_SLOT + key, piece((on ? LIT : DIM)[key], "key_" + key + (on ? "_lit" : "")).name(messages.get("tasks.games.organ.key")).build());
     }
 
     private void status() {
         var name = messages.get(listening ? "tasks.games.organ.listen" : "tasks.games.organ.repeat",
                 Formatter.number("round", round + 1), Formatter.number("rounds", ROUNDS));
-        info(STATUS_SLOT, Items.of(Material.NOTE_BLOCK).name(name).build());
+        info(STATUS_SLOT, piece(Material.NOTE_BLOCK, listening ? "listen" : "play").name(name).build());
     }
 
     private static boolean isKey(int slot) {

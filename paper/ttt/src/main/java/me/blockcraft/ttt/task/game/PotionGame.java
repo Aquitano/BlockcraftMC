@@ -39,7 +39,7 @@ public final class PotionGame extends ChoreGame {
     private int brewed;
 
     public PotionGame(Plugin plugin, Messages messages, Component title, Runnable solved) {
-        super(plugin, 4, messages, title, solved);
+        super(plugin, "potion", 4, messages, title, solved);
         var shuffled = new ArrayList<>(INGREDIENTS);
         Collections.shuffle(shuffled, ThreadLocalRandom.current());
         recipe = List.copyOf(shuffled.subList(0, ThreadLocalRandom.current().nextInt(3, 5)));
@@ -84,7 +84,7 @@ public final class PotionGame extends ChoreGame {
             var ingredient = Component.translatable(recipe.get(step).translationKey());
             var resolver = Placeholder.component("ingredient", ingredient);
             var card = step < brewed
-                    ? Items.of(Material.LIME_STAINED_GLASS_PANE).name(messages.get("tasks.games.potion.done", resolver)).build()
+                    ? piece(Material.LIME_STAINED_GLASS_PANE, "brewed").name(messages.get("tasks.games.potion.done", resolver)).build()
                     : Items.of(recipe.get(step)).lore(messages.get("tasks.games.potion.step", Formatter.number("step", step + 1))).build();
             set(RECIPE_FIRST_SLOT + step, card);
         }
