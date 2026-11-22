@@ -65,7 +65,7 @@ wall. Two traitor passages run under the town at y 2 and 3, from the fish market
 the tanners' lane to the quay beside the customs house; their hatches lie in the street. The blackout is mended in the
 vaulted cellar north of the harbour. Ten chunks of the city and the castle stand beyond the border, as far as the
 server's view distance reaches, and an iron railing with lantern posts runs along the inside of the border, so the edge
-is something to look through rather than a wall. `dev/mapgen/novigrad.py` writes these fittings and the map's
+is something to look through rather than a wall. Barriers fill the edge above the railing up to y 96, over every roof. `dev/mapgen/novigrad.py` writes these fittings and the map's
 `map.yml`, and its `--apply` builds them into a fresh import (see its docstring).
 
 **Vineyard**, **Minecraft** and **Raid** are imported maps from ClayMC (see [the import](../../worlds/README.md#ttt)).

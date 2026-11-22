@@ -102,6 +102,7 @@ STEADY = {"sand": "sandstone", "red_sand": "red_sandstone", "gravel": "cobblesto
 
 
 EDGE_TOP = 24
+EDGE_CEILING = 96
 EDGE_HEIGHT = 3
 EDGE_ROOM = 5
 EDGE_PILLAR_EVERY = 8
@@ -254,6 +255,7 @@ def edge(f, blocks):
     the border's wall: three bars high over every street and stretch of open ground, floor to ceiling across every
     room the border cuts, and from the seabed to two above the sea in the harbour. A stone pillar with a lantern, or a
     pile with one in the water, stands every few blocks on open ground. Roofs above EDGE_TOP keep their skyline.
+    Barriers then fill the rest of the edge up to EDGE_CEILING, over the highest roof, so nobody climbs out either.
     """
     x, z, size = BORDER
     low_x, low_z = x - size // 2, z - size // 2
@@ -284,6 +286,9 @@ def edge(f, blocks):
                 f.fill(cx, y, cz, cx, last, cz, "spruce_log" if wet else "stone_bricks")
                 f.set(cx, last + 1, cz, "lantern")
             y = top + 1
+    for x1, z1, x2, z2 in ((low_x, low_z, high_x, low_z), (low_x, high_z, high_x, high_z),
+                           (low_x, low_z, low_x, high_z), (high_x, low_z, high_x, high_z)):
+        f.fill(x1, 1, z1, x2, EDGE_CEILING, z2, "barrier", "replace air")
 
 
 def seal(f):
