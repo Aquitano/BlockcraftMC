@@ -1,6 +1,5 @@
 package me.blockcraft.ttt.task.game;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -27,7 +26,8 @@ public final class MillworkGame extends ChoreGame {
     private static final int[] TICKS_PER_STEP = {5, 4, 3};
     private static final int LATENCY_TICKS = 4;
 
-    private final ItemStack off = Items.of(Material.GRAY_STAINED_GLASS_PANE).name(Component.empty()).build();
+    private final ItemStack rail;
+    private final ItemStack track;
     private final ItemStack notchItem;
     private final ItemStack markerItem;
     private int gears;
@@ -36,9 +36,11 @@ public final class MillworkGame extends ChoreGame {
     private int drawnMarker = -1;
 
     public MillworkGame(Plugin plugin, Messages messages, Component title, Runnable solved) {
-        super(plugin, 3, messages, title, solved);
-        notchItem = Items.of(Material.LIME_STAINED_GLASS_PANE).name(messages.get("tasks.games.millwork.notch")).build();
-        markerItem = Items.of(Material.GOLD_BLOCK).name(messages.get("tasks.games.millwork.marker")).build();
+        super(plugin, "millwork", 3, messages, title, solved);
+        rail = piece(Material.GRAY_STAINED_GLASS_PANE, "rail").name(Component.empty()).build();
+        track = piece(Material.GRAY_STAINED_GLASS_PANE, "track").name(Component.empty()).build();
+        notchItem = piece(Material.LIME_STAINED_GLASS_PANE, "notch").name(messages.get("tasks.games.millwork.notch")).build();
+        markerItem = piece(Material.GOLD_BLOCK, "marker").name(messages.get("tasks.games.millwork.marker")).build();
         nextRound();
         drawGears();
         drawSweep();
@@ -109,8 +111,8 @@ public final class MillworkGame extends ChoreGame {
         int marker = markerPosition(tick, TICKS_PER_STEP[gears], WIDTH);
         drawnMarker = marker;
         for (int column = 0; column < WIDTH; column++) {
-            set(NOTCH_ROW + column, column == notch ? notchItem : off);
-            set(MARKER_ROW + column, column == marker ? markerItem : off);
+            set(NOTCH_ROW + column, column == notch ? notchItem : rail);
+            set(MARKER_ROW + column, column == marker ? markerItem : track);
         }
     }
 
@@ -118,7 +120,7 @@ public final class MillworkGame extends ChoreGame {
         for (int gear = 0; gear < TICKS_PER_STEP.length; gear++) {
             var key = gear < gears ? "tasks.games.millwork.gear" : "tasks.games.millwork.gap";
             var material = gear < gears ? Material.LIME_CONCRETE : Material.RED_CONCRETE;
-            set(GEAR_FIRST + gear, Items.of(material).name(messages.get(key)).build());
+            set(GEAR_FIRST + gear, piece(material, gear < gears ? "gear" : "gear_off").name(messages.get(key)).build());
         }
     }
 }
