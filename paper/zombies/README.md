@@ -5,6 +5,14 @@ the match, buy doors, power, perks and guns, and hold out until the final wave. 
 weapons, and returns the player at the next intermission. In solo play, Quick Revive is consumed to survive one lethal
 hit. Losing the last fighter or exceeding a wave's time limit ends the match.
 
+Four kinds wear creature models through BetterModel, and each asks the team for something else. Hellhound waves send
+Nexus. The Lauerer leaps on a fighter with no teammate close, and holds them so they cannot shoot until a teammate hits
+it. The Rammbock paws the ground and charges in a straight line: a fighter who steps aside sends it into a wall, where
+it stands stunned and takes double damage; outside a window its charge smashes every board at once. Kabelratten run for
+the generator while the power is on and cut it as the outage event does. From wave 5 something lives under the floor:
+whoever stays near one spot hears it rumble and is bitten if they stay. Sneaking at a window, a revive or the generator
+does not count. Each new kind explains itself in chat the first time it appears.
+
 `/zombies` opens the player guide. Right-click fires, left-click reloads, and the third slot holds the knife. Sneak near
 a broken window to repair it or near a downed teammate to revive them.
 
@@ -90,7 +98,8 @@ through the shared round summary, while gold stays in the match.
 
 For MariaDB integration tests, set `BLOCKCRAFT_TEST_DB_PORT` and `BLOCKCRAFT_TEST_DB_PASSWORD` for an isolated test database.
 In a Minecraft client, check a solo start, gun controls, a room purchase, power and upgrades, and a cooperative revive.
-Check the weapon models and the enemies' headgear with the resource pack applied. The proxy kicks whoever declines
+Check the weapon models, the enemies' headgear and the creature models with the resource pack applied. The creatures
+need BetterModel, which the `zombies` service loads; without it, as under `runServer`, they stay plain mobs. The proxy kicks whoever declines
 the pack, so its vanilla fallbacks show only before it loads.
 The [arena playtest checklist](TESTING.md) covers every station, barricade, and player state.
 

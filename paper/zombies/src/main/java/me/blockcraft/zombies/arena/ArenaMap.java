@@ -121,6 +121,9 @@ public final class ArenaMap {
 
     public List<Window> windows() { return List.copyOf(windows); }
     public List<Station> stations() { return List.copyOf(stations); }
+    public Optional<Location> generator() {
+        return stations.stream().filter(station -> station.kind() == StationKind.POWER).findFirst().map(station -> station.location().clone());
+    }
     public List<Room> rooms() { return List.copyOf(rooms.values()); }
     public List<Note> notes() { return List.copyOf(notes); }
     public List<Block> lights() { return List.copyOf(lights); }

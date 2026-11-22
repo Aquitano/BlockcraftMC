@@ -61,4 +61,15 @@ public class AbilitiesTest {
         var fighters = List.of(first, walledOff, open);
         assertEquals(List.of(first, open), Electric.chain(first, fighters, Function.identity(), (from, to) -> to != walledOff, 4, 2));
     }
+
+    @Test
+    public void aPouncerGoesForTheNearestFighterWithNoTeammateClose() {
+        var pouncer = new Vector(0, 0, 0);
+        var pair = List.of(new Vector(3, 0, 0), new Vector(4, 0, 0));
+        var straggler = new Vector(12, 0, 0);
+        var all = List.of(pair.get(0), pair.get(1), straggler);
+        assertEquals(straggler, Pouncer.loner(pouncer, all, Function.identity(), 6).orElseThrow());
+        assertTrue(Pouncer.loner(pouncer, pair, Function.identity(), 6).isEmpty());
+        assertEquals(straggler, Pouncer.loner(pouncer, List.of(straggler), Function.identity(), 6).orElseThrow());
+    }
 }

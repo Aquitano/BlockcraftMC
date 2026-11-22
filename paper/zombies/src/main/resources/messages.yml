@@ -25,6 +25,7 @@ guide:
     - "<muted>Schleiche neben einem gefallenen Mitspieler, um ihn zu retten. Verblutete Spieler kehren nach der Welle zurück und verlieren ihre Perks. Fällt der letzte Spieler, verliert das Team."
     - "<muted>Im Solo-Spiel rettet dich der Perk Schnelle Wiederbelebung einmal vor dem Tod und wird dabei verbraucht."
     - "<muted>Nach <heal-delay> Sekunden ohne Schaden heilst du dich langsam. Gold und Ausrüstung gelten nur für diese Runde. Netzwerk-Coins und Stats bleiben erhalten."
+    - "<muted>Eine neue Gegnerart stellt sich im Chat vor, sobald sie zum ersten Mal auftaucht. Und wer zu lange an einer Stelle steht, weckt etwas unter dem Boden."
     - "<muted>Im Außenposten liegen Notizen auf Lesepulten. Sie erzählen, was hier passiert ist. Jede Notiz, die du zum ersten Mal liest, bringt Netzwerk-Coins."
 game:
   enemy-name: "Die Horde"
@@ -113,6 +114,22 @@ enemy:
   electric: "<accent>Elektro-Zombie"
   breeder: "<success>Brüter"
   shadow: "<dark>Schattenläufer"
+  pouncer: "<error>Lauerer"
+  ram: "<muted>Rammbock"
+  scavenger: "<accent>Kabelratte"
+enemy-hint:
+  pouncer: "<prefix><error>Ein Lauerer! <muted>Er springt auf Spieler, die allein stehen, und hält sie fest. Bleibt zusammen und schießt euren Mitspieler frei."
+  ram: "<prefix><error>Ein Rammbock! <muted>Scharrt er mit den Füßen, stürmt er geradeaus los. Weicht zur Seite aus: Prallt er gegen eine Wand, ist er kurz betäubt und verwundbar. Von vorn hält er viel aus."
+  scavenger: "<prefix><accent>Kabelratten! <muted>Solange Strom fließt, nagen sie am Generatorkabel. Erledigt sie, bevor der Strom ausfällt."
+pouncer:
+  caught: "<prefix><error><player> wird festgehalten! <muted>Schießt den Lauerer herunter."
+  pinned: "<error>Festgehalten <dark>· <muted>Ein Mitspieler muss den Lauerer treffen"
+  freed: "<success><player> hat dich befreit"
+scavenger:
+  gnawing: "<prefix><accent>Kabelratten nagen am Generator! <muted>Erledigt sie, sonst fällt der Strom aus."
+  cut: "<prefix><error>Die Kabelratten haben das Generatorkabel durchgebissen!"
+burrower:
+  rumble: "<error>Der Boden bebt unter dir <dark>· <muted>Bleib in Bewegung"
 revive:
   solo: "<prefix><success>Selbstrettung! <muted>Dein Wiederbelebungs-Perk wurde verbraucht."
   downed: "<prefix><error><player> ist gefallen! <muted>Du hast <accent><seconds>s <muted>für die Rettung."

@@ -72,6 +72,16 @@ final class WaveEvents {
         return running instanceof BloodMoon;
     }
 
+    /** Starts an outage unless another event is running; whether it did. */
+    boolean cutPower() {
+        if (running != null) {
+            return false;
+        }
+        pending = null;
+        start(WaveEvent.Kind.POWER_OUTAGE);
+        return true;
+    }
+
     boolean powerOut() {
         return running instanceof PowerOutage;
     }

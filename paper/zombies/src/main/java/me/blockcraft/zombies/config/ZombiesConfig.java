@@ -24,7 +24,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             double burnDamage, int burnTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
                             Inferno inferno,
-                            Events events, Abilities abilities, Mystery mystery, Armory armory, Presentation presentation) {
+                            Events events, Abilities abilities, Burrower burrower, Mystery mystery, Armory armory, Presentation presentation) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerExtraPlayer,
@@ -128,7 +128,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
 
     /** What the special kinds do beyond chasing and biting, each read from {@code abilities.<kind>}. */
     public record Abilities(Arsonist arsonist, ShieldBearer shieldBearer, Breeder breeder, Frost frost, Crawler crawler,
-                            Electric electric, Shadow shadow) { }
+                            Electric electric, Shadow shadow, Pouncer pouncer, Ram ram, Scavenger scavenger) { }
 
     /**
      * Stays between {@code keepDistance} and {@code throwRange} from the nearest fighter and every {@code throwTicks}
@@ -158,6 +158,36 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
 
     /** Freezes while a fighter with line of sight looks at it within {@code watchAngle} degrees. */
     public record Shadow(double watchAngle) { }
+
+    /**
+     * Goes for a fighter with no teammate within {@code aloneRadius}. Within {@code leapRange} it crouches for
+     * {@code windupTicks} and leaps; a fighter it lands on is pinned, cannot shoot and takes the kind's damage every
+     * {@code pulseTicks}, until a teammate hits it or {@code pinTicks} pass ({@code soloPinTicks} in solo play).
+     */
+    public record Pouncer(double leapRange, double aloneRadius, int windupTicks, int cooldownTicks, int pinTicks,
+                          int soloPinTicks, int pulseTicks) { }
+
+    /**
+     * Within {@code chargeRange} it paws the ground for {@code windupTicks}, then charges in a straight line at
+     * {@code chargeSpeed} blocks a tick for up to {@code chargeTicks}, hitting every fighter in its way. Running into a
+     * wall stuns it for {@code stunTicks}, when hits deal {@code stunnedMultiplier}; otherwise a hit from within
+     * {@code frontAngle} degrees of its face deals only {@code frontShare}. Its charge smashes a window's boards at once.
+     */
+    public record Ram(double chargeRange, int windupTicks, double chargeSpeed, int chargeTicks, int stunTicks,
+                      double frontAngle, double frontShare, double stunnedMultiplier, double knockback, int cooldownTicks) { }
+
+    /**
+     * Comes in packs of up to {@code pack} and, while the power is on, runs for the generator: once scavengers within
+     * {@code gnawRadius} of it have gnawed for {@code gnawTicks} together, the power fails.
+     */
+    public record Scavenger(int pack, double gnawRadius, int gnawTicks) { }
+
+    /**
+     * From {@code fromWave} something lives under the floor. A fighter who stays within {@code radius} blocks of one
+     * spot feels it rumble after {@code rumbleTicks}; at {@code strikeTicks} its head breaks out there, sized
+     * {@code scale}, and bites everyone close for {@code damage}. Then it rests for {@code restTicks}.
+     */
+    public record Burrower(int fromWave, double radius, int rumbleTicks, int strikeTicks, int restTicks, double damage, float scale) { }
 
     /**
      * The mystery box's gun rises {@code riseHeight} blocks over {@code riseTicks} and changes for {@code rollTicks};
@@ -230,6 +260,11 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                         Math.max(0, yaml.decimal("exploder.knockback"))),
                 new Inferno(Math.clamp(yaml.decimal("inferno.blast-range"), 4, 64)),
                 events(yaml), abilities(yaml),
+                new Burrower(positive(yaml, "burrower.from-wave"), Math.clamp(yaml.decimal("burrower.radius"), 1, 8),
+                        positive(yaml, "burrower.rumble-seconds") * 20,
+                        Math.max(positive(yaml, "burrower.rumble-seconds") + 1, positive(yaml, "burrower.strike-seconds")) * 20,
+                        positive(yaml, "burrower.rest-seconds") * 20, Math.max(0, yaml.decimal("burrower.damage")),
+                        (float) Math.clamp(yaml.decimal("burrower.scale"), 0.3, 2)),
                 new Mystery(positive(yaml, "mystery.rise-ticks"), Math.clamp(yaml.decimal("mystery.rise-height"), 0.2, 2),
                         positive(yaml, "mystery.roll-seconds") * 20, positive(yaml, "mystery.take-seconds") * 20,
                         positive(yaml, "mystery.sink-ticks"), (float) Math.clamp(yaml.decimal("mystery.scale"), 0.2, 2)),
@@ -260,7 +295,18 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                 new Electric(positive(yaml, "abilities.electric.zap-ticks"), Math.clamp(yaml.decimal("abilities.electric.range"), 1, 24),
                         Math.clamp(yaml.integer("abilities.electric.jumps"), 0, 3), Math.clamp(yaml.decimal("abilities.electric.jump-range"), 0, 8),
                         Math.clamp(yaml.decimal("abilities.electric.jump-share"), 0, 1)),
-                new Shadow(Math.clamp(yaml.decimal("abilities.shadow.watch-angle"), 5, 90)));
+                new Shadow(Math.clamp(yaml.decimal("abilities.shadow.watch-angle"), 5, 90)),
+                new Pouncer(Math.clamp(yaml.decimal("abilities.pouncer.leap-range"), 2, 12),
+                        Math.clamp(yaml.decimal("abilities.pouncer.alone-radius"), 0, 16), positive(yaml, "abilities.pouncer.windup-ticks"),
+                        positive(yaml, "abilities.pouncer.cooldown-ticks"), positive(yaml, "abilities.pouncer.pin-seconds") * 20,
+                        positive(yaml, "abilities.pouncer.solo-pin-seconds") * 20, positive(yaml, "abilities.pouncer.pulse-ticks")),
+                new Ram(Math.clamp(yaml.decimal("abilities.ram.charge-range"), 3, 24), positive(yaml, "abilities.ram.windup-ticks"),
+                        Math.clamp(yaml.decimal("abilities.ram.charge-speed"), 0.2, 1.5), positive(yaml, "abilities.ram.charge-ticks"),
+                        positive(yaml, "abilities.ram.stun-seconds") * 20, Math.clamp(yaml.decimal("abilities.ram.front-angle"), 0, 180),
+                        Math.clamp(yaml.decimal("abilities.ram.front-share"), 0, 1), Math.max(1, yaml.decimal("abilities.ram.stunned-multiplier")),
+                        Math.max(0, yaml.decimal("abilities.ram.knockback")), positive(yaml, "abilities.ram.cooldown-ticks")),
+                new Scavenger(Math.clamp(yaml.integer("abilities.scavenger.pack"), 1, 6),
+                        Math.clamp(yaml.decimal("abilities.scavenger.gnaw-radius"), 1, 5), positive(yaml, "abilities.scavenger.gnaw-seconds") * 20));
     }
 
     private static Events events(StrictConfig yaml) {

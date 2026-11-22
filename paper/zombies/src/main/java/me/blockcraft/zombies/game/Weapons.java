@@ -122,6 +122,10 @@ public final class Weapons {
         if (!game.fighting(player) || !game.inWave()) {
             return;
         }
+        if (game.enemies().abilities().pinned(player)) {
+            BlockcraftApi.get().notifications().feedback(player, game.messages().get("pouncer.pinned"));
+            return;
+        }
         held(player).ifPresent(weapon -> shoot(player, weapon, tick));
     }
 
@@ -184,17 +188,15 @@ public final class Weapons {
             }
             var wall = world.rayTraceBlocks(eye, direction, stats.range(), FluidCollisionMode.NEVER, true);
             double range = wall == null ? stats.range() : wall.getHitPosition().distance(eye.toVector());
-            var hit = range <= 0 ? null : world.rayTraceEntities(eye, direction, range, 0.08,
-                    entity -> entity instanceof Mob && game.enemies().contains(entity) && !entity.isDead());
-            double length = hit == null ? range : hit.getHitPosition().distance(eye.toVector());
+            var shot = range <= 0 ? Optional.<Enemies.Shot>empty() : game.enemies().trace(eye.toVector(), direction, range);
+            double length = shot.map(hit -> hit.at().distance(eye.toVector())).orElse(range);
             for (double step = 0.5; step < length; step += 1.5) {
                 world.spawnParticle(Particle.CRIT, eye.clone().add(direction.clone().multiply(step)), 1, 0, 0, 0, 0);
             }
-            if (hit != null && hit.getHitEntity() instanceof Mob mob) {
-                boolean head = hit.getHitPosition().getY() > mob.getLocation().getY() + mob.getHeight() * 0.8;
+            shot.ifPresent(hit -> {
                 double damage = stats.damage() * multiplier;
-                hits.merge(mob, head ? new Hit(0, damage * game.config().headshotMultiplier()) : new Hit(damage, 0), Hit::plus);
-            }
+                hits.merge(hit.mob(), hit.head() ? new Hit(0, damage * game.config().headshotMultiplier()) : new Hit(damage, 0), Hit::plus);
+            });
         }
         return new Volley(hits);
     }
@@ -210,9 +212,10 @@ public final class Weapons {
             if (!(entity instanceof Mob mob)) {
                 continue;
             }
-            var toward = mob.getLocation().add(0, mob.getHeight() / 2, 0).toVector().subtract(eye.toVector());
+            var box = game.enemies().bounds(mob);
+            var toward = box.getCenter().subtract(eye.toVector());
             double distance = toward.length();
-            if (distance == 0 || distance > stats.range() || direction.angle(toward) > stats.spread() + Math.atan2(mob.getWidth(), distance)
+            if (distance == 0 || distance > stats.range() || direction.angle(toward) > stats.spread() + Math.atan2(Math.max(box.getWidthX(), box.getWidthZ()), distance)
                     || world.rayTraceBlocks(eye, toward.normalize(), distance, FluidCollisionMode.NEVER, true) != null) {
                 continue;
             }

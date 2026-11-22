@@ -92,6 +92,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private final WaveEvents events;
     private final MysteryBox mysteryBox;
     private final WeaponRacks racks;
+    private final Burrower burrower;
     private final Map<UUID, Survivor> survivors = new LinkedHashMap<>();
     private final Map<UUID, Location> downed = new HashMap<>();
     private final Map<UUID, TextDisplay> corpses = new HashMap<>();
@@ -138,6 +139,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         this.events = new WaveEvents(this, effects, config.events());
         this.mysteryBox = new MysteryBox(this);
         this.racks = new WeaponRacks(arena, config.armory(), config.forSale());
+        this.burrower = new Burrower(this, config.burrower());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
@@ -174,6 +176,17 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     public List<Player> fighters() {
         return round.players().stream().filter(this::fighting).toList();
+    }
+
+    /** Whether a pouncer holds the player, or they sneak to repair a window, revive a teammate or fix the generator. */
+    boolean busy(Player player) {
+        return enemies.abilities().pinned(player) || player.isSneaking() && (reviving.contains(player.getUniqueId()) || events.holding(player)
+                || arena.activeWindows().stream().anyMatch(window -> player.getLocation().distanceSquared(window.entry()) <= 9));
+    }
+
+    /** Fails the bought power as the outage event does, unless another event is running; whether it did. */
+    boolean cutPower() {
+        return powered() && events.cutPower();
     }
 
     public boolean downed(Player player) {
@@ -265,6 +278,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     private void clearWave() {
         events.end();
+        burrower.reset();
         clock.cancel();
         timerBar.hide();
         hideWaveBar();
@@ -313,6 +327,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
             weapons.burn(tick);
             enemies.tick(tick);
             events.tick(tick);
+            burrower.tick(tick, wave);
             if (inWave() && enemies.remaining() == 0) {
                 clearWave();
             }
@@ -785,6 +800,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     private void clearArena() {
         events.end();
+        burrower.reset();
         presentation.clear();
         enemies.clear();
         mysteryBox.clear();

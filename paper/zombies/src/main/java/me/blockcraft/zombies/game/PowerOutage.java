@@ -1,7 +1,6 @@
 package me.blockcraft.zombies.game;
 
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -30,8 +29,7 @@ final class PowerOutage implements WaveEvent {
         this.game = game;
         this.effects = effects;
         this.config = config;
-        this.generator = game.arena().stations().stream().filter(station -> station.kind() == StationKind.POWER)
-                .findFirst().map(station -> station.location().clone()).orElseGet(() -> game.arena().point("spawn"));
+        this.generator = game.arena().generator().orElseGet(() -> game.arena().point("spawn"));
     }
 
     @Override
