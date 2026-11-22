@@ -210,7 +210,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: zombies
       BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
-      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies,/worlds/silo7
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/zombies,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo,/blockcraft/bettermodel
     volumes:
       - ./build/docker/paper:/blockcraft:ro

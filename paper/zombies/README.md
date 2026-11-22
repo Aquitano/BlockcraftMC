@@ -54,8 +54,8 @@ Both commands announce the `zombies` server group.
 ## Choose the map
 
 Each map is a world template with its arena in `blockcraft/Zombies/arena.yml`: Außenposten in
-[`worlds/zombies`](../../worlds/zombies), Silo 7 in [`worlds/silo7`](../../worlds/silo7). Compose mounts both and plays
-the one `BLOCKCRAFT_WORLD_TEMPLATE` names. To rotate them, name both:
+[`worlds/zombies`](../../worlds/zombies), Silo 7 in [`worlds/silo7`](../../worlds/silo7). Compose mounts both and
+rotates them through `BLOCKCRAFT_WORLD_TEMPLATE`, which names both. Naming one plays only that map:
 
 ```yaml
 BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies,/worlds/silo7
