@@ -71,19 +71,21 @@ public final class UiFont {
 
     /** The panel for a chest with {@code rows} rows, then {@code title} where the vanilla title would be. */
     public static Component menuTitle(int rows, boolean toolbar, boolean cards, Component title) {
-        return screenWide(cards ? (char) (CARD_PANEL_BASE + rows) : panel(rows, toolbar), title);
+        return overlaid(KEY, cards ? (char) (CARD_PANEL_BASE + rows) : panel(rows, toolbar), title);
     }
 
     /** {@code overlay}, then {@code title}; a {@code Menu} draws the panel and its tiles before the title it was given. */
     public static Component overlaid(Overlay overlay, Component title) {
-        return screenWide(overlay.glyph(), title);
+        return overlaid(KEY, overlay.glyph(), title);
     }
 
-    private static Component screenWide(char glyph, Component title) {
+    /** {@code glyph} of {@code font}, a picture as wide as the chest screen that a game draws instead of the panel, then {@code title}. */
+    public static Component overlaid(Key font, char glyph, Component title) {
         return Component.text()
-                .append(Component.text(shift(-TITLE_X) + glyph + shift(TITLE_X - PANEL_WIDTH - GLYPH_SPACING))
-                        .font(KEY)
-                        .color(NamedTextColor.WHITE))
+                .append(Component.text().color(NamedTextColor.WHITE)
+                        .append(Component.text(shift(-TITLE_X)).font(KEY))
+                        .append(Component.text(glyph).font(font))
+                        .append(Component.text(shift(TITLE_X - PANEL_WIDTH - GLYPH_SPACING)).font(KEY)))
                 .append(title)
                 .build();
     }

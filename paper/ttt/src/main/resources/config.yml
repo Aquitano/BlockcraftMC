@@ -156,7 +156,8 @@ chests:
 # hold chore takes hold-seconds with the player's eyes within reach blocks of its station, as far as a click reaches.
 # Traitors sabotage from their shop, one at a time and cooldown-seconds apart: a blackout darkens everyone else for
 # blackout-seconds unless mended at the generator, doors shut every door for doors-seconds, and tester puts the tester
-# out for tester-seconds unless mended at its button. Mending takes repair-seconds.
+# out for tester-seconds unless mended at its button. Mending takes repair-seconds. Over the round the time of day
+# moves from dusk.from to dusk.to, in ticks: 6000 is noon, 13000 nightfall and 18000 midnight.
 tasks:
   per-player: 4
   hold-seconds: 6
@@ -177,3 +178,6 @@ tasks:
     doors-seconds: 15
     tester-seconds: 60
     repair-seconds: 5
+  dusk:
+    from: 6000
+    to: 18000

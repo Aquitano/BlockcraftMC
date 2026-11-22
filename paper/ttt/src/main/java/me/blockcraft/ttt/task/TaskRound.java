@@ -184,8 +184,8 @@ public final class TaskRound {
             case Chore.Puzzle puzzle -> {
                 var playing = games.get(id);
                 if (playing == null || !playing.busy(player)) {
-                    var game = ChoreGames.of(puzzle.key(), plugin, messages, messages.get("tasks.game-title",
-                            Placeholder.component("how", messages.get("tasks.games." + puzzle.key() + ".how"))),
+                    var game = ChoreGames.of(puzzle.game(), plugin, messages, messages.get("tasks.game-title",
+                            Placeholder.component("how", messages.get("tasks.games." + puzzle.game() + ".how"))),
                             () -> finish(player, puzzle));
                     games.put(id, game);
                     game.play(player);

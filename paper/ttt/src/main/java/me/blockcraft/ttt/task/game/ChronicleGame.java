@@ -1,6 +1,5 @@
 package me.blockcraft.ttt.task.game;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -29,7 +28,7 @@ public final class ChronicleGame extends ChoreGame {
     private int selected = NO_SELECTION;
 
     public ChronicleGame(Plugin plugin, Messages messages, Component title, Runnable solved) {
-        super(plugin, 3, messages, title, solved);
+        super(plugin, "chronicle", 3, messages, title, solved);
         for (int index = 0; index < VOLUMES; index++) {
             draw(index);
         }
@@ -131,11 +130,14 @@ public final class ChronicleGame extends ChoreGame {
 
     private void draw(int index) {
         int volume = volumes[index];
-        var book = Items.of(index == selected ? Material.ENCHANTED_BOOK : Material.BOOK, volume)
+        var part = "volume_" + volume + (index == selected ? "_held" : placed(index) ? "_placed" : "");
+        var book = piece(index == selected ? Material.ENCHANTED_BOOK : Material.BOOK, part)
                 .name(messages.get("tasks.games.chronicle.book", Formatter.number("volume", volume)));
         if (placed(index)) {
             book.lore(messages.get("tasks.games.chronicle.placed"));
         }
-        set(FIRST_SLOT + index, book.build());
+        var shown = book.build();
+        shown.setAmount(volume);
+        set(FIRST_SLOT + index, shown);
     }
 }

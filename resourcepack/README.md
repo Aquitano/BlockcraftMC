@@ -114,6 +114,16 @@ exported with "Java Block/Item".
 - Item icons use a native 16-pixel grid, transparent margins and upper-left lighting. HUD symbols use seven pixels of ink
   in each eight-pixel tile to align with the text baseline.
 
+## TTT 2 chore games
+
+`ChoreArt.java` draws each chore game as its station: a screen as large as the chest screen, the only glyph of the font
+`blockcraft:chore/<game>`, and the pieces that move on it as `items/chore/<game>/<part>.json`. `ChoreGame` shows the
+screen as its `screen()` and builds every moving part with `piece(fallback, part)`, which `MenuIcon.picture` marks, so a
+client without the pack sees the fallback item on the plain panel. A new game adds a `Game` to `ChoreArt` with slots
+that match its layout in `paper/ttt/.../task/game`. The `chores` family (`:resourcepack:generateChoreArt`) regenerates
+only these assets and a contact sheet in the workspace's `build/previews/chores.png`, which lays each screen out in a
+sample state above all its parts.
+
 ## Sternenfront first-person weapons
 
 `SternenfrontArt.java` assigns seven `GunPose` families in the equipment list. The same definition supplies resting

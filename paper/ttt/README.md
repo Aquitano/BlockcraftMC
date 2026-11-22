@@ -37,8 +37,9 @@ seconds and stay shut for everyone else.
 ## The maps
 
 On every map, a right-click on any chest removes it and gives one item from `chests.loot`, picked by weight. Every
-ender chest holds the round's one iron sword, given once and only after the preparation. Nothing can be broken, and
-nothing placed but the shop's landmines, fake chests and heal stations.
+ender chest holds the round's one iron sword, given once and only after the preparation. Nothing can be broken or
+taken, a map's armour stands, item frames and paintings included, and nothing placed but the shop's landmines, fake
+chests and heal stations. A chore's cargo cannot be used, so a bottle cannot be filled nor a fish eaten on the way.
 
 The **traitor tester** works the same way on every map. Pressing its button from inside closes the doorway with glass.
 After a delay the lamps turn red if a traitor stands inside, lime otherwise, and then the lamps and doorway return to the
@@ -57,6 +58,16 @@ ends: one from the mausoleum to the crypt, one from the inn's cellar to the mill
 hatches, at the bottom of the open grave (which has a ladder back up) and among the crates in the lane beside the mill,
 and walk the passages, but only a traitor opens their iron doors.
 
+**Novigrad** is the harbour of Elysium Fire's Novigrad, cut from the [Zeitkapsel exhibit](../../worlds/README.md)
+and the map TTT 2 is built for. Its round starts at the fish market on the canal. The tester stands in the customs
+house on stilts east of the quay, over a lava pit in the sand, and the trap's button hides on the house's seaward
+wall. Two traitor passages run under the town at y 2 and 3, from the fish market to the cathedral square and from
+the tanners' lane to the quay beside the customs house; their hatches lie in the street. The blackout is mended in the
+vaulted cellar north of the harbour. Ten chunks of the city and the castle stand beyond the border, as far as the
+server's view distance reaches, and an iron railing with lantern posts runs along the inside of the border, so the edge
+is something to look through rather than a wall. Barriers fill the edge above the railing up to y 96, over every roof. `dev/mapgen/novigrad.py` writes these fittings and the map's
+`map.yml`, and its `--apply` builds them into a fresh import (see its docstring).
+
 **Vineyard**, **Minecraft** and **Raid** are imported maps from ClayMC (see [the import](../../worlds/README.md#ttt)).
 They live in the TTT map bundle, `worlds/ttt/blockcraft/TTT/maps/<key>/`, each as a `map.yml` and the dimension
 folder of its world, `world/`. At startup, the server copies every imported map into place and adds it to the vote;
@@ -74,6 +85,12 @@ What its keys mean:
 - `tester.zone` is the box whose occupants are tested, and `tester.entrance` is shut with glass during a test.
   `tester.lamps` can be any blocks; they turn red or lime while the result shows.
 - `tester.trap` is optional: its `button`, and the `floor` that opens over the pit.
+- `traitor-doors` is optional: the lower half of each iron door that opens only for living traitors.
+- `tasks` is optional and makes the map playable in TTT 2: the `generator` where a blackout is mended, and `chores`,
+  each with a `key` for its texts under `tasks.chores.<key>` in messages.yml, `visible: true` for a chore others see
+  done, and one of `hold: <spot>`, `puzzle: <spot>` with an optional `game` (one of `task/game`, the key by default),
+  or `fetch: <spot>` with `to: <spot>` and a `cargo` item. A sabotage reaches every wooden door and every torch,
+  lantern and lit block inside the border, so these need no entry.
 
 The server's template is `worlds/ttt`. Its overworld, ClayMC's old TTT waiting island, is the lobby only when
 `BLOCKCRAFT_WAITING_TEMPLATE` is unset, as Compose and `:paper:runServer` both set it. `/setup lobby` moves that
@@ -92,9 +109,13 @@ as the owner's kill, even once the owner is dead; so do the bear trap's and a po
 ## TTT 2
 
 A server whose `BLOCKCRAFT_TTT_MODE` is `tasks` plays TTT 2. The compose service `ttt2` does, in its own group, so the
-two modes fill their own rounds; both share the stats, karma and the lobby. TTT 2 plays only maps whose `Town` has
-a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are under `tasks` in config.yml.
+two modes fill their own rounds; both share the stats, karma and the lobby. TTT 2 plays Schattenbach and every imported map
+whose `map.yml` has `tasks`. The settings are under `tasks` in config.yml.
 
+- No name shows above a head on the `ttt2` server, so players know each other only by skin. Detectives wear a blue
+  cap that cannot come off instead of a blue name; the tab list still names and colours everyone.
+- The sun goes down over the round: noon when the roles are drawn, midnight when the time runs out
+  (`tasks.dusk`), so the map's lights matter more the longer a round lasts.
 - Each innocent and detective receives a suggested route of chores. Those assignments form a fixed team pool that
   any living innocent or detective can finish. Deaths, disconnects, and revivals leave the target and progress unchanged.
 - The navigation book in hotbar slot eight selects a task. Traitors can find stations but cannot complete tasks.

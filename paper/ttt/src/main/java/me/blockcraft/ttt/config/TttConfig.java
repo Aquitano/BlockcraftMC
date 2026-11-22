@@ -61,9 +61,18 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
     public record Tester(int delaySeconds, int showSeconds, int cooldownSeconds, int trapSeconds) {
     }
 
-    /** TTT 2's chores and sabotage, as config.yml describes them. */
+    /** TTT 2's chores, sabotage and dusk, as config.yml describes them. */
     public record Tasks(int perPlayer, int holdSeconds, double reach, int spread, List<LootTable.Entry> loot,
-                        Sabotage sabotage) {
+                        Sabotage sabotage, Dusk dusk) {
+    }
+
+    /** The time of day, in ticks, when the roles are drawn and when the round runs out; it moves evenly between. */
+    public record Dusk(long from, long to) {
+
+        public long at(int secondsLeft, int roundSeconds) {
+            double gone = 1 - Math.clamp((double) secondsLeft / roundSeconds, 0, 1);
+            return Math.round(from + (to - from) * gone);
+        }
     }
 
     public record Sabotage(int cooldownSeconds, int blackoutSeconds, int doorsSeconds, int testerSeconds,
@@ -141,6 +150,7 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
                         Math.max(1, config.integer("tasks.sabotage.blackout-seconds")),
                         Math.max(1, config.integer("tasks.sabotage.doors-seconds")),
                         Math.max(1, config.integer("tasks.sabotage.tester-seconds")),
-                        Math.max(1, config.integer("tasks.sabotage.repair-seconds"))));
+                        Math.max(1, config.integer("tasks.sabotage.repair-seconds"))),
+                new Dusk(config.integer("tasks.dusk.from"), config.integer("tasks.dusk.to")));
     }
 }

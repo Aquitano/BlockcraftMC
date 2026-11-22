@@ -60,6 +60,42 @@ public class TownMapsTest {
     }
 
     @Test
+    public void aMapWithChoresReadsTheirKindsAndItsTraitorDoors() throws IOException {
+        write("harbour", PLAYABLE + """
+                traitor-doors:
+                  - {x: 4, y: 70, z: 9}
+                tasks:
+                  generator: {x: 1, y: 70, z: 2}
+                  chores:
+                    - {key: nets, hold: {x: 3, y: 71, z: 3}, visible: true}
+                    - {key: harbour_forge, puzzle: {x: 5, y: 71, z: 5}, game: forge}
+                    - {key: cargo, fetch: {x: 7, y: 71, z: 7}, to: {x: 9, y: 71, z: 9}, cargo: barrel}
+                """, true);
+        write("broken_chore", PLAYABLE + """
+                tasks:
+                  generator: {x: 1, y: 70, z: 2}
+                  chores:
+                    - {key: cargo, fetch: {x: 7, y: 71, z: 7}}
+                """, true);
+        write("unknown_game", PLAYABLE + """
+                tasks:
+                  generator: {x: 1, y: 70, z: 2}
+                  chores:
+                    - {key: dance, puzzle: {x: 5, y: 71, z: 5}}
+                """, true);
+
+        var maps = pool().maps();
+
+        assertEquals(List.of("harbour"), maps.stream().map(TownMap::key).toList());
+        assertEquals(List.of(new TownMap.Spot(4, 70, 9)), maps.getFirst().traitorDoors());
+        assertEquals(Optional.of(new TownMap.TaskParts(new TownMap.Spot(1, 70, 2), List.of(
+                new TownMap.ChoreParts.Hold("nets", new TownMap.Spot(3, 71, 3), true),
+                new TownMap.ChoreParts.Puzzle("harbour_forge", "forge", new TownMap.Spot(5, 71, 5), false),
+                new TownMap.ChoreParts.Fetch("cargo", new TownMap.Spot(7, 71, 7), new TownMap.Spot(9, 71, 9), Material.BARREL, false)))),
+                maps.getFirst().tasks());
+    }
+
+    @Test
     public void onlyMapsWithAWorldSpawnsAndATesterAreInThePool() throws IOException {
         write("ready", PLAYABLE, true);
         write("no_world", PLAYABLE, false);

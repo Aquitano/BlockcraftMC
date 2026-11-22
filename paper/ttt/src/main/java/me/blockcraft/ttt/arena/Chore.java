@@ -25,7 +25,11 @@ public sealed interface Chore {
     record Fetch(String key, Block station, Block destination, Material cargo, boolean visible) implements Chore {
     }
 
-    /** Solve the short puzzle that opens at the station. */
-    record Puzzle(String key, Block station, boolean visible) implements Chore {
+    /** Solve the short puzzle that opens at the station, the chore {@code game} of {@code task/game}. */
+    record Puzzle(String key, String game, Block station, boolean visible) implements Chore {
+
+        public Puzzle(String key, Block station, boolean visible) {
+            this(key, key, station, visible);
+        }
     }
 }

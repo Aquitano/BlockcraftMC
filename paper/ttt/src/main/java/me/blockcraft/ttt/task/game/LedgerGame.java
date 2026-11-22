@@ -1,6 +1,5 @@
 package me.blockcraft.ttt.task.game;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -47,8 +46,8 @@ public final class LedgerGame extends ChoreGame {
     private int open = WRONG_ENTRIES;
 
     public LedgerGame(Plugin plugin, Messages messages, Component title, Runnable solved) {
-        super(plugin, 3, messages, title, solved);
-        info(HINT_SLOT, Items.of(Material.WRITABLE_BOOK).name(messages.get("tasks.games.ledger.hint")).build());
+        super(plugin, "ledger", 3, messages, title, solved);
+        info(HINT_SLOT, piece(Material.WRITABLE_BOOK, "quill").name(messages.get("tasks.games.ledger.hint")).build());
         show();
     }
 
@@ -108,6 +107,6 @@ public final class LedgerGame extends ChoreGame {
                 Placeholder.unparsed("op", entry.plus() ? "+" : "-"),
                 Formatter.number("second", entry.right()),
                 Formatter.number("result", entry.shown()));
-        return Items.of(struck ? Material.RED_DYE : Material.PAPER).name(line).build();
+        return piece(struck ? Material.RED_DYE : Material.PAPER, struck ? "entry_struck" : "entry").name(line).build();
     }
 }

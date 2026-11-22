@@ -36,6 +36,7 @@ FAMILIES = {
     'ui': Family('PackArt.java', ('bodies',), ('src',)),
     'hud': Family('HudArt.java', arguments=('src', 'build/previews/hud.png')),
     'stations': Family('StationArt.java', ('hud',), ('src',)),
+    'chores': Family('ChoreArt.java', ('ui',), ('src', 'build/previews/chores.png')),
     'yard': Family('YardArt.java', arguments=('src', 'build/previews/yard.png')),
     'story': Family('StoryArt.java', arguments=('src',)),
     'presentation': Family('PresentationArt.java', arguments=('src',)),

@@ -1,5 +1,7 @@
 package me.blockcraft.ttt.game;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.BlockChanges;
@@ -19,10 +21,12 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.item.HotbarItem;
+import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.TesterRoom;
@@ -42,6 +46,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -50,6 +55,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Openable;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -89,6 +95,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private enum Stage { PREPARATION, PLAYING }
 
     private static final long TRAITOR_DOOR_TICKS = 60L;
+    private static final Color DETECTIVE_CAP = Color.fromRGB(0x2F5BD3);
     private static final Title.Times ROLE_TITLE = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(3), Duration.ofMillis(750));
 
     private final Plugin plugin;
@@ -133,6 +140,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.plugin = plugin;
         this.config = config;
         this.mode = mode;
+        if (mode == TttMode.TASKS) {
+            BlockcraftApi.get().tabTeams().hideNameTags();
+        }
         this.messages = messages;
         this.vote = vote;
         this.lobbySpawn = lobbySpawn;
@@ -318,7 +328,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             BlockcraftApi.get().notifications().important(player, Title.title(messages.get("roles.title", name), goal, ROLE_TITLE));
             player.sendMessage(messages.get("roles.assigned", name));
             if (role == Role.DETECTIVE) {
-                BlockcraftApi.get().tabTeams().color(player, NamedTextColor.BLUE);
+                markDetective(player);
             }
             if (role.hasShop()) {
                 points.put(player.getUniqueId(), config.shop().startPoints());
@@ -349,6 +359,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             secondsLeft = remaining;
             if (stage == Stage.PLAYING) {
                 round.announceEnd(remaining);
+                if (mode == TttMode.TASKS) {
+                    town.ifPresent(built -> Worlds.setTime(built.world(), config.tasks().dusk().at(remaining, seconds)));
+                }
             }
             if (mode == TttMode.TASKS || round.clockOnSidebar()) {
                 refreshAll();
@@ -550,7 +563,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             giveShop(patient, remains.role());
             deserters.remove(patient.getUniqueId());
             if (remains.role() == Role.DETECTIVE) {
-                BlockcraftApi.get().tabTeams().color(patient, NamedTextColor.BLUE);
+                markDetective(patient);
             }
             tasks.ifPresent(running -> running.giveTasks(patient));
             patient.getWorld().playSound(remains.location(), Sound.ITEM_TOTEM_USE, 0.8f, 1.2f);
@@ -600,6 +613,24 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             if (half.getBlockData() instanceof Openable door) {
                 door.setOpen(open);
                 BlockChanges.set(half, door);
+            }
+        }
+    }
+
+    /** Blue in the tab list, and in TTT 2, where no name shows above a head, a blue cap that cannot come off. */
+    private void markDetective(Player player) {
+        BlockcraftApi.get().tabTeams().color(player, NamedTextColor.BLUE);
+        if (mode == TttMode.TASKS) {
+            var cap = Items.of(Material.LEATHER_HELMET).color(DETECTIVE_CAP).name(messages.get("roles.detective-cap"))
+                    .hideAttributes().edit(meta -> {
+                        meta.setUnbreakable(true);
+                        meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+                    }).build();
+            cap.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes().build());
+            var worn = player.getInventory().getHelmet();
+            player.getInventory().setHelmet(cap);
+            if (worn != null && !worn.isEmpty()) {
+                give(player, worn);
             }
         }
     }
