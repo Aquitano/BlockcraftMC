@@ -1133,6 +1133,8 @@ def build_map(name="sturmwerft"):
         for function in functions:
             say(f"function {function}")
         time.sleep(8)
+    # Placing a block under a plant the run already put down pops the plant, and its item would be saved with the map.
+    say("kill @e[type=minecraft:item]")
     say("forceload remove all")
     say("save-all flush")
     time.sleep(10)

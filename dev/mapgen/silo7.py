@@ -991,7 +991,7 @@ def cold_store(b):
         x, z = b.rng.randint(x1, x2), b.rng.randint(z1, z2)
         b.put(x, 0, z, "snow[layers=1]")
     wall_box(b, -52, -20, -20, 20, 0, 6, "white_concrete")
-    b.box(-52, 2, -20, -20, 2, 20, "light_blue_terracotta")
+    wall_box(b, -52, -20, -20, 20, 2, 2, "light_blue_terracotta")
     b.box(x1, 0, z1, x1, 5, z2, "packed_ice")
     b.box(x1, 2, z1, x1, 2, z2, "light_blue_terracotta")
     b.box(-52, 7, -20, -20, 7, 20, "smooth_quartz")
