@@ -1,0 +1,5 @@
+{
+  "providers": [
+    {"type":"bitmap","file":"blockcraft:font/chore/ledger.png","ascent":13,"height":168,"chars":["\ue000"]}
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "providers": [
+    {"type":"bitmap","file":"blockcraft:font/chore/potion.png","ascent":13,"height":186,"chars":["\ue000"]}
+  ]
+}
