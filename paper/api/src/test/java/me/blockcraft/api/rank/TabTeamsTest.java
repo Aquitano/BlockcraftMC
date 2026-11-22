@@ -26,7 +26,7 @@ public class TabTeamsTest {
                         yield null;
                     }
                     case "addEntry" -> names.add((String) args[0]);
-                    case "prefix", "suffix", "setCanSeeFriendlyInvisibles" -> null;
+                    case "prefix", "suffix", "setCanSeeFriendlyInvisibles", "setOption" -> null;
                     default -> throw new AssertionError(method.getName());
                 });
         var exists = new AtomicBoolean();
@@ -42,12 +42,12 @@ public class TabTeamsTest {
         var entryType = Class.forName(TabTeams.class.getName() + "$Entry");
         var constructor = entryType.getDeclaredConstructors()[0];
         constructor.setAccessible(true);
-        var apply = TabTeams.class.getDeclaredMethod("apply", Scoreboard.class, entryType, Component.class);
+        var apply = TabTeams.class.getDeclaredMethod("apply", Scoreboard.class, entryType, Component.class, Team.OptionStatus.class);
         apply.setAccessible(true);
         for (String name : new String[]{"Red", "Blue"}) {
             var prefix = new RankPrefix(Component.empty(), Component.empty());
             var entry = constructor.newInstance("9999default--", prefix, Component.empty(), Optional.empty(), name);
-            apply.invoke(null, board, entry, Component.empty());
+            apply.invoke(null, board, entry, Component.empty(), Team.OptionStatus.ALWAYS);
             assertTrue("Tab-list groups must allow combat", friendlyFire.get());
             friendlyFire.set(false);
         }

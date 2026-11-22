@@ -35,6 +35,7 @@ roles:
   partners: "<prefix><muted>Deine Traitor-Partner<dark>: <error><players> <dark>· <muted>Schreiben mit <accent>/tc"
   alone: "<prefix><muted>Du bist der einzige Traitor. Viel Glück."
   detectives: "<prefix><muted>Detective<dark>: <accent><players>"
+  detective-cap: "<arrow><primary>Detective-Mütze"
 
 item:
   shop: "<arrow><role>-Shop"

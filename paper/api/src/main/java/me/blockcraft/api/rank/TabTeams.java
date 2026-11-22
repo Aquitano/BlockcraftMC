@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -40,8 +41,9 @@ import java.util.UUID;
  * them; entries are remembered per UUID because a nick changes the name the tab list is keyed by. Vanished players
  * get their own team per group, suffixed with a marker: only staff who see through vanish still list them. Players
  * away from the keyboard get a team of their own with an AFK marker, unless they are vanished. A game that plays in
- * teams colours its players' names, in the tab list and above their heads, without taking the rank prefix away. A
- * rank change shows as soon as LuckPerms recalculates the player.
+ * teams colours its players' names, in the tab list and above their heads, without taking the rank prefix away, and
+ * a game whose players must not know each other by sight hides every name above a head for good. A rank change shows
+ * as soon as LuckPerms recalculates the player.
  */
 public final class TabTeams implements Listener {
 
@@ -61,6 +63,7 @@ public final class TabTeams implements Listener {
     private final VanishedPlayers vanished;
     private final Map<UUID, Entry> entries = new LinkedHashMap<>();
     private final Map<UUID, NamedTextColor> colors = new HashMap<>();
+    private boolean nameTagsHidden;
 
     private record Entry(String team, RankPrefix prefix, Component suffix, Optional<NamedTextColor> color, String name) {
     }
@@ -122,6 +125,12 @@ public final class TabTeams implements Listener {
         }
     }
 
+    /** No name shows above any head on this server from now on; the tab list still names everyone. */
+    public void hideNameTags() {
+        nameTagsHidden = true;
+        Bukkit.getOnlinePlayers().forEach(viewer -> entries.values().forEach(known -> show(viewer, known)));
+    }
+
     /** A rank change reaches a player who is already listed; one still logging in is placed by the join. */
     private void refresh(UUID uuid) {
         var player = Bukkit.getPlayer(uuid);
@@ -173,11 +182,11 @@ public final class TabTeams implements Listener {
                 color, player.getName());
     }
 
-    private static void show(Player viewer, Entry entry) {
-        apply(Boards.of(viewer), entry, entry.prefix().shownTo(viewer));
+    private void show(Player viewer, Entry entry) {
+        apply(Boards.of(viewer), entry, entry.prefix().shownTo(viewer), nameTagsHidden ? Team.OptionStatus.NEVER : Team.OptionStatus.ALWAYS);
     }
 
-    private static void apply(Scoreboard board, Entry entry, Component prefix) {
+    private static void apply(Scoreboard board, Entry entry, Component prefix, Team.OptionStatus nameTags) {
         var team = board.getTeam(entry.team());
         if (team == null) {
             team = board.registerNewTeam(entry.team());
@@ -187,6 +196,7 @@ public final class TabTeams implements Listener {
         team.prefix(prefix);
         team.suffix(entry.suffix());
         entry.color().ifPresent(team::color);
+        team.setOption(Team.Option.NAME_TAG_VISIBILITY, nameTags);
         team.addEntry(entry.name());
     }
 
