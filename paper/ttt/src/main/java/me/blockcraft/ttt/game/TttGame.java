@@ -846,9 +846,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         }
         played.ifPresent(copies::renew);
         countdown.start();
-        if (round.full()) {
-            countdown.hurry(config.fullSeconds());
-        }
+        // The group that just played is still here, so it waits only as long as a full lobby would.
+        countdown.hurry(config.fullSeconds());
         Bukkit.broadcast(messages.get("round.reopened"));
         refreshAll();
     }
