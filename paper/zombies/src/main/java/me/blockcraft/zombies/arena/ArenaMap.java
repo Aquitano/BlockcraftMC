@@ -190,16 +190,21 @@ public final class ArenaMap {
         return bounds;
     }
 
+    /** Loads the arena's chunks in the background and keeps them loaded, so a map chosen in the lobby does not stall it. */
     public void keepLoaded(Plugin plugin) {
         chunkOwner = plugin;
         for (var room : rooms.values()) {
             for (int x = room.bounds().minX() >> 4; x <= room.bounds().maxX() >> 4; x++) {
                 for (int z = room.bounds().minZ() >> 4; z <= room.bounds().maxZ() >> 4; z++) {
-                    world.addPluginChunkTicket(x, z, plugin);
+                    keep(x, z, plugin);
                 }
             }
         }
-        windows.forEach(window -> world.addPluginChunkTicket(window.spawn().getBlockX() >> 4, window.spawn().getBlockZ() >> 4, plugin));
+        windows.forEach(window -> keep(window.spawn().getBlockX() >> 4, window.spawn().getBlockZ() >> 4, plugin));
+    }
+
+    private void keep(int x, int z, Plugin plugin) {
+        world.getChunkAtAsync(x, z).thenRun(() -> world.addPluginChunkTicket(x, z, plugin));
     }
 
     public boolean prepare() {

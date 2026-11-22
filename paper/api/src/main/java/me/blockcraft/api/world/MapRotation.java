@@ -28,7 +28,7 @@ public final class MapRotation {
     private final TemplateDimensions dimensions;
 
     public MapRotation(List<WorldTemplate> templates, String namespace, Consumer<World> settle) {
-        this.maps = templates.stream().map(MapRotation::entry).toList();
+        this.maps = templates.size() > 1 ? templates.stream().map(MapRotation::entry).toList() : List.of();
         this.dimensions = new TemplateDimensions(namespace, settle);
     }
 
@@ -46,7 +46,7 @@ public final class MapRotation {
     }
 
     public boolean rotates() {
-        return maps.size() > 1;
+        return !maps.isEmpty();
     }
 
     public Optional<Entry> map(String key) {

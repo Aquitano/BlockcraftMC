@@ -128,12 +128,18 @@ public final class FrontChoice {
         border.setSize(map.worldBorderSize());
     }
 
-    /** The whole basin stays in memory: bots walk it and posts recolour it wherever the players are. */
+    /**
+     * The whole basin stays in memory: bots walk it and posts recolour it wherever the players are. It loads in the
+     * background, so a front chosen in the lobby does not stall the countdown.
+     */
     private void keepLoaded(FrontMap map) {
         var area = map.playArea();
+        var world = map.world();
         for (int x = (int) area.getMinX() >> 4; x <= (int) area.getMaxX() >> 4; x++) {
             for (int z = (int) area.getMinZ() >> 4; z <= (int) area.getMaxZ() >> 4; z++) {
-                map.world().addPluginChunkTicket(x, z, plugin);
+                int cx = x;
+                int cz = z;
+                world.getChunkAtAsync(cx, cz).thenRun(() -> world.addPluginChunkTicket(cx, cz, plugin));
             }
         }
     }

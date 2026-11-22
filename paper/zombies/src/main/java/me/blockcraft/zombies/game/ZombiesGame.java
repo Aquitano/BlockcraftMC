@@ -250,7 +250,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     }
 
     private void begin() {
-        play(maps.decide());
+        play(maps.prepared());
         round.enter(GamePhase.INGAME);
         phase = Phase.INTERMISSION;
         teamSize = round.playerCount();

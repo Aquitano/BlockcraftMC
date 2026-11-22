@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.secret;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.common.message.Messages;
@@ -86,7 +87,8 @@ public final class Secrets implements Listener, AutoCloseable {
             });
             spots.course().ifPresent(course -> {
                 var times = new KesselTimes(BlockcraftApi.get().database());
-                times.createTable();
+                // With a map vote this builds at the round's start, where a database round trip would hold up the tick.
+                Tasks.async(plugin, times::createTable);
                 var kessel = new KesselCourse(plugin, game, messages, discoveries, Optional.of(times),
                         Secret.KESSEL, course, config.parSeconds(), config.limitSeconds());
                 listen(kessel);
