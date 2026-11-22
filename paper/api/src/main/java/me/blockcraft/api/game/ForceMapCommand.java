@@ -19,7 +19,8 @@ import java.util.function.Supplier;
 
 /**
  * /forcemap: staff decide the lobby's vote while it is still open. The game names what can be forced
- * ({@code options}) and forces it, returning the name of what it forced or nothing for an unknown option.
+ * ({@code options}) and forces it, returning the name of what it forced or nothing for an unknown option. An option
+ * may hold spaces, as Duell's mode followed by one of its maps does.
  */
 public final class ForceMapCommand {
 
@@ -32,7 +33,7 @@ public final class ForceMapCommand {
         var messages = BlockcraftApi.get().messages().prefixedLike(gameMessages);
         return Commands.literal("forcemap")
                 .requires(source -> source.getSender().hasPermission(GamePermissions.FORCE_MAP))
-                .then(Commands.argument("option", StringArgumentType.word())
+                .then(Commands.argument("option", StringArgumentType.greedyString())
                         .suggests((context, builder) -> {
                             options.get().stream().filter(key -> key.toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase()))
                                     .forEach(builder::suggest);
@@ -40,7 +41,7 @@ public final class ForceMapCommand {
                         })
                         .executes(context -> {
                             var sender = context.getSource().getSender();
-                            String key = StringArgumentType.getString(context, "option");
+                            String key = StringArgumentType.getString(context, "option").strip();
                             if (!open.getAsBoolean()) {
                                 sender.sendMessage(messages.get("forcemap.closed"));
                                 return Command.SINGLE_SUCCESS;

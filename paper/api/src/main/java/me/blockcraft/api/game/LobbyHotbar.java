@@ -20,14 +20,14 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /**
- * The waiting lobby's hotbar, the same in every game: the game's own choices in the first two slots (kits, perks,
+ * The waiting lobby's hotbar, the same in every game: the game's own choices in the first three slots (kits, perks,
  * the vote), the player's stats in the middle, /start for staff and the way back to the hub at the end. A choice
  * that is unavailable, such as a vote that has closed, is left out until {@link #refreshChoices} finds it available
  * again.
  */
 public final class LobbyHotbar implements Listener {
 
-    private static final int MAX_CHOICES = 2;
+    private static final int MAX_CHOICES = 3;
     private static final int STATS_SLOT = 4;
     private static final int START_SLOT = 7;
     private static final int HUB_SLOT = 8;
@@ -42,6 +42,7 @@ public final class LobbyHotbar implements Listener {
     enum LobbyItem implements HotbarItem {
         CHOICE,
         SECOND_CHOICE,
+        THIRD_CHOICE,
         STATS,
         START,
         HUB
@@ -52,10 +53,10 @@ public final class LobbyHotbar implements Listener {
     private final StatsMenus stats;
     private final LobbyCountdown countdown;
 
-    /** At most two {@code choices}, in the order of their slots. */
+    /** At most three {@code choices}, in the order of their slots. */
     public LobbyHotbar(Plugin plugin, List<Choice> choices, StatsMenus stats, LobbyCountdown countdown) {
         if (choices.size() > MAX_CHOICES) {
-            throw new IllegalArgumentException("The lobby hotbar has room for two choices, not " + choices.size());
+            throw new IllegalArgumentException("The lobby hotbar has room for three choices, not " + choices.size());
         }
         this.plugin = plugin;
         this.choices = List.copyOf(choices);
@@ -119,7 +120,7 @@ public final class LobbyHotbar implements Listener {
 
     private void use(Player player, LobbyItem item) {
         switch (item) {
-            case CHOICE, SECOND_CHOICE -> open(player, choices.get(item.ordinal()));
+            case CHOICE, SECOND_CHOICE, THIRD_CHOICE -> open(player, choices.get(item.ordinal()));
             case STATS -> stats.open(player);
             case START -> {
                 if (player.hasPermission(GamePermissions.START)) {

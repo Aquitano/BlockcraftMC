@@ -25,37 +25,49 @@ public final class MapBundle {
     private static final String DIRECTORY = "blockcraft";
     private static final String META = "map.yml";
 
-    private final World world;
-    private final Optional<WorldTemplate> template;
-    private final String name;
-    private final List<String> builders;
+    /** What {@code map.yml} says of a map; the name falls back to the folder's when the file has none. */
+    record Meta(String name, List<String> builders) {
 
-    private MapBundle(World world, Optional<WorldTemplate> template, String name, List<String> builders) {
-        this.world = world;
-        this.template = template;
-        this.name = name;
-        this.builders = builders;
+        static Meta of(Path level, String fallbackName) {
+            var meta = loadMeta(level.resolve(DIRECTORY).resolve(META));
+            String name = meta.get("name") instanceof String value && !value.isBlank() ? value : fallbackName;
+            List<String> builders = meta.get("builders") instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
+            return new Meta(name, builders);
+        }
     }
 
-    public static MapBundle load(World world, Optional<WorldTemplate> template) {
-        var meta = loadMeta(root(world).resolve(DIRECTORY).resolve(META));
-        String name = meta.get("name") instanceof String value && !value.isBlank()
-                ? value
-                : template.map(configured -> configured.directory().getFileName().toString()).orElse(world.getName());
-        List<String> builders = meta.get("builders") instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
-        return new MapBundle(world, template, name, builders);
+    private final World world;
+    private final List<WorldTemplate> rotation;
+    private final Meta meta;
+
+    private MapBundle(World world, List<WorldTemplate> rotation, Meta meta) {
+        this.world = world;
+        this.rotation = List.copyOf(rotation);
+        this.meta = meta;
+    }
+
+    /** {@code rotation} holds every configured template, the main world's first. */
+    public static MapBundle load(World world, List<WorldTemplate> rotation) {
+        String fallback = rotation.stream().findFirst().map(template -> template.directory().getFileName().toString()).orElse(world.getName());
+        return new MapBundle(world, rotation, Meta.of(root(world), fallback));
     }
 
     public String name() {
-        return name;
+        return meta.name();
     }
 
     public List<String> builders() {
-        return builders;
+        return meta.builders();
     }
 
+    /** The main world's template, which {@link #save()} publishes to. */
     public Optional<WorldTemplate> template() {
-        return template;
+        return rotation.stream().findFirst();
+    }
+
+    /** Every map the server's game may play, the main world's first; more than one only where a lobby chooses. */
+    public List<WorldTemplate> rotation() {
+        return rotation;
     }
 
     /**
@@ -83,7 +95,7 @@ public final class MapBundle {
      * not be restored after a publish that went through.
      */
     public List<RuntimeException> save() {
-        var publishing = template.orElseThrow();
+        var publishing = template().orElseThrow();
         return MapSaveEvent.publish(world, () -> {
             Bukkit.getWorlds().forEach(dimension -> dimension.save(true));
             publishing.publish(root(world));

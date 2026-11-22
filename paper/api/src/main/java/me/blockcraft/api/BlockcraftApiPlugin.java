@@ -137,7 +137,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var xpRepository = new XpRepository(database);
         var xp = new Xp(this, xpRepository, new Levels(config.integer("xp.level-step")),
                 xpRewards(config.section("xp.rewards")), notifications);
-        var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
+        var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.rotation(config));
         // The locator bar would take the level bar's place and point at hidden or hunted players. No server lets mobs
         // spawn by themselves (the games' ArenaProtection, the lobby's ProtectionListener), so none spends ticks trying.
         // The map is restored at every start, so nothing in it has to grow, spread or melt in between either; a world

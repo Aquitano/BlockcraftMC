@@ -229,6 +229,10 @@ folder with a copy of the template before Paper loads it, so a restart resets th
 is left alone and the server keeps whatever world it has, which is how a map is made in the first place. No template at
 all means a plain persistent world.
 
+Zombies and Sternenfront name several templates, separated by commas. The first is the main world, which the bootstrap
+restores and `/map save` publishes. At startup the game copies each listed map's overworld and `blockcraft/` into a world of
+its own. The lobby votes among them, and the round plays the copy of the winner.
+
 [Change a map](worlds/README.md#change-a-map) and [importing an old 1.8 map](worlds/README.md#importing-an-old-18-map) have
 the steps. `/build` needs `blockcraft.build`, and `/map save` needs `blockcraft.map`.
 
