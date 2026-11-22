@@ -123,7 +123,7 @@ public final class TttPlugin extends JavaPlugin {
             }
             try {
                 arenas.copy(pool.world(map.key()), map.key());
-                choices.add(new MapVote.Choice(map.key(), map.name(), map.builders(), map.icon(), () -> map.in(arenas.load(map.key()))));
+                choices.add(new MapVote.Choice(map.key(), map.name(), map.builders(), map.icon(), () -> map.in(arenas.load(map.key()), mode == TttMode.TASKS)));
             } catch (UncheckedIOException | IllegalStateException e) {
                 getSLF4JLogger().warn("Skipping map {}: {}", map.key(), e.getMessage());
             }

@@ -77,6 +77,12 @@ public class TownMapsTest {
                   chores:
                     - {key: cargo, fetch: {x: 7, y: 71, z: 7}}
                 """, true);
+        write("unknown_game", PLAYABLE + """
+                tasks:
+                  generator: {x: 1, y: 70, z: 2}
+                  chores:
+                    - {key: dance, puzzle: {x: 5, y: 71, z: 5}}
+                """, true);
 
         var maps = pool().maps();
 

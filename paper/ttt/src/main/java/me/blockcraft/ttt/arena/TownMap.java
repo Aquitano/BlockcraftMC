@@ -1,6 +1,7 @@
 package me.blockcraft.ttt.arena;
 
 import me.blockcraft.api.world.Point;
+import me.blockcraft.ttt.task.game.ChoreGames;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -100,7 +101,11 @@ public record TownMap(String key, String name, List<String> builders, Material i
                 return new Hold(key, Spot.parse(station), visible);
             }
             if (values.get("puzzle") instanceof Map<?, ?> station) {
-                return new Puzzle(key, values.get("game") instanceof String game ? game : key, Spot.parse(station), visible);
+                var game = values.get("game") instanceof String named ? named : key;
+                if (!ChoreGames.NAMES.contains(game)) {
+                    throw new IllegalArgumentException("chore " + key + " plays no known game: " + game);
+                }
+                return new Puzzle(key, game, Spot.parse(station), visible);
             }
             if (values.get("fetch") instanceof Map<?, ?> station && values.get("to") instanceof Map<?, ?> destination) {
                 var cargo = Material.matchMaterial(String.valueOf(values.get("cargo")));
@@ -150,15 +155,18 @@ public record TownMap(String key, String name, List<String> builders, Material i
                 yaml.getMapList("traitor-doors").stream().map(Spot::parse).toList(), tasks);
     }
 
-    /** The round's town in {@code world}, this map's loaded copy, with the world border drawn. */
-    public Town in(World world) {
+    /**
+     * The round's town in {@code world}, this map's loaded copy, with the world border drawn. Its chores come along
+     * only {@code withTasks}, because finding the doors and lights a sabotage reaches reads every block of the map.
+     */
+    public Town in(World world, boolean withTasks) {
         var worldBorder = world.getWorldBorder();
         worldBorder.setCenter(border.x(), border.z());
         worldBorder.setSize(border.size());
         var room = new TesterRoom(tester.zone(), tester.button().in(world), tester.entrance().blocks(world),
                 tester.lamps().stream().map(lamp -> lamp.in(world)).toList(),
                 tester.trap().map(trap -> new TesterRoom.Trap(trap.button().in(world), trap.floor().blocks(world))));
-        var layout = tasks.map(parts -> {
+        var layout = tasks.filter(parts -> withTasks).map(parts -> {
             var fittings = Fittings.inside(world, border);
             return new TaskLayout(parts.chores().stream().map(chore -> chore.in(world)).toList(), fittings.doors(),
                     fittings.lights(), parts.generator().in(world));
