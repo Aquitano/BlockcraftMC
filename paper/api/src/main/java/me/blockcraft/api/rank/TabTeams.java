@@ -183,10 +183,10 @@ public final class TabTeams implements Listener {
     }
 
     private void show(Player viewer, Entry entry) {
-        apply(Boards.of(viewer), entry, entry.prefix().shownTo(viewer), nameTagsHidden ? Team.OptionStatus.NEVER : Team.OptionStatus.ALWAYS);
+        apply(Boards.of(viewer), entry, entry.prefix().shownTo(viewer), nameTagsHidden);
     }
 
-    private static void apply(Scoreboard board, Entry entry, Component prefix, Team.OptionStatus nameTags) {
+    private static void apply(Scoreboard board, Entry entry, Component prefix, boolean nameTagsHidden) {
         var team = board.getTeam(entry.team());
         if (team == null) {
             team = board.registerNewTeam(entry.team());
@@ -196,7 +196,9 @@ public final class TabTeams implements Listener {
         team.prefix(prefix);
         team.suffix(entry.suffix());
         entry.color().ifPresent(team::color);
-        team.setOption(Team.Option.NAME_TAG_VISIBILITY, nameTags);
+        if (nameTagsHidden) {
+            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        }
         team.addEntry(entry.name());
     }
 
