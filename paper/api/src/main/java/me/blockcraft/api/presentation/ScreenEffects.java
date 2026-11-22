@@ -43,16 +43,6 @@ public final class ScreenEffects {
         ownedReplace(owner, player, Channel.ATMOSPHERE, Key.key("blockcraft", "presentation/atmosphere/" + atmosphere.key()));
     }
 
-    public static void atmosphere(Player player, Atmosphere atmosphere) {
-        Channel.ATMOSPHERE.owners.remove(player.getUniqueId());
-        replace(player, "presentation/atmosphere/", Key.key("blockcraft", "presentation/atmosphere/" + atmosphere.key()));
-    }
-
-    public static void clear(Player player) {
-        for (var channel : Channel.values()) channel.owners.remove(player.getUniqueId());
-        replace(player, "presentation/", null);
-    }
-
     public static void accent(Player player, Atmosphere atmosphere, double intensity) {
         replace(player, "presentation/accent/", accentKey(atmosphere, intensity));
     }

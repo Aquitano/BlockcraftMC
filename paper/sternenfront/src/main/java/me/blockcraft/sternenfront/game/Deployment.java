@@ -128,7 +128,7 @@ public final class Deployment {
             return;
         }
         var fighter = game.fighter(player);
-        SternenfrontGame.lowerAim(player);
+        game.lowerAim(player);
         PlayerReset.reset(player, GameMode.ADVENTURE);
         player.teleport(game.map().overview());
         player.setGlowing(false);
@@ -228,7 +228,7 @@ public final class Deployment {
         var site = game.map().posts().get(index);
         var enemies = game.combatants().stream().filter(other -> game.factionOf(other).filter(faction.enemy()::equals).isPresent())
                 .map(org.bukkit.entity.LivingEntity::getLocation).toList();
-        double clearance = Math.clamp(game.plugin().getConfig().getDouble("respawn.enemy-clearance"), 0, 64);
+        double clearance = game.config().respawn().enemyClearance();
         return enemies.stream().noneMatch(site::contains) && SpawnSpots.hasClearSpawn(site.spawns(), enemies, clearance);
     }
 
@@ -355,10 +355,10 @@ public final class Deployment {
         return !game.intro().running() && player.isOnline() && !player.isDead() && game.phase() == GamePhase.INGAME && game.isPlaying(player);
     }
 
-    private Location spot(Faction faction, Spawn spawn) {
+    public Location spot(Faction faction, Spawn spawn) {
         return switch (spawn) {
-            case Spawn.Headquarters ignored -> spawnSpots.farthestFromEnemies(game.map().headquarters().get(faction).spawns(), faction);
-            case Spawn.Post post -> spawnSpots.farthestFromEnemies(game.map().posts().get(post.index()).spawns(), faction);
+            case Spawn.Headquarters ignored -> spawnSpots.safest(game.map().headquarters().get(faction).spawns(), faction);
+            case Spawn.Post post -> spawnSpots.safest(game.map().posts().get(post.index()).spawns(), faction);
             case Spawn.Dropship ignored -> spawnSpots.leastCrowded(spawnSpots.dropshipSpots(game.front().orElseThrow()));
         };
     }
@@ -433,7 +433,7 @@ public final class Deployment {
                     Placeholder.unparsed("player", player.getName())));
             Bukkit.getOnlinePlayers().forEach(Sounds.NOTIFY::play);
         }, () -> unit.ifPresentOrElse(chosen -> game.reinforcementUnits().equip(player, chosen),
-                () -> game.loadouts().equip(player, faction, fighter.combatClass())));
+                () -> game.loadouts().equip(player, faction, fighter.combatClass(), fighter.classBlaster(faction, fighter.combatClass()))));
         player.getInventory().setHeldItemSlot(0);
         player.setFoodLevel(20);
         player.setSaturation(20);
@@ -452,7 +452,8 @@ public final class Deployment {
         var keys = fighter.hero().map(chosen -> chosen.abilities().stream().map(ability -> "hero.ability." + ability.key()).toList())
                 .orElseGet(() -> fighter.abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
         var weapon = fighter.hero().filter(chosen -> chosen.weapon() instanceof Hero.Weapon.Saber).map(chosen -> "deploy.saber-controls")
-                .or(() -> fighter.blaster(faction.get()).map(blaster -> blaster.isLongRifle() ? "deploy.scope-controls" : "deploy.blaster-controls"));
+                .or(() -> fighter.blaster(faction.get()).map(blaster -> blaster.isLongRifle() ? "deploy.scope-controls"
+                        : game.config().stats(blaster).mode() == Blaster.FireMode.AUTOMATIC ? "deploy.automatic-controls" : "deploy.blaster-controls"));
         var told = new ArrayList<>(keys);
         weapon.ifPresent(told::add);
         var previous = controls.put(player.getUniqueId(), told);

@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.List;
@@ -22,6 +23,18 @@ public class SystemConfigTest {
 
     @Rule
     public final TemporaryFolder folder = new TemporaryFolder();
+
+    @Test
+    public void packArchivesLiveUnderOneBaseUrlThatTheEnvironmentOverrides() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        var defaults = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml")).resourcePack();
+        assertEquals(URI.create("http://localhost:8080/"), defaults.baseUrl());
+        assertEquals(Map.of("sternenfront", List.of("starwars"), "story", List.of("starwars"), "replay", List.of()),
+                defaults.groups());
+        var production = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"),
+                Map.of("BLOCKCRAFT_RESOURCE_PACK_BASE_URL", "https://mc.example.net/packs")).resourcePack();
+        assertEquals(URI.create("https://mc.example.net/packs/"), production.baseUrl());
+    }
 
     @Test
     public void discoverySnapshotExpiryDefaultsForOlderConfigsAndCanBeConfigured() throws IOException {

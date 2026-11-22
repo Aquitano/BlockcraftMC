@@ -1,7 +1,3 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["numpy>=2", "scipy>=1.13", "pyyaml>=6"]
-# ///
 """Builds Sternenfront's effects and imported recordings into sounds/sternenfront.
 
 Run with `uv run SternenfrontSounds.py`. World effects are mono; streamed music is stereo.

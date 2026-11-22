@@ -3,7 +3,8 @@
     "glow": "blockcraft:item/battle/glow_neutral",
     "body": "blockcraft:item/battle/projector_body",
     "panel": "blockcraft:item/battle/projector_panel",
-    "metal": "blockcraft:item/battle/projector_metal"
+    "metal": "blockcraft:item/battle/projector_metal",
+    "particle": "blockcraft:item/battle/glow_neutral"
   },
   "elements": [
     {

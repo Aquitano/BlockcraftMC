@@ -1,9 +1,10 @@
 package me.blockcraft.zombies.game;
 
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.config.ZombiesConfig;
-import me.blockcraft.zombies.menu.ReplaceWeaponDialog;
+import me.blockcraft.zombies.menu.ReplaceWeaponMenu;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -105,8 +106,12 @@ public final class MysteryBox {
         } else if (age < config.rollTicks()) {
             game.feedback(player, "mystery.spinning");
         } else if (!game.survivor(player).weapons().containsKey(roll.weapon) && game.weapons().full(player)) {
-            new ReplaceWeaponDialog(game, player, roll.weapon, replaced -> take(player, roll, replaced), () -> { })
-                    .open(player, () -> rolls.get(station) == roll && game.canUse(player, station));
+            roll.swap = new ReplaceWeaponMenu(game, player, roll.weapon, replaced -> {
+                take(player, roll, replaced);
+                Menu.close(player);
+            });
+            roll.swap.open(player, () -> rolls.get(station) == roll && game.tickNumber() - roll.started < roll.sinkAt()
+                    && game.canUse(player, station));
         } else {
             take(player, roll, roll.weapon);
         }
@@ -183,6 +188,7 @@ public final class MysteryBox {
         private final ItemDisplay display;
         private final Interaction box;
         private int swapped;
+        private Menu swap;
 
         Roll(UUID buyer, ArenaMap.Station station, Weapon weapon, int started) {
             this.buyer = buyer;
@@ -231,7 +237,12 @@ public final class MysteryBox {
             }
             if (age == sinkAt()) {
                 move(lifted(0), config.sinkTicks());
-                buyer().ifPresent(player -> player.sendMessage(game.messages().get("mystery.gone", weaponName())));
+                buyer().ifPresent(player -> {
+                    player.sendMessage(game.messages().get("mystery.gone", weaponName()));
+                    if (swap != null && player.getOpenInventory().getTopInventory().getHolder(false) == swap) {
+                        Menu.close(player);
+                    }
+                });
             }
             if (age >= sinkAt() + config.sinkTicks()) {
                 remove();

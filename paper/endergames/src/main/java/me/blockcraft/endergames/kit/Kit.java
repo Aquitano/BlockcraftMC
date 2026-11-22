@@ -17,7 +17,7 @@ import java.util.Locale;
  * beyond its items is {@link KitAbilities}'; its name and description are {@code kit.<key>} in messages.yml.
  */
 public enum Kit implements UnlockableKit {
-    BARBAR(Material.LEATHER_CHESTPLATE, 0) {
+    BARBAR(Material.LEATHER_CHESTPLATE) {
         @Override
         public void equip(Player player, Messages messages) {
             var inventory = player.getInventory();
@@ -28,13 +28,13 @@ public enum Kit implements UnlockableKit {
             inventory.setBoots(ItemStack.of(Material.LEATHER_BOOTS));
         }
     },
-    BOGENSCHUETZE(Material.BOW, 0) {
+    BOGENSCHUETZE(Material.BOW) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(ItemStack.of(Material.BOW), ItemStack.of(Material.ARROW, 16));
         }
     },
-    HOLZFAELLER(Material.WOODEN_AXE, 0) {
+    HOLZFAELLER(Material.WOODEN_AXE) {
         @Override
         public void equip(Player player, Messages messages) {
             var axe = ItemStack.of(Material.WOODEN_AXE);
@@ -43,72 +43,72 @@ public enum Kit implements UnlockableKit {
             player.getInventory().setChestplate(Items.of(Material.LEATHER_CHESTPLATE).color(Color.fromRGB(0xA51D2D)).build());
         }
     },
-    JAEGER(Material.STONE_SWORD, 0) {
+    JAEGER(Material.STONE_SWORD) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(ItemStack.of(Material.STONE_SWORD));
             player.getInventory().setChestplate(Items.of(Material.LEATHER_CHESTPLATE).color(Color.fromRGB(0x3B7A2A)).build());
         }
     },
-    ENDERMAN(Material.ENDER_PEARL, 500) {
+    ENDERMAN(Material.ENDER_PEARL) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(ItemStack.of(Material.ENDER_PEARL, 5));
         }
     },
-    BOMBER(Material.TNT, 500) {
+    BOMBER(Material.TNT) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(ItemStack.of(Material.TNT, 5), ItemStack.of(Material.FLINT_AND_STEEL));
         }
     },
-    VAMPIR(Material.REDSTONE, 400) {
+    VAMPIR(Material.REDSTONE) {
         @Override
         public void equip(Player player, Messages messages) {
         }
     },
-    KAENGURU(Material.RABBIT_FOOT, 500) {
+    KAENGURU(Material.RABBIT_FOOT) {
         @Override
         public void equip(Player player, Messages messages) {
             player.setAllowFlight(true);
         }
     },
-    SPINNE(Material.COBWEB, 300) {
+    SPINNE(Material.COBWEB) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(ItemStack.of(Material.COBWEB, 16));
             player.getInventory().setHelmet(Items.of(Material.LEATHER_HELMET).color(Color.BLACK).build());
         }
     },
-    STOMPER(Material.IRON_BOOTS, 600) {
+    STOMPER(Material.IRON_BOOTS) {
         @Override
         public void equip(Player player, Messages messages) {
         }
     },
-    SKORPION(Material.SPIDER_EYE, 400) {
+    SKORPION(Material.SPIDER_EYE) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().setChestplate(Items.of(Material.LEATHER_CHESTPLATE).color(Color.GREEN).build());
         }
     },
-    THOR(Material.GOLDEN_AXE, 800) {
+    THOR(Material.GOLDEN_AXE) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(Items.of(Material.GOLDEN_AXE).name(messages.get("kit.thor.item")).build());
         }
     },
-    TELEPORTER(Material.ENDER_EYE, 400) {
+    TELEPORTER(Material.ENDER_EYE) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(ItemStack.of(Material.ENDER_PEARL, 2));
         }
     },
-    BERSERKER(Material.BLAZE_POWDER, 400) {
+    BERSERKER(Material.BLAZE_POWDER) {
         @Override
         public void equip(Player player, Messages messages) {
         }
     },
-    ANGSTHASE(Material.FEATHER, 300) {
+    ANGSTHASE(Material.FEATHER) {
         @Override
         public void equip(Player player, Messages messages) {
             var sword = ItemStack.of(Material.WOODEN_SWORD);
@@ -116,7 +116,7 @@ public enum Kit implements UnlockableKit {
             player.getInventory().addItem(sword);
         }
     },
-    SUPPENMEISTER(Material.MUSHROOM_STEW, 500) {
+    SUPPENMEISTER(Material.MUSHROOM_STEW) {
         @Override
         public void equip(Player player, Messages messages) {
             for (int i = 0; i < 6; i++) {
@@ -124,7 +124,7 @@ public enum Kit implements UnlockableKit {
             }
         }
     },
-    TRACKER(Material.COMPASS, 300) {
+    TRACKER(Material.COMPASS) {
         @Override
         public void equip(Player player, Messages messages) {
             player.getInventory().addItem(PackModel.ENDERGAMES_TRACKER.item().name(messages.get("kit.tracker.item")).build());
@@ -134,11 +134,9 @@ public enum Kit implements UnlockableKit {
     private static final String ITEM_PREFIX = "endergames.kit.";
 
     private final Material icon;
-    private final int defaultPrice;
 
-    Kit(Material icon, int defaultPrice) {
+    Kit(Material icon) {
         this.icon = icon;
-        this.defaultPrice = defaultPrice;
     }
 
     public abstract void equip(Player player, Messages messages);
@@ -158,8 +156,5 @@ public enum Kit implements UnlockableKit {
         return icon;
     }
 
-    public int defaultPrice() {
-        return defaultPrice;
-    }
 
 }

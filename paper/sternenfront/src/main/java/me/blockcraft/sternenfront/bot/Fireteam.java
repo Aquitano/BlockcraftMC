@@ -41,6 +41,8 @@ final class Fireteam {
     final FallBack fallBack = new FallBack();
     boolean fallingBack;
     final Bounding bounding = new Bounding();
+    /** The members near the leader that bound under fire, leader first, as of its last command. */
+    List<Integer> bounders = List.of();
     /** Where the leader walked, newest first, a step apart. */
     final Deque<Location> trail = new ArrayDeque<>();
     private int avoided = -1;
@@ -89,8 +91,18 @@ final class Fireteam {
         return Math.hypot(at.getX() - objective.getX(), at.getZ() - objective.getZ());
     }
 
+    /**
+     * Which of the two elements a member of {@code bounders} runs with. They alternate over the members bounding now,
+     * so a guard or flanker gone from the line never leaves both elements on one side.
+     */
     int element(int number) {
-        return members.indexOf(number) % 2;
+        return bounders.indexOf(number) % 2;
+    }
+
+    /** Whether a member bounds with the element running now; anyone outside {@code bounders} never does. */
+    boolean moves(int number) {
+        int index = bounders.indexOf(number);
+        return index >= 0 && index % 2 == bounding.moving();
     }
 
     void avoid(int post, long until) {

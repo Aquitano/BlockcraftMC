@@ -68,6 +68,7 @@ public final class NexoScenery implements Listener, AutoCloseable {
         this.group = group;
         layout = FurnitureLayout.load(file);
         owner = new NamespacedKey(plugin, "scenery");
+        var ids = layout.placements().stream().map(Placement::id).collect(java.util.stream.Collectors.toSet());
         for (var placement : layout.placements()) {
             if (!placement.groups().isEmpty() && !placement.groups().contains(group)) {
                 continue;
@@ -76,7 +77,7 @@ public final class NexoScenery implements Listener, AutoCloseable {
             if (chunks.add(chunk)) {
                 chunk.addPluginChunkTicket(plugin);
                 for (var entity : chunk.getEntities()) {
-                    if (entity instanceof ItemDisplay && entity.getPersistentDataContainer().has(owner)) {
+                    if (entity instanceof ItemDisplay && ids.contains(entity.getPersistentDataContainer().get(owner, PersistentDataType.STRING))) {
                         if (!NexoFurniture.remove(entity)) {
                             throw new IllegalStateException("Could not clean up furniture in " + world.getName());
                         }
@@ -187,6 +188,7 @@ public final class NexoScenery implements Listener, AutoCloseable {
                 var packets = factory.packetManager();
                 if (pack) {
                     packets.showFurniture(prop.entity().getEntityId(), prop.entity().getViewRange(), player);
+                    if (mechanic.getDoor() != null) mechanic.getDoor().ensureHitboxState(prop.entity(), mechanic, player);
                 } else {
                     packets.hideFurniture(prop.entity().getEntityId(), player);
                 }

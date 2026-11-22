@@ -1,6 +1,6 @@
 package me.blockcraft.api.world;
 
-import me.blockcraft.common.config.YamlFile;
+import me.blockcraft.common.config.StrictConfig;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -67,9 +67,9 @@ public final class WorldTemplate {
      * Several comma-separated directories rotate maps: one is picked at random and kept for as long as this server runs,
      * so a game server that restarts after each round plays another map next time.
      */
-    public static Optional<WorldTemplate> configured(Map<String, Object> config) {
+    public static Optional<WorldTemplate> configured(StrictConfig config) {
         String env = System.getenv(ENV);
-        String path = env != null && !env.isBlank() ? env : String.valueOf(YamlFile.section(config, "world").getOrDefault("template", ""));
+        String path = env != null && !env.isBlank() ? env : config.text("world.template");
         if (picked == null) {
             pick(path, ThreadLocalRandom.current()).ifPresent(choice -> picked = choice);
         }

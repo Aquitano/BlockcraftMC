@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.sound.FeedbackSound;
+import me.blockcraft.system.RequestButtons;
 import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
@@ -162,9 +163,9 @@ public final class PartyManager {
         if (choices.enabled(invitee, PlayerSetting.SOUNDS)) {
             invitee.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(invitee)));
         }
-        invitee.sendMessage(messages.get("party.invite-accept", name(inviter))
-                .clickEvent(ClickEvent.runCommand("/party accept"))
-                .hoverEvent(HoverEvent.showText(messages.get("party.invite-accept-hover"))));
+        invitee.sendMessage(RequestButtons.line(messages, "party.invite-buttons",
+                new RequestButtons.Answer("/party accept", messages.get("party.invite-accept-hover")),
+                new RequestButtons.Answer("/party deny", messages.get("party.invite-deny-hover"))));
     }
 
     /** Only the leader can let someone in: the request is a clickable /party invite on the leader's screen. */
@@ -228,6 +229,16 @@ public final class PartyManager {
         player.sendMessage(messages.get("party.joined", name(leader.get())));
         leader.get().sendMessage(messages.get("party.member-joined-leader", name(player)));
         broadcastToMembers(party, messages.get("party.member-joined", name(player)));
+    }
+
+    public synchronized void deny(Player player) {
+        var invite = invites.remove(player.getUniqueId());
+        if (invite == null) {
+            player.sendMessage(messages.get("party.not-invited"));
+            return;
+        }
+        player.sendMessage(messages.get("party.denied"));
+        proxy.getPlayer(invite.leader()).ifPresent(leader -> leader.sendMessage(messages.get("party.denied-by", name(player))));
     }
 
     public synchronized void kick(Player leader, Player member) {

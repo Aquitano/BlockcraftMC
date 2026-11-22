@@ -1,9 +1,8 @@
 package me.blockcraft.lobby.config;
 
-import me.blockcraft.common.config.YamlFile;
+import me.blockcraft.common.config.StrictConfig;
 
 import java.time.Duration;
-import java.util.Map;
 
 public record ActivitiesConfig(Duration konamiGap, Duration fireworkCooldown, Duration sleepAfter,
                                Duration chickenInterval, int goldenEggOdds, Duration eggLifetime,
@@ -13,31 +12,31 @@ public record ActivitiesConfig(Duration konamiGap, Duration fireworkCooldown, Du
                                Duration sleepWarningAfter, Duration sleepDurationAfter, int christmasCoins,
                                int placeRadius) {
 
-    public static ActivitiesConfig fromYaml(Map<String, Object> root) {
-        var activities = YamlFile.section(root, "activities");
-        return new ActivitiesConfig(seconds(activities, "konami-gap-seconds", 3),
-                seconds(activities, "firework-cooldown-seconds", 30), seconds(activities, "sleep-after-seconds", 600),
-                seconds(activities, "chicken-interval-seconds", 180), number(activities, "golden-egg-odds", 200),
-                seconds(activities, "egg-lifetime-seconds", 20), number(activities, "pond-radius", 20),
-                number(activities, "golden-carp-odds", 500), Math.min(32, nonnegative(activities, "parkour-checkpoints", 7)),
-                number(activities, "parkour-fall-below", 4), number(activities, "perseverance-falls", 100),
-                Math.min(100, number(activities, "easter-spots", 20)), Math.min(Math.min(100, number(activities, "easter-spots", 20)), number(activities, "easter-eggs", 10)),
-                nonnegative(activities, "advent-coins", 25), nonnegative(activities, "halloween-coins", 5),
-                String.valueOf(activities.getOrDefault("halloween-phrase", "Süßes oder Saures")),
-                seconds(activities, "pumpkin-seconds", 300), seconds(activities, "sleep-warning-seconds", 1200),
-                Duration.ofHours(number(activities, "sleep-duration-hours", 1)), nonnegative(activities, "christmas-coins", 100),
-                Math.min(32, number(activities, "place-radius", 4)));
+    /** {@code activities} of Lobby's config.yml. */
+    public static ActivitiesConfig from(StrictConfig activities) {
+        return new ActivitiesConfig(seconds(activities, "konami-gap-seconds"),
+                seconds(activities, "firework-cooldown-seconds"), seconds(activities, "sleep-after-seconds"),
+                seconds(activities, "chicken-interval-seconds"), number(activities, "golden-egg-odds"),
+                seconds(activities, "egg-lifetime-seconds"), number(activities, "pond-radius"),
+                number(activities, "golden-carp-odds"), Math.min(32, nonnegative(activities, "parkour-checkpoints")),
+                number(activities, "parkour-fall-below"), number(activities, "perseverance-falls"),
+                Math.min(100, number(activities, "easter-spots")), Math.min(Math.min(100, number(activities, "easter-spots")), number(activities, "easter-eggs")),
+                nonnegative(activities, "advent-coins"), nonnegative(activities, "halloween-coins"),
+                activities.text("halloween-phrase"),
+                seconds(activities, "pumpkin-seconds"), seconds(activities, "sleep-warning-seconds"),
+                Duration.ofHours(number(activities, "sleep-duration-hours")), nonnegative(activities, "christmas-coins"),
+                Math.min(32, number(activities, "place-radius")));
     }
 
-    private static int number(Map<String, Object> values, String key, int fallback) {
-        return values.get(key) instanceof Number number ? Math.clamp(number.intValue(), 1, 86400) : fallback;
+    private static int number(StrictConfig values, String key) {
+        return Math.clamp(values.integer(key), 1, 86400);
     }
 
-    private static int nonnegative(Map<String, Object> values, String key, int fallback) {
-        return values.get(key) instanceof Number number ? Math.clamp(number.intValue(), 0, 86400) : fallback;
+    private static int nonnegative(StrictConfig values, String key) {
+        return Math.clamp(values.integer(key), 0, 86400);
     }
 
-    private static Duration seconds(Map<String, Object> values, String key, int fallback) {
-        return Duration.ofSeconds(number(values, key, fallback));
+    private static Duration seconds(StrictConfig values, String key) {
+        return Duration.ofSeconds(number(values, key));
     }
 }

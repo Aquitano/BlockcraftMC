@@ -3,6 +3,8 @@ package me.blockcraft.api.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.coins.Coins;
+import me.blockcraft.api.cosmetic.KillEffect;
+import me.blockcraft.api.cosmetic.WinEffect;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -11,6 +13,7 @@ import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.round.RoundRecap;
+import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -35,12 +38,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.BooleanSupplier;
 
 /**
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
- * end; because every coin and every XP point of a round is handed out here, the recap names exactly what was
- * paid, keeps the player's numbers and notes behind Details, and offers another round or the lobby. Kill streaks
+ * end; because every coin and every XP point of a round is handed out here, the result title names exactly what
+ * was paid, the chat keeps the player's numbers and notes behind Details, and the wait before the lobby offers
+ * another round or the lobby on the hotbar. Kill streaks
  * are counted here too and announced at the lengths {@link Streaks} names. The recap is also stored for every
  * participant, so the lobby can show it on request. Their numbers go into the game's stats table in one write:
  * the coins as points, and a loss for everyone knocked out or
@@ -61,7 +64,7 @@ public final class RoundSummary {
     private static final Title.Times RETURN_SECOND = Title.Times.times(Duration.ZERO, Duration.ofMillis(750), Duration.ofMillis(150));
     static final double HALF_A_HEART = 1.0;
 
-    /** The buttons stay clickable past the restart countdown, which every game's config.yml sets for itself. */
+    /** Details stay clickable past the restart countdown, which every game's config.yml sets for itself. */
     private static final ClickCallback.Options BUTTON = ClickCallback.Options.builder()
             .uses(ClickCallback.UNLIMITED_USES)
             .lifetime(Duration.ofMinutes(1))
@@ -88,6 +91,7 @@ public final class RoundSummary {
     private int coinFactor = 1;
     private boolean resultsShown;
     private boolean returning;
+    private ReturnHotbar returnHotbar;
 
     private record Row(UUID player, String name, Stats delta) {
     }
@@ -195,7 +199,7 @@ public final class RoundSummary {
             return;
         }
         accusations.killed(victim, killer);
-        api.effects().onKill(killer, victim);
+        api.settings().get(killer, PlayerSetting.KILL_EFFECT).flatMap(KillEffect::byKey).ifPresent(effect -> effect.play(victim));
         if (api.streaks().announces(score.streak)) {
             Bukkit.broadcast(messages.get("summary.streak",
                     Placeholder.unparsed("player", killer.getName()), Formatter.number("streak", score.streak)));
@@ -271,7 +275,7 @@ public final class RoundSummary {
 
     /** Pays the winner and plays their win effect; a win on half a heart or less is a close call. */
     public void awardWin(Player winner) {
-        api.effects().onWin(winner);
+        api.settings().get(winner, PlayerSetting.WIN_EFFECT).flatMap(WinEffect::byKey).ifPresent(effect -> effect.play(winner));
         winners.put(winner.getUniqueId(), winner.getName());
         var score = score(winner);
         score.xp += api.xp().award(winner, XpReward.WIN);
@@ -326,19 +330,18 @@ public final class RoundSummary {
         var spectatorResult = winnerNames().isEmpty() ? messages.get("summary.result.draw")
                 : messages.get("summary.result.winner", Placeholder.unparsed("winner", names));
         resultsShown = true;
+        returnHotbar = new ReturnHotbar(plugin, messages, () -> !closed, playAgain);
+        Bukkit.getPluginManager().registerEvents(returnHotbar, plugin);
         for (var player : Bukkit.getOnlinePlayers()) {
             var score = scores.get(player.getUniqueId());
             var result = messages.get(winners.containsKey(player.getUniqueId()) ? "summary.result.win"
                     : winnerNames().isEmpty() ? "summary.result.draw" : "summary.result.lose");
+            var lines = details(score, winnerLine, curiosity);
+            var details = detailsButton(player, lines);
             player.sendMessage(score == null
                     ? messages.get("summary.spectator", Placeholder.component("game", game),
-                    Placeholder.component("result", spectatorResult))
-                    : score.compact(messages, game, result));
-            var details = details(score, winnerLine, curiosity);
-            player.sendMessage(messages.get("summary.actions",
-                    Placeholder.component("again", button("summary.again", player, () -> !closed, playAgain)),
-                    Placeholder.component("lobby", button("summary.lobby", player, () -> true, viewer -> ProxyMessaging.hub(plugin, viewer))),
-                    Placeholder.component("details", button("summary.details", player, () -> true, viewer -> details.forEach(viewer::sendMessage)))));
+                    Placeholder.component("result", spectatorResult), Placeholder.component("details", details))
+                    : score.compact(messages, game, result, details));
             showResult(player);
         }
     }
@@ -350,23 +353,34 @@ public final class RoundSummary {
         }
         var sound = scores.containsKey(player.getUniqueId())
                 ? winners.containsKey(player.getUniqueId()) ? Sounds.WIN : Sounds.LOSE : null;
-        api.notifications().important(player, resultTitle(messages, game, winners, winnerNames(), player.getUniqueId()), sound);
+        var score = scores.get(player.getUniqueId());
+        var rewards = score == null ? Optional.<Component>empty() : score.rewards(messages);
+        api.notifications().important(player, resultTitle(messages, winners, winnerNames(), player.getUniqueId(), rewards), sound);
     }
 
-    static Title resultTitle(Messages messages, Component game, Map<UUID, String> winners, UUID viewer) {
-        return resultTitle(messages, game, winners, List.copyOf(winners.values()), viewer);
-    }
-
-    static Title resultTitle(Messages messages, Component game, Map<UUID, String> winners, List<String> names, UUID viewer) {
+    /**
+     * Whoever earned something reads what under the result; a winner or a draw without rewards reads nothing more,
+     * and anyone else who earned nothing, such as a spectator, reads who won.
+     */
+    static Title resultTitle(Messages messages, Map<UUID, String> winners, List<String> names, UUID viewer,
+                             Optional<Component> rewards) {
         if (names.isEmpty()) {
-            return Title.title(messages.get("summary.ending.draw"), game, RESULT);
+            return Title.title(messages.get("summary.ending.draw"), rewards.orElse(Component.empty()), RESULT);
         }
         if (winners.containsKey(viewer)) {
-            return Title.title(messages.get("summary.ending.win"), game, RESULT);
+            return Title.title(messages.get("summary.ending.win"), rewards.orElse(Component.empty()), RESULT);
         }
         return Title.title(messages.get("summary.ending.finished"),
-                messages.get(names.size() == 1 ? "summary.ending.winner" : "summary.ending.winners",
-                        Placeholder.unparsed("winner", String.join(", ", names))), RESULT);
+                rewards.orElseGet(() -> messages.get(names.size() == 1 ? "summary.ending.winner" : "summary.ending.winners",
+                        Placeholder.unparsed("winner", String.join(", ", names)))), RESULT);
+    }
+
+    /** Hands the way on out again every second, so a player who respawns or whose inventory the game resets keeps it. */
+    void offerReturn() {
+        if (closed || returnHotbar == null) {
+            return;
+        }
+        Bukkit.getOnlinePlayers().stream().filter(player -> !player.isDead()).forEach(returnHotbar::give);
     }
 
     void returningIn(int seconds) {
@@ -406,6 +420,9 @@ public final class RoundSummary {
         HandlerList.unregisterAll(tracking);
         HandlerList.unregisterAll(respects);
         HandlerList.unregisterAll(accusations);
+        if (returnHotbar != null) {
+            HandlerList.unregisterAll(returnHotbar);
+        }
     }
 
     private void avenge(Player killer, Player nemesis, Standings.Standing standing) {
@@ -457,15 +474,15 @@ public final class RoundSummary {
         }
     }
 
-    private Component button(String key, Player viewer, BooleanSupplier eligible, Consumer<Player> action) {
-        return messages.get(key)
-                .hoverEvent(HoverEvent.showText(messages.get(key + "-hover")))
+    private Component detailsButton(Player viewer, List<Component> lines) {
+        return messages.get("summary.details")
+                .hoverEvent(HoverEvent.showText(messages.get("summary.details-hover")))
                 .clickEvent(ClickEvent.callback(audience -> {
                     if (audience == viewer) {
                         Tasks.sync(plugin, () -> {
-                            if (viewer.isOnline() && eligible.getAsBoolean()) {
+                            if (viewer.isOnline()) {
                                 Sounds.MENU_CLICK.play(viewer);
-                                action.accept(viewer);
+                                lines.forEach(viewer::sendMessage);
                             }
                         });
                     }
@@ -500,9 +517,24 @@ public final class RoundSummary {
             this.name = name;
         }
 
-        Component compact(Messages messages, Component game, Component result) {
+        Component compact(Messages messages, Component game, Component result, Component details) {
             return messages.get("summary.compact", Placeholder.component("game", game),
-                    Placeholder.component("result", result), Formatter.number("coins", coins), Formatter.number("xp", xp));
+                    Placeholder.component("result", result), Formatter.number("coins", coins), Formatter.number("xp", xp),
+                    Placeholder.component("details", details));
+        }
+
+        Optional<Component> rewards(Messages messages) {
+            var paid = TagResolver.resolver(Formatter.number("coins", coins), Formatter.number("xp", xp));
+            if (coins > 0 && xp > 0) {
+                return Optional.of(messages.get("summary.ending.rewards", paid));
+            }
+            if (coins > 0) {
+                return Optional.of(messages.get("summary.ending.coins", paid));
+            }
+            if (xp > 0) {
+                return Optional.of(messages.get("summary.ending.xp", paid));
+            }
+            return Optional.empty();
         }
 
         List<Component> details(Messages messages) {

@@ -1,0 +1,360 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/desert/atlas",
+    "particle": "blockcraft:item/sternenfront/kits/desert/atlas"
+  },
+  "elements": [
+    {
+      "name": "roof rim",
+      "from": [
+        -8,
+        0,
+        -8
+      ],
+      "to": [
+        24,
+        2,
+        24
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.0,
+            1.875,
+            8.0,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            4.0,
+            1.875,
+            8.0,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            1.875,
+            8.0,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            1.875,
+            8.0,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "roof rim",
+      "from": [
+        -8,
+        0,
+        0
+      ],
+      "to": [
+        24,
+        2,
+        24
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            3.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "roof terrace",
+      "from": [
+        -8,
+        2,
+        -8
+      ],
+      "to": [
+        24,
+        5,
+        0
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            1.5,
+            4.0,
+            2.5
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "roof terrace",
+      "from": [
+        -8,
+        5,
+        0
+      ],
+      "to": [
+        24,
+        8,
+        8
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            1.5,
+            4.0,
+            2.5
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            1.5,
+            4.0,
+            2.5
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "roof terrace",
+      "from": [
+        -8,
+        8,
+        8
+      ],
+      "to": [
+        24,
+        11,
+        16
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            1.5,
+            4.0,
+            2.5
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            1.5,
+            4.0,
+            2.5
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "roof terrace",
+      "from": [
+        -8,
+        11,
+        16
+      ],
+      "to": [
+        24,
+        14,
+        24
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            0.0,
+            1.8125,
+            4.0,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.5,
+            1.8125,
+            2.5,
+            2.1875
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            1.5,
+            4.0,
+            2.5
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            1.5,
+            4.0,
+            2.5
+          ],
+          "texture": "#atlas"
+        }
+      }
+    }
+  ]
+}

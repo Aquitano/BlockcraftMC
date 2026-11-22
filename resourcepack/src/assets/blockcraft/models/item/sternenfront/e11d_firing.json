@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/e11d",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        3.0,
+        182.0,
+        0.0
+      ],
+      "translation": [
+        -1.0,
+        3.55,
+        -0.15000000000000002
+      ],
+      "scale": [
+        0.74,
+        0.74,
+        0.74
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        3.0,
+        182.0,
+        0.0
+      ],
+      "translation": [
+        -1.0,
+        3.55,
+        -0.15000000000000002
+      ],
+      "scale": [
+        0.74,
+        0.74,
+        0.74
+      ]
+    }
+  }
+}

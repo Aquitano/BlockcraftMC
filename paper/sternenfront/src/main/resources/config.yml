@@ -18,15 +18,26 @@ bots:
   difficulty: normal
   # A bot's aim scatters aim-settle-spread times aim-spread on a fresh target and settles over aim-settle-ticks. Like a
   # player's, it opens up by combat.handling's moving and hot while the bot walks and its blaster heats. On top of that
-  # its first shots go to one side, as far off as that fresh scatter, and close in over the same aim-settle-ticks.
+  # its first shots go to one side, as far off as that fresh scatter, and close in over the same aim-settle-ticks. A bot
+  # aims aim-lead of the way ahead of a moving target that its bolt needs to meet it.
   profiles:
-    easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.13, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false, aim-settle-ticks: 40, aim-settle-spread: 3}
-    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.07, burst-shots: 4, burst-pause-ticks: 20, tracking-degrees: 45, damage-scale: 0.7, headshots: false, aim-settle-ticks: 30, aim-settle-spread: 2.5}
-    veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true, aim-settle-ticks: 16, aim-settle-spread: 1.6}
+    easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.13, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false, aim-settle-ticks: 40, aim-settle-spread: 3, aim-lead: 0.3}
+    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.07, burst-shots: 4, burst-pause-ticks: 20, tracking-degrees: 45, damage-scale: 0.7, headshots: false, aim-settle-ticks: 30, aim-settle-spread: 2.5, aim-lead: 0.7}
+    veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true, aim-settle-ticks: 16, aim-settle-spread: 1.6, aim-lead: 1}
   medic: {heal-ticks: 60, heal-amount: 3, pursuit-ticks: 80, retry-ticks: 100}
+  # A bot sees enemies within sight-range blocks and vision-angle degrees of where it aims, and keeps a target in mind for
+  # memory-ticks after losing sight of it. It sees an enemy that hit it within memory-ticks all round, and as far as its
+  # own blaster reaches.
   sight-range: 32
   vision-angle: 120
   memory-ticks: 40
+  # A bot with a long rifle sees marksman.sight-range blocks instead, and aims with aim-share of its profile's aim-spread.
+  marksman: {sight-range: 56, aim-share: 0.4}
+  # A bolt that hits a bot throws its aim off: a headshot as far back as a fresh target, a body hit hit-flinch of the
+  # way. An enemy bolt passing within combat-feedback.near-miss.radius of a bot's eyes suppresses it by up to near-miss,
+  # the nearer the more, to at most max; it fades from full over fade-ticks. A suppressed bot's spread widens by spread
+  # times its suppression, so full suppression scatters it 1 + spread times as wide.
+  shaken: {hit-flinch: 0.5, near-miss: 0.35, max: 0.75, fade-ticks: 30, spread: 1.5}
   # A bot turns toward enemy gunfire within hearing-range blocks, and a fireteam that loses a member treats where the
   # killer stood as contact, for alarm-ticks each.
   hearing-range: 16
@@ -48,7 +59,8 @@ bots:
   # pairs: one runs bound-distance blocks along the route, or for bound-ticks at most, while the other covers it and
   # fires at where the enemy was last seen, then they swap. A team held up for flank-after-ticks sends one member
   # round by another route. A team whose leader is within follow-range blocks of a player of its faction takes that
-  # player's order from the order bar as its objective. A held post with enemies in it counts reinforce-pull blocks
+  # player's order from the order bar as its objective, unless that player has stayed within three blocks of one spot
+  # and fired no shot for idle-ticks. A held post with enemies in it counts reinforce-pull blocks
   # nearer. A team whose leader has twice as many enemies as friends within fall-back-range blocks, and at least two,
   # runs back to its route's retreat points. It pushes again once back there with the odds even, and holds there for
   # fall-back-ticks at most; odds still bad then, or bad again within fall-back-ticks of pushing, make it pick another
@@ -58,7 +70,7 @@ bots:
   # unless it is wounded, treating a patient, falling back, in siege mode, or a guard at its post's lookout.
   squad: {fireteam-size: 3, switch-margin: 25, spacing: 3, stagger: 2, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
           sprint-speed: 1.25, bound-distance: 8, bound-ticks: 80, flank-after-ticks: 160, follow-range: 12,
-          reinforce-pull: 80, fall-back-range: 16, fall-back-ticks: 160, stand-ticks: 200}
+          reinforce-pull: 80, fall-back-range: 16, fall-back-ticks: 160, stand-ticks: 200, idle-ticks: 200}
 appearance:
   body-turn-degrees: 12
   motion:
@@ -75,7 +87,7 @@ appearance:
   # Marking colours by fireteam, first fireteam first; players wear their side's first. A side with more fireteams
   # starts over. The pack shows the first colour wherever a display sets none.
   unit-colours:
-    kolonien: ["30487A", "C07818"]
+    kolonien: ["405748", "C07818"]
     hegemonie: ["E0B818", "7C3420"]
 music:
   enabled: true
@@ -267,7 +279,7 @@ tickets:
 # counts priority-bleed times when bleeding, draws the bots with priority-pull (blocks of walking they accept for it),
 # and the trailing faction may land dropship-distance blocks beside it, also in the last stand. In the last stand every
 # post counts last-stand-bleed times, the trailing faction's heroes cost comeback-hero-share of heroes.cost, it fields
-# one more of them, and the storm shortens bots.sight-range to storm-sight-share.
+# one more of them, and the storm shortens bots.sight-range and bots.marksman.sight-range to storm-sight-share.
 acts:
   assault-share: 0.65
   assault-seconds: 360
@@ -363,28 +375,32 @@ classes:
     scout: {health: 16, speed: 1, scale: 1}
     medic: {health: 18, speed: 1, scale: 1}
 
-# Holding right click pulls the trigger every 4 ticks, so cooldown-ticks below 4 only help fast clickers. A pull fires
-# bolts, burst-ticks apart; heat is per pull. speed is blocks per tick, range in blocks, spread the largest sideways
-# deviation per block. A hit above the shoulders multiplies damage by headshot. Both gun heroes use the
-# twin-pistol profile.
+# A pull of the trigger fires bolts, burst-ticks apart, and the next pull waits cooldown-ticks; heat is per pull. An
+# automatic blaster pulls again by itself for as long as left click is held, and a single one fires once for each click.
+# speed is blocks per tick, range in blocks, spread the largest sideways deviation per block. A hit above the shoulders
+# multiplies damage by headshot. Both gun heroes use the twin-pistol profile.
 blasters:
-  carbine: {damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 4.5, range: 90}
-  repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 7, range: 60}
-  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 7, range: 75}
-  commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 4.5, range: 28}
-  long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0.025, speed: 6, range: 160}
-  pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 4.5, range: 70}
-  twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 5, range: 80}
+  a280: {mode: single, damage: 3.5, headshot: 1.5, heat: 18, cooldown-ticks: 12, bolts: 3, burst-ticks: 2, spread: 0.009, speed: 5, range: 95}
+  e11d: {mode: automatic, damage: 4, headshot: 1.5, heat: 9, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 4.5, range: 80}
+  dc17m: {mode: automatic, damage: 4.5, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.014, speed: 5, range: 80}
+  carbine: {mode: automatic, damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 4.5, range: 90}
+  repeater: {mode: automatic, damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 7, range: 60}
+  arc-repeater: {mode: automatic, damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 7, range: 75}
+  commando-carbine: {mode: automatic, damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 4.5, range: 28}
+  long-rifle: {mode: single, damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0.025, speed: 6, range: 160}
+  pistol: {mode: single, damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 4.5, range: 70}
+  twin-pistol: {mode: single, damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 5, range: 80}
   # Separatist weapons inherit their matching Republic profile unless overridden here.
   e5: {}
   wrist-blaster: {}
   e5s: {}
   se14: {}
   westar-pistols: {}
-  heavy-rifle: {damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 5, range: 100}
+  heavy-rifle: {mode: automatic, damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 5, range: 100}
 
 # These slots are independent of named heroes. A purchase lasts one life; limit: 0 disables a unit.
 reinforcement-units:
+  clone-commando: {cost: 300, limit: 2, health: 32, speed: 1}
   arc-trooper: {cost: 250, limit: 2, health: 32, speed: 1}
   commando-droid: {cost: 300, limit: 2, health: 26, speed: 1.12}
 
@@ -393,15 +409,15 @@ reinforcement-units:
 # throws of it, full on each deployment, and each comes back cooldown-seconds after the one before; bots keep a plain cooldown. The shield wall stands
 # width by height panes, distance blocks ahead, for seconds. The med station heals allies within radius for seconds.
 # Siege mode roots the unit for seconds; its repeater then pulls every cooldown-ticks with bolts bolts and heat-scale of
-# the heat. Two bolts every 4 ticks is a third more bolts than the normal repeater: holding right click pulls no
-# faster than every 4 ticks, and three bolts would double the damage of a heavy that also has the most health.
+# the heat. Two bolts every 4 ticks is a third more bolts than the normal repeater; three would double the damage of a
+# heavy that also has the most health.
 abilities:
   grenade: {cooldown-seconds: 15, charges: 2, fuse-ticks: 50, radius: 5, damage: 16, throw-speed: 1.1}
   adrenaline: {cooldown-seconds: 30, seconds: 5}
   shield-wall: {cooldown-seconds: 25, seconds: 8, width: 5, height: 3, distance: 2}
   jump-pack: {cooldown-seconds: 10, forward: 1.3, up: 0.9}
   med-station: {cooldown-seconds: 25, seconds: 10, radius: 4, heal-per-second: 2}
-  mining-charge: {cooldown-seconds: 25, fuse-ticks: 60, radius: 6, damage: 20, throw-speed: 0.9}
+  mining-charge: {cooldown-seconds: 25, charges: 1, fuse-ticks: 60, radius: 6, damage: 20, throw-speed: 0.9}
   siege-mode: {cooldown-seconds: 30, seconds: 6, cooldown-ticks: 4, bolts: 2, heat-scale: 0.5}
 
 # The relic blade appears first-seconds into the round and again respawn-seconds after its champion falls. The
@@ -565,3 +581,7 @@ intro:
       anchor: headquarters
       offset: [2, 1.7, 3]
       look-at: headquarters
+
+field-objectives:
+  channel-seconds: 4
+  override-seconds: 30

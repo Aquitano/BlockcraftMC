@@ -1,34 +1,5 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
-# The network's colours. Every Paper plugin's messages.yml may use these as tags, so a redesign happens here
-# and nowhere else. The values are spliced in before parsing, so a colour tag colours what follows it.
-palette:
-  primary: "<blue>"
-  accent: "<yellow>"
-  muted: "<gray>"
-  dark: "<dark_gray>"
-  success: "<green>"
-  error: "<red>"
-  bullet: "<dark_gray>● "
-  arrow: "<dark_gray>» "
-  left: "<green>Linksklick <dark_gray>· <gray>"
-  right: "<yellow>Rechtsklick <dark_gray>· <gray>"
-  click: "<green>Klicken <dark_gray>· <gray>"
-  quicksg: "<gold>"
-  emeraldrush: "<green>"
-  duell: "<aqua>"
-  bedwars: "<dark_aqua>"
-  mlgrush: "<light_purple>"
-  knockbackffa: "<aqua>"
-  zombies: "<dark_green>"
-  cores: "<yellow>"
-  sternenfront: "<#e8a33d>"
-  endergames: "<dark_purple>"
-  ttt: "<red>"
-  skywars: "<blue>"
-  archive: "<#d4a85a>"
-  premium: "<gold>"
-
 games:
   quicksg:
     name: "<quicksg>QuickSG"
@@ -136,10 +107,6 @@ menu:
   page: "<muted>Seite <page> von <pages>"
   refresh: "<primary>Aktualisieren"
   empty: "<muted>Hier ist noch nichts."
-  confirm:
-    unavailable: "<arrow><error>Kauf nicht möglich"
-    title: "<arrow><primary>Bestätigen"
-    accept: "<success>Kaufen"
 
 purchase:
   completed: "<success>Kauf abgeschlossen."
@@ -148,9 +115,13 @@ purchase:
   confirm-balance: "<muted>Dein Guthaben <dark>· <accent><coins> Coins"
   confirm-remaining: "<muted>Nach dem Kauf <dark>· <success><coins> Coins"
   confirm-missing: "<error>Dir fehlen <coins> Coins."
+  prompt: "<prefix><item> <muted>für <accent><coins> Coins <muted>kaufen? <buy> <cancel>"
+  buy: "<success>[Kaufen]"
+  cancel: "<error>[Abbrechen]"
+  cancel-hover: "<muted>Zurück zum Menü"
   bought: "<prefix><item> <success>für <accent><coins> Coins <success>freigeschaltet."
   balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
-  too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."
+  too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins<error>, um dir das zu kaufen."
   unavailable: "<error>Du kannst hier gerade nichts kaufen."
 
 login:
@@ -175,6 +146,11 @@ arena:
   starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
   restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>beim Spielen zu."
+  running: "<prefix><muted>Die Runde läuft schon, du schaust zu. <pick> <lobby>"
+  running-pick: "<primary>[Spieler wählen]"
+  running-pick-hover: "<muted>Wähle, wem du zuschauen willst."
+  running-lobby: "<primary>[Zur Lobby]"
+  running-lobby-hover: "<muted>Verlässt die Runde und bringt dich zurück in die Lobby."
   spectator-chat: "<dark>[<muted>Zuschauer<dark>]"
   watching: "<muted>Du schaust <accent><player> <muted>zu."
   tracker:
@@ -275,8 +251,11 @@ summary:
     draw: "<accent><display>Gleichstand!"
     seconds: "<primary><display><seconds>"
     lobby: "<muted>Zurück zur Lobby"
-  compact: "<arrow><game> <dark>· <result> <dark>· <accent>+<coins> Coins <dark>· <success>+<xp> XP"
-  spectator: "<arrow><game> <dark>· <result>"
+    rewards: "<accent>+<coins> Coins <dark>· <success>+<xp> XP"
+    coins: "<accent>+<coins> Coins"
+    xp: "<success>+<xp> XP"
+  compact: "<arrow><game> <dark>· <result> <dark>· <accent>+<coins> Coins <dark>· <success>+<xp> XP <dark>· <details>"
+  spectator: "<arrow><game> <dark>· <result> <dark>· <details>"
   result:
     win: "<success>Sieg"
     lose: "<error>Niederlage"
@@ -290,13 +269,10 @@ summary:
   streak-best: "<arrow><muted>Beste Serie<dark>: <white><streak> Kills"
   coins: "<arrow><muted>Coins<dark>: <accent>+<coins>"
   xp: "<arrow><muted>XP<dark>: <success>+<xp>"
-  actions: "<again> <dark>· <lobby> <dark>· <details>"
   details: "<primary>[Details]"
   details-hover: "<muted>Ergebnis, Statistiken und Belohnungen ansehen."
-  again: "<success>[Nochmal spielen]"
-  again-hover: "<muted>Klicke, um in die nächste Runde zu kommen."
-  lobby: "<accent>[Zur Lobby]"
-  lobby-hover: "<muted>Klicke, um in die Lobby zurückzukehren."
+  again: "<arrow><success>Nochmal spielen"
+  lobby: "<arrow><primary>Zur Lobby"
   streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
 
 settings:
@@ -361,7 +337,7 @@ tiles:
   hats: "Hüte"
   shirts: "Hemden"
   kill_effects: "Kill-Effekte"
-  win_effects: "Siege"
+  win_effects: "Sieg-Effekte"
   premium: "Premium"
   level: "Level"
   coins: "Coins"
@@ -767,6 +743,8 @@ curiosity:
 
 # The waiting lobby and the round every game shares: the lobby hotbar, /start, /stats, the sidebar's frame, the lobby
 # vote, /forcemap and /setup. Their answers carry the game's prefix.
+stats-menu:
+  players-lore: "<muted>Die Stats aller Spieler auf diesem Server."
 hotbar:
   stats: "<arrow><primary>Stats"
   start: "<arrow><primary>Spiel starten"
@@ -808,60 +786,3 @@ forcemap:
 setup:
   help: "<prefix><muted>/setup <white><places>"
   set: "<prefix><muted>Gesetzt: <white><place><muted>. Dauerhaft wird es mit <white>/map save<muted>."
-
-dialogue:
-  controls: 'Schleichen: weiter | Handwechsel: Ende'
-  controls-choices: 'Scrollen: Wahl | Schleichen: OK | Handwechsel: Ende'
-  page: '<current>/<total>'
-  pack-required: '<prefix><red>Die Präsentation startet, sobald das Ressourcenpaket vollständig geladen ist. Versuche es dann erneut.'
-  invalid: '<prefix><red>Dieser Dialog ist nicht korrekt eingerichtet.'
-  cancelled: '<prefix><gray>Dialog beendet.'
-  completed: '<prefix><green>Dialog abgeschlossen. Endpunkt: <white><ending>'
-  demo:
-    pilot: 'MARA | PILOTIN'
-    droid: 'K-7 | AUFKLÄRUNG'
-    arrival: 'Willkommen auf der Aster. Unser Außenposten sendet seit einer Stunde nicht mehr. Ich bringe dich zur Landezone. Du entscheidest, wie wir vorgehen.'
-    briefing: 'Zwei Zugänge erkannt. Der Wartungstunnel ist unbewacht. Am Haupttor stehen schwere Geschütze. Welchen Weg wählen wir?'
-    choice-scout: 'Leise durch den Wartungstunnel.'
-    choice-assault: 'Wir nehmen das Haupttor.'
-    choice-details: 'Zeig mir zuerst die Sensordaten.'
-    details: 'Die Sensoren melden Bewegung im Reaktorkern. Der Tunnel führt hinter die Generatoren. Am Tor gibt es Deckung, aber das Geschütz erfasst das ganze Vorfeld. Keine Sorge: Diese Demo verändert weder deine Ausrüstung noch deinen Fortschritt. Mit dem Mausrad wählst du eine Antwort. Durch Schleichen bestätigst du sie. Noch einmal schleichen zeigt zuerst den vollständigen Text.'
-    scout: 'Gute Wahl. Ich halte das Schiff unterhalb der Felswand. Sobald du den Sender erreichst, holen wir die anderen nach.'
-    assault: 'Das wird laut. Bleib in Deckung, bis K-7 die Geschütze markiert. Ich halte den Rückweg frei.'
-    extraction: 'Plan gespeichert, nur für diese Vorführung. Die echte Mission kann an diesem Endpunkt eine Szene starten, ein Ziel setzen oder eine Entscheidung für deine Gruppe übernehmen.'
-
-presentation:
-  discovery:
-    guide: 'ARCHIVAR | AUFKLÄRUNG'
-    started: '<prefix><gray>Entdeckung gestartet. Schleichen: weiter, Mausrad: Antwort, Handwechsel: beenden.'
-    completed: '<prefix><green>Entdeckung abgeschlossen. Diese Vorführung speichert keinen Fortschritt.'
-    found: 'Dort schwebt der Signalkern. Siehst du das Leuchten? Er hat auf deine Anwesenheit reagiert. Sollen wir seine Aufzeichnung untersuchen?'
-    inspect: 'Die Aufzeichnung untersuchen.'
-    leave: 'Den Kern vorerst in Ruhe lassen.'
-    inspected: 'Eine verschlüsselte Nachricht aus dem Außenposten. In einer Mission könnte deine Wahl jetzt ein neues Ziel freischalten oder eine Szene starten.'
-    left: 'Verstanden. Wir lassen den Kern unberührt. Auch diese Entscheidung kann eine Geschichte verändern.'
-  effects:
-    pack-required: '<prefix><red>Für die Effekte muss das Ressourcenpaket vollständig geladen sein.</red>'
-    text:
-      float: 'SCHWEBEN | Einsatz bereit'
-      shake: 'ERSCHÜTTERUNG | Treffer am Schild'
-      pulse: 'PULS | Reaktorkern aktiv'
-      rainbow: 'FARBWECHSEL | Seltene Entdeckung'
-      shine: 'GLANZ | Auftrag abgeschlossen'
-
-  help: '<prefix><gray>/presentation <white>dialogue | discovery | hologram | plasma | pulse | text | cinematic | holoscreen | storm | portal | focus | stop<gray>. Dialogsteuerung: <white>advance | next | previous<gray>.'
-  busy: '<prefix><yellow>Beende zuerst den laufenden Dialog, Effekt oder die Kameraszene.'
-  pack-required: '<prefix><red>Das Ressourcenpaket muss vollständig geladen sein. Versuche es danach erneut.'
-  stopped: '<prefix><gray>Präsentation beendet.'
-  inactive: '<prefix><gray>Es läuft gerade kein Dialog.'
-  started: '<prefix><gray>Vorschau: <white><effect><gray>. Mit <white>/presentation stop<gray> beenden.'
-  labels:
-    hologram: 'Hologramm'
-    holoscreen: 'Holografische Sicht'
-    plasma: 'Plasma'
-    pulse: 'Energieimpuls'
-    text: 'Animierter Text'
-    cinematic: 'Filmblenden'
-    storm: 'Sturm'
-    portal: 'Portal'
-    focus: 'Fokus'

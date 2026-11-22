@@ -22,13 +22,19 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,8 +44,13 @@ public final class Enemies {
     private static final Color RUNNER_COLOR = Color.fromRGB(0xE0, 0x6C, 0x1F);
     /** The server rejects a higher max health (spigot.yml, settings.attribute.maxHealth.max). */
     private static final double HEALTH_LIMIT = 1024;
+    /** How much a shot may miss an enemy's box by and still hit it, as {@code rayTraceEntities} allowed before. */
+    private static final double SHOT_MARGIN = 0.08;
+    private static final Set<EnemyKind> EXPLAINED = EnumSet.of(EnemyKind.POUNCER, EnemyKind.RAM, EnemyKind.SCAVENGER);
     private final ZombiesGame game;
     private final Abilities abilities;
+    private final Bodies bodies = Bodies.forServer();
+    private final Set<EnemyKind> introduced = EnumSet.noneOf(EnemyKind.class);
     private final Map<UUID, Enemy> enemies = new LinkedHashMap<>();
     private final Map<String, Integer> breaking = new HashMap<>();
     private int nextSpawn;
@@ -52,18 +63,35 @@ public final class Enemies {
         final EnemyKind kind;
         final ArenaMap.Window window;
         final double toughness;
+        /** The model it wears, absent for a plain mob and wherever BetterModel is missing. */
+        final Optional<CreatureBody> body;
+        final double scale;
         boolean breached;
         UUID attacker;
         int specialAt;
         int fuseAt;
 
         /** {@code toughness} divides every hit, standing in for the health above the server's limit. */
-        Enemy(Mob mob, EnemyKind kind, ArenaMap.Window window, double toughness) {
+        Enemy(Mob mob, EnemyKind kind, ArenaMap.Window window, double toughness, Optional<CreatureBody> body, double scale) {
             this.mob = mob;
             this.kind = kind;
             this.window = window;
             this.toughness = toughness;
+            this.body = body;
+            this.scale = scale;
         }
+
+        BoundingBox bounds() {
+            return body.map(drawn -> drawn.bounds(mob.getLocation().toVector(), mob.getBodyYaw(), scale)).orElseGet(mob::getBoundingBox);
+        }
+
+        Vector facing() {
+            return CreatureBody.facing(mob.getBodyYaw());
+        }
+    }
+
+    /** Where a shot struck an enemy, and whether it struck the head. */
+    record Shot(Mob mob, Vector at, boolean head) {
     }
 
     public Enemies(ZombiesGame game) {
@@ -87,6 +115,7 @@ public final class Enemies {
         return enemy != null && enemy.breached;
     }
     public boolean applyingDamage() { return applyingDamage; }
+    List<Enemy> of(EnemyKind kind) { return enemies.values().stream().filter(enemy -> enemy.kind == kind).toList(); }
     public Abilities abilities() { return abilities; }
     Enemy enemy(Entity entity) { return enemies.get(entity.getUniqueId()); }
     double damage(Enemy enemy) { return stats(enemy).damage() * plan.damageMultiplier(); }
@@ -134,6 +163,9 @@ public final class Enemies {
 
     private void spawn(ArenaMap.Window window) {
         EnemyKind kind = plan.boss() && unspawned == plan.enemies() ? EnemyKind.INFERNO : plan.hounds() ? EnemyKind.HELLHOUND : choose();
+        if (EXPLAINED.contains(kind) && introduced.add(kind)) {
+            game.broadcast("enemy-hint." + kind.key());
+        }
         int pack = Math.min(abilities.of(kind).pack(), game.config().waves().maxAlive() - enemies.size());
         for (int member = 0; member < pack && unspawned > 0; member++) {
             if (summon(kind, window, window.spawn(), false) != null) {
@@ -175,14 +207,15 @@ public final class Enemies {
         attribute(mob, Attribute.MOVEMENT_SPEED, stats.speed());
         attribute(mob, Attribute.ATTACK_DAMAGE, stats.damage() * plan.damageMultiplier());
         attribute(mob, Attribute.FOLLOW_RANGE, 100);
-        attribute(mob, Attribute.SCALE, stats.scale());
+        var body = kind.body().filter(model -> bodies.draw(mob, model.model(), stats.scale()));
+        attribute(mob, Attribute.SCALE, kind.body().map(CreatureBody::mobScale).orElse(stats.scale()));
         var equipment = mob.getEquipment();
         if (equipment != null) {
             equipment.clear();
             dress(kind, equipment);
             abilities.of(kind).equip(mob, equipment);
         }
-        var enemy = new Enemy(mob, kind, window, toughness);
+        var enemy = new Enemy(mob, kind, window, toughness, body, stats.scale());
         enemy.breached = breached;
         enemies.put(mob.getUniqueId(), enemy);
         return enemy;
@@ -190,6 +223,9 @@ public final class Enemies {
 
     private EnemyKind choose() {
         var weights = game.config().mix(plan.wave());
+        if (!game.powered()) {
+            weights.remove(EnemyKind.SCAVENGER);
+        }
         double total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
         if (total <= 0) {
             return EnemyKind.WALKER;
@@ -224,7 +260,7 @@ public final class Enemies {
                 equipment.setHelmet(PackModel.ZOMBIES_INFERNO.item().build());
                 equipment.setChestplate(gear(Items.of(Material.NETHERITE_CHESTPLATE)));
             }
-            case WALKER, HELLHOUND -> { }
+            case WALKER, HELLHOUND, POUNCER, RAM, SCAVENGER -> { }
         }
     }
 
@@ -257,6 +293,9 @@ public final class Enemies {
             return;
         }
         if (tick < breaking.getOrDefault(enemy.window.id(), 0)) {
+            return;
+        }
+        if (abilities.of(enemy.kind).smash(enemy, remaining, tick)) {
             return;
         }
         var block = remaining.getFirst();
@@ -294,11 +333,24 @@ public final class Enemies {
             player.getWorld().spawnParticle(Particle.ITEM_SLIME, player.getLocation().add(0, 1, 0), 16, 0.3, 0.5, 0.3, 0);
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SLIME_SQUISH, 0.8f, 0.7f);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowTicks, 1));
-        } else if (enemy.kind == EnemyKind.INFERNO && enemy.mob.hasLineOfSight(player)) {
+        } else if (enemy.kind == EnemyKind.INFERNO && enemy.mob.hasLineOfSight(player)
+                && enemy.mob.getLocation().distanceSquared(player.getLocation()) <= Math.pow(game.config().inferno().blastRange(), 2)) {
             enemy.specialAt = tick + 80;
-            enemy.mob.getWorld().spawnParticle(Particle.FLAME, enemy.mob.getEyeLocation(), 20, 0.3, 0.3, 0.3, 0.05);
-            player.damage(damage(enemy), enemy.mob);
+            blast(enemy, player);
         }
+    }
+
+    private void blast(Enemy enemy, Player player) {
+        var world = enemy.mob.getWorld();
+        var from = enemy.mob.getEyeLocation();
+        var line = player.getLocation().add(0, player.getHeight() / 2, 0).toVector().subtract(from.toVector());
+        int steps = (int) Math.ceil(line.length() / 0.4);
+        world.spawnParticle(Particle.FLAME, from, 20, 0.3, 0.3, 0.3, 0.05);
+        for (int step = 1; step <= steps; step++) {
+            world.spawnParticle(Particle.FLAME, from.clone().add(line.clone().multiply(step / (double) steps)), 2, 0.05, 0.05, 0.05, 0.01);
+        }
+        world.playSound(from, Sound.ENTITY_BLAZE_SHOOT, 2, 0.6f);
+        player.damage(damage(enemy), enemy.mob);
     }
 
     /** Nobody earns an exploder that blew itself up, even if someone hit it before. */
@@ -325,17 +377,60 @@ public final class Enemies {
         mob.setHealth(0);
     }
 
+    /** The nearest enemy whose box the ray from {@code eye} crosses within {@code range}. */
+    Optional<Shot> trace(Vector eye, Vector direction, double range) {
+        Shot nearest = null;
+        double reach = range;
+        for (var enemy : enemies.values()) {
+            if (!enemy.mob.isValid() || enemy.mob.isDead()) {
+                continue;
+            }
+            var box = enemy.bounds().expand(SHOT_MARGIN);
+            var hit = box.contains(eye) ? eye : Optional.ofNullable(box.rayTrace(eye, direction, reach)).map(RayTraceResult::getHitPosition).orElse(null);
+            if (hit == null || hit.distance(eye) > reach) {
+                continue;
+            }
+            reach = hit.distance(eye);
+            nearest = new Shot(enemy.mob, hit, head(enemy, hit));
+        }
+        return Optional.ofNullable(nearest);
+    }
+
+    private static boolean head(Enemy enemy, Vector hit) {
+        var feet = enemy.mob.getLocation().toVector();
+        return enemy.body.map(body -> body.isHead(feet, enemy.mob.getBodyYaw(), enemy.scale, hit))
+                .orElseGet(() -> hit.getY() > feet.getY() + enemy.mob.getHeight() * 0.8);
+    }
+
+    /** The space an enemy fills: its model's box, or its own. */
+    BoundingBox bounds(Mob mob) {
+        var enemy = enemies.get(mob.getUniqueId());
+        return enemy == null ? mob.getBoundingBox() : enemy.bounds();
+    }
+
+    void play(Enemy enemy, String animation) {
+        if (enemy.body.isPresent()) {
+            bodies.play(enemy.mob, animation);
+        }
+    }
+
     public void hit(Player player, Mob mob, double damage) {
+        hit(player, mob, damage, 0);
+    }
+
+    public void hit(Player player, Mob mob, double bodyDamage, double headDamage) {
         var enemy = enemies.get(mob.getUniqueId());
         if (enemy == null || !game.fighting(player) || mob.isDead()) {
             return;
         }
         enemy.attacker = player.getUniqueId();
         mob.setNoDamageTicks(0);
+        var ability = abilities.of(enemy.kind);
+        double dealt = (bodyDamage > 0 ? ability.shot(enemy, player, bodyDamage, false) : 0)
+                + (headDamage > 0 ? ability.shot(enemy, player, headDamage, true) : 0);
         applyingDamage = true;
         try {
-            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100
-                    : abilities.of(enemy.kind).shot(enemy, player, damage) / enemy.toughness, player);
+            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100 : dealt / enemy.toughness, player);
         } finally {
             applyingDamage = false;
         }
@@ -350,6 +445,7 @@ public final class Enemies {
     public Player killed(Mob mob) {
         var enemy = enemies.remove(mob.getUniqueId());
         if (enemy != null) {
+            play(enemy, "death");
             abilities.of(enemy.kind).died(enemy);
         }
         return enemy == null || enemy.attacker == null ? null : org.bukkit.Bukkit.getPlayer(enemy.attacker);
@@ -359,6 +455,7 @@ public final class Enemies {
         enemies.values().forEach(enemy -> enemy.mob.remove());
         enemies.clear();
         abilities.clear();
+        bodies.clear();
         breaking.clear();
         unspawned = 0;
     }

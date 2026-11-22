@@ -1,7 +1,9 @@
 package me.blockcraft.sternenfront.combat;
 
-import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
+
+import java.nio.file.Path;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -11,7 +13,7 @@ public class GuardTest {
 
     @Test
     public void openingParryBecomesAnOrdinaryBlockAndRecoversOnlyAfterRelease() {
-        var guard = new Guard(CombatConfig.from(new MemoryConfiguration()));
+        var guard = new Guard(CombatConfig.from(YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile())));
         guard.tick(1, true);
         assertEquals(Guard.Result.PARRY, guard.hit(1, 10));
         guard.tick(8, true);
@@ -26,7 +28,7 @@ public class GuardTest {
 
     @Test
     public void exhaustedGuardCannotBlockDuringItsBreakWindow() {
-        var guard = new Guard(CombatConfig.from(new MemoryConfiguration()));
+        var guard = new Guard(CombatConfig.from(YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile())));
         guard.tick(1, true);
         assertEquals(Guard.Result.BROKEN, guard.hit(1, 100));
         assertTrue(guard.broken(10));

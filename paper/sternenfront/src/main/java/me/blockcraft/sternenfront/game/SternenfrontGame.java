@@ -25,6 +25,7 @@ import me.blockcraft.api.game.VoteMenu;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.HudPanel;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.scene.Scenes;
@@ -39,6 +40,7 @@ import me.blockcraft.sternenfront.combat.Combat;
 import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.combat.CombatConfig;
 import me.blockcraft.sternenfront.combat.HitPush;
+import me.blockcraft.sternenfront.combat.PresentationConfig;
 import me.blockcraft.sternenfront.combat.ScopeGlint;
 import me.blockcraft.sternenfront.combat.Spectacle;
 import me.blockcraft.sternenfront.vehicle.Speeders;
@@ -123,6 +125,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     /** A click this many ticks before the gun is ready fires once it is, rather than going unanswered. */
     private static final int PULL_BUFFER_TICKS = 3;
     private static final NamespacedKey AIM = new NamespacedKey("sternenfront", "aim");
+    private static final NamespacedKey BRACE = new NamespacedKey("sternenfront", "brace");
+    /** What a sprint adds to the vanilla walking pace. */
+    private static final double SPRINT_BOOST = 0.3;
     private static final int BANNER_TICKS = 55;
 
     private record Burst(Player shooter, Blaster blaster, long at) { }
@@ -143,6 +148,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Posts posts;
     private final WeaponHandling handling;
     private final Bolts bolts;
+    private final TriggerCells triggerCells = new TriggerCells();
+    private final PresentationConfig presentationConfig;
     private final BattleEffects effects;
     private final Spectacle spectacle;
     private final BattleMusic music;
@@ -160,6 +167,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final BattleIntro intro;
     private final BattlePresentation presentation;
     private final ObjectiveHud objective;
+    private final FieldObjectives fieldObjectives;
     private final Minimap minimap;
     private final KillFeed killFeed;
     private final Battlefield battlefield;
@@ -222,10 +230,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 OptionalInt.of(config.fullSeconds()), player -> { });
         this.posts = new Posts(messages, map.posts(), config.captureSeconds());
         this.handling = WeaponHandling.from(plugin.getConfig().getConfigurationSection("combat.handling"));
+        this.presentationConfig = PresentationConfig.from(plugin.getConfig());
         this.bolts = new Bolts(this);
         this.effects = new BattleEffects(this);
         this.spectacle = new Spectacle(this);
-        this.music = new BattleMusic(this);
+        this.music = new BattleMusic(this, BattleMusic.Settings.from(plugin.getConfig()));
         this.radio = new BattleRadio(plugin, plugin.getConfig(), (player, call) -> {
             var transcript = Placeholder.component("speech", messages.get(call.message()));
             player.sendMessage(call.post() < 0 ? messages.get("radio.transcript", transcript)
@@ -245,10 +254,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.spawnSpots = new SpawnSpots(this);
         this.presentation = new BattlePresentation(this);
         this.objective = new ObjectiveHud(this);
+        this.fieldObjectives = new FieldObjectives(this, BlockcraftApi.get().map().file(plugin, "field-objectives.yml"));
         this.minimap = new Minimap(this, Minimap.Settings.from(plugin.getConfig()));
         this.killFeed = KillFeed.from(plugin.getConfig());
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
-        this.battlefield = new Battlefield(this);
+        this.battlefield = new Battlefield(this, Battlefield.Rules.from(plugin.getConfig()));
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak(), feel.botsPerStreakKill());
         this.career = new Career(plugin, messages, BlockcraftApi.get().database(), plugin.getConfig().getLongList("career.ranks"));
@@ -257,12 +267,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
         round.playArea(map.world(), map.playArea());
-        intro = new BattleIntro(this);
+        intro = new BattleIntro(this, IntroConfig.from(plugin.getConfig()));
     }
 
     public GamePhase phase() {
         return round.phase();
     }
+
+    public FieldObjectives fieldObjectives() { return fieldObjectives; }
 
     public LobbyCountdown countdown() {
         return countdown;
@@ -310,13 +322,17 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (faction.isEmpty()) {
             return Optional.empty();
         }
-        var tint = HudPanel.Tint.of(faction.get());
+        var tint = HudPanel.Tint.of(faction.get().text());
         return fighter instanceof Player player ? Optional.of(new KillFeed.Named(player.getName(), tint))
                 : bots.squadmate(fighter).map(mate -> new KillFeed.Named(minimap.botName(faction.get(), mate), tint));
     }
 
     public BattleRadio radio() {
         return radio;
+    }
+
+    public PresentationConfig presentationConfig() {
+        return presentationConfig;
     }
 
     public BattleEffects effects() {
@@ -646,6 +662,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         boolean wasPlaying = round.leave(player);
         teams.leave(player.getUniqueId());
         fighters.remove(player.getUniqueId());
+        triggerCells.forget(player.getUniqueId());
         heroes.forget(player);
         BlockcraftApi.get().tabTeams().clearColor(player);
         if (phase() == GamePhase.INGAME && wasPlaying) {
@@ -692,6 +709,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void openClassMenu(Player player) {
         new ClassMenu(messages, loadouts, factionOrSmallest(player), factionOf(player).isPresent(), () -> fighter(player).combatClass(), this::chooseClass,
+                () -> fighter(player).classBlaster(factionOrSmallest(player), fighter(player).combatClass()), this::cycleWeapon,
                 bots.enabled() ? Optional.of(this::openBotDifficulty) : Optional.empty()).open(player);
     }
 
@@ -734,6 +752,24 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (phase() == GamePhase.LOBBY) {
             refreshAll();
         }
+    }
+
+    public void cycleWeapon(Player player) {
+        if (!round.isPlaying(player) || (phase() != GamePhase.LOBBY && !deployment.deciding(player))) {
+            return;
+        }
+        var fighter = fighter(player);
+        fighter.cycleWeapon(factionOrSmallest(player));
+        Sounds.EQUIP.play(player);
+        deployment.refreshMenu(player);
+    }
+
+    public void cycleReinforcement(Player player) {
+        if (!round.isPlaying(player) || !deployment.deciding(player)) {
+            return;
+        }
+        fighter(player).cycleReinforcement(factionOrSmallest(player));
+        deployment.refreshMenu(player);
     }
 
     /** While choosing, the hero the player deploys as next, if their battle points and their faction's slots allow. */
@@ -789,8 +825,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         for (var player : round.players()) {
-            BlockcraftApi.get().dialogues().stop(player);
-            BlockcraftApi.get().visuals().stop(player);
+            BlockcraftApi.get().visuals().clearAccent(player);
             intro.cancel(player);
         }
         round.enter(GamePhase.INGAME);
@@ -815,7 +850,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         front = Optional.empty();
         relic = new Relic(this, map.relic(), config.relic().firstSeconds() * TICKS_PER_SECOND);
         posts.show();
-        posts.holograms(plugin);
+        fieldObjectives.start();
+        if (presentationConfig.holographicPosts()) posts.holograms(plugin);
         var difficulties = List.of(BotDifficulty.values());
         boolean voted = difficulties.stream().anyMatch(difficulty -> botDifficultyVotes.votes(Optional.of(difficulty)) > 0);
         var difficulty = voted ? botDifficultyVotes.winner(difficulties, ThreadLocalRandom.current()).orElse(botConfig.difficulty())
@@ -842,7 +878,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             }
         }
         messages.getLines("round.start").forEach(Bukkit::broadcast);
-        if (plugin.getConfig().getBoolean("music.enabled", true)) {
+        if (music.enabled()) {
             round.players().forEach(player -> player.sendMessage(messages.get("round.music-credit")));
         }
         secondsLeft = config.roundSeconds();
@@ -863,13 +899,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         playMusic();
         radio.tick(tick, round.players().stream()
                 .filter(player -> player.isOnline() && player.getWorld().equals(map.world()) && !intro.running()
-                        && !Scenes.isViewing(player) && !BlockcraftApi.get().dialogues().active(player))
+                        && !Scenes.isViewing(player))
                 .flatMap(player -> factionOf(player).stream().map(faction -> new BattleRadio.Listener(player, faction,
                         BlockcraftApi.get().resourcePack().applied(player)))).toList());
         bots.tick(tick);
         bolts.tick();
         glint.tick(tick);
         gadgets.tick(tick);
+        fieldObjectives.tick(tick);
         relic.tick(tick);
         heroes.tick(tick);
         speeders.tick(tick);
@@ -881,13 +918,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 continue;
             }
             if (fighter.onField()) {
-                if (player.isSprinting()) {
-                    fighter.sprinted(tick);
-                }
+                brace(player, fighter);
                 fighter.heat().tick(tick);
-                if (fighter.pullDue(tick) && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent()) {
-                    pullTrigger(player);
-                }
+                trigger(player, fighter);
                 player.setExp(fighter.heat().level());
                 aim(player, fighter);
                 combat.tick(player);
@@ -914,7 +947,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private void second() {
         var field = new LinkedHashMap<LivingEntity, Faction>();
         combatants().forEach(entity -> factionOf(entity).ifPresent(faction -> field.put(entity, faction)));
-        int alertCooldown = Math.clamp(plugin.getConfig().getInt("posts.radio-cooldown-seconds", 15), 1, 120) * 20;
+        int alertCooldown = config.radioCooldownSeconds() * 20;
         var update = posts.second(field, tick, alertCooldown);
         update.changes().forEach(this::postChanged);
         update.alerts().forEach(alert -> round.players().stream()
@@ -1051,14 +1084,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void fireBot(Mob shooter, Faction faction, Blaster blaster, Vector aim, double damageScale, boolean headshots) {
         effects.fire(shooter, faction, blaster, aim, bots.heat(shooter));
         var stats = config.stats(blaster);
-        bolts.fire(shooter, faction, blaster, new Blaster.Stats(stats.damage() * damageScale, headshots ? stats.headshot() : 1, stats.heat(),
-                stats.cooldownTicks(), stats.bolts(), stats.burstTicks(), stats.spread(), stats.speed(), stats.range()), aim);
+        bolts.fire(shooter, faction, blaster, stats.scaled(damageScale, headshots), aim);
         shotSound(shooter, blaster, BOT_SHOT_VOLUME);
         Bukkit.getPluginManager().callEvent(new ShotEvent(shooter));
     }
 
     public void botDied(LivingEntity victim, Faction faction, Bots.Squadmate bot, Optional<Player> killer, int points) {
-        var named = new KillFeed.Named(minimap.botName(faction, bot), HudPanel.Tint.of(faction));
+        var named = new KillFeed.Named(minimap.botName(faction, bot), HudPanel.Tint.of(faction.text()));
         support.killed(victim, named, killer, points);
         reinforcements.lose(faction, 1);
         killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
@@ -1075,28 +1107,116 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         dirty = true;
     }
 
-    public void pullTrigger(Player player) {
+    /**
+     * The client began breaking one of its {@link TriggerCells}: the trigger went down, or carries on after a restart.
+     * It plays the cell's hit sound each time, which only it knows of and which is cut short here.
+     */
+    public void triggerStarted(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        player.stopSound(TriggerCells.HIT, SoundCategory.BLOCKS);
+        if (fighter != null && fighter.trigger().started(tick)) {
+            pull(player, true);
+        }
+    }
+
+    /** A left click's swing, which a held trigger repeats every tick. */
+    public void triggerSwung(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        if (fighter != null && fighter.trigger().swung(tick)) {
+            pull(player, true);
+        }
+    }
+
+    public void triggerStopped(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        if (fighter != null) {
+            fighter.trigger().stopped(tick);
+            fighter.stoppedBreaking(tick);
+        }
+    }
+
+    public TriggerCells triggerCells() {
+        return triggerCells;
+    }
+
+    /**
+     * Fires a click that was held over, keeps an automatic blaster firing while its trigger is held, and shows the
+     * trigger's cells while a hold could begin. A use reaches the server through the same look as the trigger, and the
+     * server answers one on a cell by sending the real block, so an aiming player has no cells until they shoot. A
+     * venting gun has none either: a trigger held through the vent would only sound the cells' hits, and its clicks
+     * still try the vent's window. A client that breaks a cell sends no use, so every half second of a held trigger the
+     * cells go away for a tick, which lets it say whether it aims.
+     */
+    private void trigger(Player player, Fighter fighter) {
+        var trigger = fighter.trigger();
+        trigger.tick(tick);
+        var held = factionOf(player).flatMap(fighter::blaster)
+                .filter(blaster -> HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent());
+        if (held.isEmpty() || player.isInsideVehicle()) {
+            trigger.release();
+            fighter.dropPull();
+            triggerCells.hide(player);
+            return;
+        }
+        boolean automatic = firing(player, held.get()).mode() == Blaster.FireMode.AUTOMATIC;
+        boolean holding = automatic && trigger.held(tick);
+        if (holding) {
+            fighter.holdAim(tick);
+        }
+        if (fighter.pullDue(tick)) {
+            pull(player, true);
+        } else if (holding && pull(player, false) && fighter.askAim(tick)) {
+            // Right after a shot the gun waits out its cooldown anyway, so the client's stop and restart cost no shot.
+            triggerCells.hide(player);
+            return;
+        }
+        if (automatic && BlockcraftApi.get().resourcePack().applied(player) && !fighter.heat().venting(tick)
+                && (!fighter.aiming(tick) || trigger.engaged(tick) || fighter.askingAim(tick))) {
+            triggerCells.show(player, tick);
+            if (trigger.unstarted(tick)) {
+                var item = player.getInventory().getItemInMainHand();
+                Blaster.regrip(item);
+                player.getInventory().setItemInMainHand(item);
+            }
+        } else {
+            triggerCells.hide(player);
+        }
+    }
+
+    /**
+     * One pull of the trigger. A fresh one, a click, tries a vent's window and is held over when the gun is nearly ready
+     * or still coming up from a sprint; a held trigger only fires whenever the gun is ready. True when a shot left.
+     */
+    private boolean pull(Player player, boolean fresh) {
         var fighter = fighters.get(player.getUniqueId());
         var faction = factionOf(player);
         var held = fighter == null ? Optional.<Blaster>empty() : faction.flatMap(fighter::blaster);
         if (!onField(player) || held.isEmpty() || faction.isEmpty() || player.isInsideVehicle()) {
-            return;
+            return false;
         }
         var blaster = held.get();
+        fighter.brace(tick);
         if (lowered(player)) {
-            return;
+            if (fresh) {
+                fighter.queuePull(Math.max(tick, fighter.sprintedAt() + handling.sprintRecoveryTicks(blaster)) + 1);
+            }
+            return false;
         }
         var stats = firing(player, blaster);
-        var trigger = fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat());
+        var heat = fighter.heat();
+        if (!fresh && (heat.venting(tick) || tick < heat.readyAt(stats.cooldownTicks()))) {
+            return false;
+        }
+        var trigger = heat.fire(tick, stats.cooldownTicks(), stats.heat());
         if (trigger == Heat.Trigger.TOO_SOON) {
-            long ready = fighter.heat().readyAt(stats.cooldownTicks());
+            long ready = heat.readyAt(stats.cooldownTicks());
             if (ready - tick <= PULL_BUFFER_TICKS) {
                 fighter.queuePull(ready);
             }
-            return;
+            return false;
         }
         if (!heatAllows(player, fighter, trigger)) {
-            return;
+            return false;
         }
         fighter.endProtection();
         Bukkit.getPluginManager().callEvent(new ShotEvent(player));
@@ -1104,13 +1224,33 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         for (int bolt = 1; bolt < stats.bolts(); bolt++) {
             bursts.add(new Burst(player, blaster, tick + (long) bolt * stats.burstTicks()));
         }
-        player.setExp(fighter.heat().level());
+        player.setExp(heat.level());
+        return true;
+    }
+
+    /**
+     * A sprint lowers the gun, and a pull of the trigger or a look down the sights brings it back up: the client goes on
+     * sprinting, since only it can end a sprint, so its pace is taken back to a walk for as long as the gun is up.
+     */
+    private void brace(Player player, Fighter fighter) {
+        boolean braced = fighter.braced(tick) && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isPresent();
+        if (player.isSprinting() && !braced) {
+            fighter.sprinted(tick);
+        }
+        boolean slowed = braced && player.isSprinting();
+        var speed = Objects.requireNonNull(player.getAttribute(Attribute.MOVEMENT_SPEED));
+        if (slowed != (speed.getModifier(BRACE) != null)) {
+            AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, BRACE);
+            if (slowed) {
+                AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, BRACE, 1 / (1 + SPRINT_BOOST) - 1);
+            }
+        }
     }
 
     /** Whether {@code player}'s gun is down from a sprint, which it holds until its blaster's recovery has passed. */
     public boolean lowered(Player player) {
         var fighter = fighters.get(player.getUniqueId());
-        return fighter != null && (player.isSprinting() || factionOf(player).flatMap(fighter::blaster)
+        return fighter != null && (player.isSprinting() && !fighter.braced(tick) || factionOf(player).flatMap(fighter::blaster)
                 .filter(blaster -> handling.lowered(blaster, fighter.sprintedAt(), tick)).isPresent());
     }
 
@@ -1332,7 +1472,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     /**
      * A bolt flying along {@code direction} hurts its victim without the vanilla knockback, which would throw them about,
-     * and pushes them a little along its flight instead. A headshot rattles a player's view and throws a bot's aim off.
+     * and pushes them a little along its flight instead. A headshot rattles a player's view; any hit throws a bot's aim off.
      */
     public void boltHit(LivingEntity shooter, Blaster blaster, LivingEntity victim, double damage, boolean headshot, Vector direction) {
         if (isProtected(victim)) {
@@ -1349,13 +1489,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         victim.setVelocity(velocity.add(hitPush.of(victim, direction, damage)));
-        if (!headshot) {
-            return;
-        }
-        if (victim instanceof Player player) {
+        if (!(victim instanceof Player player)) {
+            bots.hit(victim, headshot, tick);
+        } else if (headshot) {
             feedback.headshotTaken(player, direction);
-        } else {
-            bots.shaken(victim, tick);
         }
     }
 
@@ -1666,6 +1803,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void cleanUp() {
+        fieldObjectives.clear();
         Bukkit.getOnlinePlayers().forEach(BlockcraftApi.get().visuals()::clearAccent);
         intro.clear();
         if (loop != null) {
@@ -1674,6 +1812,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         bursts.clear();
         bolts.clear();
+        triggerCells.clear();
         glint.clear();
         effects.clear();
         spectacle.clear();
@@ -1765,6 +1904,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var fighter = fighters.get(player.getUniqueId());
         if (fighter != null && onField(player)) {
             fighter.aimed(tick);
+            fighter.brace(tick);
         }
     }
 
@@ -1801,9 +1941,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         change.ifPresent(amount -> AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, AIM, amount));
     }
 
-    static void lowerAim(Player player) {
+    void lowerAim(Player player) {
         slowForAim(player, OptionalDouble.empty());
+        AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, BRACE);
         RifleScope.lower(player);
+        triggerCells.hide(player);
     }
 
     private Component factionDisplay(Faction faction) {

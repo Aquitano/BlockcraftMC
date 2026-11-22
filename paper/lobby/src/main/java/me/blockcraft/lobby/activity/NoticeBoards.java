@@ -7,9 +7,10 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.common.settings.PlayerSetting;
-import me.blockcraft.lobby.menu.ChangelogDialog;
+import me.blockcraft.lobby.ChatTalk;
+import me.blockcraft.lobby.SpotEntities;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,9 +23,10 @@ import java.util.List;
 
 /**
  * The two boards at spawn, books lying at the map's {@code board-changelog} and {@code board-rules} spots under a
- * card that names them: the changelog opens as a dialog, the rules come from the proxy's rules command, which holds
- * the one copy of them. A returning player whose last seen changelog is older than {@code version} gets it shown
- * once on joining; a player without any network XP yet is new, sees the welcome instead and counts as up to date.
+ * card that names them. Both print in chat: the changelog from {@code changelog} in messages.yml, the rules from the
+ * proxy's rules command, which holds the one copy of them. A returning player whose last seen changelog is older than
+ * {@code version} gets it printed once on joining; a player without any network XP yet is new, sees the welcome
+ * instead and counts as up to date.
  */
 public final class NoticeBoards implements Listener, AutoCloseable {
 
@@ -38,17 +40,18 @@ public final class NoticeBoards implements Listener, AutoCloseable {
     private final Messages messages;
     private final String version;
     private final String rulesCommand;
-    private final ChangelogDialog changelog;
+    private final ChatTalk talk;
     private final SpotEntities.Group<String> boards;
 
-    public NoticeBoards(Plugin plugin, SpotEntities entities, Locations<String> spots, Messages messages, String version, String rulesCommand) {
+    public NoticeBoards(Plugin plugin, SpotEntities entities, ChatTalk talk, Locations<String> spots, Messages messages, String version,
+                        String rulesCommand) {
         this.plugin = plugin;
         boards = entities.group(this::open);
         this.spots = spots;
         this.messages = messages;
         this.version = version;
         this.rulesCommand = rulesCommand;
-        this.changelog = new ChangelogDialog(messages, version);
+        this.talk = talk;
         refresh();
     }
 
@@ -65,11 +68,14 @@ public final class NoticeBoards implements Listener, AutoCloseable {
     }
 
     private void open(Player player, String board) {
+        if (!talk.ready(player, board)) {
+            return;
+        }
         Sounds.MENU_OPEN.play(player);
         if (board.equals("board-rules")) {
             ProxyMessaging.runOnProxy(plugin, player, rulesCommand);
         } else {
-            changelog.open(player);
+            showChangelog(player);
             seen(player);
         }
     }
@@ -84,10 +90,15 @@ public final class NoticeBoards implements Listener, AutoCloseable {
                 return;
             }
             if (api.xp().total(player) > 0) {
-                changelog.open(player);
+                showChangelog(player);
             }
             seen(player);
         });
+    }
+
+    private void showChangelog(Player player) {
+        player.sendMessage(messages.get("changelog.title", Placeholder.unparsed("version", version)));
+        messages.getLines("changelog.entries").forEach(player::sendMessage);
     }
 
     private void seen(Player player) {

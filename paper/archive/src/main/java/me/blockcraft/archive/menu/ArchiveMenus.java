@@ -1,7 +1,7 @@
 package me.blockcraft.archive.menu;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.dialog.ConfirmDialog;
+import me.blockcraft.api.chat.ChatPrompt;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
@@ -18,6 +18,7 @@ import me.blockcraft.archive.note.Note;
 import me.blockcraft.archive.note.NoteRepository;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -133,9 +134,17 @@ public final class ArchiveMenus {
                 messages.get("travel.note", Placeholder.unparsed("author", note.author().name()))));
     }
 
-    void confirmDelete(Player player, Note note, ItemStack subject, Consumer<Player> reopen) {
-        new ConfirmDialog(subject, text(note.text()),
-                messages.get("note.delete.accept"), confirmed -> delete(confirmed, note, reopen), reopen).open(player);
+    void confirmDelete(Player player, Note note, Consumer<Player> reopen) {
+        Menu.close(player, closed -> {
+            var prompt = new ChatPrompt(closed);
+            closed.sendMessage(messages.get("note.delete.prompt",
+                    Placeholder.unparsed("author", note.author().name()),
+                    Placeholder.component("delete", prompt.button(messages.get("note.delete.accept"),
+                            Component.join(JoinConfiguration.newlines(), text(note.text())),
+                            confirmed -> delete(confirmed, note, reopen))),
+                    Placeholder.component("cancel", prompt.button(messages.get("note.delete.cancel"),
+                            messages.get("note.delete.cancel-hover"), reopen))));
+        });
     }
 
     private void delete(Player player, Note note, Consumer<Player> reopen) {

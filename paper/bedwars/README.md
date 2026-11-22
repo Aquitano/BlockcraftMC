@@ -30,6 +30,9 @@ then restart the backend to use that map in rounds. Editing a chosen map before 
 instead of replacing files beneath the loaded world. The map a round was started on can be neither opened nor saved until
 the restart, since its world holds the players' blocks.
 
+To try a map alone, `/forcemap <key>` and then `/start solo`, which starts the round with one player. It runs until that
+player leaves or the round timer ends.
+
 ## Which maps are in the vote
 
 - `era: og` in a `map.yml` marks a map of the old server. The vote draws only from those while the OG occasion is on

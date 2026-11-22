@@ -2,15 +2,20 @@ package me.blockcraft.system;
 
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.NetworkConfig;
 import me.blockcraft.system.listener.CommandListener;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,11 +52,33 @@ public class CommandListenerTest {
         assertTrue(proxy.received(staff).isEmpty());
     }
 
+    @Test
+    public void everyHelpCommandSuggestsItselfAndExplainsItselfOnHover() throws Exception {
+        var directory = folder.newFolder().toPath();
+        var messages = Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"), NetworkConfig.load(directory).tags());
+        var commands = messages.getLines("help").stream()
+                .filter(line -> PlainTextComponentSerializer.plainText().serialize(line).strip().startsWith("/"))
+                .toList();
+        assertTrue(commands.size() > 20);
+        for (var line : commands) {
+            String shown = PlainTextComponentSerializer.plainText().serialize(line).strip();
+            var button = flatten(line).filter(part -> part.clickEvent() != null).findFirst().orElseThrow(() -> new AssertionError(shown));
+            assertEquals(shown, ClickEvent.Action.SUGGEST_COMMAND, button.clickEvent().action());
+            assertTrue(shown, shown.startsWith(((ClickEvent.Payload.Text) button.clickEvent().payload()).value().strip()));
+            assertTrue(shown, button.hoverEvent() != null);
+        }
+    }
+
+    private static Stream<Component> flatten(Component component) {
+        return Stream.concat(Stream.of(component), component.children().stream().flatMap(CommandListenerTest::flatten));
+    }
+
     private CommandListener listener() throws Exception {
         var data = folder.newFolder().toPath();
-        var config = SystemConfig.load(data.resolve("config.yml"), () -> bytes("""
+        Files.writeString(data.resolve("config.yml"), """
                 blocked-commands: [pl, plugins, 'bukkit:plugins', version, pex]
-                """));
+                """);
+        var config = SystemConfig.load(data.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
         var messages = Messages.load(data, () -> bytes("""
                 command-blocked: 'Nicht verfügbar!'
                 blocked-replies:

@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
@@ -34,6 +33,5 @@ public class DailyRewardsTest {
     public void theLastRewardRepeatsPastTheEndOfTheList() {
         assertEquals(new DailyRewards.Today(9, 20, false),
                 REWARDS.today(Optional.of(new DailyRewards.Claimed(8, TODAY.minusDays(1))), TODAY));
-        assertEquals(List.of(10, 15, 20, 25, 30, 40, 60), DailyRewards.fromYaml(Map.of()).coins());
     }
 }

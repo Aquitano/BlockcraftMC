@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.bedwars.resource.Resource;
 import me.blockcraft.bedwars.team.TeamColor;
@@ -30,36 +31,37 @@ public record BedWarsConfig(
         CombatStyle combat
 ) {
 
-    public static BedWarsConfig from(FileConfiguration config) {
-        var teams = config.getStringList("teams.colors").stream()
+    public static BedWarsConfig from(FileConfiguration yaml) {
+        var config = BundledDefaults.strict(yaml);
+        var teams = config.texts("teams.colors").stream()
                 .map(key -> TeamColor.byKey(key).orElseThrow(() -> new IllegalArgumentException("Unknown team colour " + key)))
                 .distinct()
                 .toList();
-        if (teams.size() == 1) {
+        if (teams.size() < 2) {
             throw new IllegalArgumentException("A round needs at least two teams, teams.colors names only " + teams);
         }
         var spawnTicks = new EnumMap<Resource, Integer>(Resource.class);
         for (var resource : Resource.values()) {
-            spawnTicks.put(resource, Math.max(1, config.getInt("resources." + resource.key() + "-ticks", 20)));
+            spawnTicks.put(resource, Math.max(1, config.integer("resources." + resource.key() + "-ticks")));
         }
         return new BedWarsConfig(
-                teams.isEmpty() ? List.of(TeamColor.RED, TeamColor.GREEN, TeamColor.PURPLE, TeamColor.YELLOW) : teams,
-                Math.max(1, config.getInt("teams.players-per-team", 2)),
-                config.getInt("countdown.vote-closes-at", 10),
-                Math.max(1, config.getInt("voting.maps", 3)),
-                config.getInt("countdown.round", 3600),
+                teams,
+                Math.max(1, config.integer("teams.players-per-team")),
+                config.integer("countdown.vote-closes-at"),
+                Math.max(1, config.integer("voting.maps")),
+                config.integer("countdown.round"),
                 spawnTicks,
-                config.getDouble("void-height", -50.0),
-                config.getInt("webs.cooldown-seconds", 20),
-                config.getInt("webs.lifetime-seconds", 10),
-                config.getInt("items.mobile-shop-seconds", 20),
-                config.getInt("items.parachute-seconds", 30),
-                config.getInt("items.teleporter-seconds", 5),
-                config.getInt("items.teleporter-height", 150),
-                config.getDouble("items.rescue-platform-radius", 2.5),
-                config.getInt("rewards.kill", 5),
-                config.getInt("rewards.win", 20),
-                CombatStyle.from(config));
+                config.decimal("void-height"),
+                config.integer("webs.cooldown-seconds"),
+                config.integer("webs.lifetime-seconds"),
+                config.integer("items.mobile-shop-seconds"),
+                config.integer("items.parachute-seconds"),
+                config.integer("items.teleporter-seconds"),
+                config.integer("items.teleporter-height"),
+                config.decimal("items.rescue-platform-radius"),
+                config.integer("rewards.kill"),
+                config.integer("rewards.win"),
+                CombatStyle.from(yaml));
     }
 
     public int capacity() {

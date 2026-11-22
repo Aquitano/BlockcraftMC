@@ -1,0 +1,209 @@
+blockcraft_objective_shield_generator_active:
+  itemname: '<white>Schildgenerator · Aktiv'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/shield_generator_active
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/shield_generator_active
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.75,1.0
+        barriers:
+          - 0,0,0
+
+      lights:
+        toggleable: true
+        lights: ["0,1,0 12"]
+        toggled_item_model: blockcraft:sternenfront/objectives/shield_generator_active_off
+
+blockcraft_objective_shield_generator_damaged:
+  itemname: '<white>Schildgenerator · Beschädigt'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/shield_generator_damaged
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/shield_generator_damaged
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.75,1.0
+        barriers:
+          - 0,0,0
+
+      lights:
+        toggleable: true
+        lights: ["0,1,0 12"]
+        toggled_item_model: blockcraft:sternenfront/objectives/shield_generator_damaged_off
+
+blockcraft_objective_shield_generator_disabled:
+  itemname: '<white>Schildgenerator · Abgeschaltet'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/shield_generator_disabled
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/shield_generator_disabled
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.75,1.0
+        barriers:
+          - 0,0,0
+
+blockcraft_objective_power_relay_active:
+  itemname: '<white>Energierelais · Aktiv'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/power_relay_active
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/power_relay_active
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.25,1.125
+        barriers:
+          - 0,0,0
+
+      lights:
+        toggleable: true
+        lights: ["0,1,0 12"]
+        toggled_item_model: blockcraft:sternenfront/objectives/power_relay_active_off
+
+blockcraft_objective_power_relay_damaged:
+  itemname: '<white>Energierelais · Beschädigt'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/power_relay_damaged
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/power_relay_damaged
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.25,1.125
+        barriers:
+          - 0,0,0
+
+      lights:
+        toggleable: true
+        lights: ["0,1,0 12"]
+        toggled_item_model: blockcraft:sternenfront/objectives/power_relay_damaged_off
+
+blockcraft_objective_power_relay_disabled:
+  itemname: '<white>Energierelais · Abgeschaltet'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/power_relay_disabled
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/power_relay_disabled
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.25,1.125
+        barriers:
+          - 0,0,0
+
+blockcraft_objective_communications_console_active:
+  itemname: '<white>Kommunikationskonsole · Aktiv'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/communications_console_active
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/communications_console_active
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.25,1.4375
+        barriers:
+          - 0,0,0
+
+      lights:
+        toggleable: true
+        lights: ["0,1,0 12"]
+        toggled_item_model: blockcraft:sternenfront/objectives/communications_console_active_off
+
+blockcraft_objective_communications_console_damaged:
+  itemname: '<white>Kommunikationskonsole · Beschädigt'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/communications_console_damaged
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/communications_console_damaged
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.25,1.4375
+        barriers:
+          - 0,0,0
+
+      lights:
+        toggleable: true
+        lights: ["0,1,0 12"]
+        toggled_item_model: blockcraft:sternenfront/objectives/communications_console_damaged_off
+
+blockcraft_objective_communications_console_disabled:
+  itemname: '<white>Kommunikationskonsole · Abgeschaltet'
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/objectives/communications_console_disabled
+  Pack:
+    model: blockcraft:item/sternenfront/objectives/communications_console_disabled
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.25,1.4375
+        barriers:
+          - 0,0,0

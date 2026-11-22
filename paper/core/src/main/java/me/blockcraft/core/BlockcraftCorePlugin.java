@@ -5,6 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.anticheat.AnticheatEvidenceRepository;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
@@ -73,8 +74,6 @@ import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -86,14 +85,14 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        var config = YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml"));
-        Set<String> sudoProtected = YamlFile.section(config, "sudo").get("protected-players") instanceof List<?> names
-                ? names.stream().map(String::valueOf).map(String::toLowerCase).collect(Collectors.toUnmodifiableSet())
-                : Set.of();
+        var config = StrictConfig.of("BlockcraftCore config.yml",
+                YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml")));
+        Set<String> sudoProtected = config.texts("sudo.protected-players").stream().map(String::toLowerCase)
+                .collect(Collectors.toUnmodifiableSet());
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var moderation = ModerationRepositories.create(api.database());
-        var chat = ChatConfig.fromYaml(config);
+        var chat = ChatConfig.from(config.section("chat"));
         var pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new MuteListener(this, moderation.punishments(), messages), this);
         var networkChat = new NetworkChat(moderation.settings(), getSLF4JLogger());
@@ -102,13 +101,13 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new ChatCooldownListener(this, chat.cooldown(), networkChat, messages), this);
         pluginManager.registerEvents(new ChatFilterListener(this, ChatFilter.load(getDataPath(), api.addresses()), api.server().name(), moderation.adLog(), messages), this);
         var nickRepository = new NickRepository(api.database());
-        var nickSection = YamlFile.section(config, "nick");
-        var nicks = new Nicks(this, nickRepository, stringList(nickSection, "names"), stringList(nickSection, "skins"),
-                stringList(nickSection, "ranks"));
+        var nickSection = config.section("nick");
+        var nicks = new Nicks(this, nickRepository, nickSection.texts("names"), nickSection.texts("skins"),
+                nickSection.texts("ranks"));
         pluginManager.registerEvents(new NickListener(nicks, messages), this);
         pluginManager.registerEvents(new ChatFormatListener(this, messages, nicks), this);
         pluginManager.registerEvents(new UnknownCommandListener(messages), this);
-        pluginManager.registerEvents(new WelcomeCommittee(this, WelcomeConfig.fromYaml(config), new GreetingRepository(api.database()),
+        pluginManager.registerEvents(new WelcomeCommittee(this, WelcomeConfig.from(config.section("welcome")), new GreetingRepository(api.database()),
                 messages), this);
         pluginManager.registerEvents(new PlayerTimeListener(), this);
         var vanish = new VanishService(this, moderation.vanish());
@@ -120,15 +119,15 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var staffInventories = new StaffInventoryRepository(api.database(), api.server().name());
         staffInventories.createTable();
         var audit = api.audit();
-        if (!Boolean.FALSE.equals(YamlFile.section(config, "troll").get("enabled"))) {
+        if (config.flag("troll.enabled")) {
             trolls = new TrollMode(this, messages);
             pluginManager.registerEvents(trolls, this);
         }
         staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),
                 moderation.punishments());
         pluginManager.registerEvents(staffMode, this);
-        var anticheat = YamlFile.section(config, "anticheat");
-        var historySettings = AnticheatHistory.Settings.fromYaml(anticheat);
+        var anticheat = config.section("anticheat");
+        var historySettings = AnticheatHistory.Settings.from(anticheat);
         var evidence = new AnticheatEvidenceRepository(api.database());
         anticheatHistory = new AnticheatHistory(evidence, historySettings, getSLF4JLogger());
         getServer().getScheduler().runTaskTimer(this, anticheatHistory::maintain, 1L, 1200L);
@@ -136,7 +135,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             // Grim ships its API in alpha builds; a change there must cost the notices, not core's moderation.
             try {
                 GrimAlerts.register(this, messages, api.server().name(),
-                        Duration.ofSeconds(Math.clamp(number(anticheat, "notice-cooldown-seconds", 30), 1, 3600)),
+                        Duration.ofSeconds(Math.clamp(anticheat.integer("notice-cooldown-seconds"), 1, 3600)),
                         anticheatHistory, historySettings.pending());
             } catch (LinkageError | RuntimeException e) {
                 getSLF4JLogger().error("GrimAC's API did not take the anticheat notices; Grim still alerts on the console", e);
@@ -144,8 +143,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         }
         var back = new BackLocations();
         pluginManager.registerEvents(back, this);
-        var nearSection = YamlFile.section(config, "near");
-        var nearRadius = new NearCommand.Radius(number(nearSection, "default-radius", 100), number(nearSection, "max-radius", 500));
+        var nearRadius = new NearCommand.Radius(config.integer("near.default-radius"), config.integer("near.max-radius"));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
@@ -189,7 +187,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             commands.register(ConnectCommand.create(this, messages));
             commands.register(ReflashCommand.create(this, messages));
             commands.register(NickCommand.create(nicks, audit, messages));
-            commands.register(ReportCommand.create(stringList(YamlFile.section(config, "report"), "reasons"), messages));
+            commands.register(ReportCommand.create(config.texts("report.reasons"), messages));
             commands.register(AnticheatCommand.create(evidence, moderation.players(), historySettings.days(), messages));
             commands.register(AchievementsCommand.create());
             commands.register(EloCommand.create(this, api.elo(), messages));
@@ -207,13 +205,5 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         if (anticheatHistory != null) {
             anticheatHistory.close();
         }
-    }
-
-    private static List<String> stringList(Map<String, Object> section, String key) {
-        return section.get(key) instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
-    }
-
-    private static int number(Map<String, Object> section, String key, int fallback) {
-        return section.get(key) instanceof Number value ? value.intValue() : fallback;
     }
 }

@@ -5,7 +5,6 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.zombies.arena.ArenaMap;
-import me.blockcraft.zombies.menu.NoteDialog;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -20,7 +19,10 @@ import java.util.OptionalLong;
 import java.util.Set;
 import java.util.UUID;
 
-/** The outpost's story, one note per room. The first read of each note is a secret: an unlock that pays coins. */
+/**
+ * The outpost's story, one note per room, read in chat under its title. The first read of each note is a secret: an
+ * unlock that pays coins.
+ */
 public final class Notes {
 
     private static final Title.Times TITLE_TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(500));
@@ -38,7 +40,9 @@ public final class Notes {
     }
 
     public void read(Player player, ArenaMap.Note note) {
-        new NoteDialog(messages, note).show(player);
+        var prefix = "note." + note.id() + ".";
+        player.sendMessage(messages.get("note.title", Placeholder.component("note", messages.get(prefix + "name"))));
+        messages.getLines(prefix + "body").forEach(player::sendMessage);
         var uuid = player.getUniqueId();
         if (!read.computeIfAbsent(uuid, ignored -> new HashSet<>()).add(note.id())) {
             return;

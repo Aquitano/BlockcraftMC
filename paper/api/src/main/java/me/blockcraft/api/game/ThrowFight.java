@@ -3,6 +3,7 @@ package me.blockcraft.api.game;
 import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.common.calendar.NetworkCalendar;
+import me.blockcraft.common.config.StrictConfig;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -69,20 +70,16 @@ public final class ThrowFight implements Listener, AutoCloseable {
     /** A game's {@code throw-fight} section: during which occasions it is on, and how hard and how often a throw pushes. */
     public record Settings(Set<NetworkCalendar.Occasion> during, double knockback, int cooldownTicks) {
 
-        public static Settings fromYaml(Map<String, Object> config) {
+        public static Settings from(StrictConfig config) {
+            var occasions = config.texts("during");
             var during = EnumSet.noneOf(NetworkCalendar.Occasion.class);
-            if (config.get("during") instanceof List<?> occasions) {
-                for (var occasion : NetworkCalendar.Occasion.values()) {
-                    if (occasions.stream().map(String::valueOf).anyMatch(name -> name.equalsIgnoreCase(occasion.name()))) {
-                        during.add(occasion);
-                    }
+            for (var occasion : NetworkCalendar.Occasion.values()) {
+                if (occasions.stream().anyMatch(name -> name.equalsIgnoreCase(occasion.name()))) {
+                    during.add(occasion);
                 }
-            } else {
-                during.addAll(List.of(NetworkCalendar.Occasion.WINTER, NetworkCalendar.Occasion.HALLOWEEN, NetworkCalendar.Occasion.EASTER));
             }
-            return new Settings(Set.copyOf(during),
-                    config.get("knockback") instanceof Number knockback ? Math.clamp(knockback.doubleValue(), 0, 3) : 0.5,
-                    config.get("cooldown-ticks") instanceof Number cooldown ? Math.clamp(cooldown.intValue(), 0, 200) : 10);
+            return new Settings(Set.copyOf(during), Math.clamp(config.decimal("knockback"), 0, 3),
+                    Math.clamp(config.integer("cooldown-ticks"), 0, 200));
         }
 
         /** The season's ammunition while one of {@code during} is celebrated. */

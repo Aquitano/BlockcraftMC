@@ -466,14 +466,16 @@ nick:
   auto-off: "<prefix><muted>In der Lobby trägst du wieder deinen echten Namen."
 report:
   reason-missing: "<prefix><error>Wähle einen gültigen Grund oder gib Details an."
-  usage: "<prefix><error>Benutze /report [Spieler]"
+  usage: "<prefix><error>Benutze /report [Spieler] [Grund] [Details]"
   invalid-player: "<prefix><error>Das ist kein gültiger Spielername."
   self: "<prefix><muted>Ehrlich von dir. Melden kannst du dich trotzdem nicht."
-  title: "<arrow><error>Report <dark>· <accent><player>"
-  body: "<muted>Du meldest <error><player><muted>. Das Team schaut sich die Meldung an."
-  reason: "<primary>Grund"
-  details: "<primary>Details (optional)"
-  send: "<success>Melden"
+  too-long: "<prefix><error>Grund und Details dürfen zusammen höchstens <max> Zeichen lang sein."
+  prompt: "<prefix><muted>Warum meldest du <error><player><muted>? <reasons>"
+  reason-button: "<error>[<reason>]"
+  reason-hover: "<muted>Meldet <error><player> <muted>wegen <accent><reason><muted>.<newline><muted>Das Team schaut sich die Meldung an."
+  details-hint: "<prefix><muted>Mit Details: <accent>/report <player> [Grund] [Details]"
+  details-only: "<prefix><muted>Beschreibe, was passiert ist: <accent>/report <player> [Details]"
+  details-hover: "<muted>Klicke, um den Befehl in den Chat zu schreiben"
 
 # Ranked 1vs1; <group> is the skill group's name from BlockcraftAPI's elo.groups, <season> the key like 2026-3.
 elo:

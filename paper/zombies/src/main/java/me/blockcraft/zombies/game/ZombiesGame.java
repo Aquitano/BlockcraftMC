@@ -19,6 +19,7 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.common.message.Messages;
@@ -91,6 +92,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private final WaveEvents events;
     private final MysteryBox mysteryBox;
     private final WeaponRacks racks;
+    private final Burrower burrower;
     private final Map<UUID, Survivor> survivors = new LinkedHashMap<>();
     private final Map<UUID, Location> downed = new HashMap<>();
     private final Map<UUID, TextDisplay> corpses = new HashMap<>();
@@ -137,6 +139,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         this.events = new WaveEvents(this, effects, config.events());
         this.mysteryBox = new MysteryBox(this);
         this.racks = new WeaponRacks(arena, config.armory(), config.forSale());
+        this.burrower = new Burrower(this, config.burrower());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
@@ -173,6 +176,17 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     public List<Player> fighters() {
         return round.players().stream().filter(this::fighting).toList();
+    }
+
+    /** Whether a pouncer holds the player, or they sneak to repair a window, revive a teammate or fix the generator. */
+    boolean busy(Player player) {
+        return enemies.abilities().pinned(player) || player.isSneaking() && (reviving.contains(player.getUniqueId()) || events.holding(player)
+                || arena.activeWindows().stream().anyMatch(window -> player.getLocation().distanceSquared(window.entry()) <= 9));
+    }
+
+    /** Fails the bought power as the outage event does, unless another event is running; whether it did. */
+    boolean cutPower() {
+        return powered() && events.cutPower();
     }
 
     public boolean downed(Player player) {
@@ -264,6 +278,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     private void clearWave() {
         events.end();
+        burrower.reset();
         clock.cancel();
         timerBar.hide();
         hideWaveBar();
@@ -312,6 +327,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
             weapons.burn(tick);
             enemies.tick(tick);
             events.tick(tick);
+            burrower.tick(tick, wave);
             if (inWave() && enemies.remaining() == 0) {
                 clearWave();
             }
@@ -382,6 +398,10 @@ public final class ZombiesGame implements RoundConnections.Seating {
         survivor.down(tick, config.bleedTicks());
         Menu.close(player);
         player.closeDialog();
+        if (fighters().isEmpty()) {
+            finish(false);
+            return;
+        }
         player.setHealth(1);
         player.setCollidable(false);
         var location = player.getLocation();
@@ -394,9 +414,6 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }));
         broadcast("revive.downed", Placeholder.unparsed("player", player.getName()), Formatter.number("seconds", config.bleedTicks() / 20));
         Sounds.NOTIFY.playToAll();
-        if (fighters().isEmpty()) {
-            finish(false);
-        }
     }
 
     private void revives() {
@@ -436,7 +453,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
             if (corpse != null) {
                 corpse.text(messages.get("revive.marker", resolvers));
             }
-            helper.ifPresent(other -> BlockcraftApi.get().notifications().status(other, messages.get("revive.helping", resolvers)));
+            helper.ifPresent(other -> status(other, messages.get("revive.helping", resolvers)));
         }
     }
 
@@ -592,16 +609,18 @@ public final class ZombiesGame implements RoundConnections.Seating {
         return true;
     }
 
-    public void buyDoor(Player player, ArenaMap.Room room) {
-        if (!fighting(player) || arena.unlocked(room.id())) {
+    public void buyDoor(Player player, ArenaMap.Door door) {
+        if (!fighting(player) || arena.opened(door)) {
             return;
         }
-        if (!survivor(player).spend(room.price())) {
+        if (!survivor(player).spend(door.price())) {
             feedback(player, "shop.not-enough");
             return;
         }
-        effects.openDoor(room);
-        broadcast("room.opened", Placeholder.unparsed("player", player.getName()), Placeholder.component("room", messages.get("room." + room.id())));
+        var reached = door.rooms().stream().filter(room -> !arena.unlocked(room)).findFirst();
+        effects.openDoor(door);
+        broadcast(reached.isPresent() ? "room.opened" : "room.linked", Placeholder.unparsed("player", player.getName()),
+                Placeholder.component("room", reached.map(room -> messages.get("room." + room)).orElseGet(() -> door.name(messages))));
         Sounds.PURCHASE.playToAll();
     }
 
@@ -683,6 +702,10 @@ public final class ZombiesGame implements RoundConnections.Seating {
             if (held.isEmpty()) {
                 continue;
             }
+            if (BlockcraftApi.get().resourcePack().applied(player)) {
+                status(player, Component.empty());
+                continue;
+            }
             var ammo = survivor(player).weapons().get(held.get());
             BlockcraftApi.get().notifications().status(player, messages.get(ammo.reloading() ? "hud.reload" : "hud.weapon",
                     Placeholder.component("weapon", messages.get("weapon." + held.get().key())),
@@ -691,8 +714,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }
         for (var player : round.players()) {
             if (downed(player)) {
-                BlockcraftApi.get().notifications().status(player, messages.get("hud.downed",
-                        Formatter.number("seconds", Math.max(0, survivor(player).bleedAt() - tick) / 20)));
+                status(player, messages.get("hud.downed", Formatter.number("seconds", Math.max(0, survivor(player).bleedAt() - tick) / 20)));
             }
         }
         if (waveBar != null && inWave()) {
@@ -701,6 +723,23 @@ public final class ZombiesGame implements RoundConnections.Seating {
                     .progress(Math.clamp(enemies.remaining() / (float) waveTotal, 0, 1));
             Bukkit.getServer().showBossBar(waveBar);
         }
+    }
+
+    /**
+     * {@code text} on the action bar, with the held gun's panel for a fighter with the pack, which the pack's text shader
+     * moves into the bottom-right corner from the line's middle. The panel replaces the weapon's line; its gold stays in
+     * the sidebar.
+     */
+    public void status(Player player, Component text) {
+        BlockcraftApi.get().notifications().status(player, weaponPanel(player).map(panel -> UiFont.centredOn(text, panel)).orElse(text));
+    }
+
+    private Optional<Component> weaponPanel(Player player) {
+        var survivor = survivor(player);
+        if (survivor == null || downed(player) || !BlockcraftApi.get().resourcePack().applied(player)) {
+            return Optional.empty();
+        }
+        return weapons.held(player).map(weapon -> WeaponPanel.render(weapon, survivor.weapons().get(weapon), tick));
     }
 
     public void refreshSidebar() {
@@ -752,6 +791,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
             }
             removeCorpse(player.getUniqueId());
             PlayerReset.reset(player, GameMode.ADVENTURE);
+            player.setFreezeTicks(0);
             player.teleport(lobbySpawn());
             lobbyHotbar.giveHub(player);
         }
@@ -762,6 +802,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     private void clearArena() {
         events.end();
+        burrower.reset();
         presentation.clear();
         enemies.clear();
         mysteryBox.clear();

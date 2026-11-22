@@ -1,5 +1,7 @@
 package me.blockcraft.api.game;
 
+import me.blockcraft.common.config.StrictConfig;
+
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -13,15 +15,12 @@ import java.util.function.Predicate;
 public final class Curiosities {
 
     public enum Kind {
-        BOW("bow-blocks", 40), JUMPS("jumps", 100), HALF_HEART("half-heart-seconds", 10),
-        ROD("rod-hits", 10), EMERALDS("emeralds-mined", 100);
+        BOW("bow-blocks"), JUMPS("jumps"), HALF_HEART("half-heart-seconds"), ROD("rod-hits"), EMERALDS("emeralds-mined");
 
         private final String key;
-        private final int minimum;
 
-        Kind(String key, int minimum) {
+        Kind(String key) {
             this.key = key;
-            this.minimum = minimum;
         }
 
         public String key() {
@@ -39,10 +38,10 @@ public final class Curiosities {
         this.minimums = Map.copyOf(minimums);
     }
 
-    public static Map<Kind, Integer> minimums(Map<String, Object> config) {
+    public static Map<Kind, Integer> minimums(StrictConfig config) {
         var minimums = new EnumMap<Kind, Integer>(Kind.class);
         for (var kind : Kind.values()) {
-            int minimum = config.get(kind.key) instanceof Number number ? number.intValue() : kind.minimum;
+            int minimum = config.integer(kind.key);
             if (minimum > 0) {
                 minimums.put(kind, minimum);
             }

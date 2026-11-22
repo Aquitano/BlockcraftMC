@@ -1,6 +1,6 @@
 package me.blockcraft.sternenfront.bot;
 
-import org.bukkit.FluidCollisionMode;
+import me.blockcraft.api.scenery.FurnitureSolids;
 import org.bukkit.Location;
 import org.bukkit.entity.Mob;
 
@@ -46,15 +46,14 @@ final class BotCover {
         if (distance < 0.01) {
             return false;
         }
-        var hit = eye.getWorld().rayTraceBlocks(eye, direction.normalize(), distance, FluidCollisionMode.NEVER, true);
+        var hit = FurnitureSolids.rayTrace(eye, direction.normalize(), distance);
         return hit == null || hit.getHitPosition().distance(eye.toVector()) >= distance * SUPPRESSED_SHARE;
     }
 
     static boolean blocked(Location from, Location to) {
         var direction = to.toVector().subtract(from.toVector());
         double distance = direction.length();
-        return distance > 0.01 && from.getWorld().rayTraceBlocks(from, direction.normalize(), distance,
-                FluidCollisionMode.NEVER, true) != null;
+        return distance > 0.01 && FurnitureSolids.rayTrace(from, direction.normalize(), distance) != null;
     }
 
     static Optional<Location> find(Mob mob, Location around, List<Location> preferred, double radius,

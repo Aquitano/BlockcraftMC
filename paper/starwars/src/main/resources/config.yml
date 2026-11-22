@@ -1,0 +1,37 @@
+weapons:
+  a280: {damage: 3.5, pellets: 1, spread: 0.009, cooldown: 12, range: 70, heat: 18, mode: burst}
+  e11d: {damage: 4, pellets: 1, spread: 0.01, cooldown: 4, range: 60, heat: 9, mode: bolt}
+  dc17m: {damage: 4.5, pellets: 1, spread: 0.014, cooldown: 4, range: 60, heat: 8, mode: bolt}
+  ca87: {damage: 3, pellets: 8, spread: 0.12, cooldown: 24, range: 18, heat: 30, mode: bolt}
+  dl44: {damage: 9, pellets: 1, spread: 0.012, cooldown: 10, range: 48, heat: 22, mode: bolt}
+  e11: {damage: 5, pellets: 1, spread: 0.018, cooldown: 5, range: 48, heat: 12, mode: bolt}
+  ee3: {damage: 4, pellets: 1, spread: 0.015, cooldown: 14, range: 52, heat: 27, mode: burst}
+  ee4: {damage: 4, pellets: 1, spread: 0.04, cooldown: 4, range: 28, heat: 13, mode: bolt}
+  amban: {damage: 24, pellets: 1, spread: 0, cooldown: 36, range: 96, heat: 48, mode: bolt}
+  nn14: {damage: 7, pellets: 1, spread: 0.012, cooldown: 8, range: 40, heat: 18, mode: bolt}
+  rocket: {damage: 32, pellets: 1, spread: 0, cooldown: 50, range: 64, heat: 100, mode: rocket}
+  thermal: {damage: 28, pellets: 1, spread: 0, cooldown: 60, range: 24, heat: 100, mode: grenade}
+heat:
+  cool-per-tick: 1.2
+  delay-ticks: 16
+projectiles:
+  rocket-speed: 0.9
+  grenade-speed: 0.6
+  grenade-fuse-ticks: 45
+  explosion-radius: 4
+creatures:
+  nexu_cub: {health: 24, damage: 3, speed: 0.30}
+  nexu: {health: 70, damage: 7, speed: 0.32}
+  acklay: {health: 160, damage: 10, speed: 0.25}
+  rancor: {health: 240, damage: 14, speed: 0.20}
+  reek: {health: 130, damage: 9, speed: 0.29}
+# A practice area grants temporary weapons and only scores hits on its own exhibits.
+practice:
+  enabled: false
+  world: world
+  min: {x: 0, y: 0, z: 0}
+  max: {x: 0, y: 0, z: 0}
+  exhibits: []
+scenery:
+  world: world
+  exhibits: []

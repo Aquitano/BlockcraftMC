@@ -1,6 +1,7 @@
 package me.blockcraft.mlgrush.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.chat.ChatPrompt;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
@@ -51,6 +52,7 @@ public final class StandaloneRushGame {
 
     private final Plugin plugin;
     private final RushConfig config;
+    private final int winCoins;
     private final GameConfig gameConfig;
     private final MapPool maps;
     private final StatsRepository stats;
@@ -72,10 +74,11 @@ public final class StandaloneRushGame {
     private final BukkitTask voidRecovery;
     private BukkitTask resetTask;
 
-    public StandaloneRushGame(Plugin plugin, GameConfig gameConfig, RushConfig config, Messages messages,
+    public StandaloneRushGame(Plugin plugin, GameConfig gameConfig, RushConfig config, int winCoins, Messages messages,
                     RushArena arena, MapPool maps, StatsRepository stats, StatsMenus statsMenus) {
         this.plugin = plugin;
         this.config = config;
+        this.winCoins = winCoins;
         this.gameConfig = gameConfig;
         this.maps = maps;
         this.stats = stats;
@@ -83,7 +86,7 @@ public final class StandaloneRushGame {
         this.arena = arena;
         kit = new RushKit(config.kit(), messages);
         recapWrites = new SerialTasks<>(plugin);
-        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats, recapWrites);
+        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, winCoins), stats, recapWrites);
         round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS, gameConfig);
         countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
         hotbar = new LobbyHotbar(plugin, List.of(
@@ -131,7 +134,6 @@ public final class StandaloneRushGame {
             countdown.start();
         } else {
             player.teleport(spectatorSpawn());
-            player.sendMessage(messages.get("join.spectator"));
         }
         player.sendMessage(messages.get("round.map", Placeholder.unparsed("map", arena.name())));
         refreshPresence();
@@ -173,7 +175,7 @@ public final class StandaloneRushGame {
             boolean running = countdown.isRunning();
             countdown.cancel();
             if (running) {
-                Bukkit.broadcast(messages.get("round.cancelled"));
+                Bukkit.broadcast(BlockcraftApi.get().messages().prefixedLike(messages).get("arena.cancelled"));
             }
             var players = round.players();
             for (int slot = 0; slot < players.size(); slot++) {
@@ -302,8 +304,11 @@ public final class StandaloneRushGame {
         }
         if (!rematches.add(player.getUniqueId()) || rematches.size() != MAX_PARTICIPANTS) {
             player.sendMessage(messages.get("rematch.waiting"));
+            var name = Placeholder.unparsed("player", player.getName());
             round.players().stream().filter(opponent -> !opponent.equals(player)).forEach(opponent -> {
-                opponent.sendMessage(messages.get("rematch.request", Placeholder.unparsed("player", player.getName())));
+                opponent.sendMessage(messages.get("rematch.request", name, Placeholder.component("accept",
+                        new ChatPrompt(opponent).button(messages.get("rematch.accept"), messages.get("rematch.accept-hover", name),
+                                accepting -> requestRematch(accepting, completed)))));
                 Sounds.NOTIFY.play(opponent);
             });
             return;
@@ -335,7 +340,7 @@ public final class StandaloneRushGame {
         rematches.clear();
         session = null;
         participants = List.of();
-        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats, recapWrites);
+        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, winCoins), stats, recapWrites);
         round.reopen(summary);
         var players = round.players();
         for (int slot = 0; slot < players.size(); slot++) {

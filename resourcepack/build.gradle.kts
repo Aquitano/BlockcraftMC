@@ -2,104 +2,92 @@ plugins {
     base
 }
 
-val generateTextures = tasks.register<Exec>("generateTextures") {
-    dependsOn("generateSternenfrontArt")
+fun assetCommand(vararg arguments: String) = listOf("uv", "run", "--locked", "python") + arguments
+
+fun generateAssets(taskName: String, family: String) = tasks.register<Exec>(taskName) {
+    group = "assets"
+    description = "Generates and validates $family in isolation, then updates accepted assets."
     workingDir(layout.projectDirectory)
-    commandLine("java", "PackArt.java", "src")
+    commandLine(assetCommand("assets.py", "generate", family, "--apply"))
 }
 
-val generateSounds = tasks.register<Exec>("generateSounds") {
+generateAssets("generateTextures", "ui")
+generateAssets("generateSounds", "sounds")
+generateAssets("generateSternenfrontSounds", "sternenfront-sounds")
+generateAssets("generateStorySounds", "story-sounds")
+generateAssets("generateProps", "props")
+generateAssets("generateSternenfrontArt", "bodies")
+generateAssets("generateRigModels", "rigs")
+generateAssets("generateSternenfrontGallery", "gallery")
+generateAssets("generateYardArt", "yard")
+generateAssets("generateObjectiveArt", "objectives")
+generateAssets("generatePlanetKitArt", "planet")
+generateAssets("generateMilitaryKitArt", "shared")
+generateAssets("generateKitActors", "actors")
+generateAssets("generateHud", "hud")
+generateAssets("generateStationArt", "stations")
+generateAssets("generateChoreArt", "chores")
+generateAssets("generateBattle", "battle")
+generateAssets("generateStoryArt", "story")
+generateAssets("generatePresentation", "presentation")
+
+tasks.register<Exec>("regenerate") {
+    group = "assets"
+    description = "Generates every authored visual family in isolation, validates it, and updates accepted output. Finished imports are preserved."
     workingDir(layout.projectDirectory)
-    commandLine("python3", "SoundArt.py")
+    commandLine(assetCommand("assets.py", "generate", "all", "--apply"))
 }
 
-val generateSternenfrontSounds = tasks.register<Exec>("generateSternenfrontSounds") {
+val verifyAssets = tasks.register<Exec>("verifyAssets") {
+    group = "verification"
+    description = "Validates accepted native assets without running generators."
+    val passed = layout.buildDirectory.file("asset-checks/passed")
+    inputs.files(fileTree(layout.projectDirectory) {
+        include("*.py", "*.java", "finished-weapons.txt", "pyproject.toml", "uv.lock")
+    })
+    inputs.dir("src")
+    inputs.dir("bettermodel")
+    inputs.dir("catalogs")
+    inputs.dir("../nexo/items")
+    inputs.file("../paper/api/src/main/java/me/blockcraft/api/pack/PackModel.java")
+    inputs.file("../CREDITS.md")
+    outputs.file(passed)
     workingDir(layout.projectDirectory)
-    commandLine("uv", "run", "SternenfrontSounds.py")
+    commandLine(assetCommand("assets.py", "check"))
+    doLast { passed.get().asFile.writeText("") }
 }
 
-val generateProps = tasks.register<Exec>("generateProps") {
+val packSource = providers.gradleProperty("packSource").map { file(it) }.getOrElse(file("src"))
+
+val verifySplitPack = tasks.register<Exec>("verifySplitPack") {
     workingDir(layout.projectDirectory)
-    commandLine("java", "PropArt.java", "src", "../nexo")
+    commandLine(assetCommand("split_pack.py", "--source", packSource.absolutePath, "--check"))
 }
 
-val generateSternenfrontArt = tasks.register<Exec>("generateSternenfrontArt") {
+val verifyBetterModel = tasks.register<Exec>("verifyBetterModel") {
     workingDir(layout.projectDirectory)
-    commandLine("java", "SternenfrontArt.java", "src")
+    commandLine(assetCommand("verify_bettermodel.py", "--source", packSource.absolutePath))
 }
 
-val generateRigModels = tasks.register<Exec>("generateRigModels") {
-    dependsOn(generateSternenfrontArt)
+val packSplit = tasks.register<Exec>("packSplit") {
+    dependsOn(verifyBetterModel, verifySplitPack)
+    val target = layout.buildDirectory.dir("split")
+    inputs.dir(packSource)
+    inputs.file("split_pack.py")
+    inputs.files(fileTree(packSource.parentFile.parentFile) { include("CREDITS.md") })
+    outputs.files(listOf("base", "starwars").map {
+        target.map { directory -> directory.file("blockcraft-$it.zip") }
+    })
+    outputs.file(target.map { it.file("split-report.json") })
     workingDir(layout.projectDirectory)
-    commandLine("python3", "RigModels.py")
-}
-
-val generateYardArt = tasks.register<Exec>("generateYardArt") {
-    workingDir(layout.projectDirectory)
-    commandLine("java", "YardArt.java", "src", "build/yard/contact-sheet.png")
-}
-
-val generateChoreArt = tasks.register<Exec>("generateChoreArt") {
-    workingDir(layout.projectDirectory)
-    commandLine("java", "ChoreArt.java", "src", "build/chore/contact-sheet.png")
-}
-
-val generateHud = tasks.register<Exec>("generateHud") {
-    workingDir(layout.projectDirectory)
-    commandLine("java", "HudArt.java", "src", "build/hud/ability-icons.png")
-}
-
-val generateBattle = tasks.register<Exec>("generateBattle") {
-    dependsOn(generateSternenfrontArt)
-    workingDir(layout.projectDirectory)
-    commandLine("python3", "BattleArt.py")
-}
-
-val verifyWeaponPoses = tasks.register<Exec>("verifyWeaponPoses") {
-    mustRunAfter(generateBattle)
-    workingDir(layout.projectDirectory)
-    commandLine("python3", "verify_weapon_poses.py")
+    commandLine(assetCommand("split_pack.py", "--source", packSource.absolutePath,
+        "--output", target.get().asFile.absolutePath))
 }
 
 tasks.check {
-    dependsOn(verifyWeaponPoses)
-}
-
-val generateDialogue = tasks.register<Exec>("generateDialogue") {
-    workingDir(layout.projectDirectory)
-    commandLine("java", "DialogueArt.java", "src", "../paper/api/src/main/resources/dialogue-glyphs.properties")
-}
-
-val generatePresentation = tasks.register<Exec>("generatePresentation") {
-    workingDir(layout.projectDirectory)
-    commandLine("java", "PresentationArt.java", "src")
-}
-
-tasks.register("regenerate") {
-    group = "build"
-    description = "Regenerates textures, sounds, furniture, and vanilla item overrides in resourcepack/src, and the BetterModel bodies."
-    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateSternenfrontArt, generateRigModels, generateYardArt, generateChoreArt, generateHud, generateBattle, generateDialogue, generatePresentation, ":paper:api:packOverrides")
-}
-
-// Players get credits for what the pack contains; the map provenance and open questions stay in the repository.
-val packCredits = setOf("Music", "Sound effects", "Models and textures")
-
-val pack = tasks.register<Zip>("pack") {
-    from("src")
-    from("../CREDITS.md") {
-        into("credits")
-        var shipped = true
-        filter { line ->
-            if (line.startsWith("## ")) shipped = line.removePrefix("## ") in packCredits
-            line.takeIf { shipped }
-        }
-    }
-    archiveFileName = "blockcraft.zip"
-    destinationDirectory = layout.buildDirectory
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
+    dependsOn(verifyAssets)
 }
 
 tasks.assemble {
-    dependsOn(pack)
+    dependsOn(packSplit)
 }

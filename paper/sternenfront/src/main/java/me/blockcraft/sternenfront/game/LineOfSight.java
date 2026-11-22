@@ -1,6 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
-import org.bukkit.FluidCollisionMode;
+import me.blockcraft.api.scenery.FurnitureSolids;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
@@ -12,6 +12,6 @@ public final class LineOfSight {
 
     public static boolean clear(Location from, Vector offset) {
         double distance = offset.length();
-        return distance == 0 || from.getWorld().rayTraceBlocks(from, offset.clone().normalize(), distance, FluidCollisionMode.NEVER, true) == null;
+        return distance == 0 || FurnitureSolids.rayTrace(from, offset.clone().normalize(), distance) == null;
     }
 }

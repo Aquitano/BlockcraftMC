@@ -46,6 +46,8 @@ Start with [Build](#build), [Run locally](#run-locally) or [Deploy](#deploy). Ot
 | [`paper/sternenfront`](paper/sternenfront/README.md) | Next-Gen | Clone Wars: Republic versus Separatists conquest; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/ttt`](paper/ttt/README.md) | Next-Gen | TTT 2 (group `ttt2`): TTT with chores and sabotage; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/zombies`](paper/zombies/README.md) | Next-Gen | Solo or co-op Zombies survival |
+| [`paper/story`](paper/story/README.md) | Core | The library plugin for co-op story games on BetonQuest; it plays nothing by itself |
+| [`paper/storyexample`](paper/storyexample/README.md) | Example | The smallest story game on that core; only with `docker compose --profile story` |
 
 ## Build
 
@@ -80,7 +82,8 @@ docker compose up -d     # MariaDB, Velocity on 25565, the waker and every Paper
 docker compose up -d mariadb velocity lobby <game>   # or only what you need
 ```
 
-Connect to `localhost:25565`. Every Paper server takes 1G of heap or more, so prefer the subset on a small machine.
+Connect to `localhost:25565`. A Paper server takes 1G of heap, the lobby 512M, the replay server 768M and EnderGames
+1536M, so prefer the subset on a small machine.
 
 - `docker compose down` keeps the plugin data in its named volumes, and `docker compose down -v` starts over.
 - After a code change, `./gradlew stagePlugins` and `docker compose restart <server>` pick up the new jars.
@@ -103,7 +106,7 @@ docker compose up -d mariadb    # MariaDB on localhost:3306, database/user/passw
 
 - `-Pgame=zombies` runs a game server instead of the lobby, with the map from `worlds/zombies` and its own run directory
   `run/paper-zombies`. A game server stops itself after every round, which also ends the Gradle task.
-- `-Pplugins=core,lobby` limits either run task to a subset. `BlockcraftAPI` is always included.
+- `-Pplugins=core,lobby` limits the Paper run task to a subset. `BlockcraftAPI` is always included.
 - The run directories under `run/` are seeded from `dev/`. The run tasks accept the Minecraft EULA on your behalf and drop
   `ranks.json.gz` next to LuckPerms. On a fresh database, run `lp import ranks` and `lp user <name> parent set owner` in
   either console once, and `lp import ranks` again after a change to `ranks.json`.
@@ -131,7 +134,7 @@ docker compose up -d
 ```
 
 `.env` holds `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `FORWARDING_SECRET`, `WAKER_TOKEN`, `RESOURCE_PACK_PORT`,
-`RESOURCE_PACK_URL` and `NETWORK_*`; `.env.example` explains each. It also sets `COMPOSE_FILE`, so every `docker compose`
+`RESOURCE_PACK_BASE_URL` and `NETWORK_*`; `.env.example` explains each. It also sets `COMPOSE_FILE`, so every `docker compose`
 command in that directory works on the production setup, which is why `.env` never belongs on a dev machine.
 
 After the first start, [import the ranks](#importing-the-ranks) and set the first owner. Every game runs around the clock
@@ -140,14 +143,17 @@ until you enable [game servers on demand](#game-servers-on-demand).
 The lobby furniture needs the licensed Nexo jar, which stays outside git. Put its path in `BLOCKCRAFT_NEXO_JAR` or pass
 `-PnexoJar=...` before every `stagePlugins`, or the servers start without furniture ([Nexo setup](nexo/README.md)).
 
-With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_URL`
-`https://mc.example.net/blockcraft.zip`):
+With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_BASE_URL`
+`https://mc.example.net/`), which forwards every archive path to the proxy:
 
 ```
 mc.example.net {
 	reverse_proxy 127.0.0.1:8081
 }
 ```
+
+The [pack rollout guide](resourcepack/SPLIT_PACK.md#production-rollout) describes staging a complete candidate with
+`-PstageDirectory` before replacing deployed files.
 
 ### Updating
 
@@ -177,12 +183,15 @@ same `BLOCKCRAFT_ADDRESS_SECRET`, which then replaces the file. Changing the sec
 ### Without containers
 
 1. Copy the jars from `build/libs` plus LuckPerms into `plugins/` of the respective server.
-2. Configure the `database` section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugin's
+2. Configure the `database` section of `plugins/BlockcraftAPI/config.yml` (Paper) and of the Velocity plugin's
    `config.yml`.
-3. Put `blockcraft.zip` next to the proxy plugin's config, with `resource-pack.url` reachable from the internet.
+3. Put the four `blockcraft-*.zip` archives from `resourcepack/build/split` next to the proxy plugin's config, with
+   `resource-pack.base-url` reachable from the internet.
 4. Point LuckPerms on every server at the same database (`storage-method` and `data` in its `config.yml`).
 5. [Import the ranks](#importing-the-ranks).
 6. Point the Paper servers at the proxy with modern forwarding. They register themselves with it.
+7. Start every server and the proxy with `-Duser.language.format=de -Duser.country.format=DE`, as `docker-compose.yml`
+   and the run tasks do. Without it, numbers in messages read `49,500` instead of `49.500`.
 
 ### Environment variables
 
@@ -191,13 +200,14 @@ In containers, these replace the config edits.
 | Variable | Replaces |
 | --- | --- |
 | `BLOCKCRAFT_DB_HOST`, `_PORT`, `_NAME`, `_USER`, `_PASSWORD` | The `database` section of every Blockcraft plugin |
-| `BLOCKCRAFT_NETWORK_<KEY>` | An entry of every `network` section, such as `BLOCKCRAFT_NETWORK_IP` for `<ip>` |
+| `BLOCKCRAFT_NETWORK_<KEY>` | An entry of `network.yml`'s `network` section, such as `BLOCKCRAFT_NETWORK_IP` for `<ip>` |
 | `BLOCKCRAFT_SERVER_NAME`, `_GROUP`, `_HOST` | What a server announces; see [Server discovery and groups](#server-discovery-and-groups) |
 | `BLOCKCRAFT_WORLD_TEMPLATE` | `world.template`; see [Maps](#maps) |
 | `BLOCKCRAFT_WAITING_TEMPLATE` | `waiting-lobby.template`, the [shared waiting island](worlds/README.md#shared-waiting-island) |
 | `BLOCKCRAFT_REPLAY_DIRECTORY` | Where recordings are stored |
 | `BLOCKCRAFT_TTT_MODE` | `tasks` makes a TTT server play TTT 2 |
-| `BLOCKCRAFT_RESOURCE_PACK_URL` | The proxy's `resource-pack.url` |
+| `BLOCKCRAFT_STORY_WORLDS` | Where a story game finds its [chapter worlds](paper/story/README.md#a-world-for-each-chapter), instead of its map bundle |
+| `BLOCKCRAFT_RESOURCE_PACK_BASE_URL` | The proxy's `resource-pack.base-url` |
 | `BLOCKCRAFT_WAKER_TOKEN` | The proxy's `on-demand.token` |
 | `BLOCKCRAFT_ON_DEMAND_GROUPS` | Names the groups the proxy starts on demand; it has no config key |
 | `BLOCKCRAFT_ALERTS_WEBHOOK_URL` | The proxy's `alerts.webhook-url`; the compose files do not pass it |
@@ -279,8 +289,10 @@ Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `conf
 either to its data folder. A file of the same name there holds only the keys an operator changed. Every other key
 follows the bundled default of the running version, so an update brings its new texts and settings along.
 
-The `network` addresses and the colour `palette` exist on both sides: in BlockcraftAPI and in the proxy plugins. Changing
-either means editing both.
+What the proxy and the Paper servers must agree on lives in `common`'s `network.yml`, which both jars bundle: the
+`network` addresses, the colour `palette`, the `calendar` and the ranked `elo`. Change it there. A `network.yml` in
+BlockcraftSystem's or BlockcraftAPI's data folder overrides keys for that plugin only, so on its own it splits the
+network.
 
 ## Server discovery and groups
 
@@ -429,7 +441,7 @@ original request may already have reached storage.
   a renamed account or a nicked staff member still resolves to who did what.
 
 A game's `countdown.restart` below seven seconds is raised to seven, so the result and the return countdown fit before
-the final shutdown grace second. Report config and messages live in `plugins/blockcraft-system/reports`.
+the final shutdown grace second. Reports are part of BlockcraftSystem: `report` in its `config.yml` and `messages.yml`.
 
 ## Tests
 
@@ -477,28 +489,28 @@ The Discord bot lives outside this repository and shares the table `bc_discord_l
 
 ## Resource pack
 
-`resourcepack/src` is the pack the proxy offers at login, zipped by `./gradlew :resourcepack:pack` and staged next to the
-proxy plugin by `stagePlugins`. The proxy hashes `plugins/blockcraft-system/blockcraft.zip` at startup, serves it on
-`resource-pack.port` and offers `resource-pack.url` to every client. A redrawn pack needs `stagePlugins` and a proxy
-restart, and the client re-downloads it because the hash changed.
+`resourcepack/src` holds the accepted client assets. `stagePlugins` packages the two
+[pack layers](resourcepack/SPLIT_PACK.md) next to the proxy plugin. The lobby and ordinary games receive base, so moving
+between them loads nothing, and Sternenfront and story games add Star Wars. Replays receive their recorded game's
+layers. `resource-pack.groups` in the proxy's `config.yml` holds this mapping.
+The proxy hashes and serves each `blockcraft-<name>.zip` at startup, and offers it at `resource-pack.base-url` plus that
+file name. Changed layers need staging and a proxy restart. The client downloads a layer again when its hash changes.
 
-The pack is required. A client whose server list entry turns packs off would decline an optional pack without asking,
-while a required one is prompted for and declining it kicks. A proxy whose `config.yml` still says `required: false`
-needs the edit by hand.
-
-A joining player stays on the loading screen until the client reports that the required pack was successfully applied.
-Downloading alone does not release the player. Declining, failing, discarding, or exceeding `resource-pack.wait-seconds`
-disconnects the client with reconnect instructions. The bundled deadline is 120 seconds; existing operator overrides
-still apply. A missing required ZIP or a failed HTTP listener also blocks entry. With `required: false`, failures and
-timeouts allow entry, and only the session's first offer waits. Only the proxy hears the client's answer, so it tells
-each backend on arrival over the `Pack` subchannel.
+The pack is required. A client whose server list entry turns packs off is still prompted, and declining kicks.
+A joining player stays on the loading screen until the client reports that every selected layer was successfully
+applied. Downloading alone does not release the player. Declining, failing, discarding, or exceeding
+`resource-pack.wait-seconds` disconnects the client with reconnect instructions. The bundled deadline is 120 seconds;
+existing operator overrides still apply. A missing ZIP or a failed HTTP listener also blocks entry. Only the proxy hears
+the client's answer, so it tells each backend on arrival over the `Pack` subchannel.
 
 To regenerate the assets after changing the art generators, adding an icon or model, or updating Minecraft, install
-Python 3, uv and FFmpeg and run the command below. Normal builds package the checked-in assets. Use a client jar matching
-`minecraft` in `gradle/libs.versions.toml`; the map inspector caches one in `run/map-inspector/data`.
+Python 3, uv and FFmpeg and run the command below. Normal builds package the checked-in assets.
 
 ```sh
-./gradlew :resourcepack:regenerate -PclientJar=/path/to/minecraft-client.jar
+./gradlew :resourcepack:regenerate
 ```
+
+A new `PackModel` also needs `:paper:api:packOverrides -PclientJar=<jar>`, with a client jar matching `minecraft` in
+`gradle/libs.versions.toml`; the map inspector caches one in `run/map-inspector/data`.
 
 [`resourcepack/README.md`](resourcepack/README.md) has the client's constraints and how to make a model.

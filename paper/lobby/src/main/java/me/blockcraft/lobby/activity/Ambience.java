@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.activity;
 
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.lobby.ParticleViewers;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.config.ParticleEffect;
@@ -43,19 +44,19 @@ public final class Ambience implements AutoCloseable {
     private long ticks;
 
     /** {@code figures} are where the game figures stand; either section's {@code enabled: false} turns off its part. */
-    public Ambience(Plugin plugin, Locations<String> places, Map<String, Object> ambient,
-                    Supplier<Map<LobbyLocation, Location>> figures, Map<String, Object> ambience) {
-        var effects = spotEffects(ambient);
+    public Ambience(Plugin plugin, Locations<String> places, StrictConfig ambient,
+                    Supplier<Map<LobbyLocation, Location>> figures, StrictConfig ambience) {
+        var effects = spotEffects(ambient.section("effects").values());
         this.spots = effects.stream().flatMap(Ambience::spots).toList();
-        if (enabled(ambient)) {
-            double radius = Math.clamp(number(ambient, "radius", 40), 4, 96);
+        if (ambient.flag("enabled")) {
+            double radius = Math.clamp(ambient.decimal("radius"), 4, 96);
             effects.forEach(effect -> spots(effect).forEach(spot ->
                     emitters.add(new Emitter(effect.particles(), effect.every(), radius, 0, () -> places.get(spot)))));
         }
-        if (enabled(ambience) && ambience.get("particles") instanceof Map<?, ?> listed) {
-            double radius = Math.clamp(number(ambience, "radius", 32), 4, 96);
-            long every = Math.clamp(ambience.get("ticks") instanceof Number number ? number.longValue() : 15L, 5L, 200L);
-            listed.forEach((area, name) -> LobbyLocation.byKey(String.valueOf(area)).ifPresent(location -> ParticleEffect.named(name)
+        if (ambience.flag("enabled")) {
+            double radius = Math.clamp(ambience.decimal("radius"), 4, 96);
+            long every = Math.clamp(ambience.integer("ticks"), 5L, 200L);
+            ambience.section("particles").values().forEach((area, name) -> LobbyLocation.byKey(String.valueOf(area)).ifPresent(location -> ParticleEffect.named(name)
                     .map(particle -> new ParticleEffect(particle, FIGURE_COUNT, FIGURE_SPREAD, FIGURE_SPREAD, FIGURE_SPEED))
                     .ifPresent(particles -> emitters.add(new Emitter(particles, every, radius, FIGURE_HEIGHT,
                             () -> Optional.ofNullable(figures.get().get(location)))))));
@@ -72,22 +73,16 @@ public final class Ambience implements AutoCloseable {
         return IntStream.rangeClosed(1, effect.spots()).mapToObj(n -> "ambient-" + effect.name() + "-" + n);
     }
 
-    private static List<SpotEffect> spotEffects(Map<String, Object> config) {
+    private static List<SpotEffect> spotEffects(Map<String, Object> listed) {
         var effects = new ArrayList<SpotEffect>();
-        if (config.get("effects") instanceof Map<?, ?> listed) {
-            listed.forEach((name, value) -> {
-                if (value instanceof Map<?, ?> effect) {
-                    ParticleEffect.fromYaml(effect).ifPresent(particles -> effects.add(new SpotEffect(String.valueOf(name), particles,
-                            SPOT_PERIOD_TICKS * Math.max(1, Math.round(Math.clamp(number(effect, "ticks", 10), SPOT_PERIOD_TICKS, 200) / SPOT_PERIOD_TICKS)),
-                            (int) Math.clamp(number(effect, "spots", 4), 0, 50))));
-                }
-            });
-        }
+        listed.forEach((name, value) -> {
+            if (value instanceof Map<?, ?> effect) {
+                ParticleEffect.fromYaml(effect).ifPresent(particles -> effects.add(new SpotEffect(String.valueOf(name), particles,
+                        SPOT_PERIOD_TICKS * Math.max(1, Math.round(Math.clamp(number(effect, "ticks", 10), SPOT_PERIOD_TICKS, 200) / SPOT_PERIOD_TICKS)),
+                        (int) Math.clamp(number(effect, "spots", 4), 0, 50))));
+            }
+        });
         return List.copyOf(effects);
-    }
-
-    private static boolean enabled(Map<String, Object> config) {
-        return !Boolean.FALSE.equals(config.get("enabled"));
     }
 
     private static double number(Map<?, ?> config, String key, double fallback) {

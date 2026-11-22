@@ -1,7 +1,8 @@
 package me.blockcraft.lobby.config;
 
+import me.blockcraft.common.config.StrictConfig;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * Lobby's {@code scenes} section. In winter {@code snowfight-figures} figures stand on each side of the snowball fight,
@@ -13,16 +14,12 @@ import java.util.Map;
 public record ScenesConfig(int snowfightFigures, List<String> snowfightSkins, int throwTicks, int answerTicks, int bats,
                            double batRadius, double batLapSeconds, int ghostSpots, double ghostSpeed) {
 
-    public static ScenesConfig fromYaml(Map<String, Object> config) {
-        var skins = config.get("snowfight-skins") instanceof List<?> textures
-                ? textures.stream().map(String::valueOf).filter(texture -> !texture.isBlank()).toList() : List.<String>of();
-        return new ScenesConfig((int) number(config, "snowfight-figures", 3, 1, 8), skins, (int) number(config, "throw-ticks", 25, 5, 400),
-                (int) number(config, "answer-ticks", 12, 1, 100), (int) number(config, "bats", 6, 0, 20),
-                number(config, "bat-radius", 4, 1, 16), number(config, "bat-lap-seconds", 8, 2, 60),
-                (int) number(config, "ghost-spots", 5, 0, 12), number(config, "ghost-speed", 0.12, 0.02, 1));
-    }
-
-    private static double number(Map<String, Object> config, String key, double fallback, double min, double max) {
-        return Math.clamp(config.get(key) instanceof Number number ? number.doubleValue() : fallback, min, max);
+    public static ScenesConfig from(StrictConfig config) {
+        var skins = config.texts("snowfight-skins").stream().filter(texture -> !texture.isBlank()).toList();
+        return new ScenesConfig(Math.clamp(config.integer("snowfight-figures"), 1, 8), skins,
+                Math.clamp(config.integer("throw-ticks"), 5, 400), Math.clamp(config.integer("answer-ticks"), 1, 100),
+                Math.clamp(config.integer("bats"), 0, 20), Math.clamp(config.decimal("bat-radius"), 1, 16),
+                Math.clamp(config.decimal("bat-lap-seconds"), 2, 60), Math.clamp(config.integer("ghost-spots"), 0, 12),
+                Math.clamp(config.decimal("ghost-speed"), 0.02, 1));
     }
 }

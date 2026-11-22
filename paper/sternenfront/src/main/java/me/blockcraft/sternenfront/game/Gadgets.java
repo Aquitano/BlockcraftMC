@@ -143,8 +143,8 @@ public final class Gadgets {
         root(unit);
         sieges.add(new Siege(unit, faction, tick + ticks));
         SoundCue.SIEGE_LOCK.play(unit.getLocation(), 1f);
-        if (unit instanceof Player player && game.plugin().getConfig().getBoolean("presentation.effects", true)) {
-            int effectTicks = Math.clamp(game.plugin().getConfig().getInt("presentation.gameplay.siege-mode-ticks", 20), 0, 200);
+        if (unit instanceof Player player && game.presentationConfig().effects()) {
+            int effectTicks = game.presentationConfig().gameplay().siegeModeTicks();
             if (effectTicks > 0) BlockcraftApi.get().visuals().accent(player, ScreenEffects.Atmosphere.HOLOGRAM, effectTicks);
         }
         return true;
@@ -217,7 +217,7 @@ public final class Gadgets {
             return false;
         }
         Hologram hologram = null;
-        if (game.plugin().getConfig().getBoolean("presentation.effects", true)) {
+        if (game.presentationConfig().effects()) {
             hologram = new Hologram(game.plugin(), center.getLocation());
             for (var block : placed) {
                 hologram.part("grid_" + faction.key(), block.getLocation().add(.5, .5, .5).setDirection(ahead));

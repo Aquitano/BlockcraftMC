@@ -6,6 +6,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.appearance.RigSnapshot;
@@ -71,10 +72,10 @@ public final class BotDebug implements Listener, AutoCloseable {
     public BotDebug(SternenfrontGame game, BodyRigs rigs) {
         this.game = game;
         this.rigs = Optional.ofNullable(rigs);
-        var config = game.plugin().getConfig();
-        historyTicks = Math.clamp(config.getInt("debug.history-ticks", 100), 20, 200);
-        captureTicks = Math.clamp(config.getInt("debug.capture-ticks", 200), 20, 600);
-        cooldownTicks = Math.clamp(config.getInt("debug.cooldown-ticks", 200), 20, 1200);
+        var read = BundledDefaults.strict(game.plugin().getConfig());
+        historyTicks = Math.clamp(read.integer("debug.history-ticks"), 20, 200);
+        captureTicks = Math.clamp(read.integer("debug.capture-ticks"), 20, 600);
+        cooldownTicks = Math.clamp(read.integer("debug.cooldown-ticks"), 20, 1200);
         Bukkit.getPluginManager().registerEvents(this, game.plugin());
         task = Bukkit.getScheduler().runTaskTimer(game.plugin(), this::tick, 1, 1);
     }

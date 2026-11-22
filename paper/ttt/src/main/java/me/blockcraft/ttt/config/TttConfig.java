@@ -1,10 +1,12 @@
 package me.blockcraft.ttt.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
 import me.blockcraft.ttt.game.Karma;
 import me.blockcraft.ttt.game.Roles;
 import me.blockcraft.ttt.shop.ShopItem;
+import me.blockcraft.common.config.StrictConfig;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.Arrays;
@@ -15,7 +17,7 @@ import java.util.Map;
 /** TTT's own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int preparationSeconds, int roundSeconds,
                         Roles roles, Karma karma, Rewards rewards, Shop shop, Tester tester, boolean regeneration,
-                        double traitorKillHeal, CombatStyle combat, LootTable chests, Tasks tasks) {
+                        double traitorKillHeal, CombatStyle combat, List<LootTable.Entry> chests, Tasks tasks) {
 
     public record Rewards(int kill, int win) {
     }
@@ -30,7 +32,7 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
                        Defibrillator defibrillator, double vest, double mineDetectorRadius, int crimeCameraSeconds) {
 
         public int price(ShopItem item) {
-            return prices.getOrDefault(item, 1);
+            return prices.get(item);
         }
     }
 
@@ -60,7 +62,7 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
     }
 
     /** TTT 2's chores, sabotage and dusk, as config.yml describes them. */
-    public record Tasks(int perPlayer, int holdSeconds, double reach, int spread, LootTable loot,
+    public record Tasks(int perPlayer, int holdSeconds, double reach, int spread, List<LootTable.Entry> loot,
                         Sabotage sabotage, Dusk dusk) {
     }
 
@@ -77,81 +79,78 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
                            int repairSeconds) {
     }
 
-    public static TttConfig from(ConfigurationSection config) {
+    public static TttConfig from(ConfigurationSection section) {
+        var config = BundledDefaults.strict(section);
         var prices = new EnumMap<ShopItem, Integer>(ShopItem.class);
         Arrays.stream(ShopItem.values()).forEach(item ->
-                prices.put(item, Math.max(0, config.getInt("shop.prices." + item.key(), 1))));
+                prices.put(item, Math.max(0, config.integer("shop.prices." + item.key()))));
         return new TttConfig(
-                Math.max(3, config.getInt("players.max", 12)),
-                Math.max(2, config.getInt("players.round-minimum", 3)),
-                Math.max(1, config.getInt("countdown.full", 15)),
-                Math.max(1, config.getInt("countdown.preparation", 30)),
-                Math.max(60, config.getInt("countdown.round", 600)),
-                new Roles(config.getDouble("roles.traitor-ratio", 0.25), config.getDouble("roles.detective-ratio", 0.125),
-                        config.getInt("roles.detective-min-players", 6)),
-                new Karma(config.getInt("karma.start", 1000), Math.max(1, config.getInt("karma.max", 1000)),
-                        config.getInt("karma.team-kill", 100), config.getInt("karma.enemy-kill", 20),
-                        config.getInt("karma.clean-round", 30), Math.clamp(config.getDouble("karma.damage-floor", 0.5), 0.0, 1.0)),
-                new Rewards(Math.max(0, config.getInt("rewards.kill", 5)), Math.max(0, config.getInt("rewards.win", 20))),
+                Math.max(3, config.integer("players.max")),
+                Math.max(2, config.integer("players.round-minimum")),
+                Math.max(1, config.integer("countdown.full")),
+                Math.max(1, config.integer("countdown.preparation")),
+                Math.max(60, config.integer("countdown.round")),
+                new Roles(config.decimal("roles.traitor-ratio"), config.decimal("roles.detective-ratio"),
+                        config.integer("roles.detective-min-players")),
+                new Karma(config.integer("karma.start"), Math.max(1, config.integer("karma.max")),
+                        config.integer("karma.team-kill"), config.integer("karma.enemy-kill"),
+                        config.integer("karma.clean-round"), Math.clamp(config.decimal("karma.damage-floor"), 0.0, 1.0)),
+                new Rewards(Math.max(0, config.integer("rewards.kill")), Math.max(0, config.integer("rewards.win"))),
                 shop(config, Map.copyOf(prices)),
-                new Tester(Math.max(1, config.getInt("tester.delay-seconds", 3)),
-                        Math.max(1, config.getInt("tester.show-seconds", 4)),
-                        Math.max(1, config.getInt("tester.cooldown-seconds", 20)),
-                        Math.max(1, config.getInt("tester.trap-seconds", 3))),
-                config.getBoolean("natural-regeneration", false),
-                Math.max(0.0, config.getDouble("traitor-kill-heal", 4.0)),
-                CombatStyle.from(config),
-                loot(config.getConfigurationSection("chests")),
-                tasks(config));
+                new Tester(Math.max(1, config.integer("tester.delay-seconds")),
+                        Math.max(1, config.integer("tester.show-seconds")),
+                        Math.max(1, config.integer("tester.cooldown-seconds")),
+                        Math.max(1, config.integer("tester.trap-seconds"))),
+                config.flag("natural-regeneration"),
+                Math.max(0.0, config.decimal("traitor-kill-heal")),
+                CombatStyle.from(section),
+                LootTable.entries(section.getConfigurationSection("chests")),
+                tasks(config, section.getConfigurationSection("tasks")));
     }
 
-    private static Shop shop(ConfigurationSection config, Map<ShopItem, Integer> prices) {
-        return new Shop(Math.max(0, config.getInt("shop.start-points", 2)), prices,
-                Math.max(1, config.getInt("shop.radar-seconds", 60)),
-                new HealStation(Math.max(1, config.getInt("shop.heal-station.seconds", 60)),
-                        config.getDouble("shop.heal-station.radius", 3.0),
-                        config.getDouble("shop.heal-station.per-second", 1.0)),
-                config.getDouble("shop.medipack", 10.0),
-                Math.max(1, config.getInt("shop.creeper-arrows", 3)),
-                (float) config.getDouble("shop.explosion-power", 3.0),
-                Math.max(1, config.getInt("shop.mask-seconds", 60)),
-                new TimeBomb(Math.max(5, config.getInt("shop.time-bomb.seconds", 45)),
-                        (float) config.getDouble("shop.time-bomb.power", 5.0),
-                        Math.clamp(config.getInt("shop.time-bomb.wires", 4), 2, 7)),
-                new Gun(Math.max(1, config.getInt("shop.silenced-pistol.shots", 3)),
-                        Math.max(0, config.getDouble("shop.silenced-pistol.damage", 8.0)),
-                        Math.max(1, config.getDouble("shop.silenced-pistol.range", 40))),
-                new Taser(Math.max(1, config.getInt("shop.taser.charges", 2)),
-                        Math.max(1, config.getInt("shop.taser.seconds", 4)),
-                        Math.max(1, config.getDouble("shop.taser.range", 12))),
-                new BearTrap(Math.max(1, config.getInt("shop.bear-trap.seconds", 3)),
-                        Math.max(0, config.getDouble("shop.bear-trap.damage", 4.0))),
-                new Jammer(Math.max(1, config.getInt("shop.jammer.seconds", 30)),
-                        Math.max(1, config.getDouble("shop.jammer.radius", 20.0))),
-                Math.max(1, config.getDouble("shop.motion-sensor-radius", 4.0)),
-                new Defibrillator(Math.max(1, config.getInt("shop.defibrillator.window-seconds", 30)),
-                        Math.max(1, config.getInt("shop.defibrillator.hold-seconds", 3)),
-                        Math.clamp(config.getDouble("shop.defibrillator.health", 10.0), 1.0, 20.0)),
-                Math.clamp(config.getDouble("shop.vest", 0.3), 0.0, 0.9),
-                Math.max(1, config.getDouble("shop.mine-detector-radius", 10.0)),
-                Math.max(2, config.getInt("shop.crime-camera-seconds", 6)));
+    private static Shop shop(StrictConfig config, Map<ShopItem, Integer> prices) {
+        return new Shop(Math.max(0, config.integer("shop.start-points")), prices,
+                Math.max(1, config.integer("shop.radar-seconds")),
+                new HealStation(Math.max(1, config.integer("shop.heal-station.seconds")),
+                        config.decimal("shop.heal-station.radius"),
+                        config.decimal("shop.heal-station.per-second")),
+                config.decimal("shop.medipack"),
+                Math.max(1, config.integer("shop.creeper-arrows")),
+                (float) config.decimal("shop.explosion-power"),
+                Math.max(1, config.integer("shop.mask-seconds")),
+                new TimeBomb(Math.max(5, config.integer("shop.time-bomb.seconds")),
+                        (float) config.decimal("shop.time-bomb.power"),
+                        Math.clamp(config.integer("shop.time-bomb.wires"), 2, 7)),
+                new Gun(Math.max(1, config.integer("shop.silenced-pistol.shots")),
+                        Math.max(0, config.decimal("shop.silenced-pistol.damage")),
+                        Math.max(1, config.decimal("shop.silenced-pistol.range"))),
+                new Taser(Math.max(1, config.integer("shop.taser.charges")),
+                        Math.max(1, config.integer("shop.taser.seconds")),
+                        Math.max(1, config.decimal("shop.taser.range"))),
+                new BearTrap(Math.max(1, config.integer("shop.bear-trap.seconds")),
+                        Math.max(0, config.decimal("shop.bear-trap.damage"))),
+                new Jammer(Math.max(1, config.integer("shop.jammer.seconds")),
+                        Math.max(1, config.decimal("shop.jammer.radius"))),
+                Math.max(1, config.decimal("shop.motion-sensor-radius")),
+                new Defibrillator(Math.max(1, config.integer("shop.defibrillator.window-seconds")),
+                        Math.max(1, config.integer("shop.defibrillator.hold-seconds")),
+                        Math.clamp(config.decimal("shop.defibrillator.health"), 1.0, 20.0)),
+                Math.clamp(config.decimal("shop.vest"), 0.0, 0.9),
+                Math.max(1, config.decimal("shop.mine-detector-radius")),
+                Math.max(2, config.integer("shop.crime-camera-seconds")));
     }
 
-    private static Tasks tasks(ConfigurationSection config) {
-        return new Tasks(Math.max(1, config.getInt("tasks.per-player", 4)),
-                Math.max(1, config.getInt("tasks.hold-seconds", 6)),
-                Math.max(1, config.getDouble("tasks.reach", 4.5)),
-                Math.max(0, config.getInt("tasks.spread", 24)),
-                loot(config.getConfigurationSection("tasks")),
-                new Sabotage(Math.max(1, config.getInt("tasks.sabotage.cooldown-seconds", 90)),
-                        Math.max(1, config.getInt("tasks.sabotage.blackout-seconds", 40)),
-                        Math.max(1, config.getInt("tasks.sabotage.doors-seconds", 15)),
-                        Math.max(1, config.getInt("tasks.sabotage.tester-seconds", 60)),
-                        Math.max(1, config.getInt("tasks.sabotage.repair-seconds", 5))),
-                new Dusk(config.getLong("tasks.dusk.from", 6000), config.getLong("tasks.dusk.to", 18000)));
-    }
-
-    private static LootTable loot(ConfigurationSection section) {
-        return section == null ? new LootTable(1, 1, List.of()) : LootTable.fromYaml(section, 1, 1);
+    private static Tasks tasks(StrictConfig config, ConfigurationSection tasks) {
+        return new Tasks(Math.max(1, config.integer("tasks.per-player")),
+                Math.max(1, config.integer("tasks.hold-seconds")),
+                Math.max(1, config.decimal("tasks.reach")),
+                Math.max(0, config.integer("tasks.spread")),
+                LootTable.entries(tasks),
+                new Sabotage(Math.max(1, config.integer("tasks.sabotage.cooldown-seconds")),
+                        Math.max(1, config.integer("tasks.sabotage.blackout-seconds")),
+                        Math.max(1, config.integer("tasks.sabotage.doors-seconds")),
+                        Math.max(1, config.integer("tasks.sabotage.tester-seconds")),
+                        Math.max(1, config.integer("tasks.sabotage.repair-seconds"))),
+                new Dusk(config.integer("tasks.dusk.from"), config.integer("tasks.dusk.to")));
     }
 }

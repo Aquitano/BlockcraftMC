@@ -4,7 +4,9 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.PackModel;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +17,12 @@ import java.util.Locale;
  * stats come from {@code speeders.cannon}.
  */
 public enum Blaster implements HotbarItem {
+    A280(PackModel.STERNENFRONT_A280, PackModel.STERNENFRONT_A280_FIRING, PackModel.STERNENFRONT_A280_LOWERED,
+            SoundCue.BLASTER_CARBINE),
+    E11D(PackModel.STERNENFRONT_E11D, PackModel.STERNENFRONT_E11D_FIRING, PackModel.STERNENFRONT_E11D_LOWERED,
+            SoundCue.BLASTER_CARBINE),
+    DC17M(PackModel.STERNENFRONT_DC17M, PackModel.STERNENFRONT_DC17M_FIRING, PackModel.STERNENFRONT_DC17M_LOWERED,
+            SoundCue.BLASTER_CARBINE),
     CARBINE(PackModel.STERNENFRONT_CARBINE, PackModel.STERNENFRONT_CARBINE_FIRING, PackModel.STERNENFRONT_CARBINE_LOWERED,
             SoundCue.BLASTER_CARBINE),
     REPEATER(PackModel.STERNENFRONT_REPEATER, PackModel.STERNENFRONT_REPEATER_FIRING, PackModel.STERNENFRONT_REPEATER_LOWERED,
@@ -44,16 +52,36 @@ public enum Blaster implements HotbarItem {
     SPEEDER_CANNON(PackModel.STERNENFRONT_HEAVY_RIFLE, PackModel.STERNENFRONT_HEAVY_RIFLE_FIRING, PackModel.STERNENFRONT_HEAVY_RIFLE_LOWERED,
             SoundCue.BLASTER_SPEEDER_CANNON);
 
+    /** Whether a held trigger keeps pulling, or every shot takes its own click. */
+    public enum FireMode {
+        AUTOMATIC, SINGLE;
+
+        public static FireMode of(String name) {
+            return switch (name.toLowerCase(Locale.ROOT)) {
+                case "automatic" -> AUTOMATIC;
+                case "single" -> SINGLE;
+                default -> throw new IllegalArgumentException("Unknown fire mode " + name + ", expected automatic or single");
+            };
+        }
+    }
+
     /**
      * {@code bolts} leave the muzzle {@code burstTicks} apart for one pull of the trigger; {@code speed} is in blocks
      * per tick, {@code spread} the largest sideways deviation per block.
      */
     public record Stats(double damage, double headshot, double heat, int cooldownTicks, int bolts, int burstTicks,
-                        double spread, double speed, double range) {
+                        double spread, double speed, double range, FireMode mode) {
+
+        public Stats scaled(double damageScale, boolean headshots) {
+            return new Stats(damage * damageScale, headshots ? headshot : 1, heat, cooldownTicks, bolts, burstTicks, spread, speed,
+                    range, mode);
+        }
     }
 
     /** How a held blaster is drawn: ready, kicked back by a shot, or lowered in a sprint. */
     public enum Pose { READY, FIRING, LOWERED }
+
+    private static final NamespacedKey GRIP = new NamespacedKey("sternenfront", "grip");
 
     private final PackModel model;
     private final PackModel firingModel;
@@ -77,7 +105,7 @@ public enum Blaster implements HotbarItem {
 
     public Blaster profile() {
         return switch (this) {
-            case E5, COMMANDO_CARBINE -> CARBINE;
+            case E5, COMMANDO_CARBINE, A280, E11D, DC17M -> CARBINE;
             case WRIST_BLASTER, ARC_REPEATER -> REPEATER;
             case E5S -> LONG_RIFLE;
             case SE14 -> PISTOL;
@@ -109,6 +137,15 @@ public enum Blaster implements HotbarItem {
 
     public SoundCue shotSound() {
         return shotSound;
+    }
+
+    /**
+     * Changes {@code item} without changing how it looks. A client breaks its trigger block anew when the held item
+     * changes, and that start tells the server of a hold the client carried on unannounced.
+     */
+    public static void regrip(ItemStack item) {
+        item.editPersistentDataContainer(data -> data.set(GRIP, PersistentDataType.BOOLEAN,
+                !data.getOrDefault(GRIP, PersistentDataType.BOOLEAN, false)));
     }
 
     /** Draws {@code item} in {@code pose} with its vents in {@code glow}; false when it already looked so. */

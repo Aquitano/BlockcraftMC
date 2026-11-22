@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.hero;
 
+import me.blockcraft.api.scenery.FurnitureSolids;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.presentation.ScreenEffects;
@@ -14,7 +15,6 @@ import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.damage.DamageType;
@@ -194,8 +194,8 @@ public final class Powers {
         double halfAngle = Math.toRadians(push.angle() / 2);
         game.effects().push(eye, facing, push.range(), push.angle());
         SoundCue.FORCE_PUSH.play(eye, 1.5f);
-        if (game.plugin().getConfig().getBoolean("presentation.effects", true)) {
-            int effectTicks = Math.clamp(game.plugin().getConfig().getInt("presentation.gameplay.force-push-ticks", 12), 0, 200);
+        if (game.presentationConfig().effects()) {
+            int effectTicks = game.presentationConfig().gameplay().forcePushTicks();
             if (effectTicks > 0) BlockcraftApi.get().visuals().accent(player, ScreenEffects.Atmosphere.FOCUS, effectTicks);
         }
         for (var target : game.targets()) {
@@ -238,7 +238,7 @@ public final class Powers {
         var grip = config.grip();
         var eye = player.getEyeLocation();
         var facing = eye.getDirection();
-        var wall = player.getWorld().rayTraceBlocks(eye, facing, grip.range(), FluidCollisionMode.NEVER, true);
+        var wall = FurnitureSolids.rayTrace(eye, facing, grip.range());
         double reach = wall == null ? grip.range() : wall.getHitPosition().distance(eye.toVector());
         var hit = player.getWorld().rayTraceEntities(eye, facing, reach, GRIP_AIM_MARGIN,
                 entity -> entity instanceof LivingEntity target && game.hittable(faction, target) && !game.isProtected(target));
@@ -265,7 +265,7 @@ public final class Powers {
     private boolean grapple(Player player, long tick) {
         var grapple = config.grapple();
         var eye = player.getEyeLocation();
-        var hit = player.getWorld().rayTraceBlocks(eye, eye.getDirection(), grapple.range(), FluidCollisionMode.NEVER, true);
+        var hit = FurnitureSolids.rayTrace(eye, eye.getDirection(), grapple.range());
         if (hit == null) {
             return false;
         }
@@ -372,7 +372,7 @@ public final class Powers {
                 return flight.move(position, heading, flight.out(), true);
             }
         }
-        var wall = position.getWorld().rayTraceBlocks(position, heading, speed, FluidCollisionMode.NEVER, true);
+        var wall = FurnitureSolids.rayTrace(position, heading, speed);
         double travelled = wall == null ? speed : Math.max(0, wall.getHitPosition().distance(position.toVector()) - 0.01);
         var next = position.clone().add(heading.clone().multiply(travelled));
         next.setYaw(flight.display().getLocation().getYaw() + SPIN_DEGREES);

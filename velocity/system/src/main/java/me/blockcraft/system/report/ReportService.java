@@ -42,7 +42,6 @@ public final class ReportService {
     private final ReportRepository reports;
     private final NotifyPreferences preferences;
     private final Messages messages;
-    private final String staffPermission;
     private final Duration cooldown;
     private final Map<UUID, Instant> lastReport = new ConcurrentHashMap<>();
 
@@ -50,14 +49,13 @@ public final class ReportService {
     private final PlayerVisibility visibility;
 
     public ReportService(ProxyServer proxy, Logger logger, ReportRepository reports,
-                         NotifyPreferences preferences, Messages messages, String staffPermission, Duration cooldown,
+                         NotifyPreferences preferences, Messages messages, Duration cooldown,
                          PlayerLookup lookup, PlayerVisibility visibility) {
         this.proxy = proxy;
         this.logger = logger;
         this.reports = reports;
         this.preferences = preferences;
         this.messages = messages;
-        this.staffPermission = staffPermission;
         this.cooldown = cooldown;
         this.lookup = lookup;
         this.visibility = visibility;
@@ -121,11 +119,11 @@ public final class ReportService {
         }
         var report = reports.byId(reportId);
         if (report.isEmpty()) {
-            staff.sendMessage(messages.get("claim.closed", Formatter.number("id", reportId)));
+            staff.sendMessage(messages.get("report.claim.closed", Formatter.number("id", reportId)));
             return OperationResult.REJECTED;
         }
         if (!reports.claim(reportId, staff.getUniqueId(), staff.getUsername())) {
-            staff.sendMessage(messages.get("claim.unavailable", Formatter.number("id", reportId)));
+            staff.sendMessage(messages.get("report.claim.unavailable", Formatter.number("id", reportId)));
             return OperationResult.REJECTED;
         }
         var claimed = report.get();
@@ -133,7 +131,7 @@ public final class ReportService {
                 ? proxy.getPlayer(claimed.reporterId().get())
                 : proxy.getPlayer(claimed.reporter());
         reporter.ifPresent(player -> player.sendMessage(messages.get("report.claimed", Formatter.number("id", reportId))));
-        staff.sendMessage(messages.get("claim.taken", Formatter.number("id", reportId)));
+        staff.sendMessage(messages.get("report.claim.taken", Formatter.number("id", reportId)));
         return OperationResult.APPLIED;
     }
 
@@ -147,7 +145,7 @@ public final class ReportService {
         var withGoto = notice(details, count, true);
         var withoutGoto = notice(details, count, false);
         for (Player staff : proxy.getAllPlayers()) {
-            if (!staff.hasPermission(staffPermission) || !preferences.enabled(staff)) {
+            if (!staff.hasPermission(SystemPermissions.REPORT_NOTIFY) || !preferences.enabled(staff)) {
                 continue;
             }
             (staff.hasPermission(SystemPermissions.GOTO) ? withGoto : withoutGoto).forEach(staff::sendMessage);
@@ -159,19 +157,19 @@ public final class ReportService {
      * the player on click.
      */
     private List<Component> notice(TagResolver details, int count, boolean jumpable) {
-        var hover = new ArrayList<>(messages.getLines("staff.hover", details));
-        var target = messages.get("staff.target", details);
+        var hover = new ArrayList<>(messages.getLines("report.staff.hover", details));
+        var target = messages.get("report.staff.target", details);
         if (jumpable) {
-            hover.addAll(messages.getLines("staff.hover-goto", details));
+            hover.addAll(messages.getLines("report.staff.hover-goto", details));
             target = target.clickEvent(ClickEvent.runCommand(PlainTextComponentSerializer.plainText()
-                    .serialize(messages.get("staff.goto-command", details))));
+                    .serialize(messages.get("report.staff.goto-command", details))));
         }
         target = target.hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.newlines(), hover)));
         var lines = new ArrayList<Component>();
-        lines.add(messages.get("staff.notice", TagResolver.resolver(Placeholder.component("target", target), details)));
-        lines.add(messages.get("staff.reason", details));
+        lines.add(messages.get("report.staff.notice", TagResolver.resolver(Placeholder.component("target", target), details)));
+        lines.add(messages.get("report.staff.reason", details));
         if (count > 1) {
-            lines.add(messages.get("staff.count", details));
+            lines.add(messages.get("report.staff.count", details));
         }
         return lines;
     }

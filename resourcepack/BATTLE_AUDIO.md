@@ -31,7 +31,7 @@ speech to finish. Act instructions replace pending post reports. New infantry ca
 `radio` in `config.yml` controls the events, speech, captions, volume, and timing. The timing floors cover the recordings.
 Captions identify the post by letter and name, followed by the recorded German line from `radio` in `messages.yml`.
 Players in the round receive captions even before the pack loads; speech requires the applied pack.
-Scenes and dialogues exclude their viewers.
+Scenes exclude their viewers.
 Leaving the audience stops that player's owned Voice sounds. Ending the round also clears pending calls.
 
 `audio/intro/sources.json`, `audio/bots/sources.json`, and `audio/radio/sources.json` record the local Thorsten-Voice

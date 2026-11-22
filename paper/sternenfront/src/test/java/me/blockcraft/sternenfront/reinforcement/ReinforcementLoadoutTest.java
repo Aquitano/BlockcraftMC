@@ -23,6 +23,7 @@ import static me.blockcraft.sternenfront.reinforcement.Reinforcement.ARC_TROOPER
 import static me.blockcraft.sternenfront.reinforcement.Reinforcement.COMMANDO_DROID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class ReinforcementLoadoutTest {
@@ -37,7 +38,7 @@ public class ReinforcementLoadoutTest {
         assertEquals(250, units.stats(ARC_TROOPER).cost());
         assertEquals(300, units.stats(COMMANDO_DROID).cost());
         for (var unit : Reinforcement.values()) {
-            assertEquals(unit, Reinforcement.of(unit.faction()));
+            assertEquals(unit.faction(), Reinforcement.of(unit.faction()).faction());
             assertTrue(units.stats(unit).cost() < heroes.cost());
             assertTrue(units.stats(unit).health() > combat.stats(unit.faction(), CombatClass.SOLDIER).health());
             assertTrue(units.stats(unit).health() < heroes.health(Hero.JEDI));
@@ -56,16 +57,31 @@ public class ReinforcementLoadoutTest {
     }
 
     @Test
-    public void overridesCanDisableAUnitAndInvalidBodyValuesStayFinite() {
+    public void cloneCommandoIsAnAdditionalRepublicChoiceWithItsOwnWeapon() {
+        var fighter = new Fighter(new Heat.Rules(10, 5, 40, 0.2, 0.25), ability -> new Charges(1, 20));
+        assertEquals(ARC_TROOPER, fighter.reinforcementChoice(Faction.KOLONIEN));
+        fighter.cycleReinforcement(Faction.KOLONIEN);
+        assertEquals(Reinforcement.CLONE_COMMANDO, fighter.reinforcementChoice(Faction.KOLONIEN));
+        assertEquals(COMMANDO_DROID, fighter.reinforcementChoice(Faction.HEGEMONIE));
+        fighter.reinforcement(Optional.of(Reinforcement.CLONE_COMMANDO));
+        assertEquals(Optional.of(Blaster.DC17M), fighter.blaster(Faction.KOLONIEN));
+        fighter.cycleReinforcement(Faction.KOLONIEN);
+        assertEquals(ARC_TROOPER, fighter.reinforcementChoice(Faction.KOLONIEN));
+    }
+
+    @Test
+    public void overridesCanDisableAUnitClampItsBodyAndNotMakeItInfinite() {
         bundled.set("reinforcement-units.arc-trooper.cost", -10);
         bundled.set("reinforcement-units.arc-trooper.limit", -1);
-        bundled.set("reinforcement-units.arc-trooper.health", Double.NaN);
-        bundled.set("reinforcement-units.arc-trooper.speed", Double.POSITIVE_INFINITY);
+        bundled.set("reinforcement-units.arc-trooper.health", 500);
+        bundled.set("reinforcement-units.arc-trooper.speed", 0);
         var units = ReinforcementConfig.from(bundled);
         assertEquals(1, units.stats(ARC_TROOPER).cost());
         assertEquals(0, units.stats(ARC_TROOPER).limit());
-        assertTrue(Double.isFinite(units.stats(ARC_TROOPER).health()));
-        assertEquals(1, units.stats(ARC_TROOPER).speed(), 0);
+        assertEquals(100, units.stats(ARC_TROOPER).health(), 0);
+        assertEquals(0.1, units.stats(ARC_TROOPER).speed(), 0);
+        bundled.set("reinforcement-units.arc-trooper.health", Double.NaN);
+        assertThrows(IllegalStateException.class, () -> ReinforcementConfig.from(bundled));
         assertEquals(300, units.stats(COMMANDO_DROID).cost());
         assertEquals(26, units.stats(COMMANDO_DROID).health(), 0);
     }

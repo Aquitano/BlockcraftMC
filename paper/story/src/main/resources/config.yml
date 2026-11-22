@@ -1,0 +1,82 @@
+players:
+  min: 1
+  max: 4
+countdown:
+  lobby: 30
+  start: 5
+  restart: 15
+idle-restart-minutes: 50
+timer-bar: false
+global-stats-head: Kevos
+# How long a running mission keeps the place of a member who dropped out; 0 turns it off.
+rejoin-seconds: 300
+rewards:
+  win: 25
+
+# The conversation panel above the hotbar. A page types out evenly in typing-ticks, ahead of its voice, but a short one
+# no slower than slowest-characters-per-tick. A line without answers closes this long after it is read and spoken; 0
+# waits for sneak. Party members within audience-radius of the member who talks watch and hear the conversation.
+dialogue:
+  typing-ticks: 30
+  slowest-characters-per-tick: 1
+  linger-seconds: 6
+  audience-radius: 12
+  # The hotbar slot the panel rests on, whose neighbours are not among the numbered answers 1 to 5.
+  resting-slot: 6
+
+# These are the core's settings, which a story game's own config.yml lies on. The game adds `mission`: its `name`,
+# which names its quest package in BetonQuest and keys what its members have seen and decided, and its positions as
+# x y z [yaw pitch]: the `landing` spots, the `rally` point and `npcs`, each standing `at` a spot, wearing a BetterModel
+# `model` where it names one, and named by `npc.<id>.name` in messages.yml.
+
+# The game's `stages`, in the order the party goes through them; the quest package moves it on. Entering one sets the
+# boss bar's `bar` colour and `progress`, plays the `cue` from the pack's story sounds and, where given, starts its
+# `music` and `ambience` ("stop" ends them), and saves the party's campaign there. A `/story jump` to a stage, and a
+# party resuming its campaign, also puts the party at its `spawn`, or the rally point; a jump sets the stage's `facts`
+# as they would be by then, and a resumed campaign the facts it saved.
+stages: {}
+
+# A game may divide its stages into `chapters`, in order, each naming the stage it starts `from` and running up to the
+# next chapter's. `storyend` ends a chapter, which opens the next one to its members, and the party goes straight on
+# into it; the round ends after the last. A party starting from the waiting lobby resumes a chapter it left open, or
+# plays the earliest one any of its members has still to finish, and starts over once all have finished every one.
+# `carries` lists the facts a chapter takes over from the ending of the one before. The package starts a chapter with
+# its action `begin_<chapter>`, or `begin`. A chapter with a `world` plays in a world of its own and gives its own
+# `landing`, `rally` and `npcs`, as `mission` does for the server's own world. Without `chapters` the mission is one
+# chapter.
+
+# Music and ambience are `story.music.<track>` and `story.ambience.<track>` in the pack; soundtrack.properties has each
+# recording's length, so a track loops, unless it is listed in `once`.
+# Between two chapters the screen fades to black, stays black for at least hold-ticks under the next chapter's name,
+# and fades in once every member's client has loaded the next chapter's world, or after ready-timeout-seconds.
+travel:
+  hold-ticks: 40
+  ready-timeout-seconds: 15
+
+soundtrack:
+  music-volume: 0.5
+  ambience-volume: 0.6
+  once: []
+
+# Each scene is timed in ticks. `shots` are camera keyframes that look from `at` towards `look`, or with `follow` at an
+# actor `height` blocks above its feet (1.3 unless given) wherever it is; `cut: true` starts a new shot. Within a shot
+# the camera eases in and out once and keeps its pace through every keyframe between. A cut further than
+# `far-cut-blocks` dips to black over `fade-ticks`, since the client still has to load the new place. `actors` walk
+# through their `marks` facing where they go, and play the `gestures` of their model (point, beckon, nod, rest, look),
+# `idle` for the whole scene; an actor talks while a line it speaks is voiced. An actor named like one of the mission's
+# `npcs` is that NPC, and every other actor is spawned for the scene. `walk-paces` are how far each body's walk carries
+# it per tick, the stride over the cycle that resourcepack/RigModels.py animates, so the legs keep pace with the ground.
+# `lines` are subtitles from messages.yml with the voice of the same key, typing out at the dialogue's pace. `craft`
+# flies a ship's model from `from` to `to` and on at the same speed until the scene ends, or one that `stays` waits
+# where it arrives; `emitters` keep particles going, `sounds` play to each viewer, at `at` when it is given, and
+# `effects` are EXPLOSION or FLARE; an EXPLOSION with a `radius` breaks the blocks around it, throws debris and leaves
+# fire and smoke until the round ends. `music` starts a soundtrack track with the scene, and `actions` run the quest
+# package's actions once for the party at their tick. `/story scene <name> [tick]` previews a scene from any tick, and
+# `/story reload` reads this file again.
+cutscenes:
+  fade-ticks: 12
+  far-cut-blocks: 48
+  # A scene waits for every viewer's resource pack and the world along its camera's path, but no longer than this.
+  ready-timeout-seconds: 120
+  walk-paces: {soldier: 0.1125, heavy: 0.059, scout: 0.183, medic: 0.121}
+  scenes: {}

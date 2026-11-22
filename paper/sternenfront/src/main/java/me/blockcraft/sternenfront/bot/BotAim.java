@@ -16,6 +16,11 @@ public final class BotAim {
         return since >= ticks ? 1 : start - (start - 1) * since / ticks;
     }
 
+    /** When a bot hit {@code share} of the way back to a fresh target would have picked it, if not later already. */
+    static long flinched(long acquiredAt, long tick, int ticks, double share) {
+        return Math.max(acquiredAt, tick - Math.round(ticks * (1 - share)));
+    }
+
     /**
      * How far beside {@code aim} a bot's shot goes {@code since} ticks after it picked its target: {@code error} per block
      * at first, toward {@code angle} round the aim, closing to nothing over {@code ticks}.
@@ -30,6 +35,19 @@ public final class BotAim {
         side.normalize();
         var up = side.clone().crossProduct(forward);
         return side.multiply(Math.cos(angle)).add(up.multiply(Math.sin(angle))).multiply(error * left);
+    }
+
+    /**
+     * How far ahead of a target {@code relative} away, moving {@code velocity} a tick, a bot aims so a bolt of
+     * {@code boltSpeed} blocks a tick meets it: {@code share} of the way the target moves while the bolt flies.
+     */
+    static Vector lead(Vector relative, Vector velocity, double boltSpeed, double share) {
+        return velocity.clone().multiply(share * relative.length() / boltSpeed);
+    }
+
+    /** Whether {@code aim} points within {@code degrees} of {@code wanted}, so a bot fires only once it has turned. */
+    static boolean onTarget(Vector aim, Vector wanted, double degrees) {
+        return wanted.lengthSquared() <= 0.01 || aim.angle(wanted) <= Math.toRadians(degrees);
     }
 
     /** Whether {@code aim} lies within {@code degrees} either side of where a body with {@code bodyYaw} faces. */

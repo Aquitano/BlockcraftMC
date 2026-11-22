@@ -16,31 +16,67 @@
                 "firstperson_lefthand"
               ],
               "model": {
-                "type": "minecraft:condition",
-                "property": "minecraft:keybind_down",
-                "on_true": {
-                  "type": "minecraft:model",
-                  "model": "blockcraft:item/sternenfront/heavy_rifle_aim",
-                  "tints": [
-                    {
-                      "type": "minecraft:custom_model_data",
-                      "index": 0,
-                      "default": -1
+                "type": "minecraft:range_dispatch",
+                "property": "minecraft:cooldown",
+                "entries": [
+                  {
+                    "threshold": 1.0E-4,
+                    "model": {
+                      "type": "minecraft:condition",
+                      "property": "minecraft:keybind_down",
+                      "on_true": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/heavy_rifle_firing_aim",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "on_false": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/heavy_rifle_firing",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "keybind": "key.use"
                     }
-                  ]
-                },
-                "on_false": {
-                  "type": "minecraft:model",
-                  "model": "blockcraft:item/sternenfront/heavy_rifle",
-                  "tints": [
-                    {
-                      "type": "minecraft:custom_model_data",
-                      "index": 0,
-                      "default": -1
-                    }
-                  ]
-                },
-                "keybind": "key.use"
+                  }
+                ],
+                "fallback": {
+                  "type": "minecraft:condition",
+                  "property": "minecraft:keybind_down",
+                  "on_true": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/heavy_rifle_aim",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "on_false": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/heavy_rifle",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "keybind": "key.use"
+                }
               }
             }
           ],

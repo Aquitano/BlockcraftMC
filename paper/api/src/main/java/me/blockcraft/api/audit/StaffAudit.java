@@ -3,6 +3,7 @@ package me.blockcraft.api.audit;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.player.PlayerReference;
@@ -33,11 +34,8 @@ public final class StaffAudit {
 
     public record Notices(Set<String> actions, String permission) {
 
-        public static Notices from(Map<String, Object> section) {
-            var actions = section.get("notify") instanceof List<?> keys
-                    ? keys.stream().map(String::valueOf).collect(Collectors.toUnmodifiableSet())
-                    : Set.<String>of();
-            return new Notices(actions, section.get("notify-permission") instanceof String node ? node : "blockcraft.audit.notify");
+        public static Notices from(StrictConfig section) {
+            return new Notices(Set.copyOf(section.texts("notify")), section.text("notify-permission"));
         }
     }
 

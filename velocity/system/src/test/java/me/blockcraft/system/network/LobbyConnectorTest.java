@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -167,11 +168,13 @@ public class LobbyConnectorTest {
         var directory = new ServerDirectory(proxy, "lobby", Duration.ofSeconds(15), counts -> { });
         directory.update(List.of(records));
         var data = folder.newFolder().toPath();
-        var config = SystemConfig.load(data.resolve("config.yml"), () -> bytes("""
+        Files.writeString(data.resolve("config.yml"), """
                 lobby-group: lobby
                 on-demand:
                   enabled: %s
-                """.formatted(onDemandEnabled)), Map.of("BLOCKCRAFT_ON_DEMAND_GROUPS", "archive,quicksg"));
+                """.formatted(onDemandEnabled));
+        var config = SystemConfig.load(data.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"),
+                Map.of("BLOCKCRAFT_ON_DEMAND_GROUPS", "archive,quicksg"));
         var messages = Messages.load(data, () -> bytes("""
                 hub:
                   already: 'Already on a lobby'

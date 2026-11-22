@@ -23,14 +23,14 @@ public final class TopList {
     }
 
     public void send(Player player, Stat stat) {
-        Tasks.async(plugin, () -> stats.top(stat, SIZE), entries -> {
+        Tasks.async(plugin, () -> stats.leaders(stat, SIZE), entries -> {
             player.sendMessage(messages.get("top.separator"));
             int rank = 0;
             for (var entry : entries) {
                 rank++;
                 player.sendMessage(messages.get(rank == 1 ? "top.first" : "top.entry",
                         Formatter.number("rank", rank),
-                        Placeholder.unparsed("name", String.valueOf(entry.name())),
+                        Placeholder.unparsed("name", entry.name()),
                         Formatter.number("value", entry.value())));
             }
             player.sendMessage(messages.get("top.separator"));

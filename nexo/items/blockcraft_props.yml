@@ -13,6 +13,8 @@ blockcraft_windmill_lantern:
       restricted_rotation: VERY_STRICT
       hitbox:
         interaction: 0,0,0 1,1.25
+      lights:
+        lights: ["0,0,0 13"]
 
 blockcraft_flour_sacks:
   itemname: '<white>Mehlsäcke'
@@ -45,6 +47,8 @@ blockcraft_grain_cart:
       restricted_rotation: VERY_STRICT
       hitbox:
         interaction: 0,0,0 1,1
+      blockcraft_collision:
+        cubes: ["-0.1875,0.0625,0.03125 0.875","0.1875,0.0625,0.03125 0.875"]
 
 blockcraft_merchant_stall:
   itemname: '<white>Marktstand'
@@ -82,6 +86,8 @@ blockcraft_timber_bench:
       seats:
         - -0.4,0.0625,0
         - 0.4,0.0625,0
+      blockcraft_collision:
+        cubes: ["-0.40625,-0.25,0.03125 0.8125","0.40625,-0.25,0.03125 0.8125","-0.5,0.75,0.375 0.5","0,0.75,0.375 0.5","0.5,0.75,0.375 0.5"]
 
 blockcraft_winter_bench:
   itemname: '<white>Verschneite Holzbank'
@@ -101,6 +107,8 @@ blockcraft_winter_bench:
       seats:
         - -0.4,0.0625,0
         - 0.4,0.125,0
+      blockcraft_collision:
+        cubes: ["-0.40625,-0.25,0.03125 0.8125","0.40625,-0.25,0.03125 0.8125","-0.5,0.75,0.375 0.5","0,0.75,0.375 0.5","0.5,0.75,0.375 0.5"]
 
 blockcraft_departure_clock:
   itemname: '<white>Abreiseuhr'
@@ -117,6 +125,8 @@ blockcraft_departure_clock:
       restricted_rotation: VERY_STRICT
       hitbox:
         interaction: 0,0,0 1,2
+      blockcraft_collision:
+        cubes: ["0,0,0 0.625","0,0.458333,0 0.625","0,0.916667,0 0.625","0,1.375,0 0.625"]
 
 blockcraft_cocoa_tray:
   itemname: '<white>Kakao und Kekse'
@@ -149,6 +159,8 @@ blockcraft_spring_basket:
       restricted_rotation: VERY_STRICT
       hitbox:
         interaction: 0,0,0 1,0.875
+      lights:
+        lights: ["0,0,0 13"]
 
 blockcraft_harvest_basket:
   itemname: '<white>Erntekorb'
@@ -229,6 +241,8 @@ blockcraft_presents:
       restricted_rotation: VERY_STRICT
       hitbox:
         interaction: 0,0,0 1,0.81875
+      blockcraft_collision:
+        cubes: ["0,0.0625,0.03125 0.75"]
 
 blockcraft_christmas_tree:
   itemname: '<white>Weihnachtsbaum'
@@ -248,6 +262,8 @@ blockcraft_christmas_tree:
         barriers:
           - 0,0,0
           - 0,1,0
+      lights:
+        lights: ["0,2,0 13"]
 
 blockcraft_skate_rack:
   itemname: '<white>Schlittschuhe und Schneeschaufel'
@@ -264,6 +280,8 @@ blockcraft_skate_rack:
       restricted_rotation: VERY_STRICT
       hitbox:
         interaction: 0,0,0 1,1.4375
+      blockcraft_collision:
+        cubes: ["0,0,0 0.75","0,0.6875,0 0.75"]
 
 blockcraft_luggage:
   itemname: '<white>Reisegepäck'

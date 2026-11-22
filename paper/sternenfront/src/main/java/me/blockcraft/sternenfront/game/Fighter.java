@@ -20,6 +20,9 @@ public final class Fighter {
     private static final long LONG_AGO = Long.MIN_VALUE / 2;
     /** A late packet may stretch one gap between a held use's repeats from 4 ticks to 6. */
     private static final int AIM_HELD_TICKS = 6;
+    private static final int AIM_ASK_TICKS = 10;
+    /** A gun brought up out of a sprint stays up this long after its last shot or aim, so a pause between shots does not lower it. */
+    private static final int BRACED_TICKS = 12;
 
     /**
      * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do. A hero or
@@ -68,6 +71,8 @@ public final class Fighter {
     }
 
     private CombatClass combatClass = CombatClass.SOLDIER;
+    private Blaster soldierWeapon = Blaster.CARBINE;
+    private Reinforcement republicReinforcement = Reinforcement.ARC_TROOPER;
     private Optional<Choosing> choosing = Optional.empty();
     private Heat heat;
     private long protectedUntil;
@@ -77,6 +82,12 @@ public final class Fighter {
     private long aimedAt = LONG_AGO;
     private long scopedSince = LONG_AGO;
     private long queuedPull = Long.MAX_VALUE;
+    private long bracedUntil = LONG_AGO;
+    private long usedAt = LONG_AGO;
+    private long aimAskAt = LONG_AGO;
+    private long aimAskedAt = LONG_AGO;
+    private boolean aimAskPending;
+    private Trigger trigger = new Trigger();
     private final Map<Ability, Charges> charges = new EnumMap<>(Ability.class);
     private final Function<Ability, Charges> freshCharges;
     private Optional<Hero> hero = Optional.empty();
@@ -122,6 +133,12 @@ public final class Fighter {
         this.aimedAt = LONG_AGO;
         this.scopedSince = LONG_AGO;
         this.queuedPull = Long.MAX_VALUE;
+        this.bracedUntil = LONG_AGO;
+        this.usedAt = LONG_AGO;
+        this.aimAskAt = LONG_AGO;
+        this.aimAskedAt = LONG_AGO;
+        this.aimAskPending = false;
+        this.trigger = new Trigger();
         this.charges.clear();
         this.hero = hero;
         this.reinforcement = Optional.empty();
@@ -143,10 +160,57 @@ public final class Fighter {
     /** A held right click reaches the server as a use every 4 ticks, so the last one tells whether it is still held. */
     public void aimed(long tick) {
         aimedAt = tick;
+        usedAt = tick;
     }
 
     public boolean aiming(long tick) {
         return tick - aimedAt <= AIM_HELD_TICKS;
+    }
+
+    /**
+     * A client that holds its trigger sends no uses, so the aim it began the hold with carries on. It sends one again
+     * when its trigger cells are taken away for a moment, and once that has made it stop, only such a use keeps the aim.
+     */
+    public void holdAim(long tick) {
+        if (aiming(tick) && usedAt >= aimAskedAt) {
+            aimedAt = tick;
+        }
+    }
+
+    /** The trigger cells go away for a tick so the client says whether it aims; at most every {@link #AIM_ASK_TICKS}. */
+    public boolean askAim(long tick) {
+        if (tick - aimAskAt < AIM_ASK_TICKS) {
+            return false;
+        }
+        aimAskAt = tick;
+        aimAskPending = true;
+        return true;
+    }
+
+    /** The client stopped breaking its cell: if that was asked for, it is free to send a use now. */
+    public void stoppedBreaking(long tick) {
+        if (aimAskPending && tick - aimAskAt <= AIM_HELD_TICKS) {
+            aimAskedAt = tick;
+        }
+        aimAskPending = false;
+    }
+
+    /** While the client may still come back from an ask, its cells stay even if it turns out to aim. */
+    public boolean askingAim(long tick) {
+        return tick - aimAskAt <= AIM_ASK_TICKS;
+    }
+
+    public Trigger trigger() {
+        return trigger;
+    }
+
+    /** Shooting or aiming brings the gun up, out of a sprint too, which then moves at a walk. */
+    public void brace(long tick) {
+        bracedUntil = tick + BRACED_TICKS;
+    }
+
+    public boolean braced(long tick) {
+        return tick <= bracedUntil;
     }
 
     /** Marks each tick whether the player looks through a scope, so its settling counts from when they raised it. */
@@ -165,6 +229,10 @@ public final class Fighter {
     /** A click just before the gun was ready, held over until {@code at}. */
     public void queuePull(long at) {
         queuedPull = at;
+    }
+
+    public void dropPull() {
+        queuedPull = Long.MAX_VALUE;
     }
 
     /** Whether a held-over click is due at {@code tick}; it is due only once. */
@@ -220,6 +288,28 @@ public final class Fighter {
         }
     }
 
+    public Blaster classBlaster(Faction faction, CombatClass role) {
+        return role.weapons(faction).contains(soldierWeapon) ? soldierWeapon : role.blaster(faction);
+    }
+
+    public void cycleWeapon(Faction faction) {
+        var weapons = combatClass.weapons(faction);
+        if (weapons.size() > 1) {
+            soldierWeapon = weapons.get((weapons.indexOf(soldierWeapon) + 1) % weapons.size());
+        }
+    }
+
+    public Reinforcement reinforcementChoice(Faction faction) {
+        return faction == Faction.KOLONIEN ? republicReinforcement : Reinforcement.COMMANDO_DROID;
+    }
+
+    public void cycleReinforcement(Faction faction) {
+        if (faction == Faction.KOLONIEN) {
+            republicReinforcement = republicReinforcement == Reinforcement.ARC_TROOPER
+                    ? Reinforcement.CLONE_COMMANDO : Reinforcement.ARC_TROOPER;
+        }
+    }
+
     public List<Ability> abilities(Faction faction) {
         return hero.isPresent() ? List.of() : reinforcement.map(Reinforcement::abilities).orElseGet(() -> combatClass.abilities(faction));
     }
@@ -229,6 +319,6 @@ public final class Fighter {
         if (hero.isPresent()) {
             return hero.map(Hero::weapon).filter(Hero.Weapon.Gun.class::isInstance).map(Hero.Weapon.Gun.class::cast).map(Hero.Weapon.Gun::blaster);
         }
-        return reinforcement.map(Reinforcement::blaster).or(() -> Optional.of(combatClass.blaster(faction)));
+        return reinforcement.map(Reinforcement::blaster).or(() -> Optional.of(classBlaster(faction, combatClass)));
     }
 }

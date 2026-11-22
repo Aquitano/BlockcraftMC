@@ -60,6 +60,7 @@ public class BotCoverTest {
 
     private static World wall(BoundingBox wall) {
         return (World) Proxy.newProxyInstance(World.class.getClassLoader(), new Class<?>[]{World.class}, (proxy, method, args) -> {
+            if (method.getName().equals("getNearbyEntities")) return java.util.List.of();
             if (method.getName().equals("rayTraceBlocks")) {
                 return wall.rayTrace(((Location) args[0]).toVector(), (Vector) args[1], (double) args[2]);
             }

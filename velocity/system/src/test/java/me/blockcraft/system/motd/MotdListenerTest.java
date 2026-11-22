@@ -24,10 +24,9 @@ public class MotdListenerTest {
     @Test
     public void brandedDefaultUsesTheConfiguredAddressAndAllowsLegacyOverrides() throws Exception {
         var directory = folder.getRoot().toPath();
-        Files.writeString(directory.resolve("config.yml"), "network:\n  ip: Example.test\n");
+        Files.writeString(directory.resolve("network.yml"), "network:\n  ip: Example.test\n");
         var config = SystemConfig.load(directory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
-        var loaded = Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"));
-        var messages = loaded.with(config.networkTags(), loaded.tagsOf("palette"));
+        var messages = Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"), config.networkTags());
         var legacy = LegacyComponentSerializer.legacyAmpersand();
 
         assertTrue(legacy.serialize(MotdListener.firstLine(config, messages)).contains("&9&lE X A M P L E . T E S T"));
@@ -40,8 +39,7 @@ public class MotdListenerTest {
     public void theMostSpecialActiveOccasionNamesTheSecondLine() throws Exception {
         var directory = folder.getRoot().toPath();
         var config = SystemConfig.load(directory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
-        var loaded = Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"));
-        var messages = loaded.with(config.networkTags(), loaded.tagsOf("palette"));
+        var messages = Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"), config.networkTags());
         var calendar = config.calendar();
         var plain = PlainTextComponentSerializer.plainText();
 

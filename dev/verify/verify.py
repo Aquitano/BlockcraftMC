@@ -5,10 +5,12 @@ import functools
 import json
 import math
 import os
+import re
 import shutil
 import socket
 import subprocess
 import sys
+import threading
 import time
 import zipfile
 from pathlib import Path
@@ -16,10 +18,12 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
-PROJECT = os.environ.get("VERIFY_PROJECT", "bcverify")
-STACK = ("mariadb", "velocity", "sternenfront", "client")
+# The game server under test: sternenfront, story for the story core's example game, zombies or lobby.
+GAME = os.environ.get("VERIFY_GAME", "sternenfront")
+STACK = ("mariadb", "velocity", GAME, "client")
 PLAYER = "Verify"
 HQ_X = 55
 MODEL_ABOVE_FEET = 2
@@ -35,7 +39,7 @@ def compose(*args, capture=False, timeout=None):
     return subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=capture, timeout=timeout)
 
 
-def rcon(command, service="sternenfront"):
+def rcon(command, service=GAME):
     try:
         return compose("exec", "-T", service, "rcon-cli", command, capture=True, timeout=30).stdout.strip()
     except subprocess.CalledProcessError as failure:
@@ -188,12 +192,12 @@ def set_window(client, width, height, scale):
 @functools.cache
 def running_template():
     """The template the game server started with, so that scenarios use the map it is playing."""
-    return compose("exec", "-T", "sternenfront", "printenv", "BLOCKCRAFT_WORLD_TEMPLATE", capture=True).stdout.strip()
+    return compose("exec", "-T", GAME, "printenv", "BLOCKCRAFT_WORLD_TEMPLATE", capture=True).stdout.strip()
 
 
 def keep_running_map():
     """Recreating the game server without this would put it back on the default map."""
-    if "VERIFY_MAP" not in os.environ and compose("ps", "-q", "--status", "running", "sternenfront", capture=True).stdout.strip():
+    if "VERIFY_MAP" not in os.environ and compose("ps", "-q", "--status", "running", GAME, capture=True).stdout.strip():
         os.environ["VERIFY_MAP"] = Path(running_template()).name
 
 
@@ -232,8 +236,8 @@ def as_trooper(client):
 
 
 def blaster(item):
-    """A class's blaster, which is a hoe."""
-    return item.endswith("_hoe")
+    """A class's blaster, which is a light item so that its trigger can be held."""
+    return item == "light"
 
 
 def enemies(client, radius=64):
@@ -524,7 +528,8 @@ def glint(client, run, tries=4, watch_seconds=30):
     run.report["glints_seen"] = seen
 
 
-# Each scenario with the state it needs: "field" means deployed in a running round.
+# Each scenario with the state it needs: "field" means deployed in a running round, and "server" that it restarts the
+# game server itself.
 def replay(client, run, round_seconds=75):
     """Fights through a short round, watches its recording on a replay server and photographs the bots' bodies there."""
     keep_running_map()
@@ -605,13 +610,445 @@ def bodies_shown(client):
     return sum(each.get("model", "").endswith("_torso") for each in client("entities", radius=250)["entities"])
 
 
+def camera(client, run, command="sfintro", ticks=200, every=10):
+    """Plays a cinematic and records the camera's pose at every client tick beside a frame every few ticks."""
+    if client("status")["screen"]:
+        client("close")
+    traced = {}
+    tracer = threading.Thread(target=lambda: traced.update(Client()("trace", ticks=ticks)))
+    tracer.start()
+    client("command", text=command)
+    client("capture", name=f"{run.name}/frame", frames=max(1, ticks // every), every=every)
+    tracer.join()
+    samples = [sample for sample in traced.get("samples", []) if sample and sample[5] != "player"]
+    (run.folder / "trace.json").write_text(json.dumps(traced.get("samples", [])))
+    run.report["camera"] = motion(samples)
+
+
+def motion(samples):
+    """Smoothness of a traced camera within each shot; a jump of more than four blocks in one tick is a cut between shots."""
+    shots = [[]]
+    for sample in samples:
+        if shots[-1] and math.dist(shots[-1][-1][:3], sample[:3]) > 4:
+            shots.append([])
+        shots[-1].append(sample)
+    steps, jerks, turns, pitches = [], [], [], []
+    stalls = 0
+    for shot in shots:
+        shot_steps = [math.dist(a[:3], b[:3]) for a, b in zip(shot, shot[1:])]
+        steps += shot_steps
+        jerks += [math.dist([c - 2 * b + a for a, b, c in zip(p[:3], q[:3], r[:3])], [0, 0, 0]) for p, q, r in zip(shot, shot[1:], shot[2:])]
+        turns += [abs((b[3] - a[3] + 180) % 360 - 180) for a, b in zip(shot, shot[1:])]
+        pitches += [abs(b[4] - a[4]) for a, b in zip(shot, shot[1:])]
+        stalls += sum(1 for a, b, c in zip(shot_steps, shot_steps[1:], shot_steps[2:]) if b < 0.2 * min(a, c) and min(a, c) > 0.01)
+    if not jerks:
+        return {"ticks": len(samples)}
+    moving = [step for step in steps if step > 0.005]
+    mean = sum(moving) / len(moving) if moving else 0
+    byte_angle = 360 / 256
+    quantized = sum(abs(sample[3] / byte_angle - round(sample[3] / byte_angle)) < 0.01 for sample in samples)
+    return {
+        "ticks": len(samples),
+        "shots": len(shots),
+        "mean_step": round(mean, 3),
+        "max_step": round(max(steps), 3),
+        "stalls": stalls,
+        "max_jerk": round(max(jerks), 3),
+        "hitches": sum(1 for jerk in jerks if mean and jerk > 0.5 * mean),
+        "max_turn": round(max(turns), 2),
+        "turn_hitches": sum(1 for a, b, c in zip(turns, turns[1:], turns[2:]) if b > 2 * max(a, c) + 0.3),
+        "max_pitch_step": round(max(pitches), 2),
+        "yaw_on_byte_steps": f"{quantized}/{len(samples)}",
+    }
+
+
+def story_state():
+    """The story's state as /story state json reports it, without the console's colour codes."""
+    return json.loads(re.sub(r"\x1b\[[0-9;]*m", "", rcon("story state json")))
+
+
+def story_jump(client, run):
+    """Jumps to every stage of the story in turn, from the waiting lobby, with /story jump, and records each stage's
+    state and a frame, then a last frame of whatever the last stage ends in."""
+    stages = story_state()["stages"]
+    run.report["stages"] = {}
+    for stage in stages:
+        answer = rcon(f"story jump {stage}")
+        settle(client, 40)
+        run.shot(client, stage)
+        run.report["stages"][stage] = {"answer": re.sub(r"\x1b\[[0-9;]*m", "", answer), **story_state()}
+    settle(client, 100)
+    run.shot(client, "end")
+    run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 60").splitlines()]
+
+
+def story_chapters(client, run):
+    """With the example game: ends its first chapter by jumping to the stage that ends it, and photographs the way into
+    the second, which plays in a world of its own: the ending, the loading screen and the arrival. It reports the
+    chapter, world and facts the second chapter starts with and the story log of the way there."""
+    if not client("status")["in_world"]:
+        join(client)
+    rcon("story jump ending")
+    client.until("the first chapter's ending", lambda: story_state()["stage"] == "done", 60, 0.5)
+    run.report["first"] = story_state()
+    run.shot(client, "ending")
+    client.until("the loading screen", lambda: client("hud")["title"]["text"] != "" and "Kapitel" in client("hud")["subtitle"]["text"], 30, 0.3)
+    hud = client("hud")
+    run.report["loading_title"] = {part: {key: hud[part][key] for key in ("text", "width", "overflows")} for part in ("title", "subtitle")}
+    client("capture", name=f"{run.name}/loading", frames=6, every=8)
+    client.until("the second chapter", lambda: story_state()["chapter"] == "relief", 120, 1)
+    client.until("the screen to come back", lambda: client("hud")["title"]["text"] == "", 60, 0.5)
+    settle(client, 40)
+    run.shot(client, "arrived")
+    run.report["second"] = story_state()
+    run.report["dimension"] = client("status")["dimension"]
+    run.report["chat"] = client("hud")["chat"]
+    run.report["log"] = [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in rcon("story log 40").splitlines()]
+
+
+
+HORDE = ("zombie ", "husk ", "wolf ")
+# What `horde --kind` can send alone: the special kinds, and the two that only come in their own waves.
+HORDE_KINDS = ("crawler", "shield_bearer", "frost", "arsonist", "electric", "breeder", "shadow", "hellhound", "inferno")
+WAVE_EVENTS = ("blood_moon", "power_outage", "bounty", "toxic_fog")
+# Gold for every door and station, and no wave while the client shops.
+RICH = {"gold": {"start": 50000}, "countdown": {"intermission": 600}}
+
+
+@functools.cache
+def outpost():
+    return yaml.safe_load((ROOT / running_template().lstrip("/") / "blockcraft/Zombies/arena.yml").read_text())
+
+
+def in_outpost(spot):
+    """A spot of the Zombies arena, which the file gives from the arena's origin, in the world."""
+    origin = outpost()["origin"]
+    return origin["x"] + spot["x"], origin["y"] + spot.get("y", 0), origin["z"] + spot["z"]
+
+
+def fresh_outpost(overrides):
+    """Restarts the Zombies server with these settings on top of the rig's own, and comes back joined."""
+    settings = yaml.safe_load((ROOT / "dev/verify/zombies-overrides.yml").read_text())
+    for section, values in overrides.items():
+        settings.setdefault(section, {}).update(values)
+    written = ROOT / "build/verify/zombies-config.yml"
+    written.parent.mkdir(parents=True, exist_ok=True)
+    written.write_text(yaml.safe_dump(settings))
+    os.environ["VERIFY_ZOMBIES_CONFIG"] = str(written)
+    compose("up", "-d", "--force-recreate", "--no-deps", "zombies")
+    time.sleep(15)
+    wait_for_server(seconds=420)
+    client = wait_for_client()
+    client.until("the proxy to drop the old server", lambda: not client("status")["in_world"], 60, 1)
+    join(client)
+    return client
+
+
+def squad_board(client):
+    """The Zombies sidebar as numbers: the wave, the enemies left and the player's gold. No wave outside a round."""
+    text = "\n".join(client("hud")["sidebar"].get("lines", []))
+
+    def number(pattern):
+        match = re.search(pattern, text)
+        return int(re.sub(r"\D", "", match.group(1))) if match else None
+
+    return {"wave": number(r"Welle (\d+)/"), "enemies": number(r"Gegner ([\d.,]+)"), "gold": number(r"([\d.,]+) Gold")}
+
+
+def start_outpost(client):
+    if not client("status")["in_world"]:
+        join(client)
+    if squad_board(client)["wave"] is None:
+        client("command", text="start")
+    client.until("the Zombies round", lambda: squad_board(client)["wave"] is not None, 90)
+    settle(client, 10)
+
+
+def horde(client, radius=48):
+    """The wave's enemies the client knows of, nearest first; the game names every one of them."""
+    return [each for each in client("entities", radius=radius)["entities"] if each["name"].startswith(HORDE) and each.get("health", 0) > 0]
+
+
+def shoot_horde(client):
+    """Aims at the nearest enemy in sight and pulls the trigger; None when the client sees none."""
+    seen = [each for each in horde(client) if each["in_sight"]]
+    if not seen:
+        return None
+    low = seen[0]["name"].startswith("wolf") or "Kriecher" in seen[0]["name"]
+    client("look_at", x=seen[0]["x"], y=seen[0]["y"] + (0.4 if low else 1.1), z=seen[0]["z"])
+    client("tap", key="use", times=3, every=4)
+    return seen[0]
+
+
+def fall_back(client, threats):
+    """Moves to the yard corner furthest from the enemies. A teleport stands in for running, which a client at a few
+    frames a second cannot steer in time."""
+    yard = outpost()["rooms"]["yard"]["bounds"]
+    corners = [in_outpost({"x": x, "z": z}) for x in (yard["x1"] + 5, yard["x2"] - 5) for z in (yard["z1"] + 5, yard["z2"] - 5)]
+    corners.sort(key=lambda corner: -min(math.hypot(corner[0] - each["x"], corner[2] - each["z"]) for each in threats))
+    for x, y, z in corners:
+        rcon(f"tp {PLAYER} {x + 0.5} {y} {z + 0.5}")
+        settle(client, 3)
+        if not client("status")["in_wall"]:
+            return
+
+
+def feedback(client, since):
+    """What the game told the player since a tick: action bar lines and chat, in order."""
+    return [f"{event['kind']}: {event['value']}" for event in client("events", since=since)["events"]
+            if event["kind"] in ("actionbar", "chat", "title") and event["value"]]
+
+
+def use_block(client, block, stand):
+    """Stands at a spot, looks at a block's middle and right-clicks it; returns what the client then looked at."""
+    rcon(f"tp {PLAYER} {stand[0]} {stand[1]} {stand[2]}")
+    settle(client, 6)
+    status = client("look_at", x=block[0] + 0.5, y=block[1] + 0.5, z=block[2] + 0.5)
+    settle(client, 3)
+    client("tap", key="use")
+    settle(client, 8)
+    return client("status").get("looking_at_block", status.get("looking_at_block", ""))
+
+
+def knock(client, room):
+    """Right-clicks a room's door from the yard's side and reports the gold before and after and what the game said."""
+    door = outpost()["rooms"][room]["door"]
+    x, y, z = in_outpost({"x": (door["x1"] + door["x2"]) // 2, "y": door["y1"] + 1, "z": (door["z1"] + door["z2"]) // 2})
+    spawn = in_outpost(outpost()["spawn"])
+    length = math.hypot(spawn[0] - x - 0.5, spawn[2] - z - 0.5)
+    stand = (round(x + 0.5 + 2.5 * (spawn[0] - x - 0.5) / length, 1), y - 1, round(z + 0.5 + 2.5 * (spawn[2] - z - 0.5) / length, 1))
+    before, since = squad_board(client)["gold"], client("status")["tick"]
+    looked = use_block(client, (x, y, z), stand)
+    settle(client, 10)
+    return {"gold": [before, squad_board(client)["gold"]], "looked_at": looked, "said": feedback(client, since)}
+
+
+def beside(client, block):
+    """Open ground two blocks from a block, on a side from which the client's crosshair reaches it."""
+    for dx, dz in ((0, -2), (0, 2), (-2, 0), (2, 0), (-2, -2), (2, 2), (-2, 2), (2, -2)):
+        stand = (block[0] + 0.5 + dx, block[1], block[2] + 0.5 + dz)
+        rcon(f"tp {PLAYER} {stand[0]} {stand[1]} {stand[2]}")
+        settle(client, 6)
+        if client("status")["in_wall"]:
+            continue
+        looked = client("look_at", x=block[0] + 0.5, y=block[1] + 0.5, z=block[2] + 0.5).get("looking_at_block", "")
+        settle(client, 3)
+        looked = client("status").get("looking_at_block", looked)
+        if looked.endswith(f" {block[0]} {block[1]} {block[2]}"):
+            return stand
+    raise RuntimeError(f"No spot beside {block} looks at it")
+
+
+def open_menu(client, block):
+    client("tap", key="use")
+    try:
+        client.until("the station's menu", lambda: client("status")["screen"] == "ContainerScreen", 15, 0.3)
+    except TimeoutError:
+        return None
+    settle(client, 4)
+    return client("screen")
+
+
+def swap_menu(client):
+    """The menu that asks which carried gun a third one replaces, when it is open, with the slots of those guns."""
+    if client("status")["screen"] != "ContainerScreen":
+        return None
+    menu = client("screen")
+    if "waffe ersetzen" not in menu["title"].lower():
+        return None
+    menu["carried"] = offered(menu, lambda line: "ersetzen" in line and "Klicken" in line)
+    return menu
+
+
+def offered(menu, mark):
+    """The first slot of each item whose lore has a line that {mark} accepts: a card on a station's screen repeats its
+    item in every slot it covers."""
+    seen, slots = set(), []
+    for slot in menu["slots"]:
+        if any(mark(line) for line in slot.get("lore", [])) and slot.get("name") not in seen:
+            seen.add(slot.get("name"))
+            slots.append(slot)
+    return slots
+
+
+def swap(client, menu):
+    """Replaces the first carried gun and reports what the menu showed."""
+    client("click", slot=menu["carried"][0]["slot"])
+    settle(client, 10)
+    return {"title": menu["title"], "slots": [{"slot": slot["slot"], "name": slot.get("name")} for slot in menu["slots"]]}
+
+
+def visit(client, run, name):
+    """Opens a station's menu and clicks each of its offers once: what it offered, what each click said and cost."""
+    station = outpost()["stations"][name]
+    block = tuple(int(math.floor(value)) for value in in_outpost(station["location"]))
+    beside(client, block)
+    client("hotbar", slot=0)
+    menu = open_menu(client, block)
+    if menu is None:
+        return {"menu": None, "said": feedback(client, client("status")["tick"] - 40)}
+    offers = offered(menu, lambda line: "Preis" in line)
+    result = {"title": menu["title"], "offers": [{"name": offer.get("name"), "lore": offer.get("lore")} for offer in offers], "clicks": []}
+    run.shot(client, f"{name}_menu")
+    for offer in offers:
+        if client("status")["screen"] != "ContainerScreen" and open_menu(client, block) is None:
+            break
+        before, since = squad_board(client)["gold"], client("status")["tick"]
+        client("click", slot=offer["slot"])
+        settle(client, 10)
+        click = {"offer": offer.get("name")}
+        menu = swap_menu(client)
+        if menu is not None:
+            run.shot(client, f"{name}_replace")
+            click["swap"] = swap(client, menu)
+        click.update(gold=[before, squad_board(client)["gold"]], said=feedback(client, since))
+        result["clicks"].append(click)
+    if client("status")["screen"]:
+        client("close")
+    settle(client, 4)
+    status = client("status")
+    result["hotbar"] = [item.get("name") for item in status["hotbar"][:3]]
+    result["max_health"] = status["max_health"]
+    return result
+
+
+def take_from_box(client, run, name):
+    """After a purchase at the mystery box: watches the gun rise and roll, then clicks the box for it."""
+    station = outpost()["stations"][name]
+    block = tuple(int(math.floor(value)) for value in in_outpost(station["location"]))
+    since = client("status")["tick"]
+    client.until("the box to stop", lambda: any("Die Kiste zeigt" in line for line in feedback(client, since - 200)), 40, 1)
+    run.shot(client, f"{name}_stopped")
+    client("look_at", x=block[0] + 0.5, y=block[1] + 0.5, z=block[2] + 0.5)
+    client("tap", key="use")
+    settle(client, 10)
+    taken = {}
+    menu = swap_menu(client)
+    if menu is not None:
+        run.shot(client, f"{name}_swap")
+        taken["swap"] = swap(client, menu)
+    taken.update(hotbar=[item.get("name") for item in client("status")["hotbar"][:3]], said=feedback(client, since))
+    return taken
+
+
+def stations(client, run):
+    """With gold for everything and no wave coming: opens every door, buys at every station, then again where the
+    first visit was refused for want of power, and takes the gun the mystery box rolls."""
+    client = fresh_outpost(RICH)
+    start_outpost(client)
+    run.report["doors"] = {room: knock(client, room) for room in outpost()["rooms"] if room != "yard"}
+    run.shot(client, "doors")
+    visits = run.report["stations"] = {}
+    for name, station in outpost()["stations"].items():
+        visits[name] = visit(client, run, name)
+        if station["kind"] == "MYSTERY" and any(click["gold"][0] != click["gold"][1] for click in visits[name].get("clicks", [])):
+            visits[name]["taken"] = take_from_box(client, run, name)
+    for name in list(visits):
+        if any(click["gold"][0] == click["gold"][1] for click in visits[name].get("clicks", [])):
+            visits[f"{name} again"] = visit(client, run, name)
+    run.report["board"] = squad_board(client)
+
+
+def hold_out(client, run, seconds, until=lambda board: board["wave"] is None):
+    """Shoots at the horde from where the player stands until the round is over, with a frame at each new wave."""
+    wave, deadline = None, time.monotonic() + seconds
+    kinds = set()
+    while time.monotonic() < deadline:
+        board = squad_board(client)
+        if until(board):
+            return kinds
+        if board["wave"] != wave:
+            wave = board["wave"]
+            settle(client, 30)
+            run.shot(client, f"wave_{wave}")
+        close = horde(client, radius=4)
+        if close:
+            fall_back(client, horde(client, radius=16) or close)
+        target = shoot_horde(client)
+        if target:
+            kinds.add(target["name"])
+        else:
+            time.sleep(0.5)
+    raise TimeoutError(f"The round still ran after {seconds}s, in wave {wave}")
+
+
+def survive(client, run, seconds=900):
+    """Plays a Zombies round with what a new player has: knocks at a door it cannot pay for, then shoots whatever
+    comes through the windows until the round is won or lost."""
+    start_outpost(client)
+    start = client("status")["tick"]
+    run.report["door_without_gold"] = knock(client, "depot")
+    x, y, z = in_outpost(outpost()["spawn"])
+    rcon(f"tp {PLAYER} {x} {y} {z}")
+    run.report["enemies_met"] = sorted(hold_out(client, run, seconds))
+    settle(client, 40)
+    run.shot(client, "end")
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+    chat = " ".join(run.report["chat_lines"])
+    run.report["result"] = "won" if "Alle Wellen überlebt" in chat else "lost" if "Das Team ist gefallen" in chat else "unknown"
+
+
+def horde_of(client, run, kind=None, event=None, seconds=240):
+    """The only wave of a round, of a single kind of enemy or with one wave event forced: what the client met, heard and
+    read, with a frame every few seconds. Every hit lands, on a player with five times the health who is healed after
+    it, to watch the wave to its end. During a power outage the player sneaks at the generator once, to repair it."""
+    overrides = {"waves": {"total": 1, "boss-every": 99}, "countdown": {"intermission": 20}, "gold": {"start": 50000}}
+    if kind == "inferno":
+        overrides["waves"]["boss-every"] = 1
+    elif kind == "hellhound":
+        overrides["waves"]["hounds"] = {"first": 1, "every": 10, "share": 0.75}
+    elif kind:
+        config = yaml.safe_load((ROOT / "paper/zombies/src/main/resources/config.yml").read_text())["enemies"]
+        overrides["enemies"] = {each: {**values, "first-wave": 1, "weight": 1 if each == kind else 0, "late-weight": 1 if each == kind else 0}
+                                for each, values in config.items()}
+    if event:
+        overrides["events"] = {"from-wave": 1, "chance": 1, "earliest-share": 0.1, "latest-share": 0.1,
+                               **{each: {"weight": 1 if each == event else 0} for each in WAVE_EVENTS}}
+    client = fresh_outpost(overrides)
+    start_outpost(client)
+    start = client("status")["tick"]
+    rcon(f"attribute {PLAYER} minecraft:max_health base set 100")
+    if event in ("power_outage", "toxic_fog"):
+        run.report["prepared"] = {"door": knock(client, "power"), "power": visit(client, run, "generator")}
+        x, y, z = in_outpost(outpost()["spawn"])
+        rcon(f"tp {PLAYER} {x} {y} {z}")
+    client.until("the wave", lambda: squad_board(client)["wave"] == 1, 60)
+    met, next_frame, deadline = set(), time.monotonic() + 4, time.monotonic() + seconds
+    repaired = event != "power_outage"
+    while time.monotonic() < deadline and squad_board(client)["wave"] is not None:
+        status = client("status")
+        if status["health"] < status["max_health"]:
+            rcon(f"effect give {PLAYER} minecraft:instant_health 1 10 true")
+        if not repaired and any("Stromausfall" in line for line in client("hud")["sidebar"].get("lines", [])):
+            repaired = True
+            run.shot(client, "outage")
+            generator = tuple(int(math.floor(value)) for value in in_outpost(outpost()["stations"]["generator"]["location"]))
+            beside(client, generator)
+            client("hold", key="sneak", ticks=160)
+            settle(client, 170)
+            run.shot(client, "repaired")
+            x, y, z = in_outpost(outpost()["spawn"])
+            rcon(f"tp {PLAYER} {x} {y} {z}")
+        target = shoot_horde(client)
+        if target:
+            met.add(target["name"])
+        if time.monotonic() >= next_frame and run.frames < 12:
+            run.shot(client)
+            next_frame = time.monotonic() + 6
+    run.report["enemies_met"] = sorted(met)
+    run.report["sidebar"] = client("hud")["sidebar"].get("lines", [])
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+
+
 def database(query):
     return compose("exec", "-T", "mariadb", "mariadb", "-ublockcraft", "-pblockcraft", "blockcraft", "-Nse", query, capture=True).stdout.strip()
 
 
 SCENARIOS = {"replay": (replay, "joined"), "scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
              "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field"),
-             "underfire": (under_fire, "field"), "glint": (glint, "field")}
+             "underfire": (under_fire, "field"), "glint": (glint, "field"), "camera": (camera, "world"),
+             "storyjump": (story_jump, "world"), "storychapters": (story_chapters, "world"), "survive": (survive, "world"), "stations": (stations, "server"),
+             "horde": (horde_of, "server")}
 
 
 def run_scenario(name, faction=None, **options):
@@ -622,6 +1059,8 @@ def run_scenario(name, faction=None, **options):
     try:
         if needs == "field":
             into_round(client, faction=faction)
+        elif needs == "world" and not client("status")["in_world"]:
+            join(client)
         scenario(client, run, **options)
     except Exception as error:
         failure = error
@@ -666,13 +1105,23 @@ def build_map(name="sturmwerft"):
         time.sleep(3)
     say = lambda command: print(rcon(command, "mapbuilder")[:140])
     compose("cp", str(built / "datapack"), f"mapbuilder:/data/world/datapacks/{name}")
-    compose("exec", "-T", "mapbuilder", "mkdir", "-p", "/data/world/blockcraft/Sternenfront")
-    compose("cp", str(built / "arena.yml"), "mapbuilder:/data/world/blockcraft/Sternenfront/arena.yml")
-    compose("cp", str(built / "map.yml"), "mapbuilder:/data/world/blockcraft/map.yml")
+    # A generator either writes the world's files under files/, or Sternenfront's arena.yml and map.yml beside its functions.
+    files = built / "files"
+    placed = {path.relative_to(files): path for path in sorted(files.rglob("*")) if path.is_file()} if files.is_dir() else {
+        Path("blockcraft/Sternenfront/arena.yml"): built / "arena.yml", Path("blockcraft/map.yml"): built / "map.yml"}
+    for target, source in placed.items():
+        compose("exec", "-T", "mapbuilder", "mkdir", "-p", f"/data/world/{target.parent}")
+        compose("cp", str(source), f"mapbuilder:/data/world/{target}")
     say("reload")
     time.sleep(8)
     say(f"datapack enable \"file/{name}\"")
     time.sleep(8)
+    # One unknown block makes the server skip that whole function, which would save a half-built map.
+    failed = [line for line in compose("logs", "--no-log-prefix", "mapbuilder", capture=True).stdout.splitlines()
+              if "Failed to load function" in line or "Whilst parsing command" in line]
+    if failed:
+        compose("--profile", "mapgen", "stop", "mapbuilder")
+        raise RuntimeError("The map's functions did not load:\n" + "\n".join(failed))
     for area in (built / "forceload.txt").read_text().split("\n"):
         if area:
             say(f"forceload add {area}")
@@ -695,14 +1144,16 @@ def build_map(name="sturmwerft"):
     staging.mkdir()
     for part in ("level.dat", "data", "dimensions", "blockcraft"):
         compose("cp", f"mapbuilder:/data/world/{part}", str(staging / part))
-    if not (staging / "blockcraft/Sternenfront/arena.yml").is_file():
+    if (template / "datapacks").is_dir():
+        shutil.copytree(template / "datapacks", staging / "datapacks")
+    if not all((staging / target).is_file() for target in placed):
         raise RuntimeError(f"The export in {staging} is incomplete; {template} is untouched")
     template.rename(previous)
     staging.rename(template)
     shutil.rmtree(previous)
 
 
-def wait_for_server(service="sternenfront", seconds=240):
+def wait_for_server(service=GAME, seconds=240):
     deadline = time.monotonic() + seconds
     while "Done (" not in compose("logs", "--no-log-prefix", "--since", "5m", "--tail", "60", service, capture=True).stdout:
         if time.monotonic() > deadline:
@@ -739,7 +1190,7 @@ def main():
     commands = parser.add_subparsers(dest="action", required=True)
     commands.add_parser("up")
     restart = commands.add_parser("restart", help="restart services, by default the game server, picking up staged jars")
-    restart.add_argument("services", nargs="*", default=["sternenfront"])
+    restart.add_argument("services", nargs="*", default=[GAME])
     down = commands.add_parser("down")
     down.add_argument("-v", action="store_true", help="also delete the database and the client's download cache")
     logs = commands.add_parser("logs")
@@ -748,7 +1199,8 @@ def main():
     command = commands.add_parser("rcon")
     command.add_argument("text")
     commands.add_parser("join")
-    commands.add_parser("map", help="generate Sturmwerft and save it to worlds/sturmwerft")
+    generate = commands.add_parser("map", help="generate a map from dev/mapgen and save it to worlds/<name>")
+    generate.add_argument("name", nargs="?", default="sturmwerft", choices=["sturmwerft", "silo7"])
     commands.add_parser("models", help="after changing a body: regenerate its models and pack, and serve them")
     round_ = commands.add_parser("round", help="start a round and deploy")
     round_.add_argument("--watch-intro", action="store_true")
@@ -757,6 +1209,10 @@ def main():
     scenario.add_argument("--full", action="store_true", help="scales: every combination instead of the common ones")
     scenario.add_argument("--hero", choices=sorted(HERO_NAMES), help="hero: which one, of the side being played")
     scenario.add_argument("--faction", help="pick this side first, from the waiting lobby: Republik or Separatisten")
+    scenario.add_argument("--command", help="camera: the command that starts the cinematic, without its slash")
+    scenario.add_argument("--ticks", type=int, help="camera: how many client ticks to trace")
+    scenario.add_argument("--kind", choices=HORDE_KINDS, help="horde: the one kind of enemy the wave sends")
+    scenario.add_argument("--event", choices=WAVE_EVENTS, help="horde: the wave event to force")
     call = commands.add_parser("c", help="one client command, as: c hold key=use ticks=20")
     call.add_argument("cmd")
     call.add_argument("fields", nargs="*")
@@ -769,13 +1225,13 @@ def main():
         keep_running_map()
         compose("up", "-d", "--force-recreate", "--no-deps", *args.services)
     elif args.action == "down":
-        compose("--profile", "replay", "--profile", "mapgen", "down", *(["-v"] if args.v else []))
+        compose("--profile", "replay", "--profile", "mapgen", "--profile", "story", "down", *(["-v"] if args.v else []))
     elif args.action == "logs":
         compose("logs", "--no-log-prefix", "--tail", args.tail, args.service)
     elif args.action == "rcon":
         print(rcon(args.text))
     elif args.action == "map":
-        build_map()
+        build_map(args.name)
     elif args.action == "models":
         refresh_models()
     elif args.action == "join":
@@ -783,7 +1239,9 @@ def main():
     elif args.action == "round":
         print(json.dumps(into_round(wait_for_client(), not args.watch_intro), indent=1, ensure_ascii=False))
     elif args.action == "scenario":
-        return run_scenario(args.name, **({"full": True} if args.full else {}), **({"hero_name": args.hero} if args.hero else {}), faction=args.faction)
+        options = {"full": args.full or None, "hero_name": args.hero, "command": args.command, "ticks": args.ticks,
+                   "kind": args.kind, "event": args.event}
+        return run_scenario(args.name, faction=args.faction, **{key: value for key, value in options.items() if value is not None})
     elif args.action == "c":
         print(json.dumps(Client()(args.cmd, **dict(map(field, args.fields))), indent=1, ensure_ascii=False))
     return 0

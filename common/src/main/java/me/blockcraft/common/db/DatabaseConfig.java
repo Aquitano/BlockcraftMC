@@ -1,21 +1,22 @@
 package me.blockcraft.common.db;
 
+import me.blockcraft.common.config.StrictConfig;
+
 import java.time.Duration;
-import java.util.Map;
 
 /** The {@code database} section of a config.yml; {@code BLOCKCRAFT_DB_*} environment variables override it. */
 public record DatabaseConfig(String host, int port, String database, String username, String password,
                              int poolSize, Duration connectionTimeout) {
 
-    public static DatabaseConfig fromYaml(Map<String, Object> section) {
+    public static DatabaseConfig fromYaml(StrictConfig section) {
         return new DatabaseConfig(
-                env("HOST", String.valueOf(section.getOrDefault("host", "localhost"))),
-                Integer.parseInt(env("PORT", String.valueOf(section.getOrDefault("port", 3306)))),
-                env("NAME", String.valueOf(section.getOrDefault("database", "blockcraft"))),
-                env("USER", String.valueOf(section.getOrDefault("username", "root"))),
-                env("PASSWORD", String.valueOf(section.getOrDefault("password", ""))),
-                section.get("pool-size") instanceof Number size ? size.intValue() : 4,
-                Duration.ofSeconds(section.get("connection-timeout-seconds") instanceof Number seconds ? seconds.longValue() : 30)
+                env("HOST", section.text("host")),
+                Integer.parseInt(env("PORT", section.text("port"))),
+                env("NAME", section.text("database")),
+                env("USER", section.text("username")),
+                env("PASSWORD", section.text("password")),
+                section.integer("pool-size"),
+                Duration.ofSeconds(section.integer("connection-timeout-seconds"))
         );
     }
 

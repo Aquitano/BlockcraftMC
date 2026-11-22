@@ -29,6 +29,7 @@ public enum RigBody {
     KOLONIEN_HEAVY(Faction.KOLONIEN),
     KOLONIEN_SCOUT(Faction.KOLONIEN),
     KOLONIEN_MEDIC(Faction.KOLONIEN),
+    REINFORCEMENT_CLONE_COMMANDO(Faction.KOLONIEN),
     REINFORCEMENT_ARC_TROOPER(Faction.KOLONIEN),
     REINFORCEMENT_COMMANDO_DROID(Faction.HEGEMONIE),
     HERO_JEDI(Faction.KOLONIEN),
@@ -121,6 +122,7 @@ public enum RigBody {
 
     static RigBody of(Reinforcement unit) {
         return switch (unit) {
+            case CLONE_COMMANDO -> REINFORCEMENT_CLONE_COMMANDO;
             case ARC_TROOPER -> REINFORCEMENT_ARC_TROOPER;
             case COMMANDO_DROID -> REINFORCEMENT_COMMANDO_DROID;
         };
@@ -158,7 +160,7 @@ public enum RigBody {
     Optional<CombatClass> gait() {
         return switch (this) {
             case HEGEMONIE_SOLDIER, KOLONIEN_SOLDIER -> Optional.of(CombatClass.SOLDIER);
-            case HEGEMONIE_HEAVY, KOLONIEN_HEAVY, REINFORCEMENT_ARC_TROOPER -> Optional.of(CombatClass.HEAVY);
+            case HEGEMONIE_HEAVY, KOLONIEN_HEAVY, REINFORCEMENT_ARC_TROOPER, REINFORCEMENT_CLONE_COMMANDO -> Optional.of(CombatClass.HEAVY);
             case HEGEMONIE_SCOUT, KOLONIEN_SCOUT, REINFORCEMENT_COMMANDO_DROID -> Optional.of(CombatClass.SCOUT);
             case HEGEMONIE_MEDIC, KOLONIEN_MEDIC -> Optional.of(CombatClass.MEDIC);
             case HERO_JEDI, HERO_COMMANDER, HERO_SITH, HERO_BOUNTY_HUNTER -> Optional.empty();

@@ -258,6 +258,40 @@ final class SharedSchema {
                 + "recorded_at TIMESTAMP(3) NOT NULL, check_name VARCHAR(64) NOT NULL, description VARCHAR(255) NOT NULL, "
                 + "violations VARCHAR(32) NOT NULL, verbose VARCHAR(1024) NOT NULL, replay_uuid CHAR(36) NULL, replay_tick INT NULL, "
                 + "INDEX idx_bc_anticheat_player (player_uuid, id), INDEX idx_bc_anticheat_time (recorded_at))"
+        )),
+        new Migration(23, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_story_seen_scenes ("
+                + "player_uuid CHAR(36) NOT NULL, "
+                + "scene VARCHAR(64) NOT NULL, "
+                + "seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (player_uuid, scene))"
+        )),
+        new Migration(24, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_story_campaigns ("
+                + "campaign_id CHAR(36) NOT NULL PRIMARY KEY, "
+                + "mission VARCHAR(32) NOT NULL, "
+                + "revision INT NOT NULL, "
+                + "facts TEXT NOT NULL, "
+                + "ending VARCHAR(32) NULL, "
+                + "writer CHAR(36) NOT NULL, "
+                + "started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "saved_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6))",
+            "CREATE TABLE IF NOT EXISTS bc_story_campaign_members ("
+                + "campaign_id CHAR(36) NOT NULL, "
+                + "player_uuid CHAR(36) NOT NULL, "
+                + "PRIMARY KEY (campaign_id, player_uuid), "
+                + "INDEX idx_bc_story_campaign_members_player (player_uuid))"
+        )),
+        new Migration(25, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_story_current_campaigns ("
+                + "player_uuid CHAR(36) NOT NULL, mission VARCHAR(32) NOT NULL, campaign_id CHAR(36) NOT NULL, "
+                + "PRIMARY KEY (player_uuid, mission))",
+            "INSERT IGNORE INTO bc_story_current_campaigns (player_uuid, mission, campaign_id) "
+                + "SELECT player_uuid, mission, campaign_id FROM ("
+                + "SELECT m.player_uuid, c.mission, c.campaign_id, ROW_NUMBER() OVER ("
+                + "PARTITION BY m.player_uuid, c.mission ORDER BY c.saved_at DESC, c.revision DESC, c.campaign_id) AS position "
+                + "FROM bc_story_campaigns c JOIN bc_story_campaign_members m ON m.campaign_id = c.campaign_id"
+                + ") AS campaigns WHERE position = 1"
         ))
     );
 

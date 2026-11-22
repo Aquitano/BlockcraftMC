@@ -56,7 +56,7 @@ final class SeaEffects {
         this.game = game;
         var config = game.plugin().getConfig();
         String path = "presentation.sea.";
-        enabled = config.getBoolean("presentation.effects") && config.getBoolean(path + "enabled");
+        enabled = game.presentationConfig().effects() && config.getBoolean(path + "enabled");
         rangeSquared = Math.pow(Math.clamp(config.getDouble(path + "range"), 1, 96), 2);
         interval = Math.clamp(config.getInt(path + "interval-ticks"), 1, 20);
         maxSites = Math.clamp(config.getInt(path + "max-sites"), 1, 8);

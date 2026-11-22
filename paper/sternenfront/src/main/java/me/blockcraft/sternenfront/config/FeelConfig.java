@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.configuration.ConfigurationSection;
 
 /**
@@ -25,12 +26,13 @@ public record FeelConfig(int killCamTicks, int orbitalStreak, int botsPerStreakK
     }
 
     public static FeelConfig from(ConfigurationSection config) {
-        double zoom = Math.clamp(config.getDouble("aim.zoom", 0.92), 0.55, 1);
+        var read = BundledDefaults.strict(config);
+        double zoom = Math.clamp(read.decimal("aim.zoom"), 0.55, 1);
         return new FeelConfig(
-                Math.max(0, config.getInt("killcam.ticks", 50)),
-                Math.max(1, config.getInt("streaks.orbital-strike", 5)),
-                Math.max(1, config.getInt("streaks.bots-per-kill", 3)),
-                new Aim(zoom, Math.clamp(config.getDouble("aim.scope-zoom", 0.25), 0.1, 0.45),
-                        Math.clamp(config.getDouble("aim.scoped-walk", 0.3), 0, 1)));
+                Math.max(0, read.integer("killcam.ticks")),
+                Math.max(1, read.integer("streaks.orbital-strike")),
+                Math.max(1, read.integer("streaks.bots-per-kill")),
+                new Aim(zoom, Math.clamp(read.decimal("aim.scope-zoom"), 0.1, 0.45),
+                        Math.clamp(read.decimal("aim.scoped-walk"), 0, 1)));
     }
 }

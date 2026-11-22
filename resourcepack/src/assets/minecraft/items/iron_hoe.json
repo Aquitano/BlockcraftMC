@@ -12,7 +12,96 @@
         }
       },
       {
-        "when": "blockcraft:sternenfront/carbine",
+        "when": "blockcraft:sternenfront/a280",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:range_dispatch",
+                "property": "minecraft:cooldown",
+                "entries": [
+                  {
+                    "threshold": 1.0E-4,
+                    "model": {
+                      "type": "minecraft:condition",
+                      "property": "minecraft:keybind_down",
+                      "on_true": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/a280_firing_aim",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "on_false": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/a280_firing",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "keybind": "key.use"
+                    }
+                  }
+                ],
+                "fallback": {
+                  "type": "minecraft:condition",
+                  "property": "minecraft:keybind_down",
+                  "on_true": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/a280_aim",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "on_false": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/a280",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "keybind": "key.use"
+                }
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/a280",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/a280_firing",
         "model": {
           "type": "minecraft:select",
           "property": "minecraft:display_context",
@@ -27,7 +116,7 @@
                 "property": "minecraft:keybind_down",
                 "on_true": {
                   "type": "minecraft:model",
-                  "model": "blockcraft:item/sternenfront/carbine_aim",
+                  "model": "blockcraft:item/sternenfront/a280_firing_aim",
                   "tints": [
                     {
                       "type": "minecraft:custom_model_data",
@@ -38,7 +127,7 @@
                 },
                 "on_false": {
                   "type": "minecraft:model",
-                  "model": "blockcraft:item/sternenfront/carbine",
+                  "model": "blockcraft:item/sternenfront/a280_firing",
                   "tints": [
                     {
                       "type": "minecraft:custom_model_data",
@@ -48,6 +137,109 @@
                   ]
                 },
                 "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/a280_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/a280_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/a280_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/carbine",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:range_dispatch",
+                "property": "minecraft:cooldown",
+                "entries": [
+                  {
+                    "threshold": 1.0E-4,
+                    "model": {
+                      "type": "minecraft:condition",
+                      "property": "minecraft:keybind_down",
+                      "on_true": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/carbine_firing_aim",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "on_false": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/carbine_firing",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "keybind": "key.use"
+                    }
+                  }
+                ],
+                "fallback": {
+                  "type": "minecraft:condition",
+                  "property": "minecraft:keybind_down",
+                  "on_true": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/carbine_aim",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "on_false": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/carbine",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "keybind": "key.use"
+                }
               }
             }
           ],
@@ -132,7 +324,96 @@
         }
       },
       {
-        "when": "blockcraft:sternenfront/e5",
+        "when": "blockcraft:sternenfront/dc17m",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:range_dispatch",
+                "property": "minecraft:cooldown",
+                "entries": [
+                  {
+                    "threshold": 1.0E-4,
+                    "model": {
+                      "type": "minecraft:condition",
+                      "property": "minecraft:keybind_down",
+                      "on_true": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/dc17m_firing_aim",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "on_false": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/dc17m_firing",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "keybind": "key.use"
+                    }
+                  }
+                ],
+                "fallback": {
+                  "type": "minecraft:condition",
+                  "property": "minecraft:keybind_down",
+                  "on_true": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/dc17m_aim",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "on_false": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/dc17m",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "keybind": "key.use"
+                }
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/dc17m",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/dc17m_firing",
         "model": {
           "type": "minecraft:select",
           "property": "minecraft:display_context",
@@ -147,7 +428,7 @@
                 "property": "minecraft:keybind_down",
                 "on_true": {
                   "type": "minecraft:model",
-                  "model": "blockcraft:item/sternenfront/e5_aim",
+                  "model": "blockcraft:item/sternenfront/dc17m_firing_aim",
                   "tints": [
                     {
                       "type": "minecraft:custom_model_data",
@@ -158,7 +439,7 @@
                 },
                 "on_false": {
                   "type": "minecraft:model",
-                  "model": "blockcraft:item/sternenfront/e5",
+                  "model": "blockcraft:item/sternenfront/dc17m_firing",
                   "tints": [
                     {
                       "type": "minecraft:custom_model_data",
@@ -168,6 +449,265 @@
                   ]
                 },
                 "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/dc17m_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/dc17m_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/dc17m_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/e11d",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:range_dispatch",
+                "property": "minecraft:cooldown",
+                "entries": [
+                  {
+                    "threshold": 1.0E-4,
+                    "model": {
+                      "type": "minecraft:condition",
+                      "property": "minecraft:keybind_down",
+                      "on_true": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/e11d_firing_aim",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "on_false": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/e11d_firing",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "keybind": "key.use"
+                    }
+                  }
+                ],
+                "fallback": {
+                  "type": "minecraft:condition",
+                  "property": "minecraft:keybind_down",
+                  "on_true": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/e11d_aim",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "on_false": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/e11d",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "keybind": "key.use"
+                }
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/e11d",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/e11d_firing",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:condition",
+                "property": "minecraft:keybind_down",
+                "on_true": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/e11d_firing_aim",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "on_false": {
+                  "type": "minecraft:model",
+                  "model": "blockcraft:item/sternenfront/e11d_firing",
+                  "tints": [
+                    {
+                      "type": "minecraft:custom_model_data",
+                      "index": 0,
+                      "default": -1
+                    }
+                  ]
+                },
+                "keybind": "key.use"
+              }
+            }
+          ],
+          "fallback": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/e11d_firing",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/e11d_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/e11d_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/e5",
+        "model": {
+          "type": "minecraft:select",
+          "property": "minecraft:display_context",
+          "cases": [
+            {
+              "when": [
+                "firstperson_righthand",
+                "firstperson_lefthand"
+              ],
+              "model": {
+                "type": "minecraft:range_dispatch",
+                "property": "minecraft:cooldown",
+                "entries": [
+                  {
+                    "threshold": 1.0E-4,
+                    "model": {
+                      "type": "minecraft:condition",
+                      "property": "minecraft:keybind_down",
+                      "on_true": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/e5_firing_aim",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "on_false": {
+                        "type": "minecraft:model",
+                        "model": "blockcraft:item/sternenfront/e5_firing",
+                        "tints": [
+                          {
+                            "type": "minecraft:custom_model_data",
+                            "index": 0,
+                            "default": -1
+                          }
+                        ]
+                      },
+                      "keybind": "key.use"
+                    }
+                  }
+                ],
+                "fallback": {
+                  "type": "minecraft:condition",
+                  "property": "minecraft:keybind_down",
+                  "on_true": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/e5_aim",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "on_false": {
+                    "type": "minecraft:model",
+                    "model": "blockcraft:item/sternenfront/e5",
+                    "tints": [
+                      {
+                        "type": "minecraft:custom_model_data",
+                        "index": 0,
+                        "default": -1
+                      }
+                    ]
+                  },
+                  "keybind": "key.use"
+                }
               }
             }
           ],

@@ -27,9 +27,17 @@ services:
     memswap_limit: 900m
     environment:
       BLOCKCRAFT_ON_DEMAND_GROUPS: ""
-      BLOCKCRAFT_RESOURCE_PACK_URL: http://velocity:8080/blockcraft.zip
+      BLOCKCRAFT_RESOURCE_PACK_BASE_URL: ${VERIFY_PACK_BASE_URL:-http://velocity:8080/}
     volumes:
       - ./dev/verify/velocity.toml:/config/velocity.toml:ro
+
+  # Docker makes the folders above the overrides' mount point as root in a fresh volume, where the server, running as
+  # uid 1000, then cannot copy its plugins in. This makes them first, owned by the server.
+  sternenfront-data:
+    extends: {file: docker-compose.yml, service: replay-storage}
+    command: ["mkdir -p /data/plugins/Sternenfront && chown 1000:1000 /data /data/plugins /data/plugins/Sternenfront"]
+    volumes: !override
+      - sternenfront:/data
 
   sternenfront:
     extends: {file: docker-compose.yml, service: sternenfront}
@@ -37,6 +45,9 @@ services:
     cpus: ${VERIFY_SERVER_CPUS:-1.5}
     mem_limit: 2500m
     memswap_limit: 2500m
+    depends_on:
+      sternenfront-data:
+        condition: service_completed_successfully
     environment:
       # With no lobby running, this server takes the proxy's first-join route.
       BLOCKCRAFT_SERVER_GROUP: lobby
@@ -44,6 +55,47 @@ services:
     volumes:
       - ./dev/verify/${VERIFY_OVERRIDES:-sternenfront-overrides.yml}:/data/plugins/Sternenfront/config.yml:ro
       - ./worlds/sturmwerft:/worlds/sturmwerft
+
+  # Instead of sternenfront with VERIFY_GAME=story: the story core's example game, also on the proxy's first-join route.
+  story:
+    extends: {file: docker-compose.yml, service: story}
+    <<: *low-priority
+    cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    mem_limit: 2500m
+    memswap_limit: 2500m
+    environment:
+      BLOCKCRAFT_SERVER_GROUP: lobby
+
+  # Instead of sternenfront with VERIFY_GAME=lobby: the network's lobby, for its first join, NPCs and menus.
+  lobby:
+    extends: {file: docker-compose.yml, service: lobby}
+    <<: *low-priority
+    cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    mem_limit: 1280m
+    memswap_limit: 1280m
+
+  zombies-data:
+    extends: {file: docker-compose.yml, service: replay-storage}
+    command: ["mkdir -p /data/plugins/Zombies && chown 1000:1000 /data /data/plugins /data/plugins/Zombies"]
+    volumes: !override
+      - zombies:/data
+
+  # Instead of sternenfront with VERIFY_GAME=zombies. A scenario that needs other settings writes its own overrides
+  # and names them in VERIFY_ZOMBIES_CONFIG.
+  zombies:
+    extends: {file: docker-compose.yml, service: zombies}
+    <<: *low-priority
+    cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    mem_limit: 2500m
+    memswap_limit: 2500m
+    depends_on:
+      zombies-data:
+        condition: service_completed_successfully
+    environment:
+      BLOCKCRAFT_SERVER_GROUP: lobby
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/${VERIFY_MAP:-zombies}
+    volumes:
+      - ${VERIFY_ZOMBIES_CONFIG:-./dev/verify/zombies-overrides.yml}:/data/plugins/Zombies/config.yml:ro
 
   # Only for the replay scenario: it plays recordings, as the network's replay server does.
   replay:
@@ -121,6 +173,9 @@ volumes:
   mariadb:
   velocity:
   sternenfront:
+  story:
+  lobby:
+  zombies:
   replay:
   replays:
   gradle:

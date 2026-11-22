@@ -34,8 +34,10 @@ public class KitCatalogTest {
     @Test
     public void ownsTheFreeKitsAndExactlyTheUnlockedOnes() {
         var config = new YamlConfiguration();
+        config.set("standard", 0);
         config.set("archer", 0);
-        var catalog = KitCatalog.from(config, TestKit.class, kit -> kit == TestKit.STANDARD ? 0 : 300);
+        config.set("knight", 300);
+        var catalog = KitCatalog.from(config, TestKit.class);
 
         assertEquals(300, catalog.price(TestKit.KNIGHT));
         assertEquals(EnumSet.of(TestKit.STANDARD, TestKit.ARCHER, TestKit.KNIGHT),

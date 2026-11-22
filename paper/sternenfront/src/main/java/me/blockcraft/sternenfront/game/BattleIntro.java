@@ -35,13 +35,15 @@ import java.util.function.Function;
 
 public final class BattleIntro implements AutoCloseable {
     private final SternenfrontGame game;
+    private final IntroConfig config;
     private final Scenes scenes;
     private final Optional<AnimationClip> clip;
     private BukkitTask deadline;
     private boolean running;
 
-    BattleIntro(SternenfrontGame game) {
+    BattleIntro(SternenfrontGame game, IntroConfig config) {
         this.game = game;
+        this.config = config;
         scenes = new Scenes(game.plugin());
         clip = loadClip();
     }
@@ -51,7 +53,7 @@ public final class BattleIntro implements AutoCloseable {
     }
 
     public void start(List<Player> players, Runnable ready) {
-        if (!game.plugin().getConfig().getBoolean("intro.enabled")) {
+        if (!config.enabled()) {
             ready.run();
             return;
         }
@@ -78,7 +80,7 @@ public final class BattleIntro implements AutoCloseable {
     }
 
     private int duration() {
-        return Math.clamp(game.plugin().getConfig().getInt("intro.duration-ticks"), 40, 600);
+        return config.durationTicks();
     }
 
     private void play(Player player, int duration, SceneTimeline.SkipMode skipMode) {
@@ -94,9 +96,7 @@ public final class BattleIntro implements AutoCloseable {
         }
         var route = path.get();
         var actorAt = route.actorAt(game.map().headquarters().get(faction).spawns().getFirst());
-        var config = game.plugin().getConfig();
-        var focus = new FocusWindow(config.getBoolean("intro.focus.enabled"),
-                config.getDouble("intro.focus.from"), config.getDouble("intro.focus.until"));
+        var focus = config.focus();
         var participant = new Participant(new PresentationScope(game.plugin()));
         var audio = new IntroAudio(player, participant.resources).cues(faction, route, config,
                 () -> player.sendMessage(game.messages().get("intro.audio.transcript",
@@ -114,7 +114,7 @@ public final class BattleIntro implements AutoCloseable {
                         participant.resources.own(() -> viewer.sendActionBar(Component.empty()));
                     }
                     if (participant.actor != null) participant.actor.tick(route.briefingTick(tick));
-                    int fadeTicks = Math.clamp(game.plugin().getConfig().getInt("intro.fade-ticks"), 1, total / 2);
+                    int fadeTicks = Math.clamp(config.fadeTicks(), 1, total / 2);
                     double fade = Math.max(1.0 - (double) tick / fadeTicks, 1.0 - (double) (total - tick) / fadeTicks);
                     ScreenEffects.frame(participant.resources, viewer, Math.clamp(fade, 0, 1), true);
                     if (focus.active(tick, total, skipped)) {
@@ -182,7 +182,7 @@ public final class BattleIntro implements AutoCloseable {
 
     private Optional<IntroPath> path(Faction faction, int duration) {
         try {
-            return Optional.of(path(game.plugin().getConfig().getMapList("intro.shots"), duration, name -> anchor(name, faction)));
+            return Optional.of(path(config.shots(), duration, name -> anchor(name, faction)));
         } catch (RuntimeException invalid) {
             game.plugin().getSLF4JLogger().warn("Invalid intro camera path", invalid);
             return Optional.empty();
@@ -199,8 +199,7 @@ public final class BattleIntro implements AutoCloseable {
             var offset = (List<?>) shot.get("offset");
             at.add(((Number) offset.get(0)).doubleValue(), ((Number) offset.get(1)).doubleValue(), ((Number) offset.get(2)).doubleValue());
             var target = anchor.apply(String.valueOf(shot.get("look-at"))).clone().add(0, 1.4, 0);
-            at.setDirection(target.toVector().subtract(at.toVector()));
-            frames.add(new CameraPath.Keyframe(tick, CameraPath.Pose.of(at), Boolean.TRUE.equals(shot.get("cut"))));
+            frames.add(CameraPath.Keyframe.aimed(tick, at, target, Boolean.TRUE.equals(shot.get("cut"))));
             if (briefingStart < 0 && name.equals("headquarters")) briefingStart = tick;
         }
         var path = new CameraPath(frames);

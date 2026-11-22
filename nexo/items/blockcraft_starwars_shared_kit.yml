@@ -1,0 +1,602 @@
+blockcraft_shared_floor_panel:
+  itemname: <white>Bodenplatte · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/floor_panel
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/floor_panel
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.0,0.007812
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,-1,0 minecraft:smooth_stone
+        cubes: []
+        keep_existing: true
+blockcraft_shared_floor_panel_worn:
+  itemname: <white>Bodenplatte · Abgenutzt
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/floor_panel_worn
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/floor_panel_worn
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.0,0.007812
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,-1,0 minecraft:smooth_stone
+        cubes: []
+        keep_existing: true
+blockcraft_shared_floor_panel_scorched:
+  itemname: <white>Bodenplatte · Versengt
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/floor_panel_scorched
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/floor_panel_scorched
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.0,0.007812
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,-1,0 minecraft:smooth_stone
+        cubes: []
+        keep_existing: true
+blockcraft_shared_floor_grate:
+  itemname: <white>Bodengitter · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/floor_grate
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/floor_grate
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.0,0.007812
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,-1,0 minecraft:smooth_stone
+        cubes: []
+        keep_existing: true
+blockcraft_shared_service_strip:
+  itemname: <white>Wartungsstreifen · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/service_strip
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/service_strip
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.0,0.011719
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,-1,0 minecraft:smooth_stone
+        cubes: []
+        keep_existing: true
+blockcraft_shared_damaged_tile:
+  itemname: <white>Beschädigte Bodenplatte · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/damaged_tile
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/damaged_tile
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.0,0.011719
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,-1,0 minecraft:smooth_stone
+        cubes: []
+        keep_existing: true
+blockcraft_shared_blast_frame:
+  itemname: <white>Schleusenrahmen · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/blast_frame
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/blast_frame
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: -1.0,0.0,0.0 1.0,3.0
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,0 minecraft:barrier
+        - -1,1,0 minecraft:barrier
+        - -1,2,0 minecraft:barrier
+        - 1,0,0 minecraft:barrier
+        - 1,1,0 minecraft:barrier
+        - 1,2,0 minecraft:barrier
+        - 0,2,0 minecraft:barrier
+        cubes: []
+      lights:
+        lights:
+        - 1,1,1 12
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/shared/blast_frame_off
+blockcraft_shared_door_closed:
+  itemname: <white>Schott geschlossen · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/door_closed
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/door_closed
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.125,2.0
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        - 0,1,0 minecraft:barrier
+        cubes: []
+      door:
+        is_sliding: true
+        toggle_hitbox_on_open: false
+        delay_hitbox_toggle: false
+        open_properties:
+          translation: 0,1.5,0
+          scale: 2,1,2
+blockcraft_shared_door_open:
+  itemname: <white>Schott offen · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/door_open
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/door_open
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,2.0,0.023438 1.046875,1.0
+        barriers: []
+      blockcraft_collision:
+        mode: open-door-preview
+        blocks: []
+        cubes: []
+blockcraft_shared_door_jammed:
+  itemname: <white>Schott verklemmt · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/door_jammed
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/door_jammed
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.625,0.023438 1.046875,2.0
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks: []
+        cubes:
+        - 0.000000,0.875000,0.000000 1.000000
+blockcraft_shared_cover_low:
+  itemname: <white>Deckung niedrig · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/cover_low
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/cover_low
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.007812 1.046875,1.015625
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+blockcraft_shared_cover_low_worn:
+  itemname: <white>Deckung niedrig · Abgenutzt
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/cover_low_worn
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/cover_low_worn
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.007812 1.046875,1.015625
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+blockcraft_shared_cover_low_scorched:
+  itemname: <white>Deckung niedrig · Versengt
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/cover_low_scorched
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/cover_low_scorched
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.007812 1.046875,1.015625
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+blockcraft_shared_cover_high:
+  itemname: <white>Deckung hoch · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/cover_high
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/cover_high
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.007812 1.046875,1.5
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+blockcraft_shared_cover_corner:
+  itemname: <white>Deckung Ecke · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/cover_corner
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/cover_corner
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,-0.484375 2.03125,1.015625
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+blockcraft_shared_wall_lamp:
+  itemname: <white>Wandleuchte · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/wall_lamp
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/wall_lamp
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,-0.28125 0.875,0.8125
+        barriers: []
+      blockcraft_collision:
+        mode: decoration
+        blocks: []
+        cubes: []
+      lights:
+        lights:
+        - 0,0,0 12
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/shared/wall_lamp_off
+blockcraft_shared_ceiling_lamp:
+  itemname: <white>Deckenleuchte · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/ceiling_lamp
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/ceiling_lamp
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.1875,0.0 1.015625,0.3125
+        barriers: []
+      blockcraft_collision:
+        mode: decoration
+        blocks: []
+        cubes: []
+      lights:
+        lights:
+        - 0,0,0 12
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/shared/ceiling_lamp_off
+blockcraft_shared_landing_lamp:
+  itemname: <white>Landefeldleuchte · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/landing_lamp
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/landing_lamp
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 0.75,0.3125
+        barriers: []
+      blockcraft_collision:
+        mode: decoration
+        blocks: []
+        cubes: []
+      lights:
+        lights:
+        - 0,0,0 12
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/shared/landing_lamp_off
+blockcraft_shared_warning_beacon:
+  itemname: <white>Warnbake · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/warning_beacon
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/warning_beacon
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 0.75,0.875
+        barriers: []
+      blockcraft_collision:
+        mode: decoration
+        blocks: []
+        cubes: []
+      lights:
+        lights:
+        - 0,0,0 12
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/shared/warning_beacon_off
+blockcraft_shared_engine_module:
+  itemname: <white>Triebwerksmodul · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/engine_module
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/engine_module
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.007812,0.0,0.0 2.015625,1.03125
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+      lights:
+        lights:
+        - -1,0,0 12
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/shared/engine_module_off
+blockcraft_shared_service_stand:
+  itemname: <white>Wartungsständer · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/service_stand
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/service_stand
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.03125,1.34375
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+blockcraft_shared_refuelling_hose:
+  itemname: <white>Betankungsschlauch · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/refuelling_hose
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/refuelling_hose
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.210938,0.0,0.054688 1.453125,1.0
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []
+      lights:
+        lights:
+        - 0,0,1 12
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/shared/refuelling_hose_off
+blockcraft_shared_landing_strut:
+  itemname: <white>Landestütze · Sauber
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/shared/landing_strut
+  Pack:
+    model: blockcraft:item/sternenfront/kits/shared/landing_strut
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0,0.0,0.0 1.03125,1.5
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - 0,0,0 minecraft:barrier
+        cubes: []

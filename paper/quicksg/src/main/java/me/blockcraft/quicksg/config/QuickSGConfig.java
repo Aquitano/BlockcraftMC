@@ -1,5 +1,6 @@
 package me.blockcraft.quicksg.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.LootTable;
@@ -31,27 +32,27 @@ public record QuickSGConfig(
     public record Rewards(int kill, int death, int win) {
     }
 
-    public static QuickSGConfig from(FileConfiguration config) {
-        var countdown = section(config, "countdown");
-        var border = section(config, "world-border");
-        var rewards = section(config, "rewards");
-        var chest = section(config, "chest");
+    public static QuickSGConfig from(FileConfiguration yaml) {
+        var config = BundledDefaults.strict(yaml);
+        var countdown = config.section("countdown");
+        var border = config.section("world-border");
+        var rewards = config.section("rewards");
         return new QuickSGConfig(
-                config.getInt("players.max", 8),
+                config.integer("players.max"),
                 new Countdowns(
-                        countdown.getInt("freeze", 5),
-                        countdown.getInt("protection", 20),
-                        countdown.getInt("round", 1200),
-                        countdown.getInt("tracker-after", 300)),
+                        countdown.integer("freeze"),
+                        countdown.integer("protection"),
+                        countdown.integer("round"),
+                        countdown.integer("tracker-after")),
                 new WorldBorderSettings(
-                        border.getBoolean("enabled", false),
-                        border.getDouble("lobby-radius", 30),
-                        border.getDouble("ingame-radius", 60)),
-                CompassTracker.Settings.from(config),
-                new Rewards(rewards.getInt("kill", 5), rewards.getInt("death", 2), rewards.getInt("win", 15)),
-                KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice),
-                LootTable.fromYaml(chest, 1, 7),
-                CombatStyle.from(config));
+                        border.flag("enabled"),
+                        border.decimal("lobby-radius"),
+                        border.decimal("ingame-radius")),
+                CompassTracker.Settings.from(yaml),
+                new Rewards(rewards.integer("kill"), rewards.integer("death"), rewards.integer("win")),
+                KitCatalog.from(section(yaml, "kits"), Kit.class),
+                LootTable.fromYaml(section(yaml, "chest")),
+                CombatStyle.from(yaml));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

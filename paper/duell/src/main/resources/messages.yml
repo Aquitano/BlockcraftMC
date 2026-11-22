@@ -15,7 +15,7 @@ commands:
 
 mode:
   vs: "1vs1"
-  sg: "SurvivalGames"
+  sg: "Survival Games"
   superjump: "SuperJump"
   sumo: "Sumo"
   mlgrush: "MLG Rush"
@@ -23,7 +23,6 @@ mode:
 
 join:
   introduction: "<prefix><muted>Ein Gegner, eure Spielauswahl. Wählt oben das Format und darunter Modus und Map."
-  spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
 
 # <map> is the map's name or vote.random-map; option names a vote in its confirmation.
 vote:
@@ -47,12 +46,12 @@ tour:
   format-request: "<prefix><accent><player> <muted>möchte eine 3-Modi-Tour. Wähle in der Abstimmung ebenfalls die Tour, um zuzustimmen."
 
 combat:
-  legacy: "1.8"
-  modern: "Neu"
+  legacy: "1.8-PvP"
+  modern: "Modernes PvP"
   chosen: "<prefix><muted>Dein Kampfsystem: <accent><combat><muted>."
   waiting: "<prefix><muted>Ein anderes Kampfsystem gilt nur, wenn ihr beide zustimmt. Sonst bleibt es bei <accent><combat><muted>."
-  request: "<prefix><accent><player> <muted>möchte mit dem Kampfsystem <accent><combat> <muted>kämpfen. Du kannst in der Spielauswahl zustimmen."
-  agreed: "<prefix><muted>Ihr kämpft mit dem Kampfsystem <accent><combat><muted>."
+  request: "<prefix><accent><player> <muted>möchte mit <accent><combat> <muted>kämpfen. Du kannst in der Spielauswahl zustimmen."
+  agreed: "<prefix><muted>Ihr kämpft mit <accent><combat><muted>."
 
 rating:
   chosen: "<prefix><muted>Deine Wertung: <accent><rating><muted>."
@@ -106,7 +105,7 @@ mlgrush:
   point: "<prefix><accent><player> <muted>bricht das Bett! <accent><score><muted>/<accent><target> <muted>Punkte."
   started: "<prefix><muted>Baue zum Gegner und brich sein Bett. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
   result: "<muted>Deine Rush-Bilanz: <accent><score><muted>/<accent><target> <muted>Punkte."
-  item-stick: "<primary>Knockback-Stick"
+  item-stick: "<primary>Rückstoß-Stick"
   item-blocks: "<primary>Baublöcke"
   item-pickaxe: "<primary>Spitzhacke"
   layout-title: "<arrow><duell>Duell <dark>· <muted>MLG-Rush-Hotbar"
@@ -162,7 +161,7 @@ menu:
     title: "<arrow><duell>Duell <dark>· <muted>Spielauswahl"
     vs: "<arrow><primary>1vs1"
     vs-lore: "<muted>Schwert, Bogen und Angel."
-    sg: "<arrow><primary>SurvivalGames"
+    sg: "<arrow><primary>Survival Games"
     sg-lore: "<muted>Beute sammeln und überleben."
     superjump: "<arrow><primary>SuperJump"
     superjump-lore: "<muted>Als Erster durchs Ziel."
@@ -197,15 +196,15 @@ menu:
       - "<muted>Ihr kommt aus der gewerteten Warteschlange."
       - "<muted>Die ganze Begegnung zählt für eure Elo."
   combat:
-    legacy: "<arrow><primary>Kampfsystem 1.8"
+    legacy: "<arrow><primary>1.8-PvP"
     legacy-lore:
       - "<muted>Keine Abklingzeit zwischen den Schlägen."
       - "<muted>Schwerter schlagen härter als Äxte."
-    modern: "<arrow><primary>Kampfsystem Neu"
+    modern: "<arrow><primary>Modernes PvP"
     modern-lore:
       - "<muted>Abklingzeit wie in aktuellen Versionen."
       - "<muted>Äxte sind langsam, aber hart."
-    rush: "<muted>MLG Rush spielt immer mit 1.8."
+    rush: "<muted>MLG Rush spielt immer mit 1.8-PvP."
     current: "<muted>Aktuell: <accent><combat>"
     toggle: "<left>Kampfsystem wechseln"
   maps:
@@ -275,16 +274,16 @@ challenge:
   toggle: "<click>Wechseln"
   legacy-only: "<muted>MLG Rush verwendet immer 1.8-PvP."
   mode: "<primary>Spielmodus: <mode>"
-  map: "<primary>Karte: <accent><map>"
+  map: "<primary>Map: <accent><map>"
   modes: "<primary>Spielmodus auswählen"
-  maps: "<primary>Karte auswählen"
+  maps: "<primary>Map auswählen"
   series: "<primary>Best of <games>"
   rating: "<muted>Gewertete Duelle verändern eure Elo. Der Gegner bestätigt diese Einstellung."
   rating-disabled: "<muted>Gewertete Duelle sind hier deaktiviert."
   send: "<success>Einladung senden"
   summary:
     - "<muted>Modus: <mode>"
-    - "<muted>Karte: <accent><map>"
+    - "<muted>Map: <accent><map>"
     - "<muted>Kampf: <combat>"
     - "<muted>Wertung: <rating>"
     - "<muted>Serie: <accent>Best of <games>"

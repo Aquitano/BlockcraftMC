@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -15,14 +16,14 @@ public final class SupportRewards {
 
     public SupportRewards(SternenfrontGame game) {
         this.game = game;
-        var config = game.plugin().getConfig();
+        var read = BundledDefaults.strict(game.plugin().getConfig());
         ledger = new SupportLedger(new SupportLedger.Rules(
-                Math.clamp(config.getInt("heroes.points.assist-window-seconds", 10), 1, 60) * 20,
-                Math.clamp(config.getInt("heroes.points.healing-window-seconds", 20), 1, 60) * 20,
-                Math.clamp(config.getInt("heroes.points.assist", 40), 0, 1000),
-                Math.clamp(config.getDouble("heroes.points.healing-per-health", 2), 0, 100),
-                Math.clamp(config.getInt("heroes.points.healing-limit-per-life", 40), 0, 1000)));
-        defencePoints = Math.clamp(config.getInt("heroes.points.defence", 25), 0, 1000);
+                Math.clamp(read.integer("heroes.points.assist-window-seconds"), 1, 60) * 20,
+                Math.clamp(read.integer("heroes.points.healing-window-seconds"), 1, 60) * 20,
+                Math.clamp(read.integer("heroes.points.assist"), 0, 1000),
+                Math.clamp(read.decimal("heroes.points.healing-per-health"), 0, 100),
+                Math.clamp(read.integer("heroes.points.healing-limit-per-life"), 0, 1000)));
+        defencePoints = Math.clamp(read.integer("heroes.points.defence"), 0, 1000);
     }
 
     public void damaged(EntityDamageEvent event) {

@@ -28,6 +28,12 @@ public class BotConfigTest {
         assertEquals(1, veteran.damageScale(), 0.001);
         assertTrue(veteran.headshots());
         assertFalse(normal.headshots());
+        assertEquals(0.3, easy.aimLead(), 0.001);
+        assertEquals(0.7, normal.aimLead(), 0.001);
+        assertEquals(1, veteran.aimLead(), 0.001);
+        assertEquals(56, config.marksman().sightRange(), 0.001);
+        assertEquals(0.4, config.marksman().aimShare(), 0.001);
+        assertEquals(0.5, config.shaken().hitFlinch(), 0.001);
         assertEquals(12, config.idleTurnDegrees(), 0.001);
         assertEquals(1, config.stepHeight(), 0.001);
         assertEquals(40, config.boundaryGraceTicks());

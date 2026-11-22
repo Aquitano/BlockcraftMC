@@ -44,7 +44,7 @@ public class IntroAudioTest {
             });
             var scope = scope();
             var captions = new AtomicInteger();
-            var cues = new IntroAudio(player, scope).cues(faction, route, config, captions::incrementAndGet);
+            var cues = new IntroAudio(player, scope).cues(faction, route, IntroConfig.from(config), captions::incrementAndGet);
             assertEquals(List.of(15, 18, 66, 72, 135), cues.stream().map(cue -> cue.tick()).toList());
             cues.forEach(cue -> cue.action().run());
             assertEquals(1, captions.get());
@@ -70,14 +70,14 @@ public class IntroAudioTest {
             throw new AssertionError(method.getName());
         });
         var audio = new IntroAudio(player, scope());
-        assertEquals(List.of(16), audio.cues(Faction.KOLONIEN, route(config, 40), config, () -> fail()).stream()
+        assertEquals(List.of(16), audio.cues(Faction.KOLONIEN, route(config, 40), IntroConfig.from(config), () -> fail()).stream()
                 .map(cue -> cue.tick()).toList());
         for (int duration = 40; duration <= 600; duration++) {
-            var cues = audio.cues(Faction.HEGEMONIE, route(config, duration), config, () -> fail());
+            var cues = audio.cues(Faction.HEGEMONIE, route(config, duration), IntroConfig.from(config), () -> fail());
             for (var cue : cues) assertTrue(cue.tick() >= 0 && cue.tick() < duration);
         }
         config.set("intro.audio.enabled", false);
-        assertTrue(audio.cues(Faction.KOLONIEN, route(config, 180), config, () -> fail()).isEmpty());
+        assertTrue(audio.cues(Faction.KOLONIEN, route(config, 180), IntroConfig.from(config), () -> fail()).isEmpty());
     }
 
     @Test
@@ -87,7 +87,7 @@ public class IntroAudioTest {
         var player = fake(Player.class, (proxy, method, args) -> {
             throw new AssertionError(method.getName());
         });
-        var cues = new IntroAudio(player, scope()).cues(Faction.KOLONIEN, route(config, 180), config, () -> fail());
+        var cues = new IntroAudio(player, scope()).cues(Faction.KOLONIEN, route(config, 180), IntroConfig.from(config), () -> fail());
         assertEquals(List.of(72, 135), cues.stream().map(cue -> cue.tick()).toList());
     }
 
@@ -98,7 +98,7 @@ public class IntroAudioTest {
         var player = fake(Player.class, (proxy, method, args) -> {
             throw new AssertionError(method.getName());
         });
-        var cues = new IntroAudio(player, scope()).cues(Faction.KOLONIEN, route(config, 180), config, () -> fail());
+        var cues = new IntroAudio(player, scope()).cues(Faction.KOLONIEN, route(config, 180), IntroConfig.from(config), () -> fail());
         assertEquals(List.of(15, 18, 66, 72, 135), cues.stream().map(cue -> cue.tick()).toList());
     }
 

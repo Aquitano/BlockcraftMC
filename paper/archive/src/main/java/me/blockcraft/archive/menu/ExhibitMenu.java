@@ -69,7 +69,7 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
                         .name(messages.get("menu.checkpoint", Placeholder.unparsed("checkpoint", checkpoint.name())))
                         .lore(lore).build();
             }
-            case Stop.Written(Note note, boolean deletable) -> noteIcon(note, true, deletable);
+            case Stop.Written(Note note, boolean deletable) -> noteIcon(note, deletable);
         };
     }
 
@@ -80,8 +80,7 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
             case Stop.Spot(Checkpoint checkpoint) -> menus.toCheckpoint(player, exhibit, checkpoint);
             case Stop.Written(Note note, boolean deletable) -> {
                 if (event.isRightClick() && deletable) {
-                    menus.confirmDelete(player, note, noteIcon(note, false, false),
-                            returned -> menus.openExhibit(returned, exhibit.key(), back));
+                    menus.confirmDelete(player, note, returned -> menus.openExhibit(returned, exhibit.key(), back));
                 } else {
                     menus.toNote(player, exhibit, note);
                 }
@@ -89,15 +88,13 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
         }
     }
 
-    private ItemStack noteIcon(Note note, boolean withHints, boolean deletable) {
+    private ItemStack noteIcon(Note note, boolean deletable) {
         var messages = menus.messages();
         var lore = new ArrayList<Component>(menus.text(note.text()));
         lore.add(messages.get("menu.note.written", Placeholder.unparsed("author", note.author().name()),
                 Formatter.date("date", note.createdAt().atZone(ZoneId.systemDefault()))));
-        if (withHints) {
-            lore.add(messages.get("menu.travel"));
-        }
-        if (withHints && deletable) {
+        lore.add(messages.get("menu.travel"));
+        if (deletable) {
             lore.add(messages.get("menu.note.delete"));
         }
         return MenuIcon.ARCHIVE_NOTE.item().name(messages.get("menu.note.name")).lore(lore).build();

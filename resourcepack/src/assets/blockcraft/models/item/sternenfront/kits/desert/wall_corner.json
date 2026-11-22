@@ -1,0 +1,1200 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/desert/atlas",
+    "particle": "blockcraft:item/sternenfront/kits/desert/atlas"
+  },
+  "elements": [
+    {
+      "name": "plaster facing",
+      "from": [
+        -8,
+        0,
+        6
+      ],
+      "to": [
+        24,
+        32,
+        10
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0.0,
+            1.75,
+            4.0,
+            2.25
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "plaster facing",
+      "from": [
+        -8,
+        3.6,
+        6
+      ],
+      "to": [
+        20,
+        30,
+        10
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.0,
+            0.25,
+            3.5,
+            3.55
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "plaster facing",
+      "from": [
+        -8,
+        0,
+        6
+      ],
+      "to": [
+        24,
+        30,
+        10
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.25,
+            4.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "plaster facing",
+      "from": [
+        -8,
+        0,
+        6
+      ],
+      "to": [
+        24,
+        30,
+        10
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            1.75,
+            0.25,
+            2.25,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "plaster facing",
+      "from": [
+        -8,
+        0,
+        6
+      ],
+      "to": [
+        24,
+        30,
+        10
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.75,
+            0.25,
+            2.25,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "weathered footing",
+      "from": [
+        -8,
+        0,
+        10
+      ],
+      "to": [
+        24,
+        3,
+        10.5
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.96875,
+            5.8125,
+            2.03125,
+            6.1875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "weathered footing",
+      "from": [
+        -8,
+        0,
+        10
+      ],
+      "to": [
+        19.5,
+        3,
+        10.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.0,
+            5.8125,
+            3.4375,
+            6.1875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "weathered footing",
+      "from": [
+        -8,
+        0,
+        10.15
+      ],
+      "to": [
+        -5,
+        3,
+        10.5
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0.0,
+            5.96875,
+            0.375,
+            6.0125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "weathered footing",
+      "from": [
+        0,
+        0,
+        10.15
+      ],
+      "to": [
+        20,
+        3,
+        10.5
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            1.0,
+            5.96875,
+            3.5,
+            6.0125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "weathered footing",
+      "from": [
+        -8,
+        0,
+        10
+      ],
+      "to": [
+        20,
+        3,
+        10.5
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0.0,
+            5.96875,
+            3.5,
+            6.03125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "coping",
+      "from": [
+        -8,
+        30,
+        5.5
+      ],
+      "to": [
+        24,
+        32,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12.0,
+            13.875,
+            16.0,
+            14.125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            13.6875,
+            13.875,
+            14.3125,
+            14.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "coping",
+      "from": [
+        -8,
+        30,
+        5.5
+      ],
+      "to": [
+        20,
+        32,
+        10.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            12.0,
+            13.875,
+            15.5,
+            14.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "coping",
+      "from": [
+        -8,
+        30,
+        5.5
+      ],
+      "to": [
+        24,
+        32,
+        10
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            13.75,
+            13.875,
+            14.3125,
+            14.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "coping",
+      "from": [
+        -8,
+        30,
+        5.5
+      ],
+      "to": [
+        20,
+        32,
+        10.5
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            12.0,
+            13.6875,
+            15.5,
+            14.3125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "coping",
+      "from": [
+        20,
+        30,
+        5.5
+      ],
+      "to": [
+        24,
+        32,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            15.5,
+            13.75,
+            16.0,
+            14.3125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "coping",
+      "from": [
+        -8,
+        30,
+        5.5
+      ],
+      "to": [
+        24,
+        32,
+        6
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            12.0,
+            13.6875,
+            16.0,
+            13.75
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "coping",
+      "from": [
+        -8,
+        30,
+        10
+      ],
+      "to": [
+        20,
+        32,
+        10.5
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            12.0,
+            14.25,
+            15.5,
+            14.3125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed foundation course",
+      "from": [
+        -8,
+        3,
+        10
+      ],
+      "to": [
+        24,
+        3.6,
+        10.15
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            5.990625,
+            5.9625,
+            6.009375,
+            6.0375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed foundation course",
+      "from": [
+        -8,
+        3,
+        10
+      ],
+      "to": [
+        -5,
+        3.6,
+        10.15
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.0,
+            5.9625,
+            4.375,
+            6.0375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed foundation course",
+      "from": [
+        0,
+        3,
+        10
+      ],
+      "to": [
+        20,
+        3.6,
+        10.15
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            5.0,
+            5.9625,
+            7.5,
+            6.0375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed foundation course",
+      "from": [
+        -8,
+        3,
+        10
+      ],
+      "to": [
+        -5,
+        3.6,
+        10.15
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4.0,
+            5.990625,
+            4.375,
+            6.009375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed foundation course",
+      "from": [
+        0,
+        3,
+        10
+      ],
+      "to": [
+        20,
+        3.6,
+        10.15
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            5.0,
+            5.990625,
+            7.5,
+            6.009375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed foundation course",
+      "from": [
+        -5,
+        3,
+        10
+      ],
+      "to": [
+        0,
+        3.6,
+        10.05
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4.375,
+            6.003125,
+            5.0,
+            6.009375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3,
+        10.05
+      ],
+      "to": [
+        0,
+        6,
+        10.65
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            9.6875,
+            9.9625,
+            10.3125,
+            10.0375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3,
+        10.05
+      ],
+      "to": [
+        -4.5,
+        6,
+        10.65
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            9.6875,
+            9.8125,
+            9.75,
+            10.1875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -2,
+        3,
+        10.05
+      ],
+      "to": [
+        0,
+        6,
+        10.65
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            10.0625,
+            9.8125,
+            10.3125,
+            10.1875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -4.5,
+        3,
+        10.05
+      ],
+      "to": [
+        -2,
+        3.3,
+        10.65
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            9.75,
+            10.15,
+            10.0625,
+            10.1875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -4.5,
+        4.8,
+        10.05
+      ],
+      "to": [
+        -2,
+        6,
+        10.65
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            9.75,
+            9.8125,
+            10.0625,
+            9.9625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3.6,
+        10.05
+      ],
+      "to": [
+        0,
+        6,
+        10.65
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            9.6875,
+            9.8125,
+            10.3125,
+            10.1125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3.6,
+        10.05
+      ],
+      "to": [
+        0,
+        6,
+        10.65
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            9.9625,
+            9.8125,
+            10.0375,
+            10.1125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3,
+        10.15
+      ],
+      "to": [
+        0,
+        3.6,
+        10.65
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            9.9625,
+            10.1125,
+            10.025,
+            10.1875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3.6,
+        10.05
+      ],
+      "to": [
+        0,
+        6,
+        10.65
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            9.9625,
+            9.8125,
+            10.0375,
+            10.1125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3,
+        10.15
+      ],
+      "to": [
+        0,
+        3.6,
+        10.65
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            9.975,
+            10.1125,
+            10.0375,
+            10.1875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "broken plaster left",
+      "from": [
+        -5,
+        3,
+        10.5
+      ],
+      "to": [
+        0,
+        6,
+        10.65
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            9.6875,
+            10.018749999999999,
+            10.3125,
+            10.0375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "exposed masonry",
+      "from": [
+        -4.5,
+        3.3,
+        10.65
+      ],
+      "to": [
+        -2,
+        4.8,
+        10.75
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            5.84375,
+            9.90625,
+            6.15625,
+            10.09375
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            5.99375,
+            9.90625,
+            6.00625,
+            10.09375
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            5.99375,
+            9.90625,
+            6.00625,
+            10.09375
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            5.84375,
+            9.99375,
+            6.15625,
+            10.00625
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            5.84375,
+            9.99375,
+            6.15625,
+            10.00625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "flaked plaster edge",
+      "from": [
+        17,
+        17,
+        10.05
+      ],
+      "to": [
+        20,
+        21,
+        10.4
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            9.8125,
+            9.75,
+            10.1875,
+            10.25
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            9.8125,
+            9.75,
+            10.1875,
+            10.25
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            9.978125,
+            9.75,
+            10.021875,
+            10.25
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            9.8125,
+            9.978125,
+            10.1875,
+            10.021875
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            9.8125,
+            9.978125,
+            10.1875,
+            10.021875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return wall",
+      "from": [
+        20,
+        0,
+        10
+      ],
+      "to": [
+        24,
+        32,
+        24
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.75,
+            0.0,
+            2.25,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.125,
+            0.0,
+            2.875,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            1.75,
+            1.125,
+            2.25,
+            2.875
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            1.75,
+            1.125,
+            2.25,
+            2.875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return wall",
+      "from": [
+        20,
+        3.6,
+        10
+      ],
+      "to": [
+        24,
+        17,
+        24
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.125,
+            1.875,
+            2.875,
+            3.55
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return wall",
+      "from": [
+        20,
+        21,
+        10
+      ],
+      "to": [
+        24,
+        30,
+        24
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.125,
+            0.25,
+            2.875,
+            1.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return wall",
+      "from": [
+        20,
+        17,
+        10
+      ],
+      "to": [
+        24,
+        21,
+        10.05
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.125,
+            1.375,
+            1.13125,
+            1.875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return wall",
+      "from": [
+        20,
+        17,
+        10.4
+      ],
+      "to": [
+        24,
+        21,
+        24
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.175,
+            1.375,
+            2.875,
+            1.875
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return wall",
+      "from": [
+        20,
+        3,
+        10.15
+      ],
+      "to": [
+        24,
+        3.6,
+        24
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.14375,
+            3.55,
+            2.875,
+            3.625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return wall",
+      "from": [
+        20,
+        30,
+        10.5
+      ],
+      "to": [
+        24,
+        32,
+        24
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            1.1875,
+            0.0,
+            2.875,
+            0.25
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return foot",
+      "from": [
+        19.5,
+        0,
+        10.5
+      ],
+      "to": [
+        20,
+        3,
+        24
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.96875,
+            5.8125,
+            2.03125,
+            6.1875
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.15625,
+            5.8125,
+            2.84375,
+            6.1875
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            1.96875,
+            5.15625,
+            2.03125,
+            6.84375
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            1.96875,
+            5.15625,
+            2.03125,
+            6.84375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 package me.blockcraft.api.kit;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.EnumMap;
@@ -7,7 +8,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.ToIntFunction;
 
 /** A game's kits with their prices from config.yml's {@code kits.<key>}; a kit priced at 0 everyone owns. */
 public final class KitCatalog<K extends Enum<K> & UnlockableKit> {
@@ -20,12 +20,12 @@ public final class KitCatalog<K extends Enum<K> & UnlockableKit> {
         this.prices = prices;
     }
 
-    /** A kit the file leaves out costs {@code defaultPrice}. */
-    public static <K extends Enum<K> & UnlockableKit> KitCatalog<K> from(ConfigurationSection kits, Class<K> type,
-                                                                        ToIntFunction<K> defaultPrice) {
+    /** {@code kits} prices every kit of {@code type} by its key. */
+    public static <K extends Enum<K> & UnlockableKit> KitCatalog<K> from(ConfigurationSection kits, Class<K> type) {
         var prices = new EnumMap<K, Integer>(type);
+        var config = BundledDefaults.strict(kits);
         for (var kit : type.getEnumConstants()) {
-            prices.put(kit, Math.max(0, kits.getInt(kit.key(), defaultPrice.applyAsInt(kit))));
+            prices.put(kit, Math.max(0, config.integer(kit.key())));
         }
         return new KitCatalog<>(type, prices);
     }

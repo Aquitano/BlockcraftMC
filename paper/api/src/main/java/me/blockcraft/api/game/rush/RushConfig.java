@@ -1,8 +1,10 @@
 package me.blockcraft.api.game.rush;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.configuration.ConfigurationSection;
 
-public record RushConfig(int scoreTarget, ArenaSettings arena, Kit kit, int winCoins) {
+/** The keys MLG Rush and Duell's MLG Rush mode share: {@code score-target}, {@code arena} and {@code kit}. */
+public record RushConfig(int scoreTarget, ArenaSettings arena, Kit kit) {
 
     public record ArenaSettings(int buildMargin, int buildHeight, int floorY, int voidY) {
         public ArenaSettings {
@@ -33,21 +35,17 @@ public record RushConfig(int scoreTarget, ArenaSettings arena, Kit kit, int winC
     }
 
     public RushConfig {
-        if (scoreTarget < 1 || scoreTarget > 100 || winCoins < 0) {
-            throw new IllegalArgumentException("Invalid MLG Rush score target or reward");
+        if (scoreTarget < 1 || scoreTarget > 100) {
+            throw new IllegalArgumentException("Invalid MLG Rush score target");
         }
     }
 
     public static RushConfig from(ConfigurationSection config) {
-        if (config.getInt("players.min", 2) != 2 || config.getInt("countdown.lobby", 5) < 1
-                || config.getInt("countdown.restart", 10) < 2) {
-            throw new IllegalArgumentException("MLG Rush needs two players and positive countdowns (restart >= 2)");
-        }
-        return new RushConfig(config.getInt("score-target", 5),
-                new ArenaSettings(config.getInt("arena.build-margin", 4),
-                        config.getInt("arena.build-height", 16), config.getInt("arena.floor-y", 64),
-                        config.getInt("arena.void-y", 48)),
-                new Kit(config.getInt("kit.blocks", 64), config.getInt("kit.knockback-level", 1)),
-                config.getInt("rewards.win", 10));
+        var read = BundledDefaults.strict(config);
+        var arena = read.section("arena");
+        return new RushConfig(read.integer("score-target"),
+                new ArenaSettings(arena.integer("build-margin"), arena.integer("build-height"), arena.integer("floor-y"),
+                        arena.integer("void-y")),
+                new Kit(read.integer("kit.blocks"), read.integer("kit.knockback-level")));
     }
 }

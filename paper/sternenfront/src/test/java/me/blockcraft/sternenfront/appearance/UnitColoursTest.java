@@ -17,7 +17,7 @@ public class UnitColoursTest {
     public void eachSidesFireteamsWearTheirOwnColourAndAThirdStartsOver() throws Exception {
         try (var reader = new InputStreamReader(getClass().getResourceAsStream("/config.yml"), StandardCharsets.UTF_8)) {
             var units = UnitColours.from(YamlConfiguration.loadConfiguration(reader).getConfigurationSection("appearance"));
-            assertEquals(0x30487A, units.colourOf(Faction.KOLONIEN, 0));
+            assertEquals(0x405748, units.colourOf(Faction.KOLONIEN, 0));
             assertEquals(0xC07818, units.colourOf(Faction.KOLONIEN, 1));
             assertEquals(units.colourOf(Faction.KOLONIEN, 0), units.colourOf(Faction.KOLONIEN, 2));
             assertNotEquals(units.colourOf(Faction.HEGEMONIE, 0), units.colourOf(Faction.HEGEMONIE, 1));

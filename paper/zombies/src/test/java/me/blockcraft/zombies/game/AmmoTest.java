@@ -23,6 +23,17 @@ public class AmmoTest {
     }
 
     @Test
+    public void reloadedCountsFromTheReloadsStartToItsEnd() {
+        var ammo = new Ammo(3, 9);
+        assertEquals(0, ammo.reloaded(5), 0);
+        ammo.shoot(0, 1);
+        ammo.reload(10, 20);
+        assertEquals(0, ammo.reloaded(10), 0);
+        assertEquals(0.25, ammo.reloaded(15), 1e-9);
+        assertEquals(1, ammo.reloaded(40), 0);
+    }
+
+    @Test
     public void refillCancelsPendingReloadAndUpgradeKeepsItsState() {
         var ammo = new Ammo(12, 120);
         ammo.shoot(0, 1);

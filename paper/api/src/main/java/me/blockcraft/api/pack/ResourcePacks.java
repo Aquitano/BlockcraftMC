@@ -10,11 +10,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * Which clients wear the network's resource pack. The proxy offers it and is the only one to hear the client's
@@ -28,6 +30,8 @@ public final class ResourcePacks implements Listener {
 
     private final Messages messages;
     private final Map<UUID, PackStatus> statuses = new ConcurrentHashMap<>();
+    private record Profile(UUID token, Consumer<Boolean> complete, BukkitTask timeout) { }
+    private final Map<UUID, Profile> profiles = new ConcurrentHashMap<>();
 
     public ResourcePacks(Messages messages) {
         this.messages = messages;
@@ -43,6 +47,27 @@ public final class ResourcePacks implements Listener {
 
     public void retry(Player player) {
         ProxyMessaging.requestPack(JavaPlugin.getProvidingPlugin(ResourcePacks.class), player);
+    }
+
+    public void profile(Player player, String game, Consumer<Boolean> complete) {
+        var previous = profiles.remove(player.getUniqueId());
+        if (previous != null) {
+            previous.timeout().cancel();
+            previous.complete().accept(false);
+        }
+        var token = UUID.randomUUID();
+        var plugin = JavaPlugin.getProvidingPlugin(ResourcePacks.class);
+        var timeout = plugin.getServer().getScheduler().runTaskLater(plugin, () -> profileReady(player, token, false),
+                Math.max(1, plugin.getConfig().getInt("resource-pack.profile-timeout-seconds")) * 20L);
+        profiles.put(player.getUniqueId(), new Profile(token, complete, timeout));
+        ProxyMessaging.profile(plugin, player, token, game);
+    }
+
+    public void profileReady(Player player, UUID token, boolean applied) {
+        var pending = profiles.get(player.getUniqueId());
+        if (pending == null || !pending.token().equals(token) || !profiles.remove(player.getUniqueId(), pending)) return;
+        pending.timeout().cancel();
+        pending.complete().accept(applied);
     }
 
     /** Resolves {@code <icon:name>} the way this player's client can draw it. */
@@ -65,5 +90,10 @@ public final class ResourcePacks implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         statuses.remove(event.getPlayer().getUniqueId());
+        var pending = profiles.remove(event.getPlayer().getUniqueId());
+        if (pending != null) {
+            pending.timeout().cancel();
+            pending.complete().accept(false);
+        }
     }
 }

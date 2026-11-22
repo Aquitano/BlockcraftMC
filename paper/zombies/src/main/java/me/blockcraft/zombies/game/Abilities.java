@@ -12,12 +12,14 @@ public final class Abilities {
 
     private final Enemies enemies;
     private final Arsonist arsonist;
+    private final Pouncer pouncer;
     private final Map<EnemyKind, Ability> byKind = new EnumMap<>(EnemyKind.class);
 
     Abilities(ZombiesGame game, Enemies enemies) {
         this.enemies = enemies;
         var config = game.config().abilities();
         arsonist = new Arsonist(game, config.arsonist());
+        pouncer = new Pouncer(game, enemies, config.pouncer());
         byKind.put(EnemyKind.CRAWLER, new Crawler(config.crawler()));
         byKind.put(EnemyKind.SHIELD_BEARER, new ShieldBearer(config.shieldBearer()));
         byKind.put(EnemyKind.FROST, new Frost(game, config.frost()));
@@ -25,6 +27,9 @@ public final class Abilities {
         byKind.put(EnemyKind.ELECTRIC, new Electric(game, config.electric()));
         byKind.put(EnemyKind.BREEDER, new Breeder(enemies, config.breeder()));
         byKind.put(EnemyKind.SHADOW, new ShadowWalker(game, config.shadow()));
+        byKind.put(EnemyKind.POUNCER, pouncer);
+        byKind.put(EnemyKind.RAM, new Ram(game, enemies, config.ram()));
+        byKind.put(EnemyKind.SCAVENGER, new Scavenger(game, enemies, config.scavenger()));
     }
 
     Ability of(EnemyKind kind) {
@@ -47,7 +52,13 @@ public final class Abilities {
     public void struck(Entity damager, Player player) {
         var enemy = enemies.enemy(damager);
         if (enemy != null) {
+            enemies.play(enemy, "attack");
             of(enemy.kind).struck(enemy, player);
         }
+    }
+
+    /** Whether a pouncer holds the player down, so they cannot shoot. */
+    public boolean pinned(Player player) {
+        return pouncer.pinned(player);
     }
 }

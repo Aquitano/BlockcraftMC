@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /** Plugin messages to the proxy: the BungeeCord channel Velocity answers itself, plus the Blockcraft channel. */
 public final class ProxyMessaging {
@@ -31,6 +32,14 @@ public final class ProxyMessaging {
     /** Moves the player to whichever server of the group the proxy picks. */
     public static void play(Plugin plugin, Player player, String group) {
         send(plugin, player, new ProxyMessage.Play(group));
+    }
+
+    public static void replay(Plugin plugin, Player player, String group, String game) {
+        send(plugin, player, new ProxyMessage.ReplayPlay(group, game));
+    }
+
+    public static void profile(Plugin plugin, Player player, UUID token, String game) {
+        send(plugin, player, new ProxyMessage.ProfileRequest(token, game));
     }
 
     /** Moves the player to a lobby. */

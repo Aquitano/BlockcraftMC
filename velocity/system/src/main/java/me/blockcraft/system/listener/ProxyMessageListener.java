@@ -80,6 +80,14 @@ public final class ProxyMessageListener {
             case ProxyMessage.PackRequest _ -> pack.get().ifPresentOrElse(networkPack -> networkPack.retry(player),
                     () -> NetworkPack.tell(player, PackStatus.UNAVAILABLE));
             case ProxyMessage.Play play -> lobby.play(player, play.group());
+            case ProxyMessage.ReplayPlay replay -> {
+                pack.get().ifPresent(networkPack -> networkPack.replay(player, replay.group(), replay.game()));
+                lobby.play(player, replay.group());
+            }
+            case ProxyMessage.ProfileRequest profile -> pack.get().ifPresentOrElse(networkPack ->
+                    networkPack.prepareReplay(player, profile.game()).thenAccept(applied ->
+                            ProxyChannel.send(player, new ProxyMessage.ProfileReady(profile.token(), applied))),
+                    () -> ProxyChannel.send(player, new ProxyMessage.ProfileReady(profile.token(), true)));
             case ProxyMessage.Hub _ -> lobby.send(player);
             case ProxyMessage.Command command -> proxy.getCommandManager().executeAsync(player, command.line());
             case ProxyMessage.NickChange change -> visibility.setNick(player, change.nick());

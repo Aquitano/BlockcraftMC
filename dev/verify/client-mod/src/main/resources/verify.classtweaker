@@ -11,3 +11,4 @@ accessible field net/minecraft/client/KeyMapping clickCount I
 accessible field net/minecraft/client/MouseHandler mouseGrabbed Z
 accessible field net/minecraft/client/gui/Hud overlayMessageTime I
 accessible field net/minecraft/client/gui/Hud titleTime I
+accessible field net/minecraft/client/Camera fovModifier F

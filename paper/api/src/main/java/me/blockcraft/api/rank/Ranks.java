@@ -25,7 +25,7 @@ public final class Ranks {
 
     public static Optional<RankPrefix> prefix(Player player) {
         var luckPerms = LuckPermsProvider.get();
-        var meta = BlockcraftApi.get().nickRank(player)
+        var meta = BlockcraftApi.get().nickRanks().of(player)
                 .map(luckPerms.getGroupManager()::getGroup)
                 .map(worn -> worn.getCachedData().getMetaData())
                 .orElseGet(() -> luckPerms.getPlayerAdapter(Player.class).getMetaData(player));

@@ -1,7 +1,7 @@
 package me.blockcraft.api.game;
 
 import me.blockcraft.common.calendar.HourWindow;
-import me.blockcraft.common.config.YamlFile;
+import me.blockcraft.common.config.StrictConfig;
 
 import java.time.Duration;
 import java.util.List;
@@ -15,19 +15,14 @@ import java.util.Map;
 public record RoundConfig(int nemesisLead, Duration respectWindow, Duration accusationWindow, List<String> accusations,
                           Duration creditWindow, HourWindow nightOwl, Map<Curiosities.Kind, Integer> curiosityMinimums) {
 
-    public static RoundConfig from(Map<String, Object> config) {
-        var hacker = YamlFile.section(config, "hacker");
+    public static RoundConfig from(StrictConfig config) {
         return new RoundConfig(
-                number(YamlFile.section(config, "nemesis"), "lead", 3),
-                Duration.ofSeconds(number(YamlFile.section(config, "respect"), "seconds", 10)),
-                Duration.ofSeconds(number(hacker, "window-seconds", 60)),
-                hacker.get("words") instanceof List<?> words ? words.stream().map(String::valueOf).toList() : List.of(),
-                Duration.ofSeconds(Math.max(0, number(YamlFile.section(config, "death-lines"), "credit-seconds", 10))),
-                HourWindow.fromYaml(YamlFile.section(YamlFile.section(config, "moments"), "night-owl"), 3, 4),
-                Curiosities.minimums(YamlFile.section(config, "curiosities")));
-    }
-
-    private static int number(Map<String, Object> section, String key, int fallback) {
-        return section.get(key) instanceof Number value ? value.intValue() : fallback;
+                config.integer("nemesis.lead"),
+                Duration.ofSeconds(config.integer("respect.seconds")),
+                Duration.ofSeconds(config.integer("hacker.window-seconds")),
+                config.texts("hacker.words"),
+                Duration.ofSeconds(Math.max(0, config.integer("death-lines.credit-seconds"))),
+                HourWindow.from(config.section("moments.night-owl")),
+                Curiosities.minimums(config.section("curiosities")));
     }
 }

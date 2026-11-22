@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.activity;
 
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -11,7 +12,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -38,13 +38,12 @@ public final class LobbyNews implements Listener, AutoCloseable {
     }
 
     /** The news, or nothing when {@code news.enabled} is off or messages.yml has no lines. */
-    public static Optional<LobbyNews> start(Plugin plugin, Messages messages, Map<String, Object> config) {
-        if (Boolean.FALSE.equals(config.get("enabled")) || messages.getLines("news.lines").isEmpty()) {
+    public static Optional<LobbyNews> start(Plugin plugin, Messages messages, StrictConfig config) {
+        if (!config.flag("enabled") || messages.getLines("news.lines").isEmpty()) {
             return Optional.empty();
         }
-        var color = BossBar.Color.NAMES.valueOr(String.valueOf(config.getOrDefault("color", "purple")).toLowerCase(Locale.ROOT),
-                BossBar.Color.PURPLE);
-        int seconds = Math.clamp(config.get("seconds") instanceof Number number ? number.intValue() : 12, 3, 600);
+        var color = BossBar.Color.NAMES.valueOr(config.text("color").toLowerCase(Locale.ROOT), BossBar.Color.PURPLE);
+        int seconds = Math.clamp(config.integer("seconds"), 3, 600);
         return Optional.of(new LobbyNews(plugin, messages, color, seconds));
     }
 

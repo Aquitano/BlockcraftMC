@@ -48,7 +48,7 @@ public class HeroConfigTest {
 
     @Test
     public void clampsInvalidRocketAndLightningSettingsBeforeTheyReachTheTickLoop() {
-        var yaml = new YamlConfiguration();
+        var yaml = YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile());
         yaml.set("heroes.abilities.wrist-rocket.speed", 0);
         yaml.set("heroes.abilities.wrist-rocket.radius", -1);
         yaml.set("heroes.abilities.force-lightning.ticks", 0);

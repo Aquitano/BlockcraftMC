@@ -1,6 +1,7 @@
 package me.blockcraft.duell.config;
 
 import me.blockcraft.duell.game.DuelMode;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
 import me.blockcraft.api.game.ThrowFight;
@@ -42,28 +43,28 @@ public record DuellConfig(
         return maps.getOrDefault(mode, List.of());
     }
 
-    public static DuellConfig from(FileConfiguration config) {
-        var countdown = section(config, "countdown");
-        var chest = section(config, "sg-chest");
+    public static DuellConfig from(FileConfiguration yaml) {
+        var config = BundledDefaults.strict(yaml);
+        var countdown = config.section("countdown");
         var maps = new EnumMap<DuelMode, List<String>>(DuelMode.class);
         for (var mode : DuelMode.values()) {
-            maps.put(mode, List.copyOf(config.getStringList("maps." + mode.configKey())));
+            maps.put(mode, List.copyOf(yaml.getStringList("maps." + mode.configKey())));
         }
         return new DuellConfig(
                 new Countdowns(
-                        countdown.getInt("freeze", 3),
-                        countdown.getInt("round", 600)),
-                config.getInt("rewards.kill", 0),
-                config.getInt("rewards.win", 10),
-                config.getInt("vs.best-of", 3),
+                        countdown.integer("freeze"),
+                        countdown.integer("round")),
+                config.integer("rewards.kill"),
+                config.integer("rewards.win"),
+                config.integer("vs.best-of"),
                 maps,
-                LootTable.fromYaml(chest, 1, 6),
-                CombatStyle.from(config),
-                Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)),
-                SumoConfig.from(config),
-                ThrowFight.Settings.fromYaml(section(config, "throw-fight").getValues(false)),
-                Duration.ofSeconds(config.getInt("tour.intermission-seconds", 3)),
-                config.getBoolean("rating.enabled", false));
+                LootTable.fromYaml(section(yaml, "sg-chest")),
+                CombatStyle.from(yaml),
+                Duration.ofSeconds(config.integer("rematch.window-seconds")),
+                SumoConfig.from(config.section("sumo")),
+                ThrowFight.Settings.from(config.section("throw-fight")),
+                Duration.ofSeconds(config.integer("tour.intermission-seconds")),
+                config.flag("rating.enabled"));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

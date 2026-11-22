@@ -1,8 +1,11 @@
 package me.blockcraft.zombies.game;
 
+import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
+
+import java.util.List;
 
 /** What a special kind does beyond chasing and biting. {@link Enemies} calls each hook for the enemy's kind. */
 interface Ability {
@@ -21,13 +24,18 @@ interface Ability {
         return false;
     }
 
+    /** Whether it dealt with the window's remaining {@code boards} itself this tick, instead of breaking one. */
+    default boolean smash(Enemies.Enemy enemy, List<Block> boards, int tick) {
+        return false;
+    }
+
     /** Whether it moved on its own, so it does not run at the nearest fighter. */
     default boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
         return false;
     }
 
-    /** The damage a fighter's hit deals to it. */
-    default double shot(Enemies.Enemy enemy, Player shooter, double damage) {
+    /** The damage a fighter's hit deals to it, to the head or to the body. */
+    default double shot(Enemies.Enemy enemy, Player shooter, double damage, boolean head) {
         return damage;
     }
 

@@ -1,5 +1,7 @@
 package me.blockcraft.lobby.config;
 
+import me.blockcraft.common.config.StrictConfig;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -13,11 +15,11 @@ import java.util.stream.Collectors;
  */
 public record GameNpcConfig(double lookRadius, int idleSeconds, Map<LobbyLocation, String> skins) {
 
-    public static GameNpcConfig fromYaml(Map<String, Object> config) {
-        var skins = config.get("skins") instanceof Map<?, ?> map ? map : Map.of();
+    public static GameNpcConfig from(StrictConfig config) {
+        var skins = config.section("skins").values();
         return new GameNpcConfig(
-                Math.clamp(config.get("look-radius") instanceof Number number ? number.doubleValue() : 8.0, 1.0, 32.0),
-                Math.clamp(config.get("idle-seconds") instanceof Number number ? number.intValue() : 6, 1, 600),
+                Math.clamp(config.decimal("look-radius"), 1.0, 32.0),
+                Math.clamp(config.integer("idle-seconds"), 1, 600),
                 Arrays.stream(LobbyLocation.values()).filter(area -> area.game().isPresent())
                         .collect(Collectors.toUnmodifiableMap(Function.identity(),
                                 area -> Optional.ofNullable(skins.get(area.key())).map(String::valueOf).orElse(""))));

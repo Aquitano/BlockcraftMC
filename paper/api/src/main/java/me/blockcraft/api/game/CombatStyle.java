@@ -1,5 +1,6 @@
 package me.blockcraft.api.game;
 
+import me.blockcraft.api.config.BundledDefaults;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -45,6 +46,6 @@ public enum CombatStyle {
     }
 
     public static CombatStyle from(ConfigurationSection config) {
-        return config.getBoolean(CONFIG_KEY, true) ? LEGACY : MODERN;
+        return BundledDefaults.strict(config).flag(CONFIG_KEY) ? LEGACY : MODERN;
     }
 }

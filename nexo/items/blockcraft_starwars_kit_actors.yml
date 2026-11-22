@@ -1,0 +1,152 @@
+blockcraft_kit_astromech:
+  itemname: <white>Astromech
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/actors/astromech
+  Pack:
+    model: blockcraft:item/sternenfront/kits/actors/astromech
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0000,0,-0.0094 1.1250,1.3125
+      blockcraft_collision:
+        mode: static-actor
+        blocks: []
+        cubes:
+        - 0.000000,0.250000,0.000000 0.625000
+        - 0.000000,0.625000,0.000000 0.625000
+blockcraft_kit_gonk:
+  itemname: <white>Energiedroide
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/actors/gonk
+  Pack:
+    model: blockcraft:item/sternenfront/kits/actors/gonk
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0000,0,-0.0094 0.8125,1.3125
+      blockcraft_collision:
+        mode: static-actor
+        blocks: []
+        cubes:
+        - 0.000000,0.437500,0.000000 0.750000
+        - 0.000000,0.562500,0.000000 0.750000
+blockcraft_kit_mouse:
+  itemname: <white>Mausdroide
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/actors/mouse
+  Pack:
+    model: blockcraft:item/sternenfront/kits/actors/mouse
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0000,0,-0.0156 0.9062,0.5000
+      blockcraft_collision:
+        mode: static-actor
+        blocks: []
+        cubes:
+        - 0.000000,-0.125000,-0.062500 0.625000
+        - 0.000000,-0.125000,0.062500 0.625000
+blockcraft_kit_bantha:
+  itemname: <white>Bantha
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/actors/bantha
+  Pack:
+    model: blockcraft:item/sternenfront/kits/actors/bantha
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0000,0,-0.1562 3.1875,2.5000
+      blockcraft_collision:
+        mode: static-actor
+        blocks: []
+        cubes:
+        - 0.000000,0.500000,-0.250000 1.500000
+        - 0.000000,0.500000,0.250000 1.500000
+        - 0.000000,0.750000,-0.250000 1.500000
+        - 0.000000,0.750000,0.250000 1.500000
+blockcraft_kit_dewback:
+  itemname: <white>Dewback
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/actors/dewback
+  Pack:
+    model: blockcraft:item/sternenfront/kits/actors/dewback
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0000,0,0.5938 4.6875,1.6875
+      blockcraft_collision:
+        mode: static-actor
+        blocks: []
+        cubes:
+        - 0.000000,0.375000,-0.250000 1.000000
+        - 0.000000,0.375000,0.250000 1.000000
+blockcraft_kit_womp_rat:
+  itemname: <white>Wompratte
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/actors/womp_rat
+  Pack:
+    model: blockcraft:item/sternenfront/kits/actors/womp_rat
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0.0000,0,0.2969 2.4062,0.9375
+      blockcraft_collision:
+        mode: static-actor
+        blocks: []
+        cubes:
+        - 0.000000,0.000000,-0.062500 0.625000
+        - 0.000000,0.000000,0.187500 0.625000

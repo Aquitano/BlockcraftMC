@@ -1,0 +1,921 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/shared/clean",
+    "particle": "#atlas"
+  },
+  "elements": [
+    {
+      "name": "fixed jamb",
+      "from": [
+        -4,
+        8,
+        4
+      ],
+      "to": [
+        4,
+        32,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        -4,
+        8,
+        4
+      ],
+      "to": [
+        -3.5,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.0,
+            4.0,
+            4.25,
+            8.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        3.5,
+        8,
+        4
+      ],
+      "to": [
+        4,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            7.75,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        -3.5,
+        30,
+        4
+      ],
+      "to": [
+        3.5,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.25,
+            4.0,
+            7.75,
+            4.333333333333334
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        -4,
+        8,
+        4
+      ],
+      "to": [
+        4,
+        24,
+        12
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            4.0,
+            1.3333333333333335,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        -3.5,
+        8,
+        12
+      ],
+      "to": [
+        3.5,
+        30,
+        12.5
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            1.875,
+            0.0,
+            2.125,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.875,
+            0.0,
+            2.125,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.25,
+            1.875,
+            3.75,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0.25,
+            1.875,
+            3.75,
+            2.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        -3.5,
+        8,
+        12
+      ],
+      "to": [
+        -1,
+        30,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.25,
+            0.0,
+            1.5,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        0,
+        8,
+        12
+      ],
+      "to": [
+        3.5,
+        30,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            2.0,
+            0.0,
+            3.75,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        -1,
+        8,
+        12
+      ],
+      "to": [
+        0,
+        9,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.5,
+            3.8181818181818183,
+            2.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        -1,
+        23,
+        12
+      ],
+      "to": [
+        0,
+        30,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.5,
+            0.0,
+            2.0,
+            1.272727272727273
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb guide",
+      "from": [
+        -1,
+        9,
+        12.5
+      ],
+      "to": [
+        0,
+        23,
+        12.75
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        }
+      },
+      "light_emission": 12,
+      "shade": false
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        12,
+        8,
+        4
+      ],
+      "to": [
+        20,
+        32,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        12,
+        8,
+        4
+      ],
+      "to": [
+        12.5,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.0,
+            4.0,
+            4.25,
+            8.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        19.5,
+        8,
+        4
+      ],
+      "to": [
+        20,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            7.75,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        12.5,
+        30,
+        4
+      ],
+      "to": [
+        19.5,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.25,
+            4.0,
+            7.75,
+            4.333333333333334
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed jamb",
+      "from": [
+        12,
+        8,
+        4
+      ],
+      "to": [
+        20,
+        24,
+        12
+      ],
+      "faces": {
+        "west": {
+          "uv": [
+            4.0,
+            1.3333333333333335,
+            8.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        12.5,
+        8,
+        12
+      ],
+      "to": [
+        19.5,
+        30,
+        12.5
+      ],
+      "faces": {
+        "east": {
+          "uv": [
+            1.875,
+            0.0,
+            2.125,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.875,
+            0.0,
+            2.125,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.25,
+            1.875,
+            3.75,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0.25,
+            1.875,
+            3.75,
+            2.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        12.5,
+        8,
+        12
+      ],
+      "to": [
+        15,
+        30,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.25,
+            0.0,
+            1.5,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        16,
+        8,
+        12
+      ],
+      "to": [
+        19.5,
+        30,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            2.0,
+            0.0,
+            3.75,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        15,
+        8,
+        12
+      ],
+      "to": [
+        16,
+        9,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.5,
+            3.8181818181818183,
+            2.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb armor",
+      "from": [
+        15,
+        23,
+        12
+      ],
+      "to": [
+        16,
+        30,
+        12.5
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.5,
+            0.0,
+            2.0,
+            1.272727272727273
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "jamb guide",
+      "from": [
+        15,
+        9,
+        12.5
+      ],
+      "to": [
+        16,
+        23,
+        12.75
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            8,
+            4,
+            12
+          ],
+          "texture": "#atlas"
+        }
+      },
+      "light_emission": 12,
+      "shade": false
+    },
+    {
+      "name": "fixed lintel",
+      "from": [
+        4,
+        24,
+        4
+      ],
+      "to": [
+        12,
+        32,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed lintel",
+      "from": [
+        4,
+        24,
+        4
+      ],
+      "to": [
+        5,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            8.0,
+            8.0,
+            8.5,
+            12.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed lintel",
+      "from": [
+        11,
+        24,
+        4
+      ],
+      "to": [
+        12,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            11.5,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed lintel",
+      "from": [
+        5,
+        24,
+        4
+      ],
+      "to": [
+        11,
+        25,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            8.5,
+            11.5,
+            11.5,
+            12.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "fixed lintel",
+      "from": [
+        5,
+        26,
+        4
+      ],
+      "to": [
+        11,
+        32,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            8.5,
+            8.0,
+            11.5,
+            11.0
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "header indicator",
+      "from": [
+        5,
+        25,
+        12
+      ],
+      "to": [
+        11,
+        26,
+        12.25
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4,
+            8,
+            8,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            8,
+            8,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            8,
+            8,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            8,
+            8,
+            12
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            8,
+            8,
+            12
+          ],
+          "texture": "#atlas"
+        }
+      },
+      "light_emission": 12,
+      "shade": false
+    }
+  ]
+}

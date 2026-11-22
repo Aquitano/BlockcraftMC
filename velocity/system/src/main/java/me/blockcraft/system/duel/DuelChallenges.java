@@ -15,6 +15,7 @@ import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
+import me.blockcraft.system.RequestButtons;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.network.OnDemandServers;
@@ -22,11 +23,13 @@ import me.blockcraft.system.network.ProxyChannel;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.party.PartyManager;
 import me.blockcraft.system.ranked.RankedQueue;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -121,9 +124,15 @@ public final class DuelChallenges {
     }
 
     private boolean available(Player player) {
-        return player.isActive() && here(player).filter(directory::isLobby).isPresent()
-                && !parties.isInParty(player.getUniqueId()) && !ranked.isWaiting(player.getUniqueId())
-                && !visibility.isVanished(player);
+        return busy(player).isEmpty();
+    }
+
+    private Optional<String> busy(Player player) {
+        if (!player.isActive() || here(player).filter(directory::isLobby).isEmpty()) return Optional.of("not-in-lobby");
+        if (parties.isInParty(player.getUniqueId())) return Optional.of("in-party");
+        if (ranked.isWaiting(player.getUniqueId())) return Optional.of("in-queue");
+        if (visibility.isVanished(player)) return Optional.of("vanished");
+        return Optional.empty();
     }
 
     private Optional<String> here(Player player) {
@@ -137,18 +146,39 @@ public final class DuelChallenges {
 
     public synchronized void request(Player sender, String name) {
         var candidates = visibility.matches(sender, name);
-        var target = candidates.size() == 1 ? Optional.of(candidates.getFirst()) : Optional.<Player>empty();
-        if (target.isEmpty() || sender.equals(target.get()) || !available(sender) || !available(target.get())
-                || !reachable(sender, target.get()) || pending.containsKey(sender.getUniqueId()) || pending.containsKey(target.get().getUniqueId())
-                || clock.instant().isBefore(cooldowns.getOrDefault(sender.getUniqueId(), Instant.MIN))) {
-            sender.sendMessage(messages.get("duel.unavailable"));
+        if (candidates.size() != 1) {
+            sender.sendMessage(messages.get(candidates.isEmpty() ? "player-unknown" : "player-ambiguous", Placeholder.unparsed("player", name)));
             return;
         }
-        var challenge = new Challenge(sender, target.get(), clock.instant().plusSeconds(settings.setupSeconds()));
+        var target = candidates.getFirst();
+        var refusal = refusal(sender, target);
+        if (refusal.isPresent()) {
+            sender.sendMessage(refusal.get());
+            return;
+        }
+        var challenge = new Challenge(sender, target, clock.instant().plusSeconds(settings.setupSeconds()));
         cooldowns.put(sender.getUniqueId(), clock.instant().plusSeconds(settings.cooldownSeconds()));
         challenge.players.forEach(id -> pending.put(id, challenge));
         sender.sendMessage(messages.get("duel.preparing"));
         prepare(challenge);
+    }
+
+    /** Whether the target ignores the sender or turned invites off stays hidden behind the vague {@code duel.unavailable}. */
+    private Optional<Component> refusal(Player sender, Player target) {
+        if (sender.equals(target)) return Optional.of(messages.get("duel.self"));
+        var own = busy(sender);
+        if (own.isPresent()) return Optional.of(messages.get("duel.busy." + own.get()));
+        if (pending.containsKey(sender.getUniqueId())) return Optional.of(messages.get("duel.pending"));
+        var cooldown = cooldowns.get(sender.getUniqueId());
+        if (cooldown != null && clock.instant().isBefore(cooldown)) {
+            long seconds = Math.ceilDiv(Duration.between(clock.instant(), cooldown).toMillis(), 1000);
+            return Optional.of(messages.get("duel.cooldown", Formatter.number("seconds", seconds)));
+        }
+        if (!reachable(sender, target)) return Optional.of(messages.get("duel.unavailable"));
+        if (!available(target) || pending.containsKey(target.getUniqueId())) {
+            return Optional.of(messages.get("duel.target-busy", Placeholder.unparsed("player", visibility.shownName(target))));
+        }
+        return Optional.empty();
     }
 
     private void prepare(Challenge challenge) {
@@ -193,9 +223,11 @@ public final class DuelChallenges {
                 Placeholder.component("combat", messages.get(rules.legacy() ? "duel.legacy" : "duel.modern")),
                 Placeholder.component("rating", messages.get(rules.rated() ? "duel.rated" : "duel.unrated")),
                 Formatter.number("games", rules.bestOf()), Formatter.number("seconds", settings.inviteSeconds())));
-        challenge.target.sendMessage(messages.get("duel.accept").clickEvent(ClickEvent.runCommand("/duel accept " + challenge.ticket))
-                .append(messages.get("duel.decline").clickEvent(ClickEvent.runCommand("/duel decline " + challenge.ticket))));
-        sender.sendMessage(messages.get("duel.sent").clickEvent(ClickEvent.runCommand("/duel cancel " + challenge.ticket)));
+        challenge.target.sendMessage(RequestButtons.line(messages, "duel.buttons",
+                new RequestButtons.Answer("/duel accept " + challenge.ticket, messages.get("duel.accept-hover")),
+                new RequestButtons.Answer("/duel decline " + challenge.ticket, messages.get("duel.decline-hover"))));
+        sender.sendMessage(messages.get("duel.sent").clickEvent(ClickEvent.runCommand("/duel cancel " + challenge.ticket))
+                .hoverEvent(messages.get("duel.cancel-hover")));
     }
 
     public synchronized void answer(Player player, String action, String ticket) {
@@ -204,8 +236,11 @@ public final class DuelChallenges {
             player.sendMessage(messages.get("duel.expired"));
             return;
         }
-        if (action.equals("cancel") && challenge.sender == player || action.equals("decline") && challenge.target == player) {
+        if (action.equals("cancel") && challenge.sender == player) {
             cancel(challenge);
+        } else if (action.equals("decline") && challenge.target == player) {
+            cancel(challenge, messages.get("duel.declined", Placeholder.unparsed("player", visibility.shownName(player))),
+                    messages.get("duel.you-declined"));
         } else if (action.equals("accept") && challenge.target == player && challenge.invited && !challenge.accepted
                 && available(player) && reachable(challenge.sender, player) && here(challenge.sender).filter(challenge.server::equals).isPresent()) {
             challenge.accepted = true;
@@ -225,14 +260,18 @@ public final class DuelChallenges {
         if (challenge != null && challenge.sender == sender && challenge.ticket.equals(ticket)) cancel(challenge);
     }
 
-    private synchronized void cancel(Challenge challenge) {
+    private void cancel(Challenge challenge) {
+        cancel(challenge, messages.get("duel.cancelled"), messages.get("duel.cancelled"));
+    }
+
+    private synchronized void cancel(Challenge challenge, Component toSender, Component toTarget) {
         if (!pending.remove(challenge.sender.getUniqueId(), challenge)) return;
         pending.remove(challenge.target.getUniqueId(), challenge);
         challenge.cancelled = true;
         if (challenge.server != null && challenge.transfers == 0) directory.releaseDuel(challenge.server, challenge.players);
         for (var player : new Player[]{challenge.sender, challenge.target}) {
             if (player.isActive()) {
-                player.sendMessage(messages.get("duel.cancelled"));
+                player.sendMessage(player == challenge.sender ? toSender : toTarget);
                 returnToLobby(challenge, player);
             }
         }

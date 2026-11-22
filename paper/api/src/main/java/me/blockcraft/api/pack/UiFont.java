@@ -3,6 +3,7 @@ package me.blockcraft.api.pack;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ public final class UiFont {
 
     /** A transparent picture as large as the 6-row panel, which a menu with a fixed layout draws on top of it. */
     public enum Overlay {
-        STERNENFRONT_CLASS('\uE130'), STERNENFRONT_CLASS_WITH_BOTS('\uE131');
+        STERNENFRONT_CLASS('\uE130'), STERNENFRONT_CLASS_WITH_BOTS('\uE131'), STERNENFRONT_FACTIONS('\uE132');
 
         private final char glyph;
 
@@ -69,10 +70,6 @@ public final class UiFont {
     }
 
     /** The panel for a chest with {@code rows} rows, then {@code title} where the vanilla title would be. */
-    public static Component menuTitle(int rows, boolean toolbar, Component title) {
-        return menuTitle(rows, toolbar, false, title);
-    }
-
     public static Component menuTitle(int rows, boolean toolbar, boolean cards, Component title) {
         return overlaid(KEY, cards ? (char) (CARD_PANEL_BASE + rows) : panel(rows, toolbar), title);
     }
@@ -107,6 +104,12 @@ public final class UiFont {
                 .append(at(labelX, Component.text(text).font(Key.key("blockcraft",
                         "label_" + tile.shape().name().toLowerCase(Locale.ROOT) + "_" + tile.slot() / 9)), text.length() * LABEL_ADVANCE))
                 .build();
+    }
+
+    /** {@code capitals}, already in {@link #LABEL_LETTERS}, in the row of {@code slot}, starting {@code x} pixels into it. */
+    public static Component rowLabel(int slot, int x, String capitals, TextColor color) {
+        return at(8 + slot % 9 * 18 + x, Component.text(capitals).color(color)
+                .font(Key.key("blockcraft", "label_wide_" + slot / 9)), capitals.length() * LABEL_ADVANCE);
     }
 
     /** {@code text} in capitals from {@code letters}: any space as a space, and a question mark for a letter they lack. */

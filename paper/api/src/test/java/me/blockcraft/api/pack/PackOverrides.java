@@ -28,6 +28,9 @@ public final class PackOverrides {
     static final Path ITEMS = Path.of("assets/minecraft/items");
     /** What a tinted model's blade shows on an item that names no colour: its texture's own. */
     static final int UNTINTED = -1;
+    static final String FIRING = "_firing";
+    /** The share of a cooldown still to run from which an item counts as cooling: any of it. */
+    static final double COOLING = 0.0001;
 
     /** The model a case draws, whether the item's first custom_model_data colour tints it, and what it turns into. */
     record Case(String model, boolean tinted, PackModel.Stance stance) {
@@ -90,7 +93,7 @@ public final class PackOverrides {
 
     /** A firing pose or a lightsaber's growing blade swaps the held item each tick, which must not lower the hand. */
     static boolean swapsInPlace(Map<String, Case> cases) {
-        return cases.values().stream().anyMatch(drawn -> drawn.model().endsWith("_firing") || drawn.model().contains("/lightsaber_"));
+        return cases.values().stream().anyMatch(drawn -> drawn.model().endsWith(FIRING) || drawn.model().contains("/lightsaber_"));
     }
 
     private static JsonObject model(String path, boolean tinted) {
@@ -109,11 +112,12 @@ public final class PackOverrides {
         return model;
     }
 
-    private static JsonObject drawn(Case drawn) {
+    /** {@code kicked} is the same gun in its firing pose, or null where it has none. */
+    private static JsonObject drawn(Case drawn, Case kicked) {
         return switch (drawn.stance()) {
             case NONE -> model(drawn.model(), drawn.tinted());
             case GUARD -> condition("minecraft:using_item", drawn);
-            case AIM -> aimed(drawn);
+            case AIM -> aimed(drawn, kicked);
         };
     }
 
@@ -129,10 +133,25 @@ public final class PackOverrides {
     /**
      * The client's own use key, not the server's word, so the gun comes up the moment the key goes down. Only the
      * first-person hands ask, since everyone else who draws this item would be asking about their own key.
+     * <p>
+     * A shot puts the item on cooldown for as long as its kick lasts, and the same hands then draw the firing pose. The
+     * client counts a cooldown down itself, so the gun kicks in its holder's view without the item changing in their hand.
      */
-    private static JsonObject aimed(Case drawn) {
-        var aiming = condition("minecraft:keybind_down", drawn);
-        aiming.addProperty("keybind", "key.use");
+    private static JsonObject aimed(Case drawn, Case kicked) {
+        var aiming = atSights(drawn);
+        if (kicked != null) {
+            var kick = new JsonObject();
+            kick.addProperty("threshold", COOLING);
+            kick.add("model", atSights(kicked));
+            var kicks = new JsonArray();
+            kicks.add(kick);
+            var ready = aiming;
+            aiming = new JsonObject();
+            aiming.addProperty("type", "minecraft:range_dispatch");
+            aiming.addProperty("property", "minecraft:cooldown");
+            aiming.add("entries", kicks);
+            aiming.add("fallback", ready);
+        }
         var contexts = new JsonArray();
         contexts.add("firstperson_righthand");
         contexts.add("firstperson_lefthand");
@@ -149,13 +168,19 @@ public final class PackOverrides {
         return select;
     }
 
+    private static JsonObject atSights(Case drawn) {
+        var aiming = condition("minecraft:keybind_down", drawn);
+        aiming.addProperty("keybind", "key.use");
+        return aiming;
+    }
+
     private static JsonObject select(Map<String, Case> cases, JsonObject fallback) {
         var list = new JsonArray();
         cases.entrySet().stream().sorted(Map.Entry.comparingByKey(Comparator.naturalOrder())).forEach(entry -> {
             var drawn = entry.getValue();
             var match = new JsonObject();
             match.addProperty("when", entry.getKey());
-            match.add("model", drawn(drawn));
+            match.add("model", drawn(drawn, cases.get(entry.getKey() + FIRING)));
             list.add(match);
         });
         var select = new JsonObject();

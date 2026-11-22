@@ -1,6 +1,8 @@
 package me.blockcraft.sternenfront.config;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.CombatStyle;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.CombatClass;
@@ -8,16 +10,16 @@ import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
 import me.blockcraft.sternenfront.game.RoundActs;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemoryConfiguration;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 /** Sternenfront's own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundSeconds, Rewards rewards, int tickets,
-                                 int bleedSeconds, int captureSeconds, Respawn respawn, double headquartersDamage,
+                                 int bleedSeconds, int captureSeconds, int radioCooldownSeconds, Respawn respawn, double headquartersDamage,
                                  Regen regen, Relic relic, Heat.Rules heat, Map<Faction, Map<CombatClass, ClassStats>> classes,
                                  Map<Blaster, Blaster.Stats> blasters, Map<Ability, Integer> cooldownSeconds,
                                  Grenade grenade, Grenade miningCharge, SiegeMode siegeMode, int adrenalineSeconds,
@@ -32,7 +34,11 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
     public record Rewards(int kill, int botKill, int capture, int champion, int award, int win) { }
 
-    public record Respawn(int seconds, int autoSeconds, int protectionSeconds) { }
+    /**
+     * {@code screenSettleTicks} keep the deploy screen from closing on the click that opened it, and an enemy within
+     * {@code enemyClearance} blocks a spawn.
+     */
+    public record Respawn(int seconds, int autoSeconds, int protectionSeconds, int screenSettleTicks, double enemyClearance) { }
 
     public record Regen(int delaySeconds, double perSecond) { }
 
@@ -47,7 +53,7 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
         public Blaster.Stats apply(Blaster.Stats stats) {
             return new Blaster.Stats(stats.damage(), stats.headshot(), stats.heat() * heatScale, cooldownTicks, bolts,
-                    stats.burstTicks(), stats.spread(), stats.speed(), stats.range());
+                    stats.burstTicks(), stats.spread(), stats.speed(), stats.range(), stats.mode());
         }
     }
 
@@ -57,89 +63,99 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
     public record MedStation(int seconds, double radius, double healPerSecond) { }
 
-    public static SternenfrontConfig from(ConfigurationSection config) {
-        var abilities = section(config, "abilities");
-        var classes = section(config, "classes");
-        var siege = section(abilities, "siege-mode");
-        var shield = section(abilities, "shield-wall");
-        var jump = section(abilities, "jump-pack");
-        var med = section(abilities, "med-station");
-        var relic = section(config, "relic");
-        var acts = section(config, "acts");
+    public static SternenfrontConfig from(ConfigurationSection section) {
+        var config = BundledDefaults.strict(section);
+        var abilities = config.section("abilities");
+        var siege = abilities.section("siege-mode");
+        var shield = abilities.section("shield-wall");
+        var jump = abilities.section("jump-pack");
+        var med = abilities.section("med-station");
+        var relic = config.section("relic");
+        var acts = config.section("acts");
+        var rewards = config.section("rewards");
+        var respawn = config.section("respawn");
+        var heat = config.section("heat");
         return new SternenfrontConfig(
-                Math.max(1, config.getInt("teams.players-per-team", 6)),
-                Math.max(1, config.getInt("countdown.full", 20)),
-                Math.max(60, config.getInt("countdown.round", 1200)),
-                new Rewards(Math.max(0, config.getInt("rewards.kill", 5)), Math.max(0, config.getInt("rewards.bot-kill", 1)),
-                        Math.max(0, config.getInt("rewards.capture", 4)), Math.max(0, config.getInt("rewards.champion", 10)),
-                        Math.max(0, config.getInt("rewards.award", 10)), Math.max(0, config.getInt("rewards.win", 25))),
-                Math.max(1, config.getInt("tickets.start", 150)),
-                Math.max(1, config.getInt("tickets.bleed-seconds", 5)),
-                Math.max(1, config.getInt("posts.capture-seconds", 12)),
-                new Respawn(Math.max(0, config.getInt("respawn.seconds", 5)), Math.max(1, config.getInt("respawn.auto-seconds", 15)),
-                        Math.max(0, config.getInt("respawn.protection-seconds", 3))),
-                Math.max(0, config.getDouble("headquarters.enemy-damage", 4)),
-                new Regen(Math.max(1, config.getInt("regen.delay-seconds", 6)), Math.max(0, config.getDouble("regen.per-second", 1))),
-                new Relic(Math.max(0, relic.getInt("first-seconds", 120)), Math.max(1, relic.getInt("respawn-seconds", 60)),
-                        Math.max(1, relic.getDouble("health", 40)), Math.max(1, relic.getDouble("damage", 9)),
-                        Math.max(1, relic.getInt("leap-cooldown-seconds", 6)), relic.getDouble("leap-forward", 1.5),
-                        relic.getDouble("leap-up", 0.7)),
-                new Heat.Rules(Math.max(0, config.getInt("heat.cool-delay-ticks", 8)), Math.max(0.1, config.getDouble("heat.cool-per-tick", 3)),
-                        Math.max(1, config.getInt("heat.vent-ticks", 40)), Math.clamp(config.getDouble("heat.window-share"), 0, 0.5),
-                        Math.max(0, config.getDouble("heat.miss-penalty-share"))),
+                Math.max(1, config.integer("teams.players-per-team")),
+                Math.max(1, config.integer("countdown.full")),
+                Math.max(60, config.integer("countdown.round")),
+                new Rewards(Math.max(0, rewards.integer("kill")), Math.max(0, rewards.integer("bot-kill")),
+                        Math.max(0, rewards.integer("capture")), Math.max(0, rewards.integer("champion")),
+                        Math.max(0, rewards.integer("award")), Math.max(0, rewards.integer("win"))),
+                Math.max(1, config.integer("tickets.start")),
+                Math.max(1, config.integer("tickets.bleed-seconds")),
+                Math.max(1, config.integer("posts.capture-seconds")),
+                Math.clamp(config.integer("posts.radio-cooldown-seconds"), 1, 120),
+                new Respawn(Math.max(0, respawn.integer("seconds")), Math.max(1, respawn.integer("auto-seconds")),
+                        Math.max(0, respawn.integer("protection-seconds")), Math.clamp(respawn.integer("screen-settle-ticks"), 0, 200),
+                        Math.clamp(respawn.decimal("enemy-clearance"), 0, 64)),
+                Math.max(0, config.decimal("headquarters.enemy-damage")),
+                new Regen(Math.max(1, config.integer("regen.delay-seconds")), Math.max(0, config.decimal("regen.per-second"))),
+                new Relic(Math.max(0, relic.integer("first-seconds")), Math.max(1, relic.integer("respawn-seconds")),
+                        Math.max(1, relic.decimal("health")), Math.max(1, relic.decimal("damage")),
+                        Math.max(1, relic.integer("leap-cooldown-seconds")), relic.decimal("leap-forward"),
+                        relic.decimal("leap-up")),
+                new Heat.Rules(Math.max(0, heat.integer("cool-delay-ticks")), Math.max(0.1, heat.decimal("cool-per-tick")),
+                        Math.max(1, heat.integer("vent-ticks")), Math.clamp(heat.decimal("window-share"), 0, 0.5),
+                        Math.max(0, heat.decimal("miss-penalty-share"))),
                 byKey(Faction.class, faction -> byKey(CombatClass.class, combatClass ->
-                        classStats(section(section(classes, faction.key()), combatClass.key())))),
-                blasters(section(config, "blasters")),
-                byKey(Ability.class, ability -> Math.max(1, section(abilities, ability.key()).getInt("cooldown-seconds", 20))),
-                grenade(section(abilities, "grenade"), new Grenade(50, 5, 16, 1.1, 1)),
-                grenade(section(abilities, "mining-charge"), new Grenade(60, 6, 20, 0.9, 1)),
-                new SiegeMode(Math.max(1, siege.getInt("seconds", 6)), Math.max(1, siege.getInt("cooldown-ticks", 4)),
-                        Math.max(1, siege.getInt("bolts", 2)), Math.max(0, siege.getDouble("heat-scale", 0.5))),
-                Math.max(1, section(abilities, "adrenaline").getInt("seconds", 5)),
-                new Shield(Math.max(1, shield.getInt("seconds", 8)), Math.max(1, shield.getInt("width", 5)),
-                        Math.max(1, shield.getInt("height", 3)), Math.max(1, shield.getInt("distance", 2))),
-                new JumpPack(jump.getDouble("forward", 1.3), jump.getDouble("up", 0.9)),
-                new MedStation(Math.max(1, med.getInt("seconds", 10)), Math.max(1, med.getDouble("radius", 4)),
-                        Math.max(0, med.getDouble("heal-per-second", 2))),
-                CombatStyle.from(config),
-                new RoundActs.Rules(Math.clamp(acts.getDouble("assault-share", 0.65), 0, 1), Math.max(0, acts.getInt("assault-seconds", 360)),
-                        Math.clamp(acts.getDouble("last-stand-share", 0.30), 0, 1), Math.max(0, acts.getInt("last-stand-seconds", 780)),
-                        Math.max(1, acts.getInt("priority-bleed", 2)), Math.max(1, acts.getInt("last-stand-bleed", 2)),
-                        Math.clamp(acts.getDouble("comeback-hero-share", 0.5), 0, 1), Math.clamp(acts.getDouble("storm-sight-share", 0.6), 0, 1),
-                        Math.max(0, acts.getDouble("priority-pull", 60)), Math.max(1, acts.getInt("dropship-distance", 22))));
+                        classStats(config.section("classes").section(faction.key()).section(combatClass.key())))),
+                blasters(config.section("blasters")),
+                byKey(Ability.class, ability -> Math.max(1, abilities.section(ability.key()).integer("cooldown-seconds"))),
+                grenade(abilities.section("grenade")),
+                grenade(abilities.section("mining-charge")),
+                new SiegeMode(Math.max(1, siege.integer("seconds")), Math.max(1, siege.integer("cooldown-ticks")),
+                        Math.max(1, siege.integer("bolts")), Math.max(0, siege.decimal("heat-scale"))),
+                Math.max(1, abilities.integer("adrenaline.seconds")),
+                new Shield(Math.max(1, shield.integer("seconds")), Math.max(1, shield.integer("width")),
+                        Math.max(1, shield.integer("height")), Math.max(1, shield.integer("distance"))),
+                new JumpPack(jump.decimal("forward"), jump.decimal("up")),
+                new MedStation(Math.max(1, med.integer("seconds")), Math.max(1, med.decimal("radius")),
+                        Math.max(0, med.decimal("heal-per-second"))),
+                CombatStyle.from(section),
+                new RoundActs.Rules(Math.clamp(acts.decimal("assault-share"), 0, 1), Math.max(0, acts.integer("assault-seconds")),
+                        Math.clamp(acts.decimal("last-stand-share"), 0, 1), Math.max(0, acts.integer("last-stand-seconds")),
+                        Math.max(1, acts.integer("priority-bleed")), Math.max(1, acts.integer("last-stand-bleed")),
+                        Math.clamp(acts.decimal("comeback-hero-share"), 0, 1), Math.clamp(acts.decimal("storm-sight-share"), 0, 1),
+                        Math.max(0, acts.decimal("priority-pull")), Math.max(1, acts.integer("dropship-distance"))));
     }
 
-    private static ClassStats classStats(ConfigurationSection section) {
-        return new ClassStats(Math.max(1, section.getDouble("health", 20)), Math.max(0.1, section.getDouble("speed", 1)),
-                Math.clamp(section.getDouble("scale", 1), MIN_SCALE, MAX_SCALE));
+    private static ClassStats classStats(StrictConfig section) {
+        return new ClassStats(Math.max(1, section.decimal("health")), Math.max(0.1, section.decimal("speed")),
+                Math.clamp(section.decimal("scale"), MIN_SCALE, MAX_SCALE));
     }
 
-    private static Grenade grenade(ConfigurationSection section, Grenade fallback) {
-        return new Grenade(Math.max(1, section.getInt("fuse-ticks", fallback.fuseTicks())),
-                Math.max(1, section.getDouble("radius", fallback.radius())),
-                Math.max(0, section.getDouble("damage", fallback.damage())),
-                section.getDouble("throw-speed", fallback.throwSpeed()), Math.max(1, section.getInt("charges", fallback.charges())));
+    private static Grenade grenade(StrictConfig section) {
+        return new Grenade(Math.max(1, section.integer("fuse-ticks")), Math.max(1, section.decimal("radius")),
+                Math.max(0, section.decimal("damage")), section.decimal("throw-speed"), Math.max(1, section.integer("charges")));
     }
 
-    private static Map<Blaster, Blaster.Stats> blasters(ConfigurationSection section) {
-        var fallback = new Blaster.Stats(4, 1.5, 10, 4, 1, 0, 0, 3.5, 80);
-        return byKey(Blaster.class, weapon -> {
-            var profile = blaster(section(section, weapon.profile().key()), fallback);
-            return blaster(section(section, weapon.key()), profile);
+    /**
+     * A faction's weapon takes every key it leaves out from its profile's section, which sets them all. The speeder
+     * cannon has none: {@link me.blockcraft.sternenfront.vehicle.SpeederConfig} sets its stats.
+     */
+    private static Map<Blaster, Blaster.Stats> blasters(StrictConfig section) {
+        var stats = new EnumMap<Blaster, Blaster.Stats>(Blaster.class);
+        Arrays.stream(Blaster.values()).filter(weapon -> weapon != Blaster.SPEEDER_CANNON).forEach(weapon -> {
+            var layered = new LinkedHashMap<>(section.section(weapon.profile().key()).values());
+            layered.putAll(section.section(weapon.key()).values());
+            stats.put(weapon, blaster(new StrictConfig(section.file(), section.path() + "." + weapon.key(), layered)));
         });
+        return Map.copyOf(stats);
     }
 
-    private static Blaster.Stats blaster(ConfigurationSection section, Blaster.Stats fallback) {
+    private static Blaster.Stats blaster(StrictConfig section) {
         return new Blaster.Stats(
-                Math.max(0, section.getDouble("damage", fallback.damage())),
-                Math.max(1, section.getDouble("headshot", fallback.headshot())),
-                Math.max(0, section.getDouble("heat", fallback.heat())),
-                Math.max(1, section.getInt("cooldown-ticks", fallback.cooldownTicks())),
-                Math.max(1, section.getInt("bolts", fallback.bolts())),
-                Math.max(0, section.getInt("burst-ticks", fallback.burstTicks())),
-                Math.max(0, section.getDouble("spread", fallback.spread())),
-                Math.max(0.5, section.getDouble("speed", fallback.speed())),
-                Math.max(1, section.getDouble("range", fallback.range())));
+                Math.max(0, section.decimal("damage")),
+                Math.max(1, section.decimal("headshot")),
+                Math.max(0, section.decimal("heat")),
+                Math.max(1, section.integer("cooldown-ticks")),
+                Math.max(1, section.integer("bolts")),
+                Math.max(0, section.integer("burst-ticks")),
+                Math.max(0, section.decimal("spread")),
+                Math.max(0.5, section.decimal("speed")),
+                Math.max(1, section.decimal("range")),
+                Blaster.FireMode.of(section.text("mode")));
     }
 
     public ClassStats stats(Faction faction, CombatClass combatClass) {
@@ -165,11 +181,6 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
     public int capacity() {
         return playersPerTeam * 2;
-    }
-
-    private static ConfigurationSection section(ConfigurationSection parent, String key) {
-        var section = parent.getConfigurationSection(key);
-        return section == null ? new MemoryConfiguration() : section;
     }
 
     private static <K extends Enum<K>, V> Map<K, V> byKey(Class<K> type, Function<K, V> value) {

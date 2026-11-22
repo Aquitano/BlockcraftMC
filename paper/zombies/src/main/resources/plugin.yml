@@ -4,3 +4,4 @@ main: me.blockcraft.zombies.ZombiesPlugin
 api-version: '${minecraft}'
 author: Aquitano
 depend: [BlockcraftAPI]
+softdepend: [BetterModel]

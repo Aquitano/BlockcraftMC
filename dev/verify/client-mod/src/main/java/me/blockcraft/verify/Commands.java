@@ -9,6 +9,8 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -28,7 +30,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.PlayerTeam;
@@ -71,6 +75,9 @@ final class Commands {
         }
     }
 
+    /** The camera's pose at the end of every client tick: what each rendered frame interpolates between. */
+    private record Trace(int ticks, JsonArray samples, CompletableFuture<JsonObject> done) { }
+
     private final Map<KeyMapping, Integer> held = new HashMap<>();
     private final Map<KeyMapping, Taps> taps = new HashMap<>();
 
@@ -91,6 +98,7 @@ final class Commands {
     private GuiMessage newestChat;
     private long eventsLost;
     private final List<Capture> captures = new ArrayList<>();
+    private final List<Trace> traces = new ArrayList<>();
     private boolean prepared;
     private long ticks;
 
@@ -116,6 +124,7 @@ final class Commands {
             return expired;
         });
         captures.removeIf(capture -> advance(minecraft, capture));
+        traces.removeIf(trace -> follow(minecraft, trace));
         observe(minecraft);
     }
 
@@ -127,9 +136,14 @@ final class Commands {
         change("subtitle", hud.titleTime > 0 ? text(hud.subtitle) : "", minecraft);
         change("bossbars", String.valueOf(hud.getBossOverlay().events.size()), minecraft);
         change("screen", minecraft.gui.screen() == null ? "" : minecraft.gui.screen().getClass().getSimpleName(), minecraft);
+        var camera = minecraft.getCameraEntity();
+        change("camera", camera == null ? "" : BuiltInRegistries.ENTITY_TYPE.getKey(camera.getType()).getPath() + " " + camera.getId()
+                + (camera.isRemoved() ? " removed" : ""), minecraft);
         if (minecraft.player != null) {
             change("health", String.valueOf(round(minecraft.player.getHealth())), minecraft);
             change("gamemode", minecraft.gameMode == null ? "" : minecraft.gameMode.getPlayerMode().getName(), minecraft);
+            change("fov", String.valueOf(round(minecraft.gameRenderer.mainCamera().fovModifier)), minecraft);
+            change("use", String.valueOf(minecraft.options.keyUse.isDown), minecraft);
         }
         var messages = hud.getChat().allMessages;
         var fresh = new ArrayList<String>();
@@ -190,6 +204,13 @@ final class Commands {
         var name = body.get("cmd").getAsString();
         return switch (name) {
             case "status" -> done(status(minecraft));
+            case "packs" -> {
+                var result = new JsonObject();
+                var selected = new JsonArray();
+                minecraft.getResourcePackRepository().getSelectedIds().forEach(selected::add);
+                result.add("selected", selected);
+                yield done(result);
+            }
             case "connect" -> done(connect(minecraft, body.get("host").getAsString()));
             case "disconnect" -> {
                 minecraft.disconnectWithProgressScreen();
@@ -216,7 +237,10 @@ final class Commands {
             }
             case "aim" -> done(aim(minecraft, body));
             case "hold" -> {
-                held.put(key(minecraft, body.get("key").getAsString()), body.has("ticks") ? (int) (ticks + body.get("ticks").getAsInt()) : -1);
+                var mapping = key(minecraft, body.get("key").getAsString());
+                // A key going down is a click as well, which is what starts an attack or a use.
+                press(mapping);
+                held.put(mapping, body.has("ticks") ? (int) (ticks + body.get("ticks").getAsInt()) : -1);
                 yield done(new JsonObject());
             }
             case "release" -> {
@@ -264,12 +288,19 @@ final class Commands {
             case "events" -> done(recorded(body));
             case "screenshot" -> shoot(minecraft, body.get("name").getAsString());
             case "capture" -> capture(body);
+            case "trace" -> {
+                var result = new CompletableFuture<JsonObject>();
+                traces.add(new Trace(Math.clamp(body.get("ticks").getAsInt(), 1, 1200), new JsonArray(), result));
+                yield result;
+            }
             default -> throw new IllegalArgumentException("Unknown command: " + name);
         };
     }
 
     private void press(KeyMapping mapping) {
         mapping.clickCount++;
+        // The button is down in the tick that sees the click, as a mouse's is.
+        mapping.isDown = true;
         held.put(mapping, (int) (ticks + 2));
     }
 
@@ -302,6 +333,8 @@ final class Commands {
             value.addProperty("max_health", round(player.getMaxHealth()));
             value.addProperty("gamemode", minecraft.gameMode == null ? "" : minecraft.gameMode.getPlayerMode().getName());
             value.addProperty("in_wall", player.isInWall());
+            value.addProperty("block_light", minecraft.level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, player.blockPosition()));
+            value.addProperty("sky_light", minecraft.level.getBrightness(net.minecraft.world.level.LightLayer.SKY, player.blockPosition()));
             value.addProperty("vehicle", player.getVehicle() == null ? "" : player.getVehicle().getType().toShortString());
             value.addProperty("slot", player.getInventory().getSelectedSlot());
             var hotbar = new JsonArray();
@@ -313,6 +346,12 @@ final class Commands {
             if (minecraft.hitResult instanceof EntityHitResult hit) {
                 value.addProperty("looking_at", name(hit.getEntity()));
             }
+            if (minecraft.hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK) {
+                var at = hit.getBlockPos();
+                value.addProperty("looking_at_block", BuiltInRegistries.BLOCK.getKey(minecraft.level.getBlockState(at).getBlock())
+                        + " " + at.getX() + " " + at.getY() + " " + at.getZ());
+            }
+            value.addProperty("mining", minecraft.gameMode != null && minecraft.gameMode.isDestroying());
             value.addProperty("dimension", minecraft.level.dimension().identifier().toString());
             var border = minecraft.level.getWorldBorder();
             var edge = new JsonObject();
@@ -513,8 +552,14 @@ final class Commands {
         return new JsonObject();
     }
 
+    /** Every button on the screen, also those a dialog nests in its scrolling body. */
     private static Stream<AbstractButton> buttons(Screen screen) {
-        return screen.children().stream().filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast);
+        return flatten(screen).filter(AbstractButton.class::isInstance).map(AbstractButton.class::cast);
+    }
+
+    private static Stream<GuiEventListener> flatten(ContainerEventHandler container) {
+        return container.children().stream().flatMap(child -> child instanceof ContainerEventHandler nested
+                ? Stream.concat(Stream.of(child), flatten(nested)) : Stream.of(child));
     }
 
     private JsonObject click(Minecraft minecraft, JsonObject body) {
@@ -630,6 +675,27 @@ final class Commands {
     }
 
     /** One frame at a time, the next only once the last is on disk; true once the last is saved or one failed. */
+    private static boolean follow(Minecraft minecraft, Trace trace) {
+        var camera = minecraft.getCameraEntity();
+        var sample = new JsonArray();
+        if (camera != null) {
+            sample.add(camera.getX());
+            sample.add(camera.getY());
+            sample.add(camera.getZ());
+            sample.add(camera.getYRot());
+            sample.add(camera.getXRot());
+            sample.add(camera == minecraft.player ? "player" : BuiltInRegistries.ENTITY_TYPE.getKey(camera.getType()).getPath());
+        }
+        trace.samples().add(sample);
+        if (trace.samples().size() < trace.ticks()) {
+            return false;
+        }
+        var value = new JsonObject();
+        value.add("samples", trace.samples());
+        trace.done().complete(value);
+        return true;
+    }
+
     private boolean advance(Minecraft minecraft, Capture capture) {
         if (capture.done.isDone()) {
             return true;

@@ -240,10 +240,10 @@ lying on it; the item turns the way you face.
   opens the note as a book; the first read pays `lore-notes.reward` coins and adds it to the secrets menu, where it
   can be read again.
 - **Boards:** `/lobbyset board-changelog` and `/lobbyset board-rules` at spawn, looking at the block. The changelog
-  opens as a dialog, and once for every returning player after `notice-boards.changelog-version` changes; the rules
-  board runs the proxy's `notice-boards.rules-command`.
-- **Quest givers:** `/lobbyset quest-<key>` for each of `quests`. Talking opens the quest; a finished one pays its
-  reward once. A boss bar of news (`news`) rotates over the whole lobby.
+  prints in chat, and once for every returning player after `notice-boards.changelog-version` changes; the rules
+  board runs the proxy's `notice-boards.rules-command`, which prints them.
+- **Quest givers:** `/lobbyset quest-<key>` for each of `quests`. Talking prints the giver's lines and the task's
+  progress in chat; a finished one adds a button that pays its reward once. A boss bar of news (`news`) rotates over the whole lobby.
 
 ## Friendship anniversaries
 

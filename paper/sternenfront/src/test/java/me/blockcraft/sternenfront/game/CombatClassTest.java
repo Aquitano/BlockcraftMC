@@ -45,6 +45,20 @@ public class CombatClassTest {
         }
     }
 
+    @Test
+    public void soldierWeaponChoiceSurvivesRoleChangesAndLeavesDroidsAlone() {
+        var fighter = new Fighter(new Heat.Rules(10, 5, 40, 0.2, 0.25), ability -> new Charges(1, 20));
+        for (var expected : List.of(Blaster.A280, Blaster.E11D, Blaster.CARBINE)) {
+            fighter.cycleWeapon(Faction.KOLONIEN);
+            assertEquals(expected, fighter.blaster(Faction.KOLONIEN).orElseThrow());
+            assertEquals(Blaster.E5, fighter.blaster(Faction.HEGEMONIE).orElseThrow());
+            fighter.combatClass(CombatClass.MEDIC);
+            assertEquals(Blaster.PISTOL, fighter.blaster(Faction.KOLONIEN).orElseThrow());
+            fighter.combatClass(CombatClass.SOLDIER);
+            assertEquals(expected, fighter.blaster(Faction.KOLONIEN).orElseThrow());
+        }
+    }
+
     private static void assertHasNameAndLore(YamlConfiguration messages, String key) {
         assertFalse(key, messages.getString(key + ".name", "").isEmpty());
         assertFalse(key, messages.getStringList(key + ".lore").isEmpty());

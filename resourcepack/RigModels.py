@@ -1,8 +1,9 @@
 """Turns the generated body and blaster models into animated BetterModel files in bettermodel/.
 
-Geometry and textures still come from SternenfrontArt.java, so a body changes in one place: run that first, then this.
+Geometry and textures come from the generated bodies and authoritative native weapons.
 The joints come from rig-bodies.yml, which RigBody reads for the plain displays too. Animations are written here as keyframes: BetterModel plays idle, walk, death and damage by itself,
-and the plugin asks for shoot. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
+Sternenfront asks for shoot, and the story's cutscenes for the gestures: talk, point, beckon, nod and the background's
+rest and look. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
 takes a model's north, -z, as the entity's front, so every position and rotation is written turned half round. BetterModel
 turns bones tagged h_ with where the entity looks, and hi_ with their children too, which is how the head, the arms, the
 gun and their markings follow a bot's aim. A part's markings and a leader's pauldrons are child bones of their own, so the
@@ -15,6 +16,7 @@ import struct
 import uuid
 import yaml
 from pathlib import Path
+from RigExport import export
 
 HERE = Path(__file__).parent
 ASSETS = HERE / "src/assets/blockcraft"
@@ -88,7 +90,7 @@ class Model:
             # A gun's heat vents take their colour from the held item, which a rig has not, so they would glow white.
             if bone == "weapon" and any("tintindex" in face for face in element["faces"].values()):
                 continue
-            faces = {}
+            faces = {side: dict(uv=[0, 0, 0, 0], texture=None) for side in ("north", "south", "east", "west", "up", "down")}
             for side, face in element["faces"].items():
                 reference = textures[face["texture"].lstrip("#")]
                 texture = self.texture(reference)
@@ -101,7 +103,10 @@ class Model:
             spin = element.get("rotation")
             if spin:
                 origin = place(spin["origin"])
-                rotation["xyz".index(spin["axis"])] = spin["angle"]
+                if "axis" in spin:
+                    rotation["xyz".index(spin["axis"])] = spin["angle"]
+                else:
+                    rotation = [spin.get(axis, 0) for axis in "xyz"]
             cube = dict(name=f"{bone}_{index}", box_uv=False, rescale=False, locked=False, render_order="default",
                         allow_mirror_modeling=True, autouv=0, color=0, type="cube",
                         **{"from": list(map(min, *corners)), "to": list(map(max, *corners))}, origin=origin, rotation=turned(*rotation),
@@ -172,6 +177,34 @@ def animations(family, grip_degrees, inward_degrees):
                            "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
             "torso": {"rotation": {0: (0, 0, 0), 0.05: (-kick / 3, 0, 0), recovery: (0, 0, 0)}},
         }),
+        animation(family, "talk", "loop", 2.4, {
+            "hi_left_arm": {"rotation": {0: (-35, 0, -12), 0.6: (-52, 6, -18), 1.2: (-30, 0, -10), 1.8: (-46, -4, -16),
+                                         2.4: (-35, 0, -12)}},
+            "hi_right_arm": {"rotation": still(x=round(grip_degrees * 0.55))},
+            "hi_head": {"rotation": {0: (0, 0, 0), 0.6: (4, 3, 0), 1.2: (-2, 0, 0), 1.8: (3, -3, 0), 2.4: (0, 0, 0)}},
+            "torso": {"rotation": {0: (0, 0, 0), 1.2: (2, 2, 0), 2.4: (0, 0, 0)}},
+        }),
+        animation(family, "point", "once", 1.6, {
+            "hi_left_arm": {"rotation": {0: (across, inward_degrees, 0), 0.35: (-88, -8, 0), 1.1: (-86, -8, 0),
+                                         1.6: (across, inward_degrees, 0)}},
+            "hi_head": {"rotation": {0: (0, 0, 0), 0.3: (-4, -6, 0), 1.1: (-4, -6, 0), 1.6: (0, 0, 0)}},
+        }),
+        animation(family, "beckon", "once", 1.2, {
+            "hi_left_arm": {"rotation": {0: (across, inward_degrees, 0), 0.25: (-82, 0, -6), 0.5: (-42, 0, -6),
+                                         0.75: (-82, 0, -6), 1.2: (across, inward_degrees, 0)}},
+        }),
+        animation(family, "nod", "once", 0.7, {
+            "hi_head": {"rotation": {0: (0, 0, 0), 0.2: (12, 0, 0), 0.45: (-2, 0, 0), 0.7: (0, 0, 0)}},
+        }),
+        animation(family, "rest", "loop", 3.2, {
+            "hi_right_arm": {"rotation": still(x=round(grip_degrees * 0.4))},
+            "hi_left_arm": {"rotation": still(x=round(across * 0.4), y=round(inward_degrees * 0.6))},
+            "torso": {"position": {0: (0, 0, 0), 1.6: (0, -0.25, 0), 3.2: (0, 0, 0)}},
+        }),
+        animation(family, "look", "loop", 6, {
+            "hi_head": {"rotation": {0: (0, 0, 0), 1.2: (2, 24, 0), 2.6: (2, 24, 0), 3.4: (0, 0, 0), 4.4: (-3, -18, 0),
+                                     5.4: (-3, -18, 0), 6: (0, 0, 0)}},
+        }),
         animation(family, "damage", "once", 0.3, {
             "root": {"rotation": {0: (0, 0, 0), 0.05: (-6, 0, 2), 0.3: (0, 0, 0)}},
             "hi_head": {"rotation": {0: (0, 0, 0), 0.05: (-10, 0, 0), 0.3: (0, 0, 0)}},
@@ -241,7 +274,7 @@ def build(family, gun):
                              visible=True, internal=True, saved=False, uuid=stable(family, "texture", reference),
                              relative_path="", source=f"data:image/png;base64,{source}"))
     size = next(iter(model.textures.values()))
-    return dict(meta=dict(format_version="5.0", model_format="free", box_uv=False), name=family, model_identifier="", visible_box=[1, 1, 0],
+    return dict(meta=dict(format_version="5.0", model_format="free", box_uv=False), blockcraft_native=1, name=family, model_identifier="", visible_box=[1, 1, 0],
                 variable_placeholders="", variable_placeholder_buttons=[], timeline_setups=[], unhandled_root_fields={},
                 resolution=dict(width=size["width"], height=size["height"]), elements=model.elements, groups=model.groups(),
                 outliner=[model.outline(model.bones["root"])], textures=textures, animations=animations(family, grip_degrees, inward_degrees))
@@ -250,9 +283,11 @@ def build(family, gun):
 def main():
     OUT.mkdir(exist_ok=True)
     for family, gun in GUNS.items():
-        model = json.dumps(build(family, gun), separators=(",", ":"))
+        built = build(family, gun)
+        model = json.dumps(built, separators=(",", ":"))
         for name in (family, family + OUTLINED):
             (OUT / f"{name}.bbmodel").write_text(model)
+            export(ASSETS.parent.parent, name, built)
     print(f"Wrote {len(GUNS)} bodies, each plain and outlined")
 
 

@@ -9,11 +9,9 @@ commands:
     description: "Zeigt die Top 10 einer Kategorie"
 join:
   introduction: "<prefix><muted>Stoße deinen Gegner von der Brücke und baue sein Bett ab. Jeder Bettabbau gibt einen Punkt."
-  spectator: "<prefix><muted>Du schaust diesem Match zu."
   next-match: "<prefix><muted>Ein Platz ist frei. Du spielst im nächsten Match mit."
 round:
-  map: "<prefix><muted>Karte: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."
-  cancelled: "<prefix><muted>Der Countdown wurde abgebrochen. Es werden zwei Spieler benötigt."
+  map: "<prefix><muted>Map: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."
   start: "<prefix><muted>Los geht's auf <accent><map><muted>! Wer zuerst <accent><target> Punkte <muted>erreicht, gewinnt."
   point: "<prefix><accent><player> <muted>punktet! <red>Rot <red_score> <dark>· <blue>Blau <blue_score>"
   forfeit: "<prefix><accent><player> <muted>hat das Match verlassen. Der Gegner gewinnt."
@@ -34,7 +32,9 @@ layout:
 rematch:
   unavailable: "<prefix><error>Eine Revanche ist nur direkt nach einem Match mit demselben Gegner möglich."
   waiting: "<prefix><muted>Du bist bereit. Warte auf deinen Gegner."
-  request: "<prefix><accent><player> <muted>möchte eine Revanche. Klicke auf Nochmal spielen oder rechtsklicke das Revanche-Item."
+  request: "<prefix><accent><player> <muted>möchte eine Revanche. <accept>"
+  accept: "<success>[Annehmen]"
+  accept-hover: "<muted>Klicke, um gleich noch einmal gegen <white><player> <muted>anzutreten."
   starting: "<prefix><muted>Revanche auf <accent><map> <muted>in <accent><seconds> Sekunden<muted>!"
 scoreboard:
   title: "<mlgrush><bold>MLG Rush"
@@ -49,7 +49,7 @@ stats:
     - "<arrow><primary>Siege<dark>: <muted><wins>"
     - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
     - "<arrow><primary>Stürze<dark>: <muted><deaths>"
-    - "<arrow><primary>Münzen<dark>: <muted><points>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
 top:
   separator: "<muted><strikethrough>---------------------------------"
   first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
@@ -62,7 +62,7 @@ menu:
       - "<arrow><primary>Siege<dark>: <muted><wins>"
       - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
       - "<arrow><primary>Stürze<dark>: <muted><deaths>"
-      - "<arrow><primary>Münzen<dark>: <muted><points>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
     global: "<arrow><primary>Globale Stats"
   global-stats:
     title: "<arrow><mlgrush>MLG Rush <dark>· <muted>Globale Stats"
@@ -70,4 +70,4 @@ menu:
     deaths: "<arrow><primary>Stürze"
     kills: "<arrow><primary>Kills"
     losses: "<arrow><primary>Niederlagen"
-    points: "<arrow><primary>Münzen"
+    points: "<arrow><primary>Punkte"

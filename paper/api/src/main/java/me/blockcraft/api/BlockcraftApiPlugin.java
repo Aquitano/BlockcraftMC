@@ -11,16 +11,10 @@ import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
-import me.blockcraft.api.command.PresentationCommand;
 import me.blockcraft.api.config.ConfigOverrides;
-import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialog.ServerMenu;
-import me.blockcraft.api.dialogue.Dialogues;
 import me.blockcraft.api.presentation.VisualEffects;
-import me.blockcraft.api.presentation.Discoveries;
-import me.blockcraft.api.presentation.ScreenEffects;
-import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.LegacyDamage;
@@ -54,6 +48,7 @@ import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.scenery.NexoScenery;
+import me.blockcraft.api.scenery.FurnitureSolids;
 import me.blockcraft.api.scenery.AmbientCreatures;
 import me.blockcraft.api.season.SeasonalBlocks;
 import me.blockcraft.api.xp.Levels;
@@ -63,11 +58,10 @@ import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.calendar.ForcedOccasions;
 import me.blockcraft.common.calendar.NetworkCalendar;
-import me.blockcraft.common.config.YamlFile;
+import me.blockcraft.common.config.StrictConfig;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.db.DatabaseException;
-import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.moderation.SettingsRepository;
@@ -98,9 +92,7 @@ import java.util.function.Supplier;
 public final class BlockcraftApiPlugin extends JavaPlugin {
 
     private Notifications notifications;
-    private Dialogues dialogues;
     private VisualEffects visuals;
-    private Discoveries discoveries;
     private Database database;
     private ServerHeartbeat heartbeat;
     private ServerGroups groups;
@@ -117,9 +109,10 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     }
 
     private void enable() {
+        if (getServer().getPluginManager().isPluginEnabled("Nexo")) scenery.add(new FurnitureSolids(this));
         var resources = ApiResources.load(getDataPath(), this::getResource);
         var config = resources.config();
-        var databaseConfig = DatabaseConfig.fromYaml(YamlFile.section(config, "database"));
+        var databaseConfig = DatabaseConfig.fromYaml(config.section("database"));
         database = Database.connect(databaseConfig, getName());
         database.migrate();
 
@@ -128,33 +121,22 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         heartbeat = new ServerHeartbeat(this, servers, ServerHeartbeat.local(databaseConfig, getServer().getPort()), presence);
         var self = heartbeat.self();
         getSLF4JLogger().info("Announcing as {} (group {}) at {}:{}", self.name(), self.group(), self.host(), self.port());
-        var groupStatus = YamlFile.section(config, "group-status");
-        groups = new ServerGroups(this, servers, new GroupStateRepository(database), number(groupStatus, "stale-seconds", 20));
+        var groupStatus = config.section("group-status");
+        groups = new ServerGroups(this, servers, new GroupStateRepository(database), groupStatus.integer("stale-seconds"));
 
         var messages = resources.messages();
         var resourcePack = new ResourcePacks(messages);
         notifications = new Notifications(this, messages, resourcePack,
-                Notifications.Timing.from(YamlFile.section(config, "notifications")));
-        dialogues = new Dialogues(this, messages, resourcePack, YamlFile.section(config, "dialogue"));
-        visuals = new VisualEffects(this, resourcePack, messages, YamlFile.section(config, "presentation"));
-        discoveries = new Discoveries(this, dialogues, resourcePack, messages,
-                YamlFile.section(YamlFile.section(config, "presentation"), "discovery"));
-        dialogues.unavailableWhen(player -> Scenes.isViewing(player) || visuals.active(player));
-        visuals.unavailableWhen(dialogues::active);
-        int levelUpTicks = Math.clamp(number(YamlFile.section(YamlFile.section(config, "presentation"), "gameplay"),
-                "level-up-ticks", 24), 0, 200);
-        notifications.levelUpEffect(player -> {
-            if (levelUpTicks > 0) visuals.accent(player, ScreenEffects.Atmosphere.FOCUS, levelUpTicks);
-        });
-        notifications.suspendWhile(player -> dialogues.active(player) || visuals.active(player) || Scenes.isViewing(player));
+                Notifications.Timing.from(config.section("notifications")));
+        visuals = new VisualEffects(this, resourcePack, config.section("presentation.gameplay"));
         var settingRepository = new PlayerSettingRepository(database);
         var settings = new PlayerSettings(this, settingRepository, messages);
         var weapons = new WeaponStyles(settings);
         var realNames = new RealNames();
         var nickRanks = new NickRanks();
         var xpRepository = new XpRepository(database);
-        var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
-                xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), notifications);
+        var xp = new Xp(this, xpRepository, new Levels(config.integer("xp.level-step")),
+                xpRewards(config.section("xp.rewards")), notifications);
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
         // The locator bar would take the level bar's place and point at hidden or hunted players. No server lets mobs
         // spawn by themselves (the games' ArenaProtection, the lobby's ProtectionListener), so none spends ticks trying.
@@ -167,50 +149,45 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         });
         var buildMode = new BuildMode();
         var flight = new FlightGrants();
-        var eloSection = YamlFile.section(config, "elo");
-        var elo = new Elo(new EloRepository(database,
-                new EloFormula(number(eloSection, "start-rating", 1000), number(eloSection, "k-factor", 32))),
-                SkillGroup.ladder(YamlFile.section(eloSection, "groups")), messages);
+        var elo = new Elo(new EloRepository(database, resources.network().elo()),
+                SkillGroup.ladder(config.section("elo.groups")), messages);
         var afk = new Afk(this, notifications, messages,
-                Duration.ofMinutes(Math.max(1, number(YamlFile.section(config, "afk"), "idle-minutes", 5))));
+                Duration.ofMinutes(Math.max(1, config.integer("afk.idle-minutes"))));
         var ignores = new Ignores(this, new IgnoreRepository(database));
         var vanished = new VanishedPlayers(this, new VanishRepository(database), messages);
         var playerTasks = new PlayerTasks(this, messages);
         var coins = new CoinsRepository(database);
         var unlocks = new Unlocks(database);
-        var profileGames = profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games"));
-        var achievements = new Achievements(this, Achievements.parse(YamlFile.section(config, "achievements")),
+        var profileGames = profileGames(config.section("profile.games"));
+        var achievements = new Achievements(this, Achievements.parse(config.section("achievements").values()),
                 profileGames, unlocks, xp, messages, playerTasks, notifications);
         var profiles = new Profiles(this, coins, profileGames, playerTasks, unlocks, achievements, xp, messages, realNames);
-        var nickStats = new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats")));
+        var nickStats = new NickStats(nickRanks, NickStats.Ranges.from(config.section("nick-stats")));
         var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
-                StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages);
+                StaffAudit.Notices.from(config.section("audit")), messages);
         var tabTeams = new TabTeams(this, LuckPermsProvider.get(), messages, nickRanks, afk, vanished);
-        var calendarSection = YamlFile.section(config, "calendar");
-        var calendar = NetworkCalendar.fromYaml(calendarSection);
+        var calendar = resources.network().calendar();
         var forcedOccasions = new ForcedOccasions(new SettingsRepository(database), calendar);
         forcedOccasions.reload();
         var waitingPath = Optional.ofNullable(System.getenv("BLOCKCRAFT_WAITING_TEMPLATE"))
-                .filter(value -> !value.isBlank()).orElse(text(YamlFile.section(config, "waiting-lobby"), "template", ""));
+                .filter(value -> !value.isBlank()).orElse(config.text("waiting-lobby.template"));
         var waiting = !waitingPath.isBlank()
                 ? waitingLobby(Path.of(waitingPath)) : Optional.<WaitingLobby>empty();
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
-                unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
-                settings, resourcePack, profiles, new Effects(settings), weapons, messages,
-                servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
+                unlocks, new Shop(database), new RoundRecapRepository(database), streaks(config.section("streaks")),
+                settings, resourcePack, profiles, weapons, messages,
+                servers, self, groups, config.text("lobby-group"), presence, resources.tags(), List.copyOf(resources.network().addresses().values()), xp, map,
                 waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
-                calendar, RoundConfig.from(config), dialogues, visuals, discoveries);
+                calendar, RoundConfig.from(config), visuals);
         BlockcraftApi.install(api);
-        if (api.isLobby()) {
-            var world = getServer().getWorlds().getFirst();
-            startScenery(world, calendar, self.group(), getServer().getWorldContainer().toPath()
-                    .resolve(world.getName()).resolve("blockcraft/scenery"));
-        }
+        var mainWorld = getServer().getWorlds().getFirst();
+        startScenery(mainWorld, calendar, self.group(), getServer().getWorldContainer().toPath()
+                .resolve(mainWorld.getName()).resolve("blockcraft/scenery"));
         waiting.ifPresent(lobby -> startScenery(lobby.world(), calendar, self.group(), lobby.directory()));
         waiting.ifPresent(lobby -> getServer().getPluginManager().registerEvents(
                 WorldProtection.in(lobby.world(), buildMode).rescue(() -> Optional.of(lobby.spawn())), this));
         getSLF4JLogger().info("Running map {}{}", map.name(), map.template().map(template -> " from " + template.directory()).orElse(""));
-        int startingCoins = number(config, "starting-coins", 10);
+        int startingCoins = config.integer("starting-coins");
         getServer().getPluginManager().registerEvents(realNames, this);
         getServer().getPluginManager().registerEvents(nickRanks, this);
         getServer().getPluginManager().registerEvents(vanished, this);
@@ -243,14 +220,13 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             commands.register(BuildCommand.create(buildMode, audit, messages));
             commands.register(MapCommand.create(this, map, waiting, messages));
             commands.register(AfkCommand.create(afk));
-            commands.register(PresentationCommand.create(dialogues, visuals, discoveries, messages));
         });
 
-        int heartbeatSeconds = number(config, "heartbeat-seconds", 5);
+        int heartbeatSeconds = config.integer("heartbeat-seconds");
         heartbeat.start(Duration.ofSeconds(heartbeatSeconds));
         getServer().getPluginManager().registerEvents(heartbeat, this);
-        groups.start(number(groupStatus, "refresh-ticks", 50));
-        long occasionTicks = Math.max(1, number(calendarSection, "poll-seconds", 5)) * 20L;
+        groups.start(groupStatus.integer("refresh-ticks"));
+        long occasionTicks = resources.network().calendarPollSeconds() * 20L;
         getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
             try {
                 forcedOccasions.reload();
@@ -301,36 +277,26 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
      * The profile card's games: menu key to legacy stats table, as configured. The table of a game the network does
      * not run yet is created here, so it reads as zeroes instead of failing the whole card.
      */
-    private Map<String, StatsRepository> profileGames(Map<String, Object> section) {
+    private Map<String, StatsRepository> profileGames(StrictConfig section) {
         var games = new LinkedHashMap<String, StatsRepository>();
-        section.forEach((key, table) -> {
-            var repository = new StatsRepository(database, String.valueOf(table));
+        section.keys().forEach(key -> {
+            var repository = new StatsRepository(database, section.text(key));
             repository.createTable();
             games.put(key, repository);
         });
         return games;
     }
 
-    private static Map<XpReward, Integer> xpRewards(Map<String, Object> section) {
+    private static Map<XpReward, Integer> xpRewards(StrictConfig section) {
         var rewards = new EnumMap<XpReward, Integer>(XpReward.class);
         for (var reward : XpReward.values()) {
-            rewards.put(reward, number(section, reward.key(), 0));
+            rewards.put(reward, section.integer(reward.key()));
         }
         return rewards;
     }
 
-    private static Streaks streaks(Map<String, Object> section) {
-        return new Streaks(section.get("announce") instanceof List<?> values
-                ? values.stream().filter(Number.class::isInstance).map(value -> ((Number) value).intValue()).toList()
-                : List.of());
-    }
-
-    private static int number(Map<String, Object> section, String key, int fallback) {
-        return section.get(key) instanceof Number value ? value.intValue() : fallback;
-    }
-
-    private static String text(Map<String, Object> section, String key, String fallback) {
-        return section.get(key) instanceof String value ? value : fallback;
+    private static Streaks streaks(StrictConfig section) {
+        return new Streaks(section.integers("announce"));
     }
 
     @Override
@@ -343,7 +309,6 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             }
         }
         scenery.clear();
-        if (dialogues != null) dialogues.close();
         if (visuals != null) visuals.close();
         if (notifications != null) {
             notifications.close();

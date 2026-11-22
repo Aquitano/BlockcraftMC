@@ -1,0 +1,348 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/desert/atlas",
+    "particle": "blockcraft:item/sternenfront/kits/desert/atlas"
+  },
+  "elements": [
+    {
+      "name": "ledge root",
+      "from": [
+        -8,
+        0,
+        4
+      ],
+      "to": [
+        24,
+        5,
+        10
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.0,
+            9.6875,
+            8.0,
+            10.3125
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            4.0,
+            9.6875,
+            8.0,
+            10.3125
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            5.625,
+            9.6875,
+            6.375,
+            10.3125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            5.625,
+            9.6875,
+            6.375,
+            10.3125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            9.625,
+            8.0,
+            10.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "ledge root",
+      "from": [
+        -8,
+        0,
+        4
+      ],
+      "to": [
+        -6,
+        5,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4.0,
+            9.625,
+            4.25,
+            10.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "ledge root",
+      "from": [
+        22,
+        0,
+        4
+      ],
+      "to": [
+        24,
+        5,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            7.75,
+            9.625,
+            8.0,
+            10.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "overhang",
+      "from": [
+        -6,
+        5,
+        4
+      ],
+      "to": [
+        22,
+        9,
+        16
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.25,
+            9.75,
+            3.75,
+            10.25
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            0.25,
+            9.75,
+            3.75,
+            10.25
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.25,
+            9.75,
+            2.75,
+            10.25
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.25,
+            9.75,
+            2.75,
+            10.25
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "overhang",
+      "from": [
+        -6,
+        5,
+        4
+      ],
+      "to": [
+        -3,
+        9,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0.25,
+            9.25,
+            0.625,
+            10.75
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "overhang",
+      "from": [
+        20,
+        5,
+        4
+      ],
+      "to": [
+        22,
+        9,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3.5,
+            9.25,
+            3.75,
+            10.75
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "overhang",
+      "from": [
+        -3,
+        5,
+        4
+      ],
+      "to": [
+        20,
+        9,
+        5
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0.625,
+            10.625,
+            3.5,
+            10.75
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "overhang",
+      "from": [
+        -3,
+        5,
+        14
+      ],
+      "to": [
+        20,
+        9,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0.625,
+            9.25,
+            3.5,
+            9.5
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "overhang",
+      "from": [
+        -6,
+        5,
+        10
+      ],
+      "to": [
+        22,
+        9,
+        16
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0.25,
+            10.0,
+            3.75,
+            10.75
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "eroded lip",
+      "from": [
+        -3,
+        9,
+        5
+      ],
+      "to": [
+        20,
+        11,
+        14
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            0.5625,
+            9.875,
+            3.4375,
+            10.125
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            0.5625,
+            9.875,
+            3.4375,
+            10.125
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            1.4375,
+            9.875,
+            2.5625,
+            10.125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            1.4375,
+            9.875,
+            2.5625,
+            10.125
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0.5625,
+            9.4375,
+            3.4375,
+            10.5625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    }
+  ]
+}

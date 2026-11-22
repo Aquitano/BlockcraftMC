@@ -33,6 +33,12 @@ public sealed interface ProxyMessage {
     record Play(String group) implements ToProxy {
     }
 
+    record ReplayPlay(String group, String game) implements ToProxy {
+    }
+
+    record ProfileRequest(UUID token, String game) implements ToProxy { }
+    record ProfileReady(UUID token, boolean applied) implements ToBackend { }
+
     record Hub() implements ToProxy {
     }
 

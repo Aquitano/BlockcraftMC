@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 
 public enum Reinforcement {
+    CLONE_COMMANDO(Faction.KOLONIEN, Blaster.DC17M, List.of(Ability.SHIELD_WALL, Ability.GRENADE)),
     ARC_TROOPER(Faction.KOLONIEN, Blaster.ARC_REPEATER, List.of(Ability.SHIELD_WALL, Ability.ADRENALINE)),
     COMMANDO_DROID(Faction.HEGEMONIE, Blaster.COMMANDO_CARBINE, List.of(Ability.JUMP_PACK, Ability.GRENADE));
 
@@ -36,6 +37,7 @@ public enum Reinforcement {
 
     public PackModel helmet() {
         return switch (this) {
+            case CLONE_COMMANDO -> PackModel.STERNENFRONT_HELMET_CLONE_COMMANDO;
             case ARC_TROOPER -> PackModel.STERNENFRONT_HELMET_ARC;
             case COMMANDO_DROID -> PackModel.STERNENFRONT_HELMET_COMMANDO;
         };

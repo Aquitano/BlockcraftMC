@@ -45,7 +45,8 @@ public final class SternenfrontPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         BundledDefaults.apply(this);
-        var gameConfig = GameConfig.from(getConfig(), getConfig().getBoolean("bots.enabled", true) ? 1 : 2);
+        var read = BundledDefaults.strict(getConfig());
+        var gameConfig = GameConfig.from(getConfig(), read.flag("bots.enabled") ? 1 : 2);
         var config = SternenfrontConfig.from(getConfig());
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "bc_sternenfront_stats");
@@ -69,10 +70,10 @@ public final class SternenfrontPlugin extends JavaPlugin {
                 messages, map, lobby, services.stats(), services.menus());
         api.presence().maxPlayers(config.capacity());
         var riggedSides = EnumSet.noneOf(Faction.class);
-        if (getConfig().getBoolean("appearance.droids", true)) {
+        if (read.flag("appearance.droids")) {
             riggedSides.add(Faction.HEGEMONIE);
         }
-        if (getConfig().getBoolean("appearance.infantry", true)) {
+        if (read.flag("appearance.infantry")) {
             riggedSides.add(Faction.KOLONIEN);
         }
         if (!riggedSides.isEmpty()) {
@@ -80,7 +81,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
             game.rigs(bodyRigs);
         }
         secrets = Secrets.start(this, game, messages);
-        if (getConfig().getBoolean("outlines.enabled", true)) {
+        if (read.flag("outlines.enabled")) {
             targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs));
         }
         botDebug = new BotDebug(game, bodyRigs);
@@ -94,6 +95,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
                 new ArenaListener(game, api.buildMode()),
                 new CombatListener(game, api.buildMode(), botDebug, secrets),
                 new ChatListener(game, messages));
+        services.listen(game.fieldObjectives());
 
         services.commands(commands -> {
             commands.register(StartCommand.of(game.countdown()).build());

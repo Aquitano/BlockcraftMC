@@ -526,5 +526,70 @@
       "blockcraft:sternenfront/blaster_heavy_thump_1",
       "blockcraft:sternenfront/blaster_heavy_thump_2"
     ]
+  },
+  "story.dialogue.open": {
+    "sounds": [
+      "blockcraft:story/dialogue_open"
+    ]
+  },
+  "story.dialogue.type": {
+    "sounds": [
+      "blockcraft:story/dialogue_type_1",
+      "blockcraft:story/dialogue_type_2",
+      "blockcraft:story/dialogue_type_3"
+    ]
+  },
+  "story.dialogue.select": {
+    "sounds": [
+      "blockcraft:story/dialogue_select"
+    ]
+  },
+  "story.dialogue.choose": {
+    "sounds": [
+      "blockcraft:story/dialogue_choose"
+    ]
+  },
+  "story.dialogue.advance": {
+    "sounds": [
+      "blockcraft:story/dialogue_advance"
+    ]
+  },
+  "story.dialogue.close": {
+    "sounds": [
+      "blockcraft:story/dialogue_close"
+    ]
+  },
+  "story.stage": {
+    "sounds": [
+      "blockcraft:story/stage"
+    ]
+  },
+  "story.objective.start": {
+    "sounds": [
+      "blockcraft:story/objective_start"
+    ]
+  },
+  "story.objective.complete": {
+    "sounds": [
+      "blockcraft:story/objective_complete"
+    ]
+  },
+  "story.vote.cast": {
+    "sounds": [
+      "blockcraft:story/vote_cast"
+    ]
+  },
+  "story.vote.decided": {
+    "sounds": [
+      "blockcraft:story/vote_decided"
+    ]
+  },
+  "story.craft.pass": {
+    "sounds": [
+      {
+        "name": "blockcraft:story/craft_pass",
+        "attenuation_distance": 96
+      }
+    ]
   }
 }

@@ -45,6 +45,11 @@ public enum CombatClass {
         };
     }
 
+    public List<Blaster> weapons(Faction faction) {
+        return this == SOLDIER && faction == Faction.KOLONIEN
+                ? List.of(Blaster.CARBINE, Blaster.A280, Blaster.E11D) : List.of(blaster(faction));
+    }
+
     public List<Ability> abilities(Faction faction) {
         return faction == Faction.KOLONIEN ? kolonien : hegemonie;
     }

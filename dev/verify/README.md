@@ -20,6 +20,14 @@ dev/verify/verify.py down        # -v also deletes the database and the download
 After `stagePlugins`, `restart` restarts the game server and `join` reconnects; `restart client` or `restart velocity`
 picks up a changed mod or a new resource pack.
 
+`VERIFY_GAME=story` runs the story core's example game (`paper/storyexample`) instead of Sternenfront for every command,
+`VERIFY_GAME=zombies` runs Zombies and `VERIFY_GAME=lobby` the network's lobby; `down` the other one first, since each
+takes the proxy's first-join route. The scenarios are written for the games; on the lobby use the single commands.
+
+`VERIFY_PROJECT` names the Docker project (default `bcverify`), so a second rig can run beside the first with its own
+`VERIFY_PORT`. `VERIFY_PACK_BASE_URL` overrides the address the proxy offers the resource pack archives under, for a
+client outside Docker.
+
 ## Scenarios
 
 Each scenario reaches the state it needs itself, writes a folder under `dev/verify/client-mod/run/screenshots` and prints
@@ -40,7 +48,32 @@ first and open a full frame only where it shows something.
 - `glint` faces an enemy scout from 20 to 40 blocks and photographs its scope's glint once the scout has the player in
   its sights. A player's own scope needs a second player, which this rig does not have.
 
+- `camera --command sfintro` starts a cinematic and records the camera's pose at every client tick to `trace.json`. The
+  report says how long the client really looked through the camera and how evenly it moved within each shot.
+- `storyjump` (with `VERIFY_GAME=story`) jumps the party to every stage of the mission with `/story jump` and reports
+  `/story state json` at each and the story log at the end.
+- `storychapters` (with `VERIFY_GAME=story`) ends the example's first chapter and photographs the way into the
+  second, which plays in a world of its own: the ending, the loading screen and the arrival. It reports the chapter,
+  world and facts the second one starts with.
+- `camera --command "story scene arrival"` traces a story cutscene. Start a mission first, so the camera need not leave
+  the waiting lobby's world.
+
 `sternenfront-overrides.yml` makes heroes free and brings the relic early on this network only.
+
+### Zombies
+
+With `VERIFY_GAME=zombies`. `zombies-overrides.yml` plays three waves that end on a boss one pistol can put down. A
+scenario that needs other settings restarts the server with its own on top, written to `build/verify/zombies-config.yml`.
+The client draws too slowly to walk, so these scenarios move the player with `tp`.
+
+- `survive` plays a round with what a new player has: it knocks at a door it cannot pay for, then shoots what comes
+  through the windows until the round is won or lost, falling back to a yard corner when the horde reaches it.
+- `stations` starts with gold for everything and ten minutes before the first wave: it opens every door, clicks every
+  offer of every station once, visits a second time where the first was refused for want of power, and takes the gun
+  the mystery box rolls. The report has each menu's offers and what each click said and cost.
+- `horde --kind frost` plays a round of one wave of a single kind of enemy, `--kind hellhound` and `--kind inferno`
+  the hound and the boss wave, and `horde --event blood_moon` forces one wave event. Every hit lands, on a player with
+  five times the health who is healed after it, to watch the wave to its end, which wins the round.
 
 ## Maps
 
@@ -48,6 +81,8 @@ first and open a full frame only where it shows something.
 `arena.yml`, builds them from an endless flat sea on a bare server and saves the result to `worlds/sturmwerft`. The generator
 stops if the arena would place a fighter inside a block. To play a map on this network, start it with `VERIFY_MAP=sturmwerft`,
 then use the scenarios, `tour` above all. Scenarios and `restart` follow the map the server is running, and each report names it.
+`verify.py map silo7` builds the Zombies map Silo 7 the same way into `worlds/silo7`; `VERIFY_GAME=zombies VERIFY_MAP=silo7`
+plays it. The mapbuilder alone needs up to 3 GB and no client.
 
 ## Replays
 
@@ -60,20 +95,22 @@ recording there and reports how many animated bodies it drew.
 
 | Command | Fields | Does |
 |---|---|---|
-| `status` | | window, GUI scale, position, health, hotbar, FPS, dimension and the world border the client holds |
+| `status` | | window, GUI scale, position, health, hotbar, FPS, dimension, the world border the client holds, the block it looks at and whether it is breaking one |
+| `packs` | | the resource-pack IDs currently selected by the client |
 | `hud` | | action bar, title, subtitle, boss bars, sidebar and chat as text, each with its width |
 | `screen` | | the open screen's title, buttons and container slots |
 | `press`, `click`, `close` | `label`; `slot`, `button` | use a dialog button or a menu slot |
 | `mouse` | `x y` | moves the cursor in window pixels, for a menu screenshot without a tooltip |
-| `hold`, `release`, `tap` | `key`, `ticks`; `times`, `every` | `forward back left right jump sneak sprint attack use swap drop inventory`; `tap` repeats `times` taps `every` ticks apart |
+| `hold`, `release`, `tap` | `key`, `ticks`; `times`, `every` | `forward back left right jump sneak sprint attack use swap drop inventory`; `hold` clicks as the key goes down, as a mouse does; `tap` repeats `times` taps `every` ticks apart |
 | `hotbar` | `slot` | selects a slot |
 | `look`, `look_at`, `aim` | `yaw pitch`; `x y z`; `name` | turns the camera, `aim` to the nearest match |
 | `command`, `chat` | `text` | sends either as the player |
 | `gui_scale`, `window` | `value`; `width height` | changes the UI scale or the window |
 | `option` | `fov fov_effects render_distance particles perspective hide_hud` | client options; `fov_effects` is the 0 to 1 FOV effects slider |
 | `screenshot`, `capture` | `name`; `frames every` | one image, or one every few ticks |
+| `trace` | `ticks` | the camera entity's position, rotation and type at the end of each client tick |
 | `entities` | `radius totals_only` | what the client sees around the player |
-| `events` | `since` | every change to the HUD, screen, health and chat and every sound played, by client tick, recorded each tick so nothing short-lived is missed |
+| `events` | `since` | every change to the HUD, screen, camera entity, health, chat, field of view and use key and every sound played, by client tick, recorded each tick so nothing short-lived is missed |
 
 `verify.py rcon "<command>"` runs a server command, such as `tp` or `damage`.
 

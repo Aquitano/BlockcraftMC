@@ -1,11 +1,11 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.pack.HudPanel;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
-import me.blockcraft.sternenfront.game.HudPanel;
 import me.blockcraft.sternenfront.hero.HeroAbility;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;

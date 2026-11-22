@@ -54,6 +54,12 @@ public final class Arena {
                 messages.get("arena.watching", Placeholder.unparsed("player", target.getName())));
     }
 
+    /** Told to whoever joined a round already running, with the buttons to pick a player and to leave. */
+    void joinedRunning(Player spectator, Component pick, Component lobby) {
+        spectator.sendMessage(messages.get("arena.running", Placeholder.component("pick", pick),
+                Placeholder.component("lobby", lobby)));
+    }
+
     Component spectatorChatTag() {
         return messages.get("arena.spectator-chat");
     }

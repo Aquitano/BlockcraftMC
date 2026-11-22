@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.menu;
 
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Teams;
@@ -17,20 +18,31 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
-/** The Kolonien on the left, the Hegemonie on the right, each with its banner and who is in it; a click joins. */
+/**
+ * The Kolonien on the left, the Hegemonie on the right, each a card of four columns by five rows that the pack draws
+ * with the faction's soldier; its tooltip says who is in it, and a click anywhere on it joins. Without the pack, each
+ * card is its banner between panes.
+ */
 public final class TeamMenu extends Menu {
 
-    private static final int ROWS = 3;
-    private static final Map<Integer, Faction> SLOTS = Map.of(11, Faction.KOLONIEN, 15, Faction.HEGEMONIE);
+    private static final int ROWS = 6;
+    private static final int CARD_COLUMNS = 4;
+    private static final int CARD_ROWS = 5;
+    private static final Map<Integer, Faction> SLOTS = Map.of(9, Faction.KOLONIEN, 14, Faction.HEGEMONIE);
 
+    private final Component title;
     private final BiConsumer<Player, Faction> choose;
 
     public TeamMenu(Messages messages, Teams teams, int capacity, BiConsumer<Player, Faction> choose) {
         super(ROWS, messages.get("faction.title"));
+        this.title = messages.get("faction.title");
         this.choose = choose;
+        closeButton(ToolbarButton.LEFT);
         SLOTS.forEach((slot, faction) -> {
+            area(slot, CARD_COLUMNS, CARD_ROWS);
             var lore = new ArrayList<>(messages.getLines("faction." + faction.key() + ".lore"));
             lore.add(Component.empty());
             lore.add(messages.get("faction.size", Formatter.number("players", teams.size(faction)), Formatter.number("max", capacity)));
@@ -42,7 +54,11 @@ public final class TeamMenu extends Menu {
                     .name(messages.get("faction." + faction.key() + ".name").colorIfAbsent(faction.text()))
                     .lore(lore).hideAttributes().build());
         });
-        closeButton();
+    }
+
+    @Override
+    protected Optional<Component> screen() {
+        return Optional.of(UiFont.menuTitle(ROWS, true, false, UiFont.overlaid(UiFont.Overlay.STERNENFRONT_FACTIONS, title)));
     }
 
     @Override

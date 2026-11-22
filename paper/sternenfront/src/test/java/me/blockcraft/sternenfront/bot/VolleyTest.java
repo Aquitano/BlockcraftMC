@@ -23,4 +23,15 @@ public class VolleyTest {
         volley.clear();
         assertFalse(volley.next(202));
     }
+
+    @Test
+    public void aHeldBackVolleyGoesOnAtItsSpacing() {
+        var volley = new Volley();
+        volley.start(100, 3, 2);
+        assertTrue(volley.next(100));
+        assertTrue(volley.next(110));
+        assertFalse(volley.next(110));
+        assertFalse(volley.next(111));
+        assertTrue(volley.next(112));
+    }
 }

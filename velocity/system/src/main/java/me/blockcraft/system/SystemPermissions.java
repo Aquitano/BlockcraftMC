@@ -1,5 +1,7 @@
 package me.blockcraft.system;
 
+import me.blockcraft.common.settings.PlayerSetting;
+
 public final class SystemPermissions {
 
     private static final String ROOT = "blockcraft.system.";
@@ -47,6 +49,9 @@ public final class SystemPermissions {
     public static final String FULL_JOIN = ROOT + "fulljoin";
     public static final String BLOCKED_COMMANDS_BYPASS = ROOT + "blockedcommands.bypass";
     public static final String BYPASS_RANK = ROOT + "bypass-rank";
+
+    /** Staff with this hear about new reports and may turn that off; the settings menu offers the toggle by the same node. */
+    public static final String REPORT_NOTIFY = PlayerSetting.REPORT_NOTIFICATIONS.permission().orElseThrow();
 
     /** The Paper side's nodes for looking through vanish and nicks; one node covers both sides. */
     public static final String SEE_VANISHED = "blockcraft.core.vanish.see";

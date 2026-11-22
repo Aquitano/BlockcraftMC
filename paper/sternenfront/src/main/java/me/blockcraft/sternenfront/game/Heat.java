@@ -111,6 +111,10 @@ public final class Heat {
         return lastShot + minTicksBetween;
     }
 
+    public long lastShot() {
+        return lastShot;
+    }
+
     public boolean venting(long tick) {
         return tick < ventedUntil;
     }

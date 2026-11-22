@@ -17,6 +17,9 @@ public class ProxyMessageCodecTest {
     public void everyMessageSurvivesTheRoundTrip() {
         var messages = List.<ProxyMessage>of(
                 new ProxyMessage.Play("bedwars"),
+                new ProxyMessage.ReplayPlay("replay", "sternenfront"),
+                new ProxyMessage.ProfileRequest(UUID.randomUUID(), "sternenfront"),
+                new ProxyMessage.ProfileReady(UUID.randomUUID(), true),
                 new ProxyMessage.Hub(),
                 new ProxyMessage.Command("goto Player"),
                 new ProxyMessage.NickChange(Optional.of(new Nick("Nick", "Skin", "vip"))),

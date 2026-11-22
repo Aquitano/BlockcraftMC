@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.appearance;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.sternenfront.bot.Bots;
@@ -56,9 +57,11 @@ public final class BodyRigs implements Listener, AutoCloseable {
         this.plugin = plugin;
         this.game = game;
         this.riggedSides = Set.copyOf(riggedSides);
-        turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
-        hurtTint = Color.fromRGB(Optional.ofNullable(TextColor.fromHexString("#" + game.plugin().getConfig().getString("appearance.hurt-tint", "")))
-                .map(TextColor::value).orElse(0xFF5050));
+        var read = BundledDefaults.strict(game.plugin().getConfig()).section("appearance");
+        turnDegrees = (float) Math.clamp(read.decimal("body-turn-degrees"), 1, 45);
+        var tint = read.text("hurt-tint");
+        hurtTint = Color.fromRGB(Optional.ofNullable(TextColor.fromHexString("#" + tint)).map(TextColor::value).orElseThrow(() ->
+                new IllegalStateException("config.yml: appearance.hurt-tint must be a hex colour, not " + tint)));
         unitColours = UnitColours.from(game.plugin().getConfig().getConfigurationSection("appearance"));
         for (var role : CombatClass.values()) {
             motions.put(role, RigMotion.from(game.plugin().getConfig(), role));

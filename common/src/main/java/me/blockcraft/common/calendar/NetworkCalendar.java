@@ -1,20 +1,17 @@
 package me.blockcraft.common.calendar;
 
-import me.blockcraft.common.config.YamlFile;
+import me.blockcraft.common.config.StrictConfig;
 
 import java.time.Clock;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.MonthDay;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -66,13 +63,10 @@ public final class NetworkCalendar {
      * {@code calendar} of a config.yml: {@code zone}, {@code easter.days-before/-after}, {@code halloween.from/to},
      * {@code winter.from/to}, {@code founded}. SnakeYAML hands an unquoted founded over as a {@link Date} at UTC midnight.
      */
-    public static NetworkCalendar fromYaml(Map<String, Object> section) {
-        var easter = YamlFile.section(section, "easter");
-        return new NetworkCalendar(Clock.system(zone(section.get("zone"))),
-                number(easter, "days-before", 2), number(easter, "days-after", 7),
-                window(YamlFile.section(section, "halloween"), new Window(MonthDay.of(Month.OCTOBER, 17), MonthDay.of(Month.OCTOBER, 31))),
-                window(YamlFile.section(section, "winter"), new Window(MonthDay.of(Month.DECEMBER, 1), MonthDay.of(Month.DECEMBER, 31))),
-                date(section.get("founded")));
+    public static NetworkCalendar from(StrictConfig section) {
+        return new NetworkCalendar(Clock.system(ZoneId.of(section.text("zone"))),
+                Math.max(0, section.integer("easter.days-before")), Math.max(0, section.integer("easter.days-after")),
+                window(section.section("halloween")), window(section.section("winter")), founded(section));
     }
 
     public ZoneId zone() {
@@ -173,38 +167,15 @@ public final class NetworkCalendar {
         return LocalDate.of(year, month, day);
     }
 
-    private static ZoneId zone(Object value) {
-        try {
-            return value instanceof String id && !id.isBlank() ? ZoneId.of(id) : ZoneId.of("Europe/Berlin");
-        } catch (DateTimeException invalid) {
-            return ZoneId.of("Europe/Berlin");
-        }
+    private static Window window(StrictConfig section) {
+        return new Window(MonthDay.parse("--" + section.text("from")), MonthDay.parse("--" + section.text("to")));
     }
 
-    private static Window window(Map<String, Object> section, Window fallback) {
-        return new Window(monthDay(section.get("from"), fallback.from()), monthDay(section.get("to"), fallback.to()));
-    }
-
-    private static MonthDay monthDay(Object value, MonthDay fallback) {
-        try {
-            return value instanceof String text ? MonthDay.parse("--" + text) : fallback;
-        } catch (DateTimeParseException invalid) {
-            return fallback;
-        }
-    }
-
-    private static Optional<LocalDate> date(Object value) {
-        if (value instanceof Date day) {
+    private static Optional<LocalDate> founded(StrictConfig section) {
+        if (section.values().get("founded") instanceof Date day) {
             return Optional.of(day.toInstant().atZone(ZoneOffset.UTC).toLocalDate());
         }
-        try {
-            return value instanceof String text && !text.isBlank() ? Optional.of(LocalDate.parse(text)) : Optional.empty();
-        } catch (DateTimeParseException invalid) {
-            return Optional.empty();
-        }
-    }
-
-    private static int number(Map<String, Object> section, String key, int fallback) {
-        return section.get(key) instanceof Number value ? Math.max(0, value.intValue()) : fallback;
+        var text = section.text("founded");
+        return text.isBlank() ? Optional.empty() : Optional.of(LocalDate.parse(text));
     }
 }

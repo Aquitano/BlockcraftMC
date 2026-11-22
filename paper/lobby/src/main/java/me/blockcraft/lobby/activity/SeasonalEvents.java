@@ -12,6 +12,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.lobby.ChatTalk;
 import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.lobby.config.ActivitiesConfig;
@@ -125,7 +126,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         this.rewards = new UnlockRewards(BlockcraftApi.get().database());
         eggSpots = entities.group(this::findEgg, (player, egg) -> { });
         santa = entities.group((player, spot) -> visitSanta(player),
-                (player, spot) -> player.sendMessage(messages.pick("seasonal.santa-hurt")));
+                (player, spot) -> player.sendMessage(santaSays(messages.pick("seasonal.santa-hurt"))));
         this.fireworks = fireworks;
         this.decor = decor;
         day = calendar.today();
@@ -370,11 +371,15 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
             }
             if (granted) {
                 jingle(player);
-                player.sendMessage(messages.get("seasonal.santa-gift", Formatter.number("coins", config.christmasCoins())));
+                player.sendMessage(santaSays(messages.get("seasonal.santa-gift", Formatter.number("coins", config.christmasCoins()))));
             } else {
-                player.sendMessage(messages.pick("seasonal.santa-talk"));
+                player.sendMessage(santaSays(messages.pick("seasonal.santa-talk")));
             }
         }, () -> claiming.remove(player.getUniqueId()));
+    }
+
+    private Component santaSays(Component line) {
+        return ChatTalk.says(messages, messages.get("seasonal.santa-name"), line);
     }
 
     private void jingle(Player player) {

@@ -166,8 +166,7 @@ public final class SystemPlugin {
 
     private void enable() {
         var config = SystemConfig.load(dataDirectory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
-        var loaded = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
-        var messages = loaded.with(config.networkTags(), loaded.tagsOf("palette"));
+        var messages = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"), config.networkTags());
         database = Database.connect(config.database(), "BlockcraftSystem");
         database.migrate();
         var repositories = ModerationRepositories.create(database);
@@ -222,7 +221,7 @@ public final class SystemPlugin {
         var support = new CommandSupport(visibility, messages);
         var staffButtons = new StaffButtons(messages);
         var moderationActions = new ModerationActions(support, lookup, punishments, config, messages);
-        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility, choices, playerSettings);
+        var reports = Reports.load(proxy, logger, messages, config.reportCooldown(), database, lookup, visibility, choices, playerSettings);
         register(reports.command().create());
         proxy.getEventManager().register(this, new OperationListener(proxy, (player, request) -> switch (request) {
             case NetworkRequest.SubmitReport report -> reports.service().submit(player, report.target(), report.reason());
@@ -273,8 +272,9 @@ public final class SystemPlugin {
         events.register(this, new FreezeSwitchListener(repositories.frozen(), messages, logger));
         events.register(this, new VanishSwitchListener(this, proxy, repositories.vanish(), visibility, logger));
         events.register(this, playtime);
-        pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages, logger);
-        pack.ifPresent(networkPack -> events.register(this, networkPack));
+        var networkPack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages, logger, directory::groupOf);
+        events.register(this, networkPack);
+        pack = Optional.of(networkPack);
 
         var punishmentCommands = new PunishmentCommands(support, lookup, moderationActions, repositories.punishments(), messages);
         for (var type : PunishmentType.values()) {

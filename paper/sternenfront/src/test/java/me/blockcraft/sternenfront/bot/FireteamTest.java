@@ -1,12 +1,15 @@
 package me.blockcraft.sternenfront.bot;
 
 import me.blockcraft.sternenfront.bot.Fireteam.Place;
+import me.blockcraft.sternenfront.game.Faction;
 import org.bukkit.util.Vector;
 import org.junit.Test;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class FireteamTest {
 
@@ -42,6 +45,20 @@ public class FireteamTest {
         assertEquals(0.9, Fireteam.followPace(3, 3, 0.9, 1.25), 1e-9);
         assertEquals(1.075, Fireteam.followPace(6, 3, 0.9, 1.25), 1e-9);
         assertEquals(1.25, Fireteam.followPace(20, 3, 0.9, 1.25), 1e-9);
+    }
+
+    @Test
+    public void theElementsAlternateOverTheMembersStillBounding() {
+        var team = new Fireteam(0, Faction.KOLONIEN, List.of(1, 2, 3));
+        team.bounders = List.of(1, 3);
+        assertEquals(0, team.element(1));
+        assertEquals(1, team.element(3));
+        team.bounding.update(new boolean[] {true, true}, false, 0, 80);
+        assertTrue(team.moves(3));
+        assertFalse(team.moves(1));
+        assertFalse(team.moves(2));
+        team.bounding.reset();
+        assertFalse(team.moves(2));
     }
 
 }

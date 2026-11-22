@@ -145,9 +145,7 @@ public final class Posts {
     }
 
     public void holograms(Plugin plugin) {
-        if (plugin.getConfig().getBoolean("presentation.holographic-posts", true)) {
-            posts.forEach(post -> post.hologram = new PostHologram(plugin, post.site.center()));
-        }
+        posts.forEach(post -> post.hologram = new PostHologram(plugin, post.site.center()));
     }
 
     public void tick(long tick) {

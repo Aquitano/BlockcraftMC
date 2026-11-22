@@ -60,7 +60,7 @@ public final class DeployArt {
     static final int BUTTON_INK = 0xFF1B1E26;
 
     /** Tops of the server's text lines; Sternenfront's DeployScreen draws on no others. */
-    static final int[] LINES = {-3, 19, 21, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 153, 154, 155, 163, 165, 168, 173, 175, 178, 183, 185, 193, 195, 196, 197, 203, 206, 214, 218};
+    static final int[] LINES = {-3, 19, 21, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 154, 168, 178, 196, 197, 203, 206, 214, 218};
 
     static final String[] FACTIONS = {"kolonien", "hegemonie"};
     static final int[] ACCENTS = {0xFF3D8BFF, 0xFFE8473F};
@@ -82,7 +82,7 @@ public final class DeployArt {
     /** The portraits in one sheet each, in this order; the server picks a cell by its index. */
     static final List<String> UNITS = List.of("kolonien_soldier", "kolonien_heavy", "kolonien_scout", "kolonien_medic",
             "hegemonie_soldier", "hegemonie_heavy", "hegemonie_scout", "hegemonie_medic",
-            "reinforcement_arc_trooper", "reinforcement_commando_droid", "hero_jedi", "hero_commander", "hero_sith", "hero_bounty_hunter");
+            "reinforcement_arc_trooper", "reinforcement_commando_droid", "hero_jedi", "hero_commander", "hero_sith", "hero_bounty_hunter", "reinforcement_clone_commando");
 
     static final String LABELS = PackArt.TileArt.LETTERS + "%,()·";
     /** Letters the menu tiles lack, and a 1 with its stem in the middle, since theirs reads as a ] beside KP. */
@@ -234,7 +234,7 @@ public final class DeployArt {
                 Files.writeString(models.resolve(name + ".json"), String.format(Locale.ROOT, """
                         {
                           "gui_light": "front",
-                          "textures": {"digits": "blockcraft:item/deploy/countdown_digits"},
+                          "textures": {"digits": "blockcraft:item/deploy/countdown_digits", "particle": "#digits"},
                           "elements": [{"from": [%d, %d, 8], "to": [%d, %d, 8], "shade": false,
                             "faces": {"south": {"uv": [%.1f, 0, %.1f, 10], "texture": "#digits"}}}]
                         }
@@ -282,7 +282,6 @@ public final class DeployArt {
         canvas.panel(179, 17, 117, 209);
         canvas.fill(180, 18, 115, 10, HEADER);
         canvas.fill(180, 28, 115, 1, EDGE);
-        canvas.fill(181, 139, 113, 1, EDGE);
 
         canvas.fill(SLOT_LEFT - 1, 17, span(COLUMNS) + 2, 12, EDGE);
         canvas.fill(SLOT_LEFT, 18, span(COLUMNS), 10, HEADER);

@@ -119,13 +119,15 @@ weapons:
   shotgun: {price: 650, damage: 4, range: 22, pellets: 7, spread: 0.12, clip: 6, reserve: 72, cooldown-ticks: 18, reload-ticks: 55, upgrade-multiplier: 2.5, mystery-weight: 3}
   sniper: {price: 900, damage: 36, range: 65, pellets: 1, spread: 0, clip: 5, reserve: 60, cooldown-ticks: 22, reload-ticks: 50, upgrade-multiplier: 2.5, mystery-weight: 2}
   flamethrower: {damage: 6, range: 9, pellets: 1, spread: 0.3, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 120, upgrade-multiplier: 1.6, burn-damage: 3, burn-seconds: 4, mystery-weight: 1}
+# The hellhound, pouncer, ram and scavenger wear creature models: their scale sizes the model and the box shots hit,
+# while the mob beneath keeps a size that fits through the windows.
 enemies:
   walker: {first-wave: 1, health: 20, damage: 4, speed: 0.23, weight: 12, late-weight: 5}
   runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 3, late-weight: 6}
   tank: {first-wave: 6, health: 65, damage: 6, speed: 0.17, weight: 2, late-weight: 5}
   exploder: {first-wave: 9, health: 24, damage: 10, speed: 0.25, weight: 2, late-weight: 4}
   toxic: {first-wave: 12, health: 30, damage: 4, speed: 0.22, weight: 2, late-weight: 4, slow-seconds: 3}
-  hellhound: {first-wave: 7, health: 16, damage: 3, speed: 0.32, weight: 0}
+  hellhound: {first-wave: 7, health: 16, damage: 3, speed: 0.32, weight: 0, scale: 0.75}
   inferno: {first-wave: 10, health: 300, damage: 8, speed: 0.20, weight: 0}
   crawler: {first-wave: 8, health: 8, damage: 2, speed: 0.33, weight: 1, late-weight: 2, scale: 0.5}
   shield_bearer: {first-wave: 11, health: 40, damage: 5, speed: 0.20, weight: 1.5, late-weight: 3}
@@ -135,6 +137,11 @@ enemies:
   # A zombie taller than scale 1.02 no longer fits through the arena's two-block windows.
   breeder: {first-wave: 21, health: 120, damage: 7, speed: 0.15, weight: 0.8, late-weight: 2}
   shadow: {first-wave: 23, health: 36, damage: 6, speed: 0.36, weight: 1, late-weight: 2.5}
+  # Only while the power is on, since cutting it is all it does.
+  scavenger: {first-wave: 9, health: 10, damage: 2, speed: 0.31, weight: 0.25, late-weight: 0.5}
+  # Its damage is what a pinned fighter takes every pulse.
+  pouncer: {first-wave: 14, health: 70, damage: 3, speed: 0.24, weight: 0.8, late-weight: 2, scale: 0.45}
+  ram: {first-wave: 16, health: 110, damage: 9, speed: 0.19, weight: 0.6, late-weight: 1.8, scale: 0.6}
 # An exploder within trigger-range blocks of a player lights its fuse, hisses, glows and rushes; after fuse-ticks it
 # blasts everyone in sight within radius for up to its damage, less towards the edge, and throws them back. Shooting
 # it while the fuse burns kills it before it goes off.
@@ -144,6 +151,10 @@ exploder:
   rush-speed: 0.34
   radius: 4.5
   knockback: 1.1
+# About every four seconds the Inferno throws fire at the nearest fighter it sees within blast-range blocks, for its
+# damage: a flame runs from its head to the fighter. Cover or distance saves them.
+inferno:
+  blast-range: 24
 # From from-wave, each wave that is neither a boss nor a hound wave gets one event with chance, picked by weight.
 # The blood moon is decided as the wave starts; the others strike once a random share between earliest-share and
 # latest-share of the wave has spawned. The power outage needs bought power, the toxic fog a second open room.
@@ -196,3 +207,46 @@ abilities:
   # Freezes in place while a fighter with line of sight looks within watch-angle of it.
   shadow:
     watch-angle: 30
+  # Goes for a fighter with no teammate within alone-radius. Within leap-range it crouches for windup-ticks and leaps
+  # at them; whoever it lands on is pinned and cannot shoot until a teammate hits it or pin-seconds pass
+  # (solo-pin-seconds in solo play). Its next leap waits cooldown-ticks.
+  pouncer:
+    leap-range: 7
+    alone-radius: 6
+    windup-ticks: 15
+    cooldown-ticks: 100
+    pin-seconds: 5
+    solo-pin-seconds: 2
+    pulse-ticks: 20
+  # Within charge-range it paws the ground for windup-ticks and charges straight ahead at charge-speed blocks a tick
+  # for up to charge-ticks, throwing aside every fighter in its way. A wall stuns it for stun-seconds, when hits deal
+  # stunned-multiplier; otherwise a hit within front-angle of its face deals only front-share. Outside a window it
+  # charges the boards and smashes them all at once.
+  ram:
+    charge-range: 14
+    windup-ticks: 30
+    charge-speed: 0.7
+    charge-ticks: 30
+    stun-seconds: 3
+    front-angle: 70
+    front-share: 0.35
+    stunned-multiplier: 2
+    knockback: 1.3
+    cooldown-ticks: 80
+  # Comes in packs once the power is on and runs for the generator instead of the fighters. Once scavengers within
+  # gnaw-radius of it have gnawed for gnaw-seconds together, the power fails as in the outage event.
+  scavenger:
+    pack: 2
+    gnaw-radius: 2.5
+    gnaw-seconds: 8
+# From from-wave something lives under the floor. A fighter who stays within radius blocks of one spot hears it after
+# rumble-seconds; at strike-seconds its head breaks out there, at scale times the model's size, and bites everyone
+# within reach for damage. Then it rests for rest-seconds.
+burrower:
+  from-wave: 5
+  radius: 3
+  rumble-seconds: 6
+  strike-seconds: 9
+  rest-seconds: 12
+  damage: 7
+  scale: 1.5

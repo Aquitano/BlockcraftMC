@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.cookies;
 
+import me.blockcraft.common.config.StrictConfig;
 import org.junit.Test;
 
 import java.util.List;
@@ -38,9 +39,9 @@ public class CookieProgressTest {
 
     @Test
     public void configurationAndStoredProgressStayBounded() {
-        var rules = CookieProgress.Rules.fromYaml(Map.of("max-cookies", 10, "clicks-per-second", 1000,
-                "save-seconds", 0, "shutdown-save-seconds", 1000,
-                "upgrades", List.of(Map.of("cost", -1, "per-click", Long.MAX_VALUE))));
+        var rules = CookieProgress.Rules.from(StrictConfig.of("config.yml", Map.of("max-cookies", 10,
+                "clicks-per-second", 1000, "save-seconds", 0, "shutdown-save-seconds", 1000,
+                "upgrades", List.of(Map.of("cost", -1, "per-click", Long.MAX_VALUE)))));
         assertEquals(50_000_000, rules.clickNanos());
         assertEquals(100, rules.saveTicks());
         assertEquals(30, rules.shutdownSaveSeconds());
