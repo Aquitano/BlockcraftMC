@@ -76,7 +76,7 @@ public final class ArenaMap {
     private final List<BlockState> originals = new ArrayList<>();
     private final List<TextDisplay> labels = new ArrayList<>();
     private final Map<Station, TextDisplay> stationLabels = new LinkedHashMap<>();
-    private record DoorLabel(TextDisplay display, Component opened) { }
+    private record DoorLabel(List<TextDisplay> displays, Component opened) { }
     private final Map<Door, DoorLabel> doorLabels = new LinkedHashMap<>();
     private Plugin chunkOwner;
     private org.bukkit.block.data.BlockData windowData;
@@ -288,7 +288,7 @@ public final class ArenaMap {
         unlocked.addAll(door.rooms());
         var label = doorLabels.get(door);
         if (label != null) {
-            label.display().text(label.opened());
+            label.displays().forEach(display -> display.text(label.opened()));
         }
         var box = door.box();
         return java.util.stream.IntStream.rangeClosed(box.minY(), box.maxY())
@@ -319,16 +319,26 @@ public final class ArenaMap {
         }
         doors.forEach(door -> {
             var box = door.box();
-            var location = new Location(world, (box.minX() + box.maxX() + 1) / 2.0, box.maxY() + 1.0, (box.minZ() + box.maxZ() + 1) / 2.0);
-            var towardYard = point("spawn").toVector().subtract(location.toVector()).setY(0);
-            if (towardYard.lengthSquared() > 0) {
-                location.add(towardYard.normalize().multiply(0.65));
-            }
+            var centre = new Location(world, (box.minX() + box.maxX() + 1) / 2.0, box.maxY() + 1.0, (box.minZ() + box.maxZ() + 1) / 2.0);
             var roomName = Placeholder.component("room", door.name(messages));
-            var display = label(location, messages.get("room.label", roomName,
-                    net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("price", door.price())));
-            doorLabels.put(door, new DoorLabel(display, messages.get("room.open-label", roomName)));
+            var text = messages.get("room.label", roomName,
+                    net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("price", door.price()));
+            var displays = faces(box).stream().map(face -> label(centre.clone().add(face), text)).toList();
+            doorLabels.put(door, new DoorLabel(displays, messages.get("room.open-label", roomName)));
         });
+    }
+
+    /**
+     * Just outside both faces of a door's wall, so its label shows from either room instead of sitting in the lintel.
+     */
+    private static List<org.bukkit.util.Vector> faces(BlockBox box) {
+        double out = 0.15;
+        if (box.maxX() - box.minX() <= box.maxZ() - box.minZ()) {
+            double half = (box.maxX() - box.minX() + 1) / 2.0 + out;
+            return List.of(new org.bukkit.util.Vector(half, 0, 0), new org.bukkit.util.Vector(-half, 0, 0));
+        }
+        double half = (box.maxZ() - box.minZ() + 1) / 2.0 + out;
+        return List.of(new org.bukkit.util.Vector(0, 0, half), new org.bukkit.util.Vector(0, 0, -half));
     }
 
     /** Tells everyone the stations of this kind have nothing left to sell, as the door labels do for an opened room. */
