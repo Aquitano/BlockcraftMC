@@ -15,6 +15,7 @@ import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
+import me.blockcraft.ttt.arena.MapCopies;
 import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.TownBuilder;
 import me.blockcraft.ttt.arena.TownMaps;
@@ -46,6 +47,7 @@ public final class TttPlugin extends JavaPlugin {
 
     private static final String NAMESPACE = "ttt";
     private static final String LOBBY = "lobby";
+    private static final String BUILT_TEMPLATES = "ttt-built-maps";
 
     private TttGame game;
 
@@ -65,8 +67,12 @@ public final class TttPlugin extends JavaPlugin {
         var locations = Locations.load(api.map().file(this, "locations.yml"));
         Supplier<Location> lobbySpawn = () -> api.waitingLobby().map(WaitingLobby::spawn)
                 .or(() -> locations.get(LOBBY)).orElseGet(lobby::getSpawnLocation);
-        var vote = new MapVote(messages, choices(config, mode), getSLF4JLogger());
-        game = new TttGame(this, gameConfig, config, mode, messages, vote, lobbySpawn, services.stats(), services.menus(), karma);
+        var copies = new MapCopies(this, new TemplateDimensions(NAMESPACE, world -> {
+            Worlds.settle(world);
+            playable(world, config);
+        }));
+        var vote = new MapVote(messages, choices(config, mode, copies), getSLF4JLogger());
+        game = new TttGame(this, gameConfig, config, mode, messages, vote, copies, lobbySpawn, services.stats(), services.menus(), karma);
         api.presence().maxPlayers(config.capacity());
 
         services.listen(
@@ -101,29 +107,35 @@ public final class TttPlugin extends JavaPlugin {
 
     /**
      * Schattenbach and every imported map of the pool. Schattenbach is built now, because building it takes seconds
-     * that a round start must not stall for; the imported maps are only copied into place, and loading one takes a
-     * fraction of that. A map whose copy fails stays out of the vote. TTT 2 plays only the maps with chores.
+     * that a round start must not stall for, and kept as the template its later rounds are copied from; the imported
+     * maps are only copied into place, and loading one takes a fraction of that. A map whose copy fails stays out of
+     * the vote. TTT 2 plays only the maps with chores.
      */
-    private List<MapVote.Choice> choices(TttConfig config, TttMode mode) {
+    private List<MapVote.Choice> choices(TttConfig config, TttMode mode, MapCopies copies) {
         var choices = new ArrayList<MapVote.Choice>();
         var builtKey = new NamespacedKey(NAMESPACE, TownBuilder.KEY);
         Worlds.discard(builtKey);
         var builtWorld = Worlds.createArena(builtKey);
         playable(builtWorld, config);
         var built = TownBuilder.build(builtWorld);
-        choices.add(new MapVote.Choice(TownBuilder.KEY, built.name(), List.of(), Material.BELL, () -> built));
+        try {
+            copies.keep(builtWorld, Bukkit.getWorldContainer().toPath().resolve(BUILT_TEMPLATES).resolve(TownBuilder.KEY));
+        } catch (UncheckedIOException e) {
+            getSLF4JLogger().warn("Could not keep {} as a template, so its later rounds play on what earlier ones left", TownBuilder.KEY, e);
+        }
+        choices.add(new MapVote.Choice(TownBuilder.KEY, built.name(), List.of(), Material.BELL, () -> {
+            var world = copies.load(TownBuilder.KEY);
+            TownBuilder.drawBorder(world);
+            return built.in(world);
+        }));
         var pool = new TownMaps(BlockcraftApi.get().map().file(this, "maps"), getSLF4JLogger());
-        var arenas = new TemplateDimensions(NAMESPACE, world -> {
-            Worlds.settle(world);
-            playable(world, config);
-        });
         for (var map : pool.maps()) {
             if (mode == TttMode.TASKS && map.tasks().isEmpty()) {
                 continue;
             }
             try {
-                arenas.copy(pool.world(map.key()), map.key());
-                choices.add(new MapVote.Choice(map.key(), map.name(), map.builders(), map.icon(), () -> map.in(arenas.load(map.key()), mode == TttMode.TASKS)));
+                copies.copy(pool.world(map.key()), map.key());
+                choices.add(new MapVote.Choice(map.key(), map.name(), map.builders(), map.icon(), () -> map.in(copies.load(map.key()), mode == TttMode.TASKS)));
             } catch (UncheckedIOException | IllegalStateException e) {
                 getSLF4JLogger().warn("Skipping map {}: {}", map.key(), e.getMessage());
             }

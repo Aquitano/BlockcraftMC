@@ -25,9 +25,11 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.ttt.arena.MapCopies;
 import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.TesterRoom;
 import me.blockcraft.ttt.arena.Town;
@@ -82,13 +84,13 @@ import java.util.stream.Collectors;
 import java.util.OptionalInt;
 
 /**
- * One server, one round of TTT, as GommeHD played it. The lobby votes for the map, everyone loots its chests during
- * the preparation, then the roles are drawn: a few traitors who know each other, a detective everyone knows, and
- * innocents. The traitors win when nobody else is left; everyone else wins when the traitors are dead or the time runs
- * out. Nobody hears who killed whom: the dead lie where they fell until someone identifies them, the tester tells a
- * traitor from an innocent, and traitors and detectives spend their kills in a shop. Killing your own side costs
- * karma, and with it the strength of your blows. In TTT 2 the innocents share a fixed pool of chores, which pay loot
- * and can win the round, and the traitors sabotage the town.
+ * A server's rounds of TTT as GommeHD played it, one after another, each on a fresh copy of its map. The lobby votes
+ * for the map, everyone loots its chests during the preparation, then the roles are drawn: a few traitors who know
+ * each other, a detective everyone knows, and innocents. The traitors win when nobody else is left; everyone else
+ * wins when the traitors are dead or the time runs out. Nobody hears who killed whom: the dead lie where they fell
+ * until someone identifies them, the tester tells a traitor from an innocent, and traitors and detectives spend their
+ * kills in a shop. Killing your own side costs karma, and with it the strength of your blows. In TTT 2 the innocents
+ * share a fixed pool of chores, which pay loot and can win the round, and the traitors sabotage the town.
  */
 public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
@@ -103,9 +105,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private final TttMode mode;
     private final Messages messages;
     private final MapVote vote;
+    private final MapCopies copies;
     private final Supplier<Location> lobbySpawn;
     private final KarmaRepository karmaRepository;
-    private final RoundSummary summary;
+    private final StatsRepository stats;
+    private final SerialTasks<UUID> recapWrites;
+    private RoundSummary summary;
     private final Round round;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
@@ -133,10 +138,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private Optional<Faction> winner = Optional.empty();
     private boolean enderChestOpened;
     private int secondsLeft;
+    private int roundsPlayed;
     private volatile Set<UUID> traitorChat = Set.of();
 
     public TttGame(Plugin plugin, GameConfig gameConfig, TttConfig config, TttMode mode, Messages messages, MapVote vote,
-                   Supplier<Location> lobbySpawn, StatsRepository stats, StatsMenus statsMenus, KarmaRepository karmaRepository) {
+                   MapCopies copies, Supplier<Location> lobbySpawn, StatsRepository stats, StatsMenus statsMenus,
+                   KarmaRepository karmaRepository) {
         this.plugin = plugin;
         this.config = config;
         this.mode = mode;
@@ -145,10 +152,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         }
         this.messages = messages;
         this.vote = vote;
+        this.copies = copies;
         this.lobbySpawn = lobbySpawn;
         this.karmaRepository = karmaRepository;
-        this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
-        summary.keepKillsSecret();
+        this.stats = stats;
+        this.recapWrites = new SerialTasks<>(plugin);
+        this.summary = nextSummary();
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         round.backToLobby(this::backToLobby);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::start);
@@ -165,6 +174,13 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobbySpawn.get()),
                 () -> Optional.of(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get()),
                 OptionalInt.of(config.fullSeconds()), this::loadKarma);
+    }
+
+    private RoundSummary nextSummary() {
+        var next = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()),
+                stats, recapWrites);
+        next.keepKillsSecret();
+        return next;
     }
 
     public GamePhase phase() {
@@ -794,8 +810,68 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             }
         }
         corpses.clear();
-        round.end();
+        if (++roundsPlayed >= config.roundsBeforeRestart()) {
+            round.end();
+        } else if (round.endInPlace(player -> { })) {
+            Bukkit.broadcast(messages.get("round.reopening", Formatter.number("seconds", config.reopenSeconds())));
+            Tasks.later(plugin, config.reopenSeconds() * 20L, this::reopen);
+        }
         refreshAll();
+    }
+
+    /**
+     * Everyone still here waits in the lobby for the next round, which votes for its map anew; whoever watched the
+     * last one plays too. The world the last round played in is unloaded and copied anew from its map.
+     */
+    private void reopen() {
+        if (phase() != GamePhase.ENDING) {
+            return;
+        }
+        var played = town.map(Town::world);
+        forgetRound();
+        vote.reset();
+        summary = nextSummary();
+        round.reopenToAll(summary);
+        for (var player : Bukkit.getOnlinePlayers()) {
+            player.teleport(lobbySpawn.get());
+            if (!round.isPlaying(player)) {
+                round.watch(player);
+                continue;
+            }
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            hotbar.give(player);
+            if (!karmaLoaded.contains(player.getUniqueId())) {
+                loadKarma(player);
+            }
+        }
+        played.ifPresent(copies::renew);
+        countdown.start();
+        if (round.full()) {
+            countdown.hurry(config.fullSeconds());
+        }
+        Bukkit.broadcast(messages.get("round.reopened"));
+        refreshAll();
+    }
+
+    private void forgetRound() {
+        town = Optional.empty();
+        tester = Optional.empty();
+        tasks = Optional.empty();
+        roles.clear();
+        points.clear();
+        teamKillers.clear();
+        ownFault.clear();
+        deserters.clear();
+        names.clear();
+        doorsClosing.clear();
+        stage = Stage.PREPARATION;
+        winner = Optional.empty();
+        enderChestOpened = false;
+        secondsLeft = config.roundSeconds();
+        var online = Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).collect(Collectors.toSet());
+        // Whoever left may play on TTT 2's server, which shares the karma, before coming back here.
+        karma.keySet().retainAll(online);
+        karmaLoaded.retainAll(online);
     }
 
     /** After the round everyone meets in the lobby again, seen by all, with nothing but the way out. */

@@ -17,7 +17,8 @@ import java.util.Map;
 /** TTT's own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int preparationSeconds, int roundSeconds,
                         Roles roles, Karma karma, Rewards rewards, Shop shop, Tester tester, boolean regeneration,
-                        double traitorKillHeal, CombatStyle combat, List<LootTable.Entry> chests, Tasks tasks) {
+                        double traitorKillHeal, CombatStyle combat, List<LootTable.Entry> chests, Tasks tasks,
+                        int reopenSeconds, int roundsBeforeRestart) {
 
     public record Rewards(int kill, int win) {
     }
@@ -105,7 +106,9 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
                 Math.max(0.0, config.decimal("traitor-kill-heal")),
                 CombatStyle.from(section),
                 LootTable.entries(section.getConfigurationSection("chests")),
-                tasks(config, section.getConfigurationSection("tasks")));
+                tasks(config, section.getConfigurationSection("tasks")),
+                Math.max(1, config.integer("countdown.reopen")),
+                Math.max(1, config.integer("rounds-before-restart")));
     }
 
     private static Shop shop(StrictConfig config, Map<ShopItem, Integer> prices) {

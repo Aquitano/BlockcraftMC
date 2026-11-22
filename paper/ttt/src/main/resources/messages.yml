@@ -60,6 +60,8 @@ round:
   too-few: "<prefix><error>Zu viele Spieler haben die Runde verlassen, bevor die Rollen verteilt wurden."
   draw: "<prefix><muted>Die Runde ist ohne Sieger zu Ende."
   traitors: "<prefix><muted>Die Traitor waren<dark>: <error><players>"
+  reopening: "<prefix><muted>In <accent><seconds> <muted>Sekunden öffnet die Wartelobby für die nächste Runde."
+  reopened: "<prefix><muted>Die Wartelobby ist offen. Stimmt für die nächste Karte ab!"
 
 timer:
   preparation: "<ttt>Rollen in <dark>● <white><time>"
