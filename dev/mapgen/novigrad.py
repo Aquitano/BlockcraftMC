@@ -1,29 +1,46 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.13"
+# dependencies = ["nbtlib==2.0.4"]
+# ///
 """Fits TTT 2 into the harbour of Novigrad, a TTT pool map cut from the Zeitkapsel exhibit with importMap.
 
-`python3 -I dev/mapgen/novigrad.py` writes the fittings as a function and the map's map.yml. With `--apply` it then runs
+The import keeps ten chunks of the city round the 208-block play square, as far as the server's view distance reaches,
+so the town and the castle stand behind the edge:
+
+    ./gradlew importMap -Psource=<the exhibit as a level> -Playout=dimension -Pmode=void \
+        -Pbounds=840,1316,1048,1524 -Pmargin=10 -Ptarget=worlds/ttt/blockcraft/TTT/maps/novigrad/world
+
+`uv run dev/mapgen/novigrad.py` writes the fittings as a function and the map's map.yml. With `--apply` it then runs
 the function on a bare Paper server over a copy of the template and writes the result back to the template, so run it
 once on a fresh import (worlds/README.md, "Importing an old 1.8 map"); every fitting is set block by block, so a second
 run changes nothing. The map's streets lie at y 6 to 12 and its sea at y 5 over sand, with bedrock at y 0.
 
 Every coordinate below was chosen by walking the saved blocks: the stations stand against a wall of a room players
 reach from the fish market, the two traitor passages run at y 1 to 4 where only earth, sand and sea lie, and the
-torches hang on walls along the lanes, which the exhibit left almost dark.
+torches hang on walls along the lanes, which the exhibit left almost dark. Only the barrier along the edge reads the
+saved blocks when it runs, because it follows every street, floor and stretch of seabed it crosses.
 """
 import argparse
 import glob
+import io
 import json
-import os
+import math
+import struct
+import zlib
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
 
+import nbtlib
+
 ROOT = Path(__file__).resolve().parents[2]
 TEMPLATE = ROOT / "worlds/ttt/blockcraft/TTT/maps/novigrad"
 OUT = ROOT / "build/mapgen/novigrad"
 BORDER = (944, 1420, 208)
+SCENERY = (672, 1152, 1215, 1695)
 
 SPAWNS = ((926, 8, 1481), (928, 8, 1478), (928, 8, 1484), (925, 8, 1476), (925, 8, 1486), (931, 8, 1476), (930, 8, 1487),
           (919, 10, 1485), (935, 9, 1486), (933, 8, 1473), (929, 8, 1481), (922, 9, 1485), (928, 8, 1475), (926, 8, 1489))
@@ -82,6 +99,63 @@ CHORES = (
 LOOSE = ("sand", "red_sand", "gravel", "water", "suspicious_sand", "suspicious_gravel")
 STEADY = {"sand": "sandstone", "red_sand": "red_sandstone", "gravel": "cobblestone", "water": "stone_bricks",
           "suspicious_sand": "sandstone", "suspicious_gravel": "cobblestone"}
+
+
+EDGE_TOP = 24
+EDGE_HEIGHT = 3
+EDGE_ROOM = 5
+EDGE_PILLAR_EVERY = 8
+SEA = 5
+OPEN = {"air", "cave_air", "water", "iron_bars", "short_grass", "tall_grass", "fern", "large_fern", "seagrass",
+        "tall_seagrass", "kelp", "kelp_plant", "vine", "dead_bush"}
+
+
+class Blocks:
+    """Reads block names from the saved dimension, one chunk at a time."""
+
+    def __init__(self, dimension):
+        self.region = dimension / "region"
+        self.chunks = {}
+
+    def _chunk(self, cx, cz):
+        key = (cx, cz)
+        if key not in self.chunks:
+            self.chunks[key] = {}
+            path = self.region / f"r.{cx >> 5}.{cz >> 5}.mca"
+            if path.exists():
+                with open(path, "rb") as region:
+                    region.seek(((cx & 31) + (cz & 31) * 32) * 4)
+                    location = struct.unpack(">I", region.read(4))[0]
+                    if location:
+                        region.seek((location >> 8) * 4096)
+                        length, compression = struct.unpack(">IB", region.read(5))
+                        raw = region.read(length - 1)
+                        chunk = nbtlib.File.parse(io.BytesIO(zlib.decompress(raw) if compression == 2 else raw))
+                        for section in chunk.get("sections", []):
+                            states = section.get("block_states")
+                            if states is not None:
+                                self.chunks[key][int(section["Y"])] = (
+                                    [self._name(entry) for entry in states["palette"]], states.get("data"))
+        return self.chunks[key]
+
+    @staticmethod
+    def _name(entry):
+        if isinstance(entry, dict):
+            entry = entry["Name"] if "Name" in entry else next(iter(entry.values()))
+        return str(entry).removeprefix("minecraft:")
+
+    def at(self, x, y, z):
+        section = self._chunk(x >> 4, z >> 4).get(y >> 4)
+        if section is None:
+            return "air"
+        palette, data = section
+        if data is None:
+            return palette[0]
+        bits = max(4, math.ceil(math.log2(len(palette))))
+        per = 64 // bits
+        index = ((y & 15) << 8) | ((z & 15) << 4) | (x & 15)
+        word = int(data[index // per]) & 0xFFFFFFFFFFFFFFFF
+        return palette[(word >> ((index % per) * bits)) & ((1 << bits) - 1)]
 
 
 class Fittings:
@@ -174,6 +248,62 @@ def customs_house(f):
     }
 
 
+def edge(f, blocks):
+    """
+    Iron bars along the inside of the world border, so the edge is a railing players see the city through rather than
+    the border's wall: three bars high over every street and stretch of open ground, floor to ceiling across every
+    room the border cuts, and from the seabed to two above the sea in the harbour. A stone pillar with a lantern, or a
+    pile with one in the water, stands every few blocks on open ground. Roofs above EDGE_TOP keep their skyline.
+    """
+    x, z, size = BORDER
+    low_x, low_z = x - size // 2, z - size // 2
+    high_x, high_z = low_x + size - 1, low_z + size - 1
+    sides = ([(i, low_z, "east=true,west=true") for i in range(low_x, high_x + 1)]
+             + [(i, high_z, "east=true,west=true") for i in range(low_x, high_x + 1)]
+             + [(low_x, i, "north=true,south=true") for i in range(low_z + 1, high_z)]
+             + [(high_x, i, "north=true,south=true") for i in range(low_z + 1, high_z)])
+    for index, (cx, cz, links) in enumerate(sides):
+        column = [blocks.at(cx, y, cz) for y in range(0, EDGE_TOP + EDGE_ROOM + 2)]
+        y = 1
+        while y <= EDGE_TOP:
+            if column[y] not in OPEN or column[y - 1] in OPEN:
+                y += 1
+                continue
+            top = y
+            while top + 1 < len(column) and column[top + 1] in OPEN:
+                top += 1
+            sky = top == len(column) - 1
+            wet = column[y] == "water"
+            if not sky and top - y < 1:
+                y = top + 1
+                continue
+            last = max(y + EDGE_HEIGHT - 1, SEA + 2) if wet else y + EDGE_HEIGHT - 1 if sky else min(top, y + EDGE_ROOM - 1)
+            f.fill(cx, y, cz, cx, last, cz, f"iron_bars[{links}]", "replace air")
+            f.fill(cx, y, cz, cx, last, cz, f"iron_bars[{links},waterlogged=true]", "replace water")
+            if sky and index % EDGE_PILLAR_EVERY == 0:
+                f.fill(cx, y, cz, cx, last, cz, "spruce_log" if wet else "stone_bricks")
+                f.set(cx, last + 1, cz, "lantern")
+            y = top + 1
+
+
+def seal(f):
+    """
+    Barriers take the water in the outermost ring of the scenery, which would otherwise pour off the cut into the void
+    and run as waterfalls along the horizon once those chunks tick.
+    """
+    x1, z1, x2, z2 = SCENERY
+    for x in (x1, x2):
+        f.fill(x, 0, z1, x, 20, z2, "barrier", "replace water")
+    for z in (z1, z2):
+        f.fill(x1, 0, z, x2, 20, z, "barrier", "replace water")
+
+
+def scenery_strips():
+    """The scenery's outer ring as four strips of chunks, each small enough for one forceload."""
+    x1, z1, x2, z2 = SCENERY
+    return [(x1, z1, x1, z2), (x2, z1, x2, z2), (x1, z1, x2, z1), (x1, z2, x2, z2)]
+
+
 def run(a, b):
     """The straight steps from a to b along x, then along z."""
     (ax, az), (bx, bz) = a, b
@@ -210,6 +340,8 @@ def passage(f, hatch_a, hatch_b):
 
 def build():
     f = Fittings()
+    edge(f, Blocks(TEMPLATE / "world"))
+    seal(f)
     tester = customs_house(f)
     traitor_doors = [door for a, b in PASSAGES for door in passage(f, a, b)]
     for x, y, z, facing in TORCHES:
@@ -285,6 +417,35 @@ def paper_jar():
     return jars[-1]
 
 
+def prune(dimension):
+    """
+    Drops every chunk outside the scenery from the dimension's region, entity and POI files. Loading the scenery's
+    edge makes the server generate the void around it, which would otherwise be saved into the template.
+    """
+    x1, z1, x2, z2 = (value >> 4 for value in SCENERY)
+    for folder in ("region", "entities", "poi"):
+        for path in sorted((dimension / folder).glob("r.*.*.mca")):
+            rx, rz = (int(part) for part in path.stem.split(".")[1:3])
+            header = path.read_bytes()
+            kept = []
+            for index in range(1024):
+                location = struct.unpack(">I", header[index * 4:index * 4 + 4])[0]
+                cx, cz = rx * 32 + index % 32, rz * 32 + index // 32
+                if location and x1 <= cx <= x2 and z1 <= cz <= z2:
+                    offset, sectors = (location >> 8) * 4096, location & 0xFF
+                    kept.append((index, header[4096 + index * 4:4100 + index * 4], header[offset:offset + sectors * 4096]))
+            if not kept:
+                path.unlink()
+                continue
+            locations, stamps, body = bytearray(4096), bytearray(4096), bytearray()
+            for index, stamp, data in kept:
+                sector = 2 + len(body) // 4096
+                locations[index * 4:index * 4 + 4] = struct.pack(">I", (sector << 8) | (len(data) // 4096))
+                stamps[index * 4:index * 4 + 4] = stamp
+                body += data
+            path.write_bytes(bytes(locations) + bytes(stamps) + bytes(body))
+
+
 def apply(function):
     """Runs the function on a bare server over a copy of the template and copies the changed dimension back."""
     server = OUT / "server"
@@ -322,6 +483,8 @@ def apply(function):
     wait_for("Done (", 300)
     x, z, size = BORDER
     say(f"forceload add {x - size // 2} {z - size // 2} {x + size // 2} {z + size // 2}")
+    for strip in scenery_strips():
+        say("forceload add " + " ".join(map(str, strip)))
     say("datapack enable \"file/novigrad\"")
     time.sleep(15)
     say("function novigrad:build")
@@ -332,6 +495,7 @@ def apply(function):
     time.sleep(10)
     say("stop")
     process.wait(120)
+    prune(dimension)
     for part in ("region", "entities", "poi"):
         shutil.rmtree(TEMPLATE / "world" / part, ignore_errors=True)
         if (dimension / part).exists():

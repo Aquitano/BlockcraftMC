@@ -63,8 +63,10 @@ and the map TTT 2 is built for. Its round starts at the fish market on the canal
 house on stilts east of the quay, over a lava pit in the sand, and the trap's button hides on the house's seaward
 wall. Two traitor passages run under the town at y 2 and 3, from the fish market to the cathedral square and from
 the tanners' lane to the quay beside the customs house; their hatches lie in the street. The blackout is mended in the
-vaulted cellar north of the harbour. `dev/mapgen/novigrad.py` writes these fittings and the map's `map.yml`, and its
-`--apply` builds them into a fresh import (see its docstring).
+vaulted cellar north of the harbour. Ten chunks of the city and the castle stand beyond the border, as far as the
+server's view distance reaches, and an iron railing with lantern posts runs along the inside of the border, so the edge
+is something to look through rather than a wall. `dev/mapgen/novigrad.py` writes these fittings and the map's
+`map.yml`, and its `--apply` builds them into a fresh import (see its docstring).
 
 **Vineyard**, **Minecraft** and **Raid** are imported maps from ClayMC (see [the import](../../worlds/README.md#ttt)).
 They live in the TTT map bundle, `worlds/ttt/blockcraft/TTT/maps/<key>/`, each as a `map.yml` and the dimension
