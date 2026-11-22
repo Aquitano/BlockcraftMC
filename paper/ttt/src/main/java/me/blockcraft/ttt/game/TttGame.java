@@ -627,7 +627,11 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
                         meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
                     }).build();
             cap.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes().build());
+            var worn = player.getInventory().getHelmet();
             player.getInventory().setHelmet(cap);
+            if (worn != null && !worn.isEmpty()) {
+                give(player, worn);
+            }
         }
     }
 
