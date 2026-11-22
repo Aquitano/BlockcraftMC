@@ -71,6 +71,9 @@ services:
     extends: {file: docker-compose.yml, service: lobby}
     <<: *low-priority
     cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    # The rig keeps the lobby's heap small; the network's 1 GB would not fit under this limit.
+    environment:
+      MEMORY: 768M
     mem_limit: 1280m
     memswap_limit: 1280m
 
