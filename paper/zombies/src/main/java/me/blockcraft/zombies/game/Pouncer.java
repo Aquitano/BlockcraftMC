@@ -75,6 +75,7 @@ final class Pouncer implements Ability {
             mob.setAware(false);
             mob.getPathfinder().stopPathfinding();
             mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_SPIDER_AMBIENT, SoundCategory.HOSTILE, 1.4f, 0.5f);
+            enemies.play(enemy, "crouch");
             return true;
         }
         mob.setTarget(target);

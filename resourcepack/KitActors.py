@@ -195,10 +195,10 @@ def native(cubes, scale, pivot):
         for c in cubes]}
 
 
-def animation(a, name, duration, loop, tracks):
+def animation(a, name, duration, loop, tracks, interpolation='linear'):
     return {'uuid': stable(a.name,name), 'name': name, 'length': duration, 'loop': loop, 'override': False,
             'animators': {stable(a.name,b): {'name': b, 'type': 'bone', 'keyframes': [
-                {'channel': ch, 'time': t, 'interpolation': 'linear',
+                {'channel': ch, 'time': t, 'interpolation': interpolation,
                  'data_points': [dict(zip('xyz', map(str, value)))]}
                 for ch, keys in channels.items() for t,value in keys.items()]}
                 for b,channels in tracks.items()}}
@@ -218,12 +218,50 @@ def clips(a):
     walk['body'] = {'position': {0:[0,0,0], .2:[0,.35,0], .4:[0,0,0], .6:[0,.35,0], .8:[0,0,0]}}
     result = [animation(a,'idle',3,'loop',idle), animation(a,'walk',.8,'loop',walk),
               animation(a,'turn',.6,'once',{focus:{'rotation':{0:[0,0,0],.3:[0,25,0],.6:[0,0,0]}}})]
+    if a.name=='womp_rat':
+        return womp_rat_clips(a, result)
     if a.family=='desert':
         result.extend([
             animation(a,'attack',.6,'once',{'head':{'rotation':{0:[0,0,0],.2:[-12,0,0],.35:[18,0,0],.6:[0,0,0]}}}),
             animation(a,'damage',.3,'once',{'body':{'rotation':{0:[0,0,0],.1:[0,0,5],.3:[0,0,0]}}}),
             animation(a,'death',1,'hold',{'root':{'rotation':{0:[0,0,0],.7:[0,0,85],1:[0,0,85]}}})])
     return result
+
+
+def womp_rat_clips(a, shared):
+    """Zombies' Kabelratte: a scurrying gait, a lunge, and the gnaw it plays at the generator. Positive x pitches down."""
+    smooth = lambda name, duration, loop, tracks: animation(a, name, duration, loop, tracks, 'catmullrom')
+    diagonal = lambda sign: {0:[35*sign,0,0], .125:[0,0,0], .25:[-35*sign,0,0], .375:[0,0,0], .5:[35*sign,0,0]}
+    walk = {'leg_front_left': {'rotation': diagonal(1)}, 'leg_back_right': {'rotation': diagonal(1)},
+            'leg_front_right': {'rotation': diagonal(-1)}, 'leg_back_left': {'rotation': diagonal(-1)},
+            'body': {'rotation': {0:[0,0,0], .125:[0,0,3], .25:[0,0,0], .375:[0,0,-3], .5:[0,0,0]}},
+            'root': {'position': {0:[0,0,0], .125:[0,.8,0], .25:[0,0,0], .375:[0,.8,0], .5:[0,0,0]}},
+            'head': {'rotation': {0:[2,0,0], .125:[-3,0,0], .25:[2,0,0], .375:[-3,0,0], .5:[2,0,0]}},
+            'tail': {'rotation': {0:[0,-12,0], .25:[0,12,0], .5:[0,-12,0]}},
+            'ear_left': {'rotation': {0:[0,0,0], .25:[0,0,-8], .5:[0,0,0]}},
+            'ear_right': {'rotation': {0:[0,0,0], .25:[0,0,8], .5:[0,0,0]}}}
+    idle = {'body': {'rotation': {0:[0,0,0], 1.5:[-1.5,0,0], 3:[0,0,0]}},
+            'root': {'position': {0:[0,0,0], 1.5:[0,.4,0], 3:[0,0,0]}},
+            'head': {'rotation': {0:[0,-8,0], 1:[-3,6,0], 2:[2,-2,0], 3:[0,-8,0]}},
+            'tail': {'rotation': {0:[0,-10,0], 1.5:[0,10,0], 3:[0,-10,0]}},
+            'ear_left': {'rotation': {0:[0,0,0], 2.2:[0,0,-12], 2.4:[0,0,0], 3:[0,0,0]}}}
+    attack = {'head': {'rotation': {0:[0,0,0], .15:[-22,0,0], .3:[30,0,0], .45:[10,0,0], .6:[0,0,0]}},
+              'body': {'rotation': {0:[0,0,0], .15:[-6,0,0], .3:[8,0,0], .6:[0,0,0]}},
+              'root': {'position': {0:[0,0,0], .15:[0,0,1], .3:[0,0,-2], .6:[0,0,0]}},
+              'tail': {'rotation': {0:[0,0,0], .3:[0,20,0], .6:[0,0,0]}}}
+    damage = {'root': {'rotation': {0:[0,0,0], .08:[0,0,7], .3:[0,0,0]}},
+              'head': {'rotation': {0:[0,0,0], .08:[-12,0,0], .3:[0,0,0]}}}
+    death = {'root': {'rotation': {0:[0,0,0], .3:[0,0,18], .8:[0,0,88], 1.2:[0,0,88]},
+                      'position': {0:[0,0,0], .3:[0,2,0], .8:[0,0,0], 1.2:[0,0,0]}},
+             'head': {'rotation': {0:[0,0,0], .8:[25,0,0], 1.2:[25,0,0]}},
+             **{leg: {'rotation': {0:[0,0,0], .8:[35,0,0], 1.2:[35,0,0]}}
+                for leg in ('leg_front_left','leg_front_right','leg_back_left','leg_back_right')}}
+    gnaw = {'head': {'rotation': {0:[15,0,0], .12:[30,0,0], .25:[15,0,0], .37:[30,-6,0], .5:[15,0,0]}},
+            'body': {'rotation': {0:[8,0,0], .25:[10,0,0], .5:[8,0,0]}},
+            'tail': {'rotation': {0:[0,-15,0], .25:[0,15,0], .5:[0,-15,0]}}}
+    turn = next(clip for clip in shared if clip['name']=='turn')
+    return [smooth('idle',3,'loop',idle), smooth('walk',.5,'loop',walk), turn, smooth('attack',.6,'once',attack),
+            smooth('damage',.3,'once',damage), smooth('death',1.2,'hold',death), smooth('gnaw',.5,'once',gnaw)]
 
 
 def make_rig(a, texture):

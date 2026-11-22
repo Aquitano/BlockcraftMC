@@ -24,7 +24,7 @@ for prop in catalog:
             target = route['model']['model'].removeprefix('blockcraft:')
             assert (ASSETS / 'models' / (target + '.json')).is_file()
         rig = json.loads((ROOT / f'bettermodel/{prop["rig"]}.bbmodel').read_text())
-        assert {a['name'] for a in rig['animations']} == {'idle', 'walk', 'attack', 'damage', 'death'}
+        assert {a['name'] for a in rig['animations']} >= {'idle', 'walk', 'attack', 'damage', 'death'}
         bones = {b['uuid'] for b in rig['groups']}
         for animation in rig['animations']:
             assert set(animation['animators']) <= bones

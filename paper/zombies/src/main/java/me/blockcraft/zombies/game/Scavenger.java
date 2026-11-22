@@ -13,6 +13,8 @@ import java.util.Optional;
 final class Scavenger implements Ability {
 
     private static final int WARNING_TICKS = 200;
+    /** The length of the rig's gnaw clip. */
+    private static final int GNAW_CLIP_TICKS = 10;
     private final ZombiesGame game;
     private final Enemies enemies;
     private final ZombiesConfig.Scavenger config;
@@ -57,14 +59,15 @@ final class Scavenger implements Ability {
         if (generator.isEmpty() || !game.inWave()) {
             return;
         }
-        long gnawers = enemies.of(EnemyKind.SCAVENGER).stream().filter(enemy -> enemy.breached && gnawing(enemy)).count();
-        if (gnawers == 0) {
+        var gnawers = enemies.of(EnemyKind.SCAVENGER).stream().filter(enemy -> enemy.breached && gnawing(enemy)).toList();
+        if (gnawers.isEmpty()) {
             gnawed = Math.max(0, gnawed - 1);
             return;
         }
         var at = generator.get();
-        gnawed += (int) gnawers;
-        if (tick % 10 == 0) {
+        gnawed += gnawers.size();
+        if (tick % GNAW_CLIP_TICKS == 0) {
+            gnawers.forEach(enemy -> enemies.play(enemy, "gnaw"));
             at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, at.clone().add(0, 0.6, 0), 6, 0.5, 0.3, 0.5, 0.05);
             at.getWorld().playSound(at, Sound.ENTITY_SILVERFISH_AMBIENT, SoundCategory.HOSTILE, 1.2f, 0.6f);
         }

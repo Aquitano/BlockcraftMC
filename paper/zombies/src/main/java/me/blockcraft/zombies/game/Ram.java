@@ -30,6 +30,8 @@ final class Ram implements Ability {
     private static final double REACH = 1.6;
     private static final double[] SHINS_AND_SHOULDERS = {0.3, 1.2};
     private static final double SMASH_CLOSE = 2.5;
+    /** The length of the rig's charge clip, which plays again for as long as the charge lasts. */
+    private static final int CHARGE_CLIP_TICKS = 8;
 
     private enum Stage { PAW, CHARGE, STUNNED }
 
@@ -92,6 +94,7 @@ final class Ram implements Ability {
         mob.setAware(false);
         mob.getPathfinder().stopPathfinding();
         mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_RAVAGER_ROAR, SoundCategory.HOSTILE, 1.6f, 0.8f);
+        enemies.play(enemy, "paw");
     }
 
     @Override
@@ -130,7 +133,7 @@ final class Ram implements Ability {
         rush.direction = direction.normalize();
         rush.stage = Stage.CHARGE;
         rush.until = tick + config.chargeTicks();
-        enemies.play(enemy, "attack");
+        enemies.play(enemy, "charge");
         if (!rush.boards.isEmpty()) {
             rush.boards.forEach(board -> {
                 board.getWorld().spawnParticle(Particle.BLOCK, board.getLocation().add(0.5, 0.5, 0.5), 12, 0.3, 0.3, 0.3, board.getBlockData());
@@ -148,7 +151,7 @@ final class Ram implements Ability {
             rush.until = tick + config.stunTicks();
             mob.getWorld().playSound(at, Sound.ENTITY_IRON_GOLEM_DAMAGE, SoundCategory.HOSTILE, 1.6f, 0.5f);
             mob.getWorld().spawnParticle(Particle.EXPLOSION, at.clone().add(rush.direction).add(0, 1, 0), 1);
-            enemies.play(enemy, "damage");
+            enemies.play(enemy, "stunned");
             return;
         }
         if (tick >= rush.until) {
@@ -158,6 +161,9 @@ final class Ram implements Ability {
         var next = at.clone().add(rush.direction.clone().multiply(config.chargeSpeed()));
         next.setDirection(rush.direction);
         mob.teleport(next);
+        if ((rush.until - tick) % CHARGE_CLIP_TICKS == 0) {
+            enemies.play(enemy, "charge");
+        }
         if (tick % 2 == 0) {
             floor(next, 4);
             mob.getWorld().playSound(next, Sound.ENTITY_RAVAGER_STEP, SoundCategory.HOSTILE, 1.2f, 0.8f);
