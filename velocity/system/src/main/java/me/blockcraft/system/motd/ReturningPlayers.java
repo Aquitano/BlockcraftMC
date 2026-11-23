@@ -2,6 +2,7 @@ package me.blockcraft.system.motd;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -14,6 +15,7 @@ import java.net.InetAddress;
 import java.time.Duration;
 import java.util.HexFormat;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Who most likely pings the server list from an address: the account last seen logging in from it, by the keyed hash
@@ -50,18 +52,18 @@ public final class ReturningPlayers {
     public Optional<Returning> at(InetAddress address) {
         var hash = hasher.hash(address);
         var key = HexFormat.of().formatHex(hash);
-        var known = recent.getIfPresent(key);
-        if (known == null) {
-            known = lookUp(hash);
-            recent.put(key, known);
+        try {
+            return recent.get(key, () -> lookUp(hash));
+        } catch (ExecutionException | UncheckedExecutionException e) {
+            logger.warn("Could not look up who pinged the server list", e.getCause());
+            return Optional.empty();
         }
-        return known;
     }
 
     private Optional<Returning> lookUp(byte[] addressHash) {
         try {
-            return players.lastSeenOn(addressHash)
-                    .filter(player -> choices.enabled(player.uuid(), PlayerSetting.SERVER_LIST_GREETING))
+            return players.returningOn(addressHash)
+                    .filter(player -> choices.enabled(player.uuid(), PlayerSetting.SERVER_LIST_GREETING, player.greeting()))
                     .map(player -> new Returning(player.name(), showFriends ? friends.onlineCount(player.uuid()) : 0));
         } catch (DatabaseException e) {
             logger.warn("Could not look up who pinged the server list", e);

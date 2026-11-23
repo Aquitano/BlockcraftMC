@@ -7,10 +7,27 @@ import me.blockcraft.common.settings.PlayerSetting;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class PlayerChoicesTest {
+
+    @Test
+    public void thePingLookupUsesTheStoredGreetingUntilLiveChoicesAreAvailable() {
+        var player = new FakeProxy().join("Player");
+        var choices = new PlayerChoices(null, LoggerFactory.getLogger(PlayerChoicesTest.class));
+        var greeting = PlayerSetting.SERVER_LIST_GREETING;
+        var optedIn = Optional.of(PlayerSetting.ON);
+
+        assertFalse(choices.enabled(player.getUniqueId(), greeting, Optional.empty()));
+        assertTrue(choices.enabled(player.getUniqueId(), greeting, optedIn));
+
+        choices.set(player, greeting, PlayerSetting.OFF);
+        assertFalse(choices.enabled(player.getUniqueId(), greeting, optedIn));
+    }
 
     @Test
     public void kitChoicesReachTheNextBackendBeforeItsDatabaseReadCompletes() {
