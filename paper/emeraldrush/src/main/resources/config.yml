@@ -19,6 +19,8 @@ countdown:
   deathmatch: 1200
   deathmatch-tracker-after: 300
   restart: 10
+  reopen: 20
+rounds-in-place: 10
 idle-restart-minutes: 50
 timer-bar: true
 

@@ -3,37 +3,39 @@ package me.blockcraft.rush.config;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.world.WaitingLobby;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
-/** The map's spawn points, one per {@link SpawnPoint}, persisted in the map's {@code locations.yml}. */
+/**
+ * One round's spawn points, one per {@link SpawnPoint}, set in the main world and persisted in the map's
+ * {@code locations.yml}. They lie in the main world until the round plays a copy of it.
+ */
 public final class Spawns {
 
     private final Locations<SpawnPoint> locations;
     private final Optional<WaitingLobby> lobby;
+    private Function<SpawnPoint, Optional<Location>> arena;
 
-    private Spawns(Locations<SpawnPoint> locations, Optional<WaitingLobby> lobby) {
+    public Spawns(Locations<SpawnPoint> locations, Optional<WaitingLobby> lobby) {
         this.locations = locations;
         this.lobby = lobby;
+        this.arena = locations::get;
     }
 
-    public static Spawns load(Path file) {
-        return load(file, Optional.empty());
-    }
-
-    public static Spawns load(Path file, Optional<WaitingLobby> lobby) {
-        return new Spawns(Locations.load(file, SpawnPoint::key), lobby);
+    /** Every point but the lobby now lies in {@code world}, a fresh copy of the main world. */
+    public void playIn(World world) {
+        arena = locations.in(world);
     }
 
     public Optional<Location> get(SpawnPoint point) {
-        return point == SpawnPoint.LOBBY && lobby.isPresent() ? lobby.map(WaitingLobby::spawn) : locations.get(point);
-    }
-
-    public void set(SpawnPoint point, Location location) {
-        locations.set(point, location);
+        if (point == SpawnPoint.LOBBY) {
+            return lobby.isPresent() ? lobby.map(WaitingLobby::spawn) : locations.get(point);
+        }
+        return arena.apply(point);
     }
 
     public void teleport(Player player, SpawnPoint point) {
