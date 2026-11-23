@@ -42,6 +42,11 @@ public final class ArenaCopies {
         }
     }
 
+    /** Whether the map's last copy failed, which retrying in the lobby will not fix. */
+    boolean failed(ArenaMap map) {
+        return copies.failed(map.key());
+    }
+
     /** The map's fresh world, once its copy is done. */
     World load(ArenaMap map) {
         if (!free(map)) {

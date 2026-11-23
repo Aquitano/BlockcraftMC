@@ -443,6 +443,10 @@ public final class Game implements RoundHost.Game {
             return;
         }
         var map = maps.chosen().orElseThrow();
+        if (arenas.failed(map)) {
+            scope.abandon("the BedWars map " + map.key() + " could not be copied");
+            return;
+        }
         try {
             match = new Match(scope, scope.own(maps.load(), arenas::discard), map, messages, config, dealers);
         } catch (RuntimeException e) {
