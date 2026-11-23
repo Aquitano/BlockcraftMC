@@ -1,8 +1,7 @@
 package me.blockcraft.sternenfront.secret;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.game.GamePhase;
-import me.blockcraft.api.game.RoundPhaseChangeEvent;
+import me.blockcraft.api.game.Round;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.arena.FrontMap;
@@ -52,12 +51,15 @@ final class MayTheFourth implements Listener {
         this.firework = new NamespacedKey(plugin, "may_the_fourth");
     }
 
-    @EventHandler
-    public void onPhase(RoundPhaseChangeEvent event) {
-        if (event.phase() != GamePhase.INGAME || !BlockcraftApi.get().calendar().is(NetworkCalendar.Occasion.MAY_THE_FOURTH)) {
+    /**
+     * The round under way has started. Secrets builds this while it handles that very start, after Bukkit took its
+     * list of listeners for the event, so it hands the start on itself.
+     */
+    void started(Round round) {
+        if (!BlockcraftApi.get().calendar().is(NetworkCalendar.Occasion.MAY_THE_FOURTH)) {
             return;
         }
-        event.round().summary().coinFactor(factor);
+        round.summary().coinFactor(factor);
         Bukkit.broadcast(messages.get("secret.may-the-fourth", Formatter.number("factor", factor)));
         var bursts = bursts();
         for (int i = 0; i < bursts.size(); i++) {

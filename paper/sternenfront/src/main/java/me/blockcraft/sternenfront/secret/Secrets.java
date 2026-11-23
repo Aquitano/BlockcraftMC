@@ -31,6 +31,7 @@ public final class Secrets implements Listener, AutoCloseable {
     private final List<LongConsumer> ticks = new ArrayList<>();
     private final List<Runnable> cleanup = new ArrayList<>();
     private final List<Listener> listeners = new ArrayList<>();
+    private Optional<MayTheFourth> holiday = Optional.empty();
     private final List<MusicBox> music = new ArrayList<>();
     private final List<KesselCourse> courses = new ArrayList<>();
     private Optional<BukkitTask> task = Optional.empty();
@@ -56,6 +57,7 @@ public final class Secrets implements Listener, AutoCloseable {
         var holiday = new MayTheFourth(plugin, messages, map, config.mayTheFourthFactor());
         listen(holiday);
         cleanup.add(holiday::close);
+        this.holiday = Optional.of(holiday);
         map.secrets().ifPresent(spots -> {
             var discoveries = new Discoveries(game, messages, config.coins());
             var feedback = BlockcraftApi.get().notifications();
@@ -126,9 +128,12 @@ public final class Secrets implements Listener, AutoCloseable {
     public void onPhase(RoundPhaseChangeEvent event) {
         if (event.phase() == GamePhase.ENDING) {
             close();
-        } else if (event.phase() == GamePhase.INGAME && builtFor != game.map()) {
-            close();
-            build();
+        } else if (event.phase() == GamePhase.INGAME) {
+            if (builtFor != game.map()) {
+                close();
+                build();
+            }
+            holiday.ifPresent(started -> started.started(event.round()));
         }
     }
 
@@ -138,6 +143,7 @@ public final class Secrets implements Listener, AutoCloseable {
         task = Optional.empty();
         cleanup.forEach(Runnable::run);
         cleanup.clear();
+        holiday = Optional.empty();
         ticks.clear();
         music.clear();
         courses.clear();
