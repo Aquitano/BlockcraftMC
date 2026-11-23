@@ -69,16 +69,17 @@ public final class RoundWorlds {
     }
 
     /**
-     * A world is generated here without waiting only when its dimension's delete is done; the one round that needs a
-     * world before then, such as after a server restart left no next world, waits for it.
+     * A dimension whose delete is still running is not generated again: waiting for the disk here would hold up the
+     * main thread, so the round that needs it fails to open and the host restarts the server instead.
      */
     private RoundWorld generate() {
         var key = nextKey();
-        generated++;
-        var deletion = deleting.remove(key);
-        if (deletion != null) {
-            deletion.handle((done, failure) -> null).join();
+        var deletion = deleting.get(key);
+        if (deletion != null && !deletion.isDone()) {
+            throw new IllegalStateException("The EnderGames world " + key + " is still being deleted");
         }
+        deleting.remove(key);
+        generated++;
         var world = RoundWorld.create(plugin, settings, key);
         world.prepare(startChests);
         return world;
