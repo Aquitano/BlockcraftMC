@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ import java.util.function.LongConsumer;
 
 public final class Secrets implements Listener, AutoCloseable {
 
-    private final JavaPlugin plugin;
+    private final Plugin plugin;
     private final SternenfrontGame game;
     private final Messages messages;
     private FrontMap builtFor;
@@ -35,19 +35,16 @@ public final class Secrets implements Listener, AutoCloseable {
     private final List<KesselCourse> courses = new ArrayList<>();
     private Optional<BukkitTask> task = Optional.empty();
 
-    private Secrets(JavaPlugin plugin, SternenfrontGame game, Messages messages) {
+    private Secrets(Plugin plugin, SternenfrontGame game, Messages messages) {
         this.plugin = plugin;
         this.game = game;
         this.messages = messages;
     }
 
-    /** The secrets of the round's map, from now on if it is known already, else from the round's start. */
-    public static Secrets start(JavaPlugin plugin, SternenfrontGame game, Messages messages) {
+    /** The secrets of the round's map, from the round's start, when its map is known. */
+    public static Secrets start(Plugin plugin, SternenfrontGame game, Messages messages) {
         var secrets = new Secrets(plugin, game, messages);
         Bukkit.getPluginManager().registerEvents(secrets, plugin);
-        if (game.mapChosen()) {
-            secrets.build();
-        }
         game.feedback().courseStatus(secrets::courseStatus);
         return secrets;
     }
@@ -87,7 +84,7 @@ public final class Secrets implements Listener, AutoCloseable {
             });
             spots.course().ifPresent(course -> {
                 var times = new KesselTimes(BlockcraftApi.get().database());
-                // With a map vote this builds at the round's start, where a database round trip would hold up the tick.
+                // This builds at the round's start, where a database round trip would hold up the tick.
                 Tasks.async(plugin, times::createTable);
                 var kessel = new KesselCourse(plugin, game, messages, discoveries, Optional.of(times),
                         Secret.KESSEL, course, config.parSeconds(), config.limitSeconds());

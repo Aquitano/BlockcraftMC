@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class BattleIntro implements AutoCloseable {
     private final SternenfrontGame game;
@@ -232,22 +233,24 @@ public final class BattleIntro implements AutoCloseable {
         }
     }
 
-    public LiteralCommandNode<CommandSourceStack> command() {
+    public static LiteralCommandNode<CommandSourceStack> command(Supplier<BattleIntro> current) {
         return Commands.literal("sfintro")
                 .requires(source -> source.getSender() instanceof Player && source.getSender().hasPermission("blockcraft.sternenfront.presentation"))
                 .executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
-                    if (game.phase() != GamePhase.LOBBY || Scenes.isViewing(player)) {
-                        player.sendMessage(game.messages().get("intro.lobby-only"));
+                    var intro = current.get();
+                    if (intro.game.phase() != GamePhase.LOBBY || Scenes.isViewing(player)) {
+                        player.sendMessage(intro.game.messages().get("intro.lobby-only"));
                     } else {
-                        play(player, duration(), SceneTimeline.SkipMode.COMPLETE);
+                        intro.play(player, intro.duration(), SceneTimeline.SkipMode.COMPLETE);
                     }
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.literal("stop").executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
-                    if (!running) cancel(player);
-                    else scenes.skip(player);
+                    var intro = current.get();
+                    if (!intro.running) intro.cancel(player);
+                    else intro.scenes.skip(player);
                     return Command.SINGLE_SUCCESS;
                 })).build();
     }
