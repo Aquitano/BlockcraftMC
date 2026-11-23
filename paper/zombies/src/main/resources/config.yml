@@ -9,6 +9,8 @@ countdown:
   restart: 15
   intermission: 10
   wave-limit: 300
+  reopen: 20
+rounds-in-place: 10
 idle-restart-minutes: 50
 timer-bar: true
 global-stats-head: Kevos

@@ -116,6 +116,11 @@ public final class ArenaMap {
         }
     }
 
+    /** The same arena read anew from its file, without the doors, rooms and blocks this one opened or prepared. */
+    public ArenaMap fresh() {
+        return new ArenaMap(file, world);
+    }
+
     public World world() { return world; }
     public String name() { return yaml.getString("name", world.getName()); }
     public Location point(String key) {
