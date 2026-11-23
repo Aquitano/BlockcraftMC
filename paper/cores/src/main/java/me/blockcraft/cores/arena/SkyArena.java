@@ -29,17 +29,15 @@ public final class SkyArena {
     private static final List<String> COPIES = List.of(SkyMap.KEY, SkyMap.KEY + "-2");
 
     private final Plugin plugin;
-    private final TemplateDimensions dimensions;
     private final MapCopies copies;
     private final LootTable loot;
     private final Optional<Location> lobby;
     private final boolean kept;
     private int turn;
 
-    private SkyArena(Plugin plugin, TemplateDimensions dimensions, MapCopies copies, LootTable loot,
+    private SkyArena(Plugin plugin, MapCopies copies, LootTable loot,
                      Optional<Location> lobby, boolean kept) {
         this.plugin = plugin;
-        this.dimensions = dimensions;
         this.copies = copies;
         this.loot = loot;
         this.lobby = lobby;
@@ -63,25 +61,20 @@ public final class SkyArena {
             plugin.getSLF4JLogger().warn("Could not keep {} as a template, so the server restarts after every round", SkyMap.NAME, e);
             kept = false;
         }
-        return new SkyArena(plugin, dimensions, copies, loot, lobby, kept);
+        return new SkyArena(plugin, copies, loot, lobby, kept);
     }
 
-    /** A pristine map the round owns, with cores of its own and its chests rolled anew. */
+    /**
+     * A pristine map the round owns, with cores of its own and its chests rolled anew. A copy that is not ready
+     * throws: rebuilding the map here would stall the server longer than the restart the host falls back to.
+     */
     public CoresMap open(RoundScope scope) {
         if (!kept) {
             scope.restartAfter();
         }
         var key = COPIES.get(turn);
         turn = (turn + 1) % COPIES.size();
-        World world;
-        try {
-            world = copies.load(key);
-        } catch (RuntimeException e) {
-            plugin.getSLF4JLogger().warn("Could not load the copy {} of {}; building it anew and restarting after the round", key, SkyMap.NAME, e);
-            scope.restartAfter();
-            world = built(dimensions, key, lobby);
-        }
-        var map = SkyMap.in(scope.own(world, this::discard), lobby);
+        var map = SkyMap.in(scope.own(copies.load(key), this::discard), lobby);
         map.fillChests(new LootChests(loot));
         map.lobbySpawn().getWorld().setSpawnLocation(map.lobbySpawn());
         return map;
