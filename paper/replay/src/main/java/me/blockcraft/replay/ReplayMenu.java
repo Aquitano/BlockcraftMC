@@ -36,8 +36,8 @@ final class ReplayMenu extends ListMenu<ReplayRepository.Entry> {
                 Placeholder.component("result", messages.get(entry.endReason().equals("MATCH_END") ? "menu.complete" : "menu.partial")),
                 Placeholder.component("mark", entry.favourite() ? messages.get("menu.favourite-mark") : Component.empty()),
                 Placeholder.component("favourite", messages.get(entry.favourite() ? "menu.favourite-remove" : "menu.favourite-add")));
-        var item = MenuIcon.RECAP.item().name(messages.get("menu.entry", tags)).lore(messages.getLines("menu.lore", tags));
-        return (entry.favourite() ? item.glow() : item).build();
+        var icon = entry.favourite() ? MenuIcon.ACHIEVEMENTS : MenuIcon.RECAP;
+        return icon.item().name(messages.get("menu.entry", tags)).lore(messages.getLines("menu.lore", tags)).build();
     }
 
     @Override
