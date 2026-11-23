@@ -5,6 +5,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
 
 public class WorldTemplateTest {
 
@@ -223,6 +226,24 @@ public class WorldTemplateTest {
         publish.get(10, TimeUnit.SECONDS);
 
         assertEquals("new", Files.readString(directory.resolve("level.dat")));
+    }
+
+    @Test
+    public void anInterruptedLockWaitKeepsTheInterruptAndItsCause() throws Exception {
+        Path directory = folder.newFolder("template").toPath();
+        var interrupted = new FutureTask<>(() -> {
+            Thread.currentThread().interrupt();
+            var thrown = assertThrows(UncheckedIOException.class, () -> WorldTemplate.at(directory).recover());
+            assertTrue(thrown.getCause() instanceof InterruptedIOException);
+            assertTrue(thrown.getCause().getCause() instanceof InterruptedException);
+            return Thread.currentThread().isInterrupted();
+        });
+
+        try (var channel = FileChannel.open(directory.resolve(".template.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+             var _ = channel.lock()) {
+            Thread.ofVirtual().start(interrupted);
+            assertTrue(interrupted.get(10, TimeUnit.SECONDS));
+        }
     }
 
     private static void write(Path root, String file, String content) throws IOException {
