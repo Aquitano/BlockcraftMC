@@ -95,11 +95,11 @@ public final class Arena {
     }
 
     void announceStart(int seconds) {
-        Bukkit.broadcast(messages.get("arena.starting-in", Formatter.number("seconds", seconds)));
+        Bukkit.broadcast(messages.get("arena.starting-in", Formatter.number("seconds", seconds), Formatter.choice("unit", seconds)));
     }
 
     void announceRestart(int seconds) {
-        Bukkit.broadcast(messages.get("arena.restart-in", Formatter.number("seconds", seconds)));
+        Bukkit.broadcast(messages.get("arena.restart-in", Formatter.number("seconds", seconds), Formatter.choice("unit", seconds)));
     }
 
     void announceNextRound(int seconds) {
