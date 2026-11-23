@@ -21,9 +21,11 @@ public record Stage(String name, int order, BossBar.Color bar, float progress, S
                     Optional<String> ambience, Optional<Location> spawn, Map<String, String> facts) {
 
     public static List<Stage> load(World world, ConfigurationSection section) {
+        if (section == null) throw new IllegalArgumentException("config.yml: stages must be a section");
         var keys = List.copyOf(section.getKeys(false));
         return keys.stream().map(name -> {
             var stage = section.getConfigurationSection(name);
+            if (stage == null) throw new IllegalArgumentException("config.yml: stages." + name + " must be a section");
             var facts = new LinkedHashMap<String, String>();
             var preset = stage.getConfigurationSection("facts");
             if (preset != null) preset.getKeys(false).forEach(key -> facts.put(key, preset.getString(key)));
