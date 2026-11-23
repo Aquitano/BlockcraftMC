@@ -85,10 +85,38 @@ val downloadLuckPermsVelocity = downloadPlugin(
     "https://download.luckperms.net/1669/velocity/LuckPerms-Velocity-5.5.82.jar",
 )
 
+// The Paper server the image in docker/paper is built from, for the catalog's version and build, checked against the
+// checksum Paper publishes with it.
+val downloadPaper = tasks.register("downloadPaper") {
+    val minecraft = libs.versions.minecraft.get()
+    val build = libs.versions.paper.api.get().substringAfter(".build.").substringBefore('-')
+    val target = layout.buildDirectory.dir("paper-server")
+    inputs.property("version", "$minecraft $build")
+    outputs.dir(target)
+    doLast {
+        val api = java.net.URI("https://fill.papermc.io/v3/projects/paper/versions/$minecraft/builds/$build").toURL()
+            .openConnection().apply { setRequestProperty("User-Agent", "BlockcraftMC build") }
+        val published = groovy.json.JsonSlurper().parse(api.getInputStream()) as Map<*, *>
+        val server = (published["downloads"] as Map<*, *>)["server:default"] as Map<*, *>
+        val checksum = (server["checksums"] as Map<*, *>)["sha256"] as String
+        val directory = target.get().asFile
+        directory.mkdirs()
+        val jar = directory.resolve("paper.jar")
+        java.net.URI(server["url"] as String).toURL().openStream().use { input -> jar.outputStream().use { input.copyTo(it) } }
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(jar.readBytes()).joinToString("") { "%02x".format(it) }
+        if (digest != checksum) {
+            jar.delete()
+            throw GradleException("Paper $minecraft build $build does not match its published checksum")
+        }
+        directory.resolve("version").writeText("$minecraft $build\n")
+    }
+}
+
 // Lays out build/docker for docker-compose.yml: build/docker/paper/<module>/<module>.jar (one directory per plugin,
 // so a compose service lists the ones it runs, LuckPerms, ViaVersion and GrimAC among them), build/docker/velocity/<module>.jar
 // with LuckPerms, ranks.json.gz next to LuckPerms on both sides, Grim's punishments.yml in its data directory, the
-// resource pack in the proxy plugin's data directory, and build/docker/waker/waker.jar for the on-demand waker.
+// resource pack in the proxy plugin's data directory, build/docker/paper-server with the Paper jar the image is built
+// from, and build/docker/waker/waker.jar for the on-demand waker.
 val nexoJar = providers.gradleProperty("nexoJar").orElse(providers.environmentVariable("BLOCKCRAFT_NEXO_JAR"))
     .filter { it.isNotBlank() }
 val stageNexo = tasks.register<Sync>("stageNexo") {
@@ -114,6 +142,7 @@ val stageDirectory = providers.gradleProperty("stageDirectory").map { file(it) }
 tasks.register<Sync>("stagePlugins") {
     from(stageNexo) { into("paper/nexo") }
     from(stageRuntime)
+    from(downloadPaper) { into("paper-server") }
     project(":paper").subprojects.forEach { plugin ->
         from(plugin.tasks.named("shadowJar")) {
             into("paper/${plugin.name}")

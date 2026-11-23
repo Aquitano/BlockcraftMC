@@ -21,9 +21,18 @@ x-luckperms: &luckperms
   LUCKPERMS_DATA_PASSWORD: blockcraft
   LUCKPERMS_MESSAGING_SERVICE: sql
 
+# Every Paper server runs the image in docker/paper (README, "The Paper image"), made from the Paper jar stagePlugins
+# downloads. Each `up` builds it, which costs a cached second when nothing changed and picks up a new Paper build.
+x-paper-image: &paper-image
+  build:
+    context: ./docker/paper
+    additional_contexts:
+      server: ./build/docker/paper-server
+  pull_policy: build
+
 # Game servers restart themselves after a round (Bukkit.shutdown), so the container has to come back on its own.
 x-paper: &paper
-  image: itzg/minecraft-server:2026.10.0-java25
+  <<: *paper-image
   env_file: ./build/docker/runtime.env
   restart: unless-stopped
   stop_grace_period: 1m
@@ -36,7 +45,6 @@ x-paper: &paper
 x-paper-env: &paper-env
   <<: *luckperms
   EULA: "TRUE"
-  TYPE: PAPER
   TZ: Europe/Berlin
   ONLINE_MODE: "FALSE"
   NETWORK_COMPRESSION_THRESHOLD: "-1"
@@ -50,19 +58,14 @@ x-paper-env: &paper-env
   # restart it.
   JVM_XX_OPTS: "-XX:+ExitOnOutOfMemoryError"
   JVM_OPTS: *german-formats
-  SYNC_SKIP_NEWER_IN_DESTINATION: "false"
-  # The image otherwise deletes every library Paper itself does not list, and the plugins download theirs again from
-  # Maven Central on each start, about 5 seconds.
-  CLEAN_SERVER_LIBRARIES: "false"
   CREATE_CONSOLE_IN_PIPE: "true"
-  # Empty rather than gone: the image then deletes the LuckPerms jar it downloaded before plugins were staged.
-  PLUGINS: ""
   BLOCKCRAFT_DB_HOST: mariadb
   BLOCKCRAFT_REPLAY_DIRECTORY: /replays
 
 services:
   replay-storage:
-    image: itzg/minecraft-server:2026.10.0-java25
+    <<: *paper-image
+    user: "0:0"
     entrypoint: ["/bin/sh", "-c"]
     command: ["chown 1000:1000 /replays"]
     restart: "no"
