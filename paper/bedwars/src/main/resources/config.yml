@@ -21,7 +21,7 @@ countdown:
   vote-closes-at: 10
   round: 3600
   restart: 30
-  reopen: 20
+  reopen: 30
 rounds-in-place: 10
 voting:
   maps: 3
