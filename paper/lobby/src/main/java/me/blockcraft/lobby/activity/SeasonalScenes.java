@@ -144,6 +144,7 @@ public final class SeasonalScenes implements Listener, AutoCloseable {
                 spots.get("snowfight-" + side + "-" + n).ifPresent(spot -> {
                     held.add(spot.getChunk());
                     var figure = Figures.spawn(spot, skin(winter.size() / 2), spawned -> {
+                        spawned.setCollidable(config.snowfightCollidable());
                         spawned.getEquipment().setItemInMainHand(ItemStack.of(Material.SNOWBALL));
                     });
                     crouch(figure);

@@ -38,6 +38,62 @@ parkour-top:
   z: 1630.5
   yaw: 0.0
   pitch: 0.0
+pond:
+  ==: org.bukkit.Location
+  world: world
+  x: -963.5
+  y: 28.0
+  z: 1641.5
+  yaw: 0.0
+  pitch: 0.0
+santa:
+  ==: org.bukkit.Location
+  world: world
+  x: -939.5
+  y: 24.0
+  z: 1622.5
+  yaw: 180.0
+  pitch: 0.0
+note-gruendung:
+  ==: org.bukkit.Location
+  world: world
+  x: -954.0
+  y: 25.0
+  z: 1698.0
+  yaw: 90.0
+  pitch: 0.0
+note-baumeister:
+  ==: org.bukkit.Location
+  world: world
+  x: -922.0
+  y: 24.0
+  z: 1559.0
+  yaw: 90.0
+  pitch: 0.0
+note-zettel:
+  ==: org.bukkit.Location
+  world: world
+  x: -989.0
+  y: 54.0
+  z: 1635.0
+  yaw: 90.0
+  pitch: 0.0
+note-bahnhof:
+  ==: org.bukkit.Location
+  world: world
+  x: -966.0
+  y: 27.0
+  z: 1631.0
+  yaw: 270.0
+  pitch: 0.0
+note-tagebuch:
+  ==: org.bukkit.Location
+  world: world
+  x: -905.0
+  y: 34.0
+  z: 1644.0
+  yaw: 0.0
+  pitch: 0.0
 prisoner:
   ==: org.bukkit.Location
   world: world
@@ -401,7 +457,7 @@ snowfight-a-1:
 snowfight-a-2:
   ==: org.bukkit.Location
   world: world
-  x: -941.5
+  x: -942.5
   y: 24.0
   z: 1615.5
   yaw: 270.0
@@ -425,7 +481,7 @@ snowfight-b-1:
 snowfight-b-2:
   ==: org.bukkit.Location
   world: world
-  x: -934.5
+  x: -933.5
   y: 24.0
   z: 1615.5
   yaw: 90.0

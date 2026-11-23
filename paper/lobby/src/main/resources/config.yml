@@ -541,6 +541,8 @@ ambient:
 # drifts ghost-speed blocks a tick along halloween-ghost-1 to ghost-spots and back.
 scenes:
   snowfight-figures: 3
+  # Projectiles can hit the fighters and trigger a return throw while collision is enabled.
+  snowfight-collidable: true
   snowfight-skins:
     - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODk5MzZiYTExN2JhOWE4M2NjNzAwMzg5OTFjMTIzYjM5NzJhZWJlMDQxYmVmZDA0YzhmNTk4ZGU0ZWM3ZWQyMCJ9fX0=
     - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU2YzJiNjBmNDlkZTYwMjY3NWM3YzY2OGFiMjViMmE0MDBkNzY2YzA1NzU4YmNlODZlM2YwODczMGZiNGMyMCJ9fX0=
