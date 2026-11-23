@@ -270,6 +270,7 @@ setup:
   lobby-set: "<prefix><muted>Der Ort <white><spot> <muted>wurde gesetzt. Mit <white>/map save <muted>bleibt er."
   invalid-key: "<prefix><error>Ein Map-Name darf nur aus a-z, 0-9, _, . und - bestehen."
   editing: "<prefix><muted>Du bearbeitest <white><map><muted>. Mit <white>/setup map <map> save <muted>bleibt die Welt."
+  busy: "<prefix><error><white><map> <error>wird gerade kopiert. Versuch es gleich noch einmal."
   not-loaded: "<prefix><error>Diese Map ist gerade nicht geladen."
   live: "<prefix><error>Auf <white><map> <error>läuft diese Runde. Bearbeite sie nach der Runde."
   saved: "<prefix><muted>Die Welt von <white><map> <muted>wurde gespeichert."
