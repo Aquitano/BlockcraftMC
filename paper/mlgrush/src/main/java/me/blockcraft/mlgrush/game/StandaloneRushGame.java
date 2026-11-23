@@ -205,8 +205,10 @@ public final class StandaloneRushGame {
         participants = players.stream().map(Player::getUniqueId).toList();
         winnerName = Optional.empty();
         var chosen = vote.decide().key();
-        arena.selectMap(maps.maps().stream().filter(map -> map.key().equals(chosen)).findFirst().orElseThrow());
+        var map = maps.maps().stream().filter(candidate -> candidate.key().equals(chosen)).findFirst().orElseThrow();
+        arena.selectMap(map);
         round.playArea(arena.world(), arena.bounds());
+        round.map(map.name());
         round.enter(GamePhase.INGAME);
         var started = identity;
         session = new RushSession(plugin, config, arena, kit, participants, new RushSession.Events() {

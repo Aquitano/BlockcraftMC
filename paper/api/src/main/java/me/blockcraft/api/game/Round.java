@@ -63,6 +63,7 @@ public final class Round implements Listener {
     private final RejoinRepository rejoins;
     private volatile GamePhase phase = GamePhase.LOBBY;
     private PlayArea playArea;
+    private String map;
     private Supplier<GameSidebar.Headcount> headcount = () -> new GameSidebar.Headcount(playerCount(), spectatorCount());
 
     public record PlayArea(World world, BoundingBox box) { }
@@ -330,6 +331,15 @@ public final class Round implements Listener {
 
     public Optional<PlayArea> playArea() {
         return Optional.ofNullable(playArea);
+    }
+
+    /** The name of the map the round plays, for a game that chooses among several; a replay labels its recording with it. */
+    public void map(String name) {
+        map = name;
+    }
+
+    public Optional<String> map() {
+        return Optional.ofNullable(map);
     }
 
     public boolean isPlaying(Player player) {

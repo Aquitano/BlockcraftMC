@@ -34,6 +34,7 @@ import me.blockcraft.skywars.map.SkyArena;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -204,6 +205,7 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         chests = Optional.of(filled);
         int radius = built.borderRadius();
         round.playArea(world, new BoundingBox(-radius, world.getMinHeight(), -radius, radius + 1, world.getMaxHeight(), radius + 1));
+        round.map(PlainTextComponentSerializer.plainText().serialize(vote.name(theme)));
         round.enter(GamePhase.INGAME);
         var players = new ArrayList<>(round.players());
         Collections.shuffle(players);

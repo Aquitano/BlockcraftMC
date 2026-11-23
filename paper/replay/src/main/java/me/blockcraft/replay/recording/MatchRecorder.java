@@ -186,7 +186,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
             return;
         }
         var header = new ReplayHeader(UUID.randomUUID(), api.server().group(), api.server().name(),
-                Bukkit.getMinecraftVersion(), plugin.getPluginMeta().getVersion(), api.map().name(), Instant.now(),
+                Bukkit.getMinecraftVersion(), plugin.getPluginMeta().getVersion(), round.map().orElseGet(api.map()::name), Instant.now(),
                 players.stream().map(MatchRecorder::participant).toList());
         try {
             session = new Session(round, store.begin(header), header.id(), players.stream().map(Player::getUniqueId).toList(), area(round));

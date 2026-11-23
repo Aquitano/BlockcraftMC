@@ -274,6 +274,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }
         arena = chosen;
         round.playArea(arena.world(), arena.bounds());
+        round.map(arena.name());
         arena.labels(messages);
     }
 

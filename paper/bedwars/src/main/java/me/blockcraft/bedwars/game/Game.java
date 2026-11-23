@@ -469,6 +469,7 @@ public final class Game implements RoundConnections.Seating {
         jumpAndRun.ifPresent(JumpAndRun::close);
         catchGame.close();
         round.playArea(world, match.border().bounds(world));
+        round.map(map.name());
         round.enter(GamePhase.INGAME);
         for (var player : round.players()) {
             var team = teams.of(player);

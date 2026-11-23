@@ -21,6 +21,6 @@ Paper 26.3 / Velocity 4 plugins. This file holds only what the code does not say
   cannot cancel chat for 1.19.1+ clients.
 - Players join groups through `ProxyMessaging`. Only the `waker` service touches Docker.
 - Replays see only what Bukkit announces: fire `BlocksChangedEvent` for blocks set directly and `ShotEvent` for hitscan guns,
-  and set `Round.playArea` for a fixed arena.
+  set `Round.playArea` for a fixed arena, and set `Round.map` when a game picks among several maps.
 - The proxy requires the resource pack, though a client can be in the world before it loads. Sternenfront assumes the pack;
   shared code and the other games stay readable without it.
