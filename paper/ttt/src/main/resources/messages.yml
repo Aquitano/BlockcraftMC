@@ -49,6 +49,7 @@ vote:
   chance: "den Zufall"
   result:
     - "<prefix><muted>Gespielt wird <accent><map><muted>."
+  unavailable: "<prefix><error>Gerade lässt sich keine Map laden. Die Runde startet gleich noch einmal."
 
 round:
   preparation: "<prefix><muted>Durchsucht die Kisten, danach werden die Rollen verteilt."

@@ -302,7 +302,13 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     }
 
     private void start() {
-        var built = vote.decide();
+        var decided = vote.decide();
+        if (decided.isEmpty()) {
+            Bukkit.broadcast(messages.get("vote.unavailable"));
+            countdown.start();
+            return;
+        }
+        var built = decided.get();
         town = Optional.of(built);
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         tester.get().showLabel();
