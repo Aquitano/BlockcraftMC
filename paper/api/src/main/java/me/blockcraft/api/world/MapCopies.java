@@ -1,12 +1,17 @@
 package me.blockcraft.api.world;
 
+import me.blockcraft.api.BlockcraftApi;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -26,12 +31,25 @@ public final class MapCopies {
     private final TemplateDimensions dimensions;
     private final Map<String, Consumer<String>> copiers = new HashMap<>();
     private final Map<String, CompletableFuture<Void>> copies = new HashMap<>();
+    private final Set<String> mainCopies = new HashSet<>();
 
-    /** On the main thread, which resolves where the copies go before any copy runs in the background. */
+    /**
+     * On the main thread while the plugin enables, which resolves where the copies go before any copy runs in the
+     * background. A copy of the main world's map is copied anew once {@code /map save} published that world, since it
+     * was taken from the template before the save.
+     */
     public MapCopies(Plugin plugin, TemplateDimensions dimensions) {
         this.plugin = plugin;
         this.dimensions = dimensions;
         dimensions.folder("");
+        plugin.getServer().getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onPublished(MapPublishedEvent event) {
+                if (event.world().equals(Bukkit.getWorlds().getFirst())) {
+                    mainCopies.stream().filter(key -> dimensions.loaded(key).isEmpty()).forEach(MapCopies.this::recopy);
+                }
+            }
+        }, plugin);
     }
 
     /** Copies {@code template} into place now, as the world of the map {@code key}. */
@@ -42,6 +60,7 @@ public final class MapCopies {
 
     /** As {@link #copy}, for a whole level's template, such as the main world's, of which the overworld is played. */
     public void copyLevel(WorldTemplate level, String key) {
+        rememberLevel(level, key);
         copiers.put(key, name -> dimensions.copyLevelReserved(level, name));
         dimensions.copyLevel(level, key);
     }
@@ -54,6 +73,7 @@ public final class MapCopies {
 
     /** As {@link #copyLevel}, off the main thread; {@link #load} refuses the map until it is done. */
     public void copyLevelInBackground(WorldTemplate level, String key) {
+        rememberLevel(level, key);
         copiers.put(key, name -> dimensions.copyLevelReserved(level, name));
         recopy(key);
     }
@@ -63,6 +83,25 @@ public final class MapCopies {
         var key = dimensions.nameOf(world).orElseThrow(() -> new IllegalArgumentException("Not a map world: " + world.getKey()));
         dimensions.publish(world, template);
         copiers.put(key, name -> dimensions.copyReserved(template, name));
+    }
+
+    private void rememberLevel(WorldTemplate level, String key) {
+        var main = BlockcraftApi.get().map().template();
+        if (main.filter(template -> template.directory().equals(level.directory())).isPresent()) {
+            mainCopies.add(key);
+        }
+    }
+
+    /** Whether a copy of the map {@code key} is under way, which a game can wait for rather than fall back. */
+    public boolean copying(String key) {
+        var copy = copies.get(key);
+        return copy != null && !copy.isDone();
+    }
+
+    /** Whether the last copy of the map {@code key} failed; {@link #load} starts another and throws. */
+    public boolean failed(String key) {
+        var copy = copies.get(key);
+        return copy != null && copy.isCompletedExceptionally();
     }
 
     /** Whether the map {@code key} can be loaded now, its copy done, so that a game can choose a map that is. */

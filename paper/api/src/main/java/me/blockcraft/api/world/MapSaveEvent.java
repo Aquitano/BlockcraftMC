@@ -37,7 +37,9 @@ public final class MapSaveEvent extends Event {
             event.complete().forEach(failure::addSuppressed);
             throw failure;
         }
-        return event.complete();
+        var unrestored = event.complete();
+        Bukkit.getPluginManager().callEvent(new MapPublishedEvent(world));
+        return unrestored;
     }
 
     public World world() {
