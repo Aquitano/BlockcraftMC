@@ -118,7 +118,8 @@ public final class RoundSummary {
         this.rewards = rewards;
         this.stats = stats;
         var config = api.roundConfig();
-        this.rivalries = new Rivalries(durable, api, messages, new RivalryRepository(api.database()), config.nemesisLead());
+        this.rivalries = new Rivalries(durable, player -> api.nickRanks().of(player).isPresent(), messages,
+                new RivalryRepository(api.database()), config.nemesisLead());
         this.respects = new Respects(plugin, messages, config.respectWindow());
         this.accusations = new Accusations(plugin, messages, config.accusationWindow(), config.accusations());
         this.deathLines = new DeathLines(messages);

@@ -36,36 +36,33 @@ public final class MapCopies {
 
     /** Copies {@code template} into place now, as the world of the map {@code key}. */
     public void copy(Path template, String key) {
-        remember(key, name -> dimensions.copy(template, name));
+        copiers.put(key, name -> dimensions.copyReserved(template, name));
+        dimensions.copy(template, key);
     }
 
     /** As {@link #copy}, for a whole level's template, such as the main world's, of which the overworld is played. */
     public void copyLevel(WorldTemplate level, String key) {
-        remember(key, name -> dimensions.copyLevel(level, name));
+        copiers.put(key, name -> dimensions.copyLevelReserved(level, name));
+        dimensions.copyLevel(level, key);
     }
 
-    /** As {@link #copy}, off the main thread; {@link #load} waits for it. */
+    /** As {@link #copy}, off the main thread; {@link #load} refuses the map until it is done. */
     public void copyInBackground(Path template, String key) {
-        copiers.put(key, name -> dimensions.copy(template, name));
+        copiers.put(key, name -> dimensions.copyReserved(template, name));
         recopy(key);
     }
 
-    /** As {@link #copyLevel}, off the main thread; {@link #load} waits for it. */
+    /** As {@link #copyLevel}, off the main thread; {@link #load} refuses the map until it is done. */
     public void copyLevelInBackground(WorldTemplate level, String key) {
-        copiers.put(key, name -> dimensions.copyLevel(level, name));
+        copiers.put(key, name -> dimensions.copyLevelReserved(level, name));
         recopy(key);
-    }
-
-    private void remember(String key, Consumer<String> copier) {
-        copier.accept(key);
-        copiers.put(key, copier);
     }
 
     /** Keeps {@code world}, loaded and as built, as the template its map is copied from after every round. */
     public void keep(World world, Path template) {
         var key = dimensions.nameOf(world).orElseThrow(() -> new IllegalArgumentException("Not a map world: " + world.getKey()));
         dimensions.publish(world, template);
-        copiers.put(key, name -> dimensions.copy(template, name));
+        copiers.put(key, name -> dimensions.copyReserved(template, name));
     }
 
     /** Whether the map {@code key} can be loaded now, its copy done, so that a game can choose a map that is. */
@@ -108,13 +105,22 @@ public final class MapCopies {
         dimensions.nameOf(world).filter(copiers::containsKey).ifPresent(this::recopy);
     }
 
+    /**
+     * Holds the map from the main thread until the copy is done, so that nothing can load it between the check that it
+     * is unloaded and the copy, such as a builder's edit.
+     */
     private void recopy(String key) {
-        if (dimensions.loaded(key).isPresent()) {
-            plugin.getSLF4JLogger().warn("The map {} is still loaded, so it is not copied anew", key);
+        if (!dimensions.reserve(key)) {
+            plugin.getSLF4JLogger().warn("The map {} is loaded or busy, so it is not copied anew", key);
             return;
         }
         var copier = copiers.get(key);
-        copies.put(key, CompletableFuture.runAsync(() -> copier.accept(key),
-                task -> Thread.ofVirtual().name("map-copy-" + key).start(task)));
+        copies.put(key, CompletableFuture.runAsync(() -> {
+            try {
+                copier.accept(key);
+            } finally {
+                dimensions.release(key);
+            }
+        }, task -> Thread.ofVirtual().name("map-copy-" + key).start(task)));
     }
 }

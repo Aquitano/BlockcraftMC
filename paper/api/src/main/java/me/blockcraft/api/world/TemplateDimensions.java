@@ -56,30 +56,45 @@ public final class TemplateDimensions {
 
     /** Blocking file work, run before {@link #load}; only an unloaded dimension may be replaced. */
     public void copy(Path template, String name) {
-        copy(name, WorldTemplate.at(template)::restore);
+        reserved(name, () -> copyReserved(template, name));
     }
 
     /** {@link #copy} for a whole level's template, of which only the overworld and the map's bundle are played. */
     public void copyLevel(WorldTemplate level, String name) {
-        copy(name, level::restoreDimension);
+        reserved(name, () -> copyLevelReserved(level, name));
     }
 
     /**
-     * Guarded per map, not by one lock: a background copy waiting on another process's template lock must not hold
-     * up the main thread's work on a different map; the same map being copied or loaded refuses at once instead.
+     * On the main thread: holds the map, unloaded, so that nothing loads, copies or publishes it until
+     * {@link #release}; false if it is loaded or held already. Each map is held on its own, so a background copy
+     * waiting on another process's template lock never holds up the main thread's work on a different map.
      */
-    private void copy(String name, Consumer<Path> into) {
-        if (!copyingOrLoading.add(name)) {
-            throw new IllegalStateException("The world is being copied or loaded: " + name);
+    public boolean reserve(String name) {
+        return loaded(name).isEmpty() && copyingOrLoading.add(name);
+    }
+
+    public void release(String name) {
+        copyingOrLoading.remove(name);
+    }
+
+    /** {@link #copy} into a map held with {@link #reserve}, from any thread. */
+    public void copyReserved(Path template, String name) {
+        WorldTemplate.at(template).restore(folder(name));
+    }
+
+    /** {@link #copyLevel} into a map held with {@link #reserve}, from any thread. */
+    public void copyLevelReserved(WorldTemplate level, String name) {
+        level.restoreDimension(folder(name));
+    }
+
+    private void reserved(String name, Runnable work) {
+        if (!reserve(name)) {
+            throw new IllegalStateException("The world is loaded, or being copied or loaded: " + name);
         }
         try {
-            // Off the main thread Bukkit's world list may change under the lookup, so a background copy relies on its caller.
-            if (Bukkit.isPrimaryThread() && loaded(name).isPresent()) {
-                throw new IllegalStateException("Cannot copy into a loaded world: " + name);
-            }
-            into.accept(folder(name));
+            work.run();
         } finally {
-            copyingOrLoading.remove(name);
+            release(name);
         }
     }
 
