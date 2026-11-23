@@ -94,7 +94,7 @@ public final class ServerDirectory {
             published.clear();
             reconcileAt = now.plus(RECONCILE_INTERVAL);
         } else {
-            published.keySet().removeIf(name -> !servers.containsKey(name)
+            published.keySet().removeIf(name -> !servers.containsKey(name) || !previous.containsKey(name)
                     || !previous.get(name).identity().equals(servers.get(name).identity()));
         }
         expireSeats();
