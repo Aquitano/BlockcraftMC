@@ -17,6 +17,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.IntConsumer;
 
 /**
@@ -44,6 +45,7 @@ public final class LobbyCountdown implements Listener {
     private final int startSeconds;
     private final IntConsumer onSecond;
     private final Runnable onStart;
+    private final BooleanSupplier ready;
     private boolean forced;
     private int startMinimum;
     private BossBar bar;
@@ -58,6 +60,11 @@ public final class LobbyCountdown implements Listener {
     }
 
     public LobbyCountdown(Plugin plugin, Round round, GameConfig config, int roundMinimum, IntConsumer onSecond, Runnable onStart) {
+        this(plugin, round, config, roundMinimum, onSecond, () -> true, onStart);
+    }
+
+    public LobbyCountdown(Plugin plugin, Round round, GameConfig config, int roundMinimum, IntConsumer onSecond,
+                          BooleanSupplier ready, Runnable onStart) {
         this.countdown = new Countdown(plugin);
         this.round = round;
         this.seconds = config.lobbySeconds();
@@ -66,6 +73,7 @@ public final class LobbyCountdown implements Listener {
         this.startMinimum = this.roundMinimum;
         this.startSeconds = config.startSeconds();
         this.onSecond = onSecond;
+        this.ready = ready;
         this.onStart = onStart;
         this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(this, plugin);
@@ -197,15 +205,17 @@ public final class LobbyCountdown implements Listener {
 
     /** A forced countdown may run out after players left; below the round's minimum it waits again. */
     private void finish() {
-        forced = false;
-        int minimum = startMinimum;
-        startMinimum = roundMinimum;
-        hideBar();
-        if (round.playerCount() < minimum) {
+        if (round.playerCount() < startMinimum) {
+            cancel();
             round.arena().announceCancelled();
             start();
             return;
         }
+        if (!ready.getAsBoolean()) {
+            countdown.start(1, ignored -> { }, this::finish);
+            return;
+        }
+        cancel();
         onStart.run();
     }
 }

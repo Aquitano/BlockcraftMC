@@ -143,7 +143,7 @@ public final class Game implements RoundConnections.Seating {
         this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, this::canBuild,
                 Game::isDecoration, placed::add);
         this.maps = new MapChoice(plugin, config, messages, pool, arenas, api.calendar());
-        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::lobbySecond, this::start);
+        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, LobbyCountdown.ROUND_MINIMUM, this::lobbySecond, this::mapReady, this::start);
         this.lobbyHotbar = new LobbyHotbar(plugin, List.of(
                 new LobbyHotbar.Choice(MenuIcon.BEDWARS, messages.get("item.perks"), this::openPerks),
                 new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"), () -> maps.chosen().isEmpty(), this::openVote)),
@@ -431,10 +431,14 @@ public final class Game implements RoundConnections.Seating {
         scoreboard.refreshAll();
     }
 
-    private void start() {
+    private boolean mapReady() {
         if (maps.decide()) {
             voteChanged();
         }
+        return maps.chosen().isEmpty() || maps.copyFinished();
+    }
+
+    private void start() {
         if (maps.chosen().isEmpty()) {
             broadcast("lobby.no-map");
             lobbyCountdown.start();
@@ -442,7 +446,7 @@ public final class Game implements RoundConnections.Seating {
         }
         ArenaMap map;
         try {
-            map = maps.awaitCopy();
+            map = maps.copiedMap();
             match = new Match(plugin, arenas.load(map.key()), map, messages, config, dealers);
         } catch (RuntimeException e) {
             plugin.getSLF4JLogger().error("Could not load the map {}", maps.chosen().map(ArenaMap::key).orElse("?"), e);

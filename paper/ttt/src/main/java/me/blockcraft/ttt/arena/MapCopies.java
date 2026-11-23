@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 /**
  * Every map's world, a copy of its template under the map's key. A world a round played in is unloaded afterwards
@@ -43,17 +42,16 @@ public final class MapCopies {
         templates.put(key, template);
     }
 
-    /** The world of the map {@code key}; a background copy that failed is tried once more here, and throws if it fails again. */
+
     public World load(String key) {
         var copy = copies.getOrDefault(key, DONE);
-        try {
-            copy.join();
-        } catch (CompletionException failed) {
-            plugin.getSLF4JLogger().warn("Copying the TTT map {} failed; trying once more", key, failed.getCause());
-            copies.remove(key);
-            dimensions.copy(templates.get(key), key);
-        }
+        if (!copy.isDone()) throw new IllegalStateException("The map is still copying: " + key);
+        copy.getNow(null);
         return dimensions.load(key);
+    }
+
+    public boolean ready(String key) {
+        return copies.getOrDefault(key, DONE).isDone();
     }
 
     /** Unloads a world a round played in, which nobody may be in any more, and copies its map anew. */
@@ -66,8 +64,15 @@ public final class MapCopies {
             plugin.getSLF4JLogger().warn("Could not unload the TTT map {}; its next round plays on what this one left", key.get());
             return;
         }
-        var template = templates.get(key.get());
-        copies.put(key.get(), CompletableFuture.runAsync(() -> dimensions.copy(template, key.get()),
-                task -> Bukkit.getScheduler().runTaskAsynchronously(plugin, task)));
+        String name = key.get();
+        var template = templates.get(name);
+        copies.put(name, CompletableFuture.runAsync(() -> {
+            try {
+                dimensions.copy(template, name);
+            } catch (RuntimeException failure) {
+                plugin.getSLF4JLogger().warn("Copying the TTT map {} failed; trying once more", name, failure);
+                dimensions.copy(template, name);
+            }
+        }, task -> Bukkit.getScheduler().runTaskAsynchronously(plugin, task)));
     }
 }

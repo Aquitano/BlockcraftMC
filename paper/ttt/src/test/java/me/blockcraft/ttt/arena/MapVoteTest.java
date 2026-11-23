@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertSame;
 
 public class MapVoteTest {
@@ -52,7 +53,9 @@ public class MapVoteTest {
                     })), NOPLogger.NOP_LOGGER);
             vote.force("broken");
 
-            assertSame(fallback, vote.decide());
+            assertTrue(vote.decide("fallback"::equals).isEmpty());
+            assertTrue(announcements.isEmpty());
+            assertSame(fallback, vote.decide(key -> true).orElseThrow());
             assertEquals(List.of(Component.text("Fallback")), announcements);
         } finally {
             serverField.set(null, previous);

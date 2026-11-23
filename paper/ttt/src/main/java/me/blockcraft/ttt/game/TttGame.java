@@ -160,7 +160,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.summary = nextSummary();
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         round.backToLobby(this::backToLobby);
-        this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::start);
+        this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::mapReady, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"),
                 () -> phase() == GamePhase.LOBBY, this::openVote)), statsMenus, countdown);
         round.countWith(this::headcount);
@@ -301,9 +301,13 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         return karma.getOrDefault(player, config.karma().start());
     }
 
+    private boolean mapReady() {
+        town = vote.decide(copies::ready);
+        return town.isPresent();
+    }
+
     private void start() {
-        var built = vote.decide();
-        town = Optional.of(built);
+        var built = town.orElseThrow();
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         tester.get().showLabel();
         round.playArea(built.world(), built.bounds());

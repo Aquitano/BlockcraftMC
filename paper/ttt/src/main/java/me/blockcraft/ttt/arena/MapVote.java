@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -39,6 +40,7 @@ public final class MapVote {
     private final Random random = new Random();
     private Ballot<String> ballot = new Ballot<>();
     private Optional<Choice> forced = Optional.empty();
+    private Optional<Choice> selected = Optional.empty();
 
     public MapVote(Messages messages, List<Choice> choices, Logger logger) {
         if (choices.isEmpty()) {
@@ -59,6 +61,7 @@ public final class MapVote {
     }
 
     public void withdraw(Player player) {
+        if (ballot.choiceOf(player.getUniqueId()).isPresent()) selected = Optional.empty();
         ballot.withdraw(player.getUniqueId());
     }
 
@@ -68,7 +71,10 @@ public final class MapVote {
 
     public Optional<Component> force(String key) {
         var choice = choice(key);
-        choice.ifPresent(chosen -> forced = Optional.of(chosen));
+        choice.ifPresent(chosen -> {
+            forced = Optional.of(chosen);
+            selected = Optional.empty();
+        });
         return choice.map(chosen -> Component.text(chosen.name()));
     }
 
@@ -76,22 +82,27 @@ public final class MapVote {
     public void reset() {
         ballot = new Ballot<>();
         forced = Optional.empty();
+        selected = Optional.empty();
     }
 
     /** Loads the chosen map, falling back to the first, already-built map if loading fails. */
-    public Town decide() {
-        var choice = forced.or(() -> ballot.winner(keys(), random).flatMap(this::choice)).orElseThrow();
+    public Optional<Town> decide(Predicate<String> ready) {
+        if (selected.isEmpty()) selected = forced.or(() -> ballot.winner(keys(), random).flatMap(this::choice));
+        var choice = selected.orElseThrow();
+        if (!ready.test(choice.key())) return Optional.empty();
         Town town;
         try {
             town = choice.town().get();
         } catch (RuntimeException failure) {
             logger.warn("Could not load TTT map {}; using {}", choice.key(), choices.getFirst().key(), failure);
             choice = choices.getFirst();
+            selected = Optional.of(choice);
+            if (!ready.test(choice.key())) return Optional.empty();
             town = choice.town().get();
         }
         messages.getLines("vote.result", Placeholder.unparsed("map", choice.name())).forEach(Bukkit::broadcast);
         Sounds.NOTIFY.playToAll();
-        return town;
+        return Optional.of(town);
     }
 
     /** {@code key} empty is a vote to leave the map to chance. */
@@ -103,7 +114,9 @@ public final class MapVote {
             return;
         }
         var option = choice.<Component>map(chosen -> Component.text(chosen.name())).orElseGet(() -> messages.get("vote.chance"));
-        boolean changed = ballot.cast(player.getUniqueId(), choice.map(Choice::key)).isPresent();
+        var previous = ballot.cast(player.getUniqueId(), choice.map(Choice::key));
+        boolean changed = previous.isPresent();
+        if (!previous.equals(Optional.of(choice.map(Choice::key)))) selected = Optional.empty();
         VoteMenu.confirm(player, messages, option, changed);
     }
 

@@ -21,7 +21,9 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -47,6 +49,7 @@ final class MapChoice {
     private List<ArenaMap> choices;
     private Optional<ArenaMap> chosen = Optional.empty();
     private boolean forced;
+    private final Map<String, CompletableFuture<Void>> copying = new HashMap<>();
     private CompletableFuture<Void> copied = CompletableFuture.completedFuture(null);
 
     MapChoice(Plugin plugin, BedWarsConfig config, Messages messages, MapPool pool, TemplateDimensions arenas,
@@ -125,9 +128,13 @@ final class MapChoice {
         return true;
     }
 
-    /** Waits for the chosen map's copy, which normally finished while the lobby counted down its last seconds. */
-    ArenaMap awaitCopy() {
-        copied.join();
+    boolean copyFinished() {
+        return copied.isDone();
+    }
+
+    ArenaMap copiedMap() {
+        if (!copyFinished()) throw new IllegalStateException("The map is still copying");
+        copied.getNow(null);
         var map = chosen.orElseThrow();
         if (arenas.loaded(map.key()).isPresent()) {
             throw new IllegalStateException("The map is already loaded: " + map.key());
@@ -190,15 +197,8 @@ final class MapChoice {
         forced = forcedChoice;
         messages.getLines("vote.result", Placeholder.unparsed("map", map.name())).forEach(Bukkit::broadcast);
         Sounds.NOTIFY.playToAll();
-        var copy = new CompletableFuture<Void>();
-        Tasks.async(plugin, () -> {
-            try {
-                arenas.copy(pool.world(map.key()), map.key());
-                copy.complete(null);
-            } catch (RuntimeException e) {
-                copy.completeExceptionally(e);
-            }
-        });
-        copied = copy;
+        copying.values().removeIf(CompletableFuture::isDone);
+        copied = copying.computeIfAbsent(map.key(), key -> CompletableFuture.runAsync(
+                () -> arenas.copy(pool.world(key), key), task -> Tasks.async(plugin, task)));
     }
 }
