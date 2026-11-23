@@ -47,7 +47,7 @@ public record BedWarsConfig(
         return new BedWarsConfig(
                 teams,
                 Math.max(1, config.integer("teams.players-per-team")),
-                config.integer("countdown.vote-closes-at"),
+                Math.max(0, config.integer("countdown.vote-closes-at")),
                 Math.max(1, config.integer("voting.maps")),
                 config.integer("countdown.round"),
                 spawnTicks,

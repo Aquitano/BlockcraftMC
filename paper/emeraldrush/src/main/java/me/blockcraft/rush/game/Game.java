@@ -8,7 +8,8 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
-import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
+import me.blockcraft.api.game.RoundScope;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.SpawnProtection;
@@ -43,7 +44,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -58,16 +58,18 @@ import java.util.UUID;
 import java.util.function.IntConsumer;
 import java.util.OptionalInt;
 
-public final class Game implements RoundConnections.Seating {
+public final class Game implements RoundHost.Game {
 
     private static final int SECONDS_PER_MINUTE = 60;
     private static final long RESPAWN_DELAY_TICKS = 1L;
     private static final int RESPAWN_BOOST_TICKS = 120;
     private static final int SKIP_TO_SECONDS = 10;
 
-    private final Plugin plugin;
+    private final RoundScope scope;
     private final RushConfig config;
     private final Spawns spawns;
+    private final ArenaCopies arenas;
+    private final int startSeconds;
     private final Messages messages;
     private final RoundSummary summary;
     private final Round round;
@@ -78,6 +80,7 @@ public final class Game implements RoundConnections.Seating {
     private final LobbyEntrance entrance;
 
     private GamePhase phase = GamePhase.LOBBY;
+    private boolean arenaPrepared;
     private Countdown clock;
     private final Map<UUID, Integer> emeralds = new HashMap<>();
     private final Map<UUID, Integer> lives = new HashMap<>();
@@ -90,19 +93,22 @@ public final class Game implements RoundConnections.Seating {
     private record Loadout(ItemStack[] contents, ItemStack[] armor) {
     }
 
-    public Game(Plugin plugin, GameConfig gameConfig, RushConfig config, Spawns spawns, Messages messages,
+    /** The round's world loads {@code countdown.start} seconds before the start. */
+    public Game(RoundScope scope, GameConfig gameConfig, RushConfig config, Spawns spawns, ArenaCopies arenas, Messages messages,
                 StatsRepository stats, StatsMenus statsMenus, Unlocks unlocks, MapBundle map) {
-        this.plugin = plugin;
+        this.scope = scope;
         this.config = config;
         this.spawns = spawns;
+        this.arenas = arenas;
+        this.startSeconds = gameConfig.startSeconds();
         this.messages = messages;
-        this.summary = new RoundSummary(plugin, messages,
+        this.summary = new RoundSummary(scope, messages,
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
-        this.round = new Round(plugin, new Arena(messages, Sounds.RUSH_JOIN), summary, config.maxPlayers(), gameConfig);
-        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::beginSearch);
+        this.round = new Round(scope, new Arena(messages, Sounds.RUSH_JOIN), summary, config.maxPlayers(), gameConfig);
+        this.lobbyCountdown = new LobbyCountdown(scope, round, gameConfig, this::lobbySecond, this::beginSearch);
         this.scoreboard = new GameScoreboard(this, messages, round, map, config.maxPlayers());
         this.menus = new RushMenus(this, config, messages, spawns, unlocks);
-        this.lobbyHotbar = new LobbyHotbar(plugin,
+        this.lobbyHotbar = new LobbyHotbar(scope,
                 List.of(new LobbyHotbar.Choice(MenuIcon.EMERALDRUSH, messages.get("item.perks"), menus::openPerks)),
                 statsMenus, lobbyCountdown);
         this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, () -> spawns.get(SpawnPoint.LOBBY),
@@ -127,6 +133,7 @@ public final class Game implements RoundConnections.Seating {
         return menus;
     }
 
+    @Override
     public LobbyCountdown lobbyCountdown() {
         return lobbyCountdown;
     }
@@ -245,12 +252,27 @@ public final class Game implements RoundConnections.Seating {
         }
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         lobbyCountdown.cancel();
         round.stop();
     }
 
+    private void lobbySecond(int remaining) {
+        if (remaining <= startSeconds) {
+            prepareArena();
+        }
+    }
+
+    private void prepareArena() {
+        if (!arenaPrepared) {
+            arenaPrepared = true;
+            arenas.prepare(scope, spawns, config.ores().radius());
+        }
+    }
+
     private void beginSearch() {
+        prepareArena();
         setPhase(GamePhase.SEARCH);
         spawns.get(SpawnPoint.SEARCH).ifPresent(search -> OreVeins.seed(search, config.ores()));
         RoundStart.go(alivePlayers());
@@ -367,7 +389,7 @@ public final class Game implements RoundConnections.Seating {
         lives.put(victim.getUniqueId(), remaining);
         if (remaining == 0) {
             round.eliminate(victim);
-            Tasks.later(plugin, 1L, () -> checkWinner(false));
+            Tasks.later(scope, 1L, () -> checkWinner(false));
         }
         round.respawn(victim, RESPAWN_DELAY_TICKS);
         scoreboard.refreshAll();
@@ -390,7 +412,7 @@ public final class Game implements RoundConnections.Seating {
             return;
         }
         awaitingLoadout.add(player.getUniqueId());
-        Tasks.sync(plugin, () -> {
+        Tasks.sync(scope, () -> {
             awaitingLoadout.remove(player.getUniqueId());
             config.combat().apply(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, RESPAWN_BOOST_TICKS, 1));

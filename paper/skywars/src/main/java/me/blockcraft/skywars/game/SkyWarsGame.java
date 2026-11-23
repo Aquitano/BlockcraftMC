@@ -15,7 +15,7 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
-import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
@@ -54,11 +54,11 @@ import java.util.Set;
 import java.util.OptionalInt;
 
 /**
- * One server, one round of SkyWars, as GommeHD played it: every player on their own island over the void with a
+ * One round of SkyWars, as GommeHD played it: every player on their own island over the void with a
  * kit and three chests, the better loot on the semi-middles and the best in the middle. The chests fill once more
  * after a while, later the border closes on the middle, and the last player alive wins.
  */
-public final class SkyWarsGame implements RoundConnections.Seating {
+public final class SkyWarsGame implements RoundHost.Game {
 
     private static final long TICKS_PER_SECOND = 20L;
     private static final Set<Integer> REFILL_WARNINGS = Set.of(60, 10);
@@ -116,7 +116,8 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         return phase() == GamePhase.INGAME;
     }
 
-    public LobbyCountdown countdown() {
+    @Override
+    public LobbyCountdown lobbyCountdown() {
         return countdown;
     }
 
@@ -344,7 +345,8 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         }
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         countdown.cancel();
         round.stop();
     }

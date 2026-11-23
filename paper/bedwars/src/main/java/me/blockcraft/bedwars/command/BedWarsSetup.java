@@ -23,6 +23,7 @@ import me.blockcraft.bedwars.team.TeamColor;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Player;
 
@@ -164,10 +165,16 @@ public final class BedWarsSetup {
             pool.save(created);
             return created;
         });
-        if (arenas.loaded(key).isEmpty() && Files.isDirectory(pool.world(key))) {
-            arenas.copy(pool.world(key), key);
+        World world;
+        try {
+            if (arenas.loaded(key).isEmpty() && Files.isDirectory(pool.world(key))) {
+                arenas.copy(pool.world(key), key);
+            }
+            world = arenas.load(key);
+        } catch (IllegalStateException busy) {
+            player.sendMessage(messages.get("setup.busy", Placeholder.unparsed("map", key)));
+            return Command.SINGLE_SUCCESS;
         }
-        var world = arenas.load(key);
         player.teleport(map.spectator().orElse(NEW_MAP_START).in(world));
         player.sendMessage(messages.get("setup.editing", Placeholder.unparsed("map", key)));
         return Command.SINGLE_SUCCESS;
@@ -183,7 +190,12 @@ public final class BedWarsSetup {
             player.sendMessage(messages.get("setup.not-loaded"));
             return Command.SINGLE_SUCCESS;
         }
-        arenas.publish(world.get(), pool.world(key));
+        try {
+            arenas.publish(world.get(), pool.world(key));
+        } catch (IllegalStateException busy) {
+            player.sendMessage(messages.get("setup.busy", Placeholder.unparsed("map", key)));
+            return Command.SINGLE_SUCCESS;
+        }
         player.sendMessage(messages.get("setup.saved", Placeholder.unparsed("map", key)));
         return Command.SINGLE_SUCCESS;
     }

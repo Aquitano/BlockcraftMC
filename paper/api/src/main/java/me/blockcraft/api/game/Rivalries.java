@@ -1,6 +1,5 @@
 package me.blockcraft.api.game;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -19,6 +18,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Every kill of a round, counted in {@code bc_rivalries} by account, and the nemesis (Erzfeind) the counts make. When
@@ -29,7 +29,7 @@ import java.util.function.Function;
 final class Rivalries {
 
     private final Plugin plugin;
-    private final BlockcraftApi api;
+    private final Predicate<Player> nicked;
     private final Messages messages;
     private final Function<Collection<UUID>, List<RivalryRepository.Rivalry>> read;
     private final BiConsumer<UUID, UUID> record;
@@ -40,14 +40,14 @@ final class Rivalries {
     private boolean loading;
     private boolean closed;
 
-    Rivalries(Plugin plugin, BlockcraftApi api, Messages messages, RivalryRepository repository, int lead) {
-        this(plugin, api, messages, repository::among, repository::add, lead);
+    Rivalries(Plugin plugin, Predicate<Player> nicked, Messages messages, RivalryRepository repository, int lead) {
+        this(plugin, nicked, messages, repository::among, repository::add, lead);
     }
 
-    Rivalries(Plugin plugin, BlockcraftApi api, Messages messages,
+    Rivalries(Plugin plugin, Predicate<Player> nicked, Messages messages,
               Function<Collection<UUID>, List<RivalryRepository.Rivalry>> read, BiConsumer<UUID, UUID> record, int lead) {
         this.plugin = plugin;
-        this.api = api;
+        this.nicked = nicked;
         this.messages = messages;
         this.read = read;
         this.record = record;
@@ -58,24 +58,25 @@ final class Rivalries {
         loading = true;
         var ids = players.stream().map(Player::getUniqueId).toList();
         Tasks.async(plugin, () -> new Standings(read.apply(ids)), loaded -> {
-            if (closed) {
-                return;
-            }
             standings = loaded;
             for (var player : players) {
                 loaded.nemesis(player.getUniqueId(), ids, lead).ifPresent(nemesis -> {
                     nemeses.put(player.getUniqueId(), nemesis);
-                    announce(player, Bukkit.getPlayer(nemesis), loaded.between(player.getUniqueId(), nemesis));
+                    if (!closed) {
+                        announce(player, Bukkit.getPlayer(nemesis), loaded.between(player.getUniqueId(), nemesis));
+                    }
                 });
             }
             finishLoading();
         }, this::finishLoading);
     }
 
+    /**
+     * Nothing more is announced. Kills that wait for the standings still being read stay queued: the read finishes
+     * after the round closed, under the plugin itself, writes them and grants a revenge they earned.
+     */
     void close() {
         closed = true;
-        standings = null;
-        finishLoading();
     }
 
     private void finishLoading() {
@@ -117,6 +118,6 @@ final class Rivalries {
     }
 
     private boolean masked(Player player, Player rival) {
-        return api.nickRanks().of(player).isPresent() || api.nickRanks().of(rival).isPresent();
+        return nicked.test(player) || nicked.test(rival);
     }
 }

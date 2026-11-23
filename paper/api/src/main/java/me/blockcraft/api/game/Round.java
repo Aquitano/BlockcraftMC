@@ -5,6 +5,7 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.network.RejoinRepository;
@@ -46,6 +47,7 @@ public final class Round implements Listener {
     private static final Set<Integer> END_ANNOUNCEMENTS = Set.of(600, 300, 180, 60);
     private static final long TICKS_PER_SECOND = 20L;
     private static final int SECONDS_PER_MINUTE = 60;
+    private static final String REJOINS = "rejoins";
 
     private final Plugin plugin;
     private final BlockcraftApi api;
@@ -61,7 +63,10 @@ public final class Round implements Listener {
     private final List<TimerBar> bars = new ArrayList<>();
     private final Map<UUID, Away> away = new HashMap<>();
     private final RejoinRepository rejoins;
+    /** One queue for every hold and release, so a late write of one round never lands after the next round's. */
+    private final SerialTasks<String> rejoinWrites;
     private volatile GamePhase phase = GamePhase.LOBBY;
+    private boolean playsOn;
     private PlayArea playArea;
     private String map;
     private Supplier<GameSidebar.Headcount> headcount = () -> new GameSidebar.Headcount(playerCount(), spectatorCount());
@@ -76,6 +81,11 @@ public final class Round implements Listener {
         this.capacity = capacity;
         this.config = config;
         this.rejoins = new RejoinRepository(api.database());
+        this.rejoinWrites = plugin instanceof RoundScope scope ? scope.host().rejoinWrites() : new SerialTasks<>(plugin);
+        if (plugin instanceof RoundScope scope) {
+            // A restart used to end the summary along with the JVM; closing it lets the kills it still holds be written.
+            scope.onClose(() -> this.summary.close());
+        }
         this.spectators = new Spectators(plugin, arena, this::players, () -> phase == GamePhase.INGAME);
         Bukkit.getPluginManager().registerEvents(this, plugin);
         releaseRejoins();
@@ -206,7 +216,7 @@ public final class Round implements Listener {
         var kept = new Away(player.getName(), player.isDead(), onForfeit);
         away.put(id, kept);
         var server = api.server().name();
-        Tasks.async(plugin, () -> rejoins.hold(id, server, seconds));
+        rejoinWrites.run(REJOINS, () -> rejoins.hold(id, server, seconds));
         Tasks.later(plugin, seconds * TICKS_PER_SECOND, () -> {
             if (away.get(id) == kept) {
                 forfeit(id);
@@ -247,12 +257,12 @@ public final class Round implements Listener {
 
     private void release(UUID id) {
         var server = api.server().name();
-        Tasks.async(plugin, () -> rejoins.release(id, server));
+        rejoinWrites.run(REJOINS, () -> rejoins.release(id, server));
     }
 
     private void releaseRejoins() {
         var server = api.server().name();
-        Tasks.async(plugin, () -> rejoins.releaseAll(server));
+        rejoinWrites.run(REJOINS, () -> rejoins.releaseAll(server));
     }
 
     @EventHandler
@@ -447,13 +457,32 @@ public final class Round implements Listener {
         return end(config.restartSeconds());
     }
 
-    /** As {@link #end()}, with a longer wait before the restart for a game that still has something to offer. */
+    /**
+     * As {@link #end()}, with a longer wait before the restart for a game that still has something to offer. A round
+     * of a {@link RoundHost} that plays on is followed by the next round on this server instead, after as long.
+     */
     public boolean end(int restartSeconds) {
+        if (plugin instanceof RoundScope scope && scope.host().playsNext(scope)) {
+            if (!endInPlace(player -> arena.tell(player, "arena.next-round-here"))) {
+                return false;
+            }
+            timer(scope.host().nextRoundIn(arena, restartSeconds, summary::closeRespects));
+            playsOn = true;
+            return true;
+        }
         if (!endInPlace(player -> ProxyMessaging.play(plugin, player, api.server().group()))) {
             return false;
         }
         timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects, summary::offerReturn, summary::returningIn));
         return true;
+    }
+
+    /**
+     * Whether the round has ended and the next round follows on this server rather than after a restart, for a game
+     * that prepares that round ahead.
+     */
+    public boolean playsOn() {
+        return playsOn;
     }
 
     public boolean endInPlace(Consumer<Player> playAgain) {

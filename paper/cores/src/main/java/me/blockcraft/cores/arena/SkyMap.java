@@ -1,6 +1,5 @@
 package me.blockcraft.cores.arena;
 
-import me.blockcraft.api.game.LootChests;
 import me.blockcraft.cores.arena.CoresMap.Box;
 import me.blockcraft.cores.game.Core;
 import me.blockcraft.cores.game.Side;
@@ -21,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Himmelsfeste, the map Cores builds into an empty world at every start: a floating base per team at either end,
+ * Himmelsfeste, the map Cores builds into an empty world once per start: a floating base per team at either end,
  * each with two cores in their protected cubes, its spawn, iron to mine, an enchanting table with shelves, anvils,
  * workbenches and a chest of experience bottles; diamonds in the middle, and two side islands with loot and gold.
  * A short lane runs straight from base to base through the middle, two long ones round the flanks. The blue half
@@ -30,9 +29,9 @@ import java.util.Set;
 public final class SkyMap {
 
     public static final String NAME = "Himmelsfeste";
+    public static final String KEY = "himmelsfeste";
 
     private static final int FLOOR = 64;
-    private static final Box CLEARED = new Box(-42, 40, -82, 42, 125, 82);
     private static final Box BORDER = new Box(-40, 0, -80, 40, 319, 80);
     private static final int BASE_HALF_WIDTH = 12;
     private static final int BASE_NEAR = 48;
@@ -45,28 +44,30 @@ public final class SkyMap {
     private static final int XP_STACKS = 27;
 
     private final World world;
-    private final LootChests loot;
+    /** False when the world is a copy of one built before, of which only the layout is read. */
+    private final boolean place;
     private final Set<Long> protectedBlocks = new HashSet<>();
     private final List<Box> noBuild = new ArrayList<>();
     private final List<Core> cores = new ArrayList<>();
     private final Map<Side, Location> spawns = new EnumMap<>(Side.class);
     private final List<Block> lootChests = new ArrayList<>();
 
-    private SkyMap(World world, LootChests loot) {
+    private SkyMap(World world, boolean place) {
         this.world = world;
-        this.loot = loot;
+        this.place = place;
     }
 
-    public static CoresMap build(World world, LootChests loot) {
-        return build(world, loot, Optional.empty());
+    /** Builds the map into {@code world}, which must be empty; its loot chests stay empty. */
+    public static CoresMap build(World world, Optional<Location> lobby) {
+        return new SkyMap(world, true).build(lobby);
     }
 
-    public static CoresMap build(World world, LootChests loot, Optional<Location> lobby) {
-        return new SkyMap(world, loot).build(lobby);
+    /** The map in {@code copy}, a copy of a world it was built into, with cores of its own. */
+    public static CoresMap in(World copy, Optional<Location> lobby) {
+        return new SkyMap(copy, false).build(lobby);
     }
 
     private CoresMap build(Optional<Location> sharedLobby) {
-        clear();
         for (var side : Side.values()) {
             base(side);
         }
@@ -75,23 +76,8 @@ public final class SkyMap {
             flank(sign);
         }
         var lobby = sharedLobby.orElseGet(this::lobby);
-        lootChests.forEach(this::fillLoot);
-        return new CoresMap(NAME, world, Map.copyOf(spawns), List.copyOf(cores), Set.copyOf(protectedBlocks),
-                List.copyOf(noBuild), BORDER, lobby, new Location(world, 0.5, 90, 0.5, 0, 60));
-    }
-
-    /** The world keeps what the last round built, so everything the map may cover goes first. */
-    private void clear() {
-        for (int x = CLEARED.minX(); x <= CLEARED.maxX(); x++) {
-            for (int z = CLEARED.minZ(); z <= CLEARED.maxZ(); z++) {
-                for (int y = CLEARED.minY(); y <= CLEARED.maxY(); y++) {
-                    var block = world.getBlockAt(x, y, z);
-                    if (!block.isEmpty()) {
-                        block.setType(Material.AIR, false);
-                    }
-                }
-            }
-        }
+        return new CoresMap(NAME, world, Map.copyOf(spawns), List.copyOf(cores), List.copyOf(lootChests),
+                Set.copyOf(protectedBlocks), List.copyOf(noBuild), BORDER, lobby, new Location(world, 0.5, 90, 0.5, 0, 60));
     }
 
     private void base(Side side) {
@@ -122,9 +108,11 @@ public final class SkyMap {
             set(x, FLOOR + 1, z(side, 70), Material.CRAFTING_TABLE, true);
         }
         var experience = set(0, FLOOR + 1, z(side, 71), Material.CHEST, true);
-        var bottles = new ItemStack[XP_STACKS];
-        Arrays.fill(bottles, ItemStack.of(Material.EXPERIENCE_BOTTLE, 64));
-        ((Chest) experience.getState()).getBlockInventory().setContents(bottles);
+        if (place) {
+            var bottles = new ItemStack[XP_STACKS];
+            Arrays.fill(bottles, ItemStack.of(Material.EXPERIENCE_BOTTLE, 64));
+            ((Chest) experience.getState()).getBlockInventory().setContents(bottles);
+        }
         for (int sign : new int[]{-1, 1}) {
             fill(side, sign * 9, sign * 11, FLOOR + 1, FLOOR + 2, 62, 67, Material.IRON_BLOCK, false);
             for (int d : new int[]{BASE_NEAR, BASE_FAR}) {
@@ -215,10 +203,6 @@ public final class SkyMap {
         return new Location(world, 0.5, y + 1, 0.5);
     }
 
-    private void fillLoot(Block chest) {
-        ((Chest) chest.getState()).getBlockInventory().setContents(loot.open(chest.getLocation()).getContents());
-    }
-
     private void line(int minX, int maxX, int minZ, int maxZ) {
         for (int x = Math.min(minX, maxX); x <= Math.max(minX, maxX); x++) {
             for (int z = minZ; z <= maxZ; z++) {
@@ -246,7 +230,9 @@ public final class SkyMap {
 
     private Block set(int x, int y, int z, Material material, boolean base) {
         var block = world.getBlockAt(x, y, z);
-        block.setType(material, false);
+        if (place) {
+            block.setType(material, false);
+        }
         if (base) {
             protectedBlocks.add(CoresMap.key(x, y, z));
         }

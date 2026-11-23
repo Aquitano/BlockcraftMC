@@ -4,8 +4,6 @@ import me.blockcraft.api.game.Ballot;
 import me.blockcraft.api.game.VoteMenu;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.map.ArenaMap;
 import me.blockcraft.bedwars.map.Era;
@@ -15,31 +13,29 @@ import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Which map the round is played on. The lobby votes among a few maps drawn from the pool, or leaves it to chance,
  * until shortly before the start, when the vote decides, unless someone forced a map before. The draw takes the
  * old server's maps while OG mode is on and the current ones otherwise, and is drawn again when staff switch it
- * before the vote is decided. The chosen map is copied into place in the background at once, so that the start only
- * has to load it.
+ * before the vote is decided. The chosen map is copied into place in the background at once, unless a fresh copy is
+ * there already, so that the start only has to load it.
  */
 final class MapChoice {
 
-    private final Plugin plugin;
     private final BedWarsConfig config;
     private final Messages messages;
     private final MapPool pool;
-    private final TemplateDimensions arenas;
+    private final ArenaCopies arenas;
     private final NetworkCalendar calendar;
     private final Random random = new Random();
     private Era drawnFor;
@@ -47,11 +43,8 @@ final class MapChoice {
     private List<ArenaMap> choices;
     private Optional<ArenaMap> chosen = Optional.empty();
     private boolean forced;
-    private CompletableFuture<Void> copied = CompletableFuture.completedFuture(null);
 
-    MapChoice(Plugin plugin, BedWarsConfig config, Messages messages, MapPool pool, TemplateDimensions arenas,
-              NetworkCalendar calendar) {
-        this.plugin = plugin;
+    MapChoice(BedWarsConfig config, Messages messages, MapPool pool, ArenaCopies arenas, NetworkCalendar calendar) {
         this.config = config;
         this.messages = messages;
         this.pool = pool;
@@ -61,7 +54,7 @@ final class MapChoice {
     }
 
     boolean hasMaps() {
-        return choices.stream().anyMatch(map -> arenas.loaded(map.key()).isEmpty());
+        return choices.stream().anyMatch(arenas::free);
     }
 
     Optional<ArenaMap> chosen() {
@@ -82,7 +75,7 @@ final class MapChoice {
             return;
         }
         followEra();
-        var options = choices.stream().filter(map -> arenas.loaded(map.key()).isEmpty())
+        var options = choices.stream().filter(arenas::free)
                 .map(map -> new VoteMenu.Option(Optional.of(map.key()),
                         messages.get("vote.map", Placeholder.unparsed("map", map.name())), new ItemStack(map.icon()),
                         builders(map), ballot.votes(Optional.of(map.key())))).toList();
@@ -101,7 +94,7 @@ final class MapChoice {
             return false;
         }
         followEra();
-        var candidates = choices.stream().filter(map -> arenas.loaded(map.key()).isEmpty())
+        var candidates = choices.stream().filter(arenas::free)
                 .map(ArenaMap::key).toList();
         if (candidates.isEmpty()) {
             redraw();
@@ -125,14 +118,9 @@ final class MapChoice {
         return true;
     }
 
-    /** Waits for the chosen map's copy, which normally finished while the lobby counted down its last seconds. */
-    ArenaMap awaitCopy() {
-        copied.join();
-        var map = chosen.orElseThrow();
-        if (arenas.loaded(map.key()).isPresent()) {
-            throw new IllegalStateException("The map is already loaded: " + map.key());
-        }
-        return map;
+    /** The chosen map's world, once its copy is done, which normally happened while the lobby counted down. */
+    World load() {
+        return arenas.load(chosen.orElseThrow());
     }
 
     /** A fresh draw of maps for a new vote; a menu still showing the old draw closes. */
@@ -169,11 +157,11 @@ final class MapChoice {
     }
 
     private Optional<ArenaMap> choice(String key) {
-        return choices.stream().filter(map -> map.key().equals(key) && arenas.loaded(key).isEmpty()).findFirst();
+        return choices.stream().filter(map -> map.key().equals(key) && arenas.free(map)).findFirst();
     }
 
     private List<ArenaMap> available() {
-        return pool.playable(config.teams()).stream().filter(map -> arenas.loaded(map.key()).isEmpty()).toList();
+        return pool.playable(config.teams()).stream().filter(arenas::free).toList();
     }
 
     private List<Component> builders(ArenaMap map) {
@@ -183,22 +171,13 @@ final class MapChoice {
     }
 
     private void choose(ArenaMap map, boolean forcedChoice) {
-        if (arenas.loaded(map.key()).isPresent()) {
+        if (!arenas.free(map)) {
             throw new IllegalStateException("The map is already loaded: " + map.key());
         }
         chosen = Optional.of(map);
         forced = forcedChoice;
         messages.getLines("vote.result", Placeholder.unparsed("map", map.name())).forEach(Bukkit::broadcast);
         Sounds.NOTIFY.playToAll();
-        var copy = new CompletableFuture<Void>();
-        Tasks.async(plugin, () -> {
-            try {
-                arenas.copy(pool.world(map.key()), map.key());
-                copy.complete(null);
-            } catch (RuntimeException e) {
-                copy.completeExceptionally(e);
-            }
-        });
-        copied = copy;
+        arenas.prepare(map);
     }
 }

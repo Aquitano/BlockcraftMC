@@ -116,6 +116,11 @@ public final class ArenaMap {
         }
     }
 
+    /** The same arena read anew from its file, without the doors, rooms and blocks this one opened or prepared. */
+    public ArenaMap fresh() {
+        return new ArenaMap(file, world);
+    }
+
     public World world() { return world; }
     public String name() { return yaml.getString("name", world.getName()); }
     public Location point(String key) {
@@ -312,6 +317,7 @@ public final class ArenaMap {
 
     public void labels(Messages messages) {
         world.getEntitiesByClass(TextDisplay.class).stream().filter(entity -> entity.getScoreboardTags().contains(DISPLAY_TAG)).forEach(TextDisplay::remove);
+        labels.clear();
         stationLabels.clear();
         for (var station : stations) {
             stationLabels.put(station, label(station.location().clone().add(0.5, 1.5, 0.5), messages.get("station.label",

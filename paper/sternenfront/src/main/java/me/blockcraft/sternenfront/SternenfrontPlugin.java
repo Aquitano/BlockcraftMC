@@ -8,14 +8,19 @@ import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameServices;
 import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
 import me.blockcraft.api.game.StartCommand;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.appearance.TargetOutlines;
 import me.blockcraft.sternenfront.arena.FrontChoice;
+import me.blockcraft.sternenfront.arena.FrontMaps;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
+import me.blockcraft.sternenfront.game.BattleIntro;
+import me.blockcraft.sternenfront.game.Career;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.debug.BotDebug;
@@ -33,11 +38,8 @@ import java.util.Optional;
 
 public final class SternenfrontPlugin extends JavaPlugin {
 
-    private SternenfrontGame game;
-    private BodyRigs bodyRigs;
-    private TargetOutlines targetOutlines;
+    private RoundHost<SternenfrontGame> host;
     private BotDebug botDebug;
-    private Secrets secrets;
 
     @Override
     public void onEnable() {
@@ -45,14 +47,20 @@ public final class SternenfrontPlugin extends JavaPlugin {
         var read = BundledDefaults.strict(getConfig());
         var gameConfig = GameConfig.from(getConfig(), read.flag("bots.enabled") ? 1 : 2);
         var config = SternenfrontConfig.from(getConfig());
+        var heroConfig = HeroConfig.from(getConfig());
+        var feel = FeelConfig.from(getConfig());
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "bc_sternenfront_stats");
         var messages = services.messages();
-        var maps = new FrontChoice(this, messages);
+        var maps = new FrontMaps(this, messages);
+        if (!maps.copied()) {
+            getSLF4JLogger().warn("No Sternenfront map template to copy; every round plays the main world and restarts the server");
+        }
         var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(maps.main().lobbySpawn());
         lobby.getWorld().setSpawnLocation(lobby);
-        game = new SternenfrontGame(this, gameConfig, config, HeroConfig.from(getConfig()), FeelConfig.from(getConfig()),
-                messages, maps, read.integer("countdown.vote-closes-at"), lobby, services.stats(), services.menus());
+        int voteClosesAt = read.integer("countdown.vote-closes-at");
+        var career = new Career(this, messages, api.database(), getConfig().getLongList("career.ranks"));
+        Tasks.async(this, career::createTable);
         api.presence().maxPlayers(config.capacity());
         var riggedSides = EnumSet.noneOf(Faction.class);
         if (read.flag("appearance.droids")) {
@@ -61,54 +69,54 @@ public final class SternenfrontPlugin extends JavaPlugin {
         if (read.flag("appearance.infantry")) {
             riggedSides.add(Faction.KOLONIEN);
         }
-        if (!riggedSides.isEmpty()) {
-            bodyRigs = BodyRigs.start(this, game, riggedSides);
-            game.rigs(bodyRigs);
-        }
-        secrets = Secrets.start(this, game, messages);
-        if (read.flag("outlines.enabled")) {
-            targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs));
-        }
-        botDebug = new BotDebug(game, bodyRigs);
+        boolean outlines = read.flag("outlines.enabled");
+        botDebug = new BotDebug(this, messages, () -> host.current());
 
-        services.listen(
-                game.hotbar(),
-                new RoundConnections(game),
-                WorldProtection.during(() -> game.phase() != GamePhase.INGAME, api.buildMode())
-                        .rescue(() -> Optional.of(lobby)),
-                new ArenaProtection(() -> false),
-                new ArenaListener(game, api.buildMode()),
-                new CombatListener(game, api.buildMode(), botDebug, secrets),
-                new ChatListener(game, messages));
-        services.listen(game.fieldObjectives());
-
-        services.commands(commands -> {
-            commands.register(StartCommand.of(game.countdown()).build());
-            commands.register(ForceMapCommand.create(messages, maps.vote()::keys,
-                    () -> game.phase() == GamePhase.LOBBY && maps.vote().open(), maps.vote()::force));
-            commands.register(botDebug.command());
-            commands.register(game.intro().command());
+        host = RoundHost.start(this, gameConfig, round -> {
+            var game = new SternenfrontGame(round, gameConfig, config, heroConfig, feel, messages, new FrontChoice(maps, round),
+                    voteClosesAt, lobby, career, services.stats(), services.menus());
+            var bodyRigs = riggedSides.isEmpty() ? Optional.<BodyRigs>empty() : Optional.of(BodyRigs.start(round, game, riggedSides));
+            bodyRigs.ifPresent(rigs -> {
+                game.rigs(rigs);
+                round.onClose(rigs::close);
+            });
+            var secrets = Secrets.start(round, game, messages);
+            round.onClose(secrets::close);
+            if (outlines) {
+                var targetOutlines = new TargetOutlines(round, game, bodyRigs);
+                round.onClose(targetOutlines::close);
+            }
+            round.listen(
+                    game.hotbar(),
+                    new RoundConnections(game),
+                    WorldProtection.during(() -> game.phase() != GamePhase.INGAME, api.buildMode())
+                            .rescue(() -> Optional.of(lobby)),
+                    new ArenaProtection(() -> false),
+                    new ArenaListener(game, api.buildMode()),
+                    new CombatListener(game, api.buildMode(), botDebug, secrets),
+                    new ChatListener(game, messages),
+                    game.fieldObjectives());
+            return game;
         });
 
-        Bukkit.getOnlinePlayers().forEach(game::join);
+        services.commands(commands -> {
+            commands.register(StartCommand.of(host).build());
+            commands.register(ForceMapCommand.create(messages, maps.vote()::keys,
+                    () -> host.current().phase() == GamePhase.LOBBY && maps.vote().open(), maps.vote()::force));
+            commands.register(botDebug.command());
+            commands.register(BattleIntro.command(() -> host.current().intro()));
+        });
+
+        Bukkit.getOnlinePlayers().forEach(host.current()::join);
     }
 
     @Override
     public void onDisable() {
-        if (secrets != null) {
-            secrets.close();
-        }
-        if (targetOutlines != null) {
-            targetOutlines.close();
+        if (host != null) {
+            host.close();
         }
         if (botDebug != null) {
             botDebug.close();
-        }
-        if (bodyRigs != null) {
-            bodyRigs.close();
-        }
-        if (game != null) {
-            game.stop();
         }
         Bukkit.getOnlinePlayers().forEach(player -> player.kick(Component.empty()));
         Bukkit.getScheduler().cancelTasks(this);

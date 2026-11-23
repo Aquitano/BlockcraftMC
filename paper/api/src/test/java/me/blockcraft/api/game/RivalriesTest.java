@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 public class RivalriesTest {
 
     @Test
-    public void closingWhileLoadingPersistsTheQueuedKillOnceWithoutOldRoundNotifications() throws Exception {
+    public void closingWhileLoadingPersistsTheQueuedKillOnceAndGrantsItsRevengeWithoutOldRoundNotifications() throws Exception {
         var workers = new ArrayDeque<Runnable>();
         var main = new ArrayDeque<Runnable>();
         var scheduler = fake(BukkitScheduler.class, (proxy, method, args) -> {
@@ -44,7 +44,7 @@ public class RivalriesTest {
         var victimId = UUID.randomUUID();
         var persisted = new ArrayList<RivalryRepository.Rivalry>();
         var revenge = new ArrayList<Standings.Standing>();
-        var rivalries = new Rivalries(plugin, null, null, ids -> {
+        var rivalries = new Rivalries(plugin, player -> false, null, ids -> {
             assertEquals(List.of(killerId, victimId), List.copyOf(ids));
             return List.of(new RivalryRepository.Rivalry(victimId, killerId, 5));
         }, (killer, victim) -> persisted.add(new RivalryRepository.Rivalry(killer, victim, 1)), 3);
@@ -70,7 +70,7 @@ public class RivalriesTest {
             }
 
             assertEquals(List.of(new RivalryRepository.Rivalry(killerId, victimId, 1)), persisted);
-            assertTrue(revenge.isEmpty());
+            assertEquals(1, revenge.size());
             assertTrue(main.isEmpty());
         } finally {
             serverField.set(null, previousServer);

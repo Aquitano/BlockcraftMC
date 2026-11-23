@@ -10,8 +10,8 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.game.PlayerReset;
-import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundHost;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
@@ -51,7 +51,6 @@ import org.bukkit.entity.Pose;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -67,7 +66,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class ZombiesGame implements RoundConnections.Seating {
+public final class ZombiesGame implements RoundHost.Game {
 
     private enum Phase { LOBBY, WAVE, INTERMISSION, ENDING }
     public enum Powerup { MAX_AMMO, DOUBLE_GOLD, INSTANT_KILL }
@@ -104,7 +103,6 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private final Map<UUID, Integer> repaired = new HashMap<>();
     private final Map<UUID, Drop> drops = new HashMap<>();
     private final Set<UUID> reviving = new HashSet<>();
-    private final BukkitTask task;
     private Phase phase = Phase.LOBBY;
     private Countdown clock;
     private TimerBar timerBar;
@@ -118,7 +116,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private int instantKillUntil;
     private boolean powered;
 
-    /** The vote among the maps closes {@code voteClosesAt} seconds before the start, when the chosen one loads. */
+    /** The round's map loads {@code voteClosesAt} seconds before the start, when the vote among several closes. */
     public ZombiesGame(Plugin plugin, GameConfig gameConfig, ZombiesConfig config, Messages messages,
                        ArenaChoice maps, int voteClosesAt, StatsRepository stats, StatsMenus statsMenus) {
         this.plugin = plugin;
@@ -147,7 +145,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         this.mysteryBox = new MysteryBox(this);
         this.racks = new WeaponRacks(this::arena, config.armory(), config.forSale());
         this.burrower = new Burrower(this, config.burrower());
-        this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
 
@@ -158,6 +156,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn)
                 .orElseGet(() -> maps.main().point("lobby"));
     }
+    @Override
     public LobbyCountdown lobbyCountdown() { return lobbyCountdown; }
     public LobbyHotbar lobbyHotbar() { return lobbyHotbar; }
     public Weapons weapons() { return weapons; }
@@ -242,7 +241,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     }
 
     private void lobbySecond(int remaining) {
-        if (remaining <= voteClosesAt && maps.vote().open()) {
+        if (remaining <= voteClosesAt && !maps.decided()) {
             maps.decide();
             round.players().forEach(lobbyHotbar::refreshChoices);
             refreshSidebar();
@@ -772,7 +771,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     public void refreshSidebar() {
         for (var player : Bukkit.getOnlinePlayers()) {
             if (isLobby()) {
-                sidebar.lobby(player, config.maxPlayers(), maps.chosen().<Component>map(chosen -> Component.text(chosen.name()))
+                sidebar.lobby(player, config.maxPlayers(), maps.chosenName().<Component>map(Component::text)
                         .orElseGet(() -> messages.get("scoreboard.map-vote")), List.of());
             } else if (phase == Phase.ENDING) {
                 sidebar.end(player, summary.winnerNames().stream().<Component>map(Component::text).toList());
@@ -847,14 +846,13 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }
     }
 
-    public void stop() {
-        task.cancel();
+    @Override
+    public void close() {
         phase = Phase.ENDING;
         lobbyCountdown.cancel();
         round.stop();
         clearArena();
         List.copyOf(corpses.keySet()).forEach(this::removeCorpse);
-        arena.restore();
     }
 
     void broadcast(String key, TagResolver... tags) {

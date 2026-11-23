@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /** A fighter's rank across rounds, from every battle point they have ever earned, and their best round. */
-final class Career {
+public final class Career {
 
     private record Standing(long points, int bestRound) { }
 
@@ -28,14 +28,14 @@ final class Career {
     private final Database db;
     private final List<Long> ranks;
 
-    Career(Plugin plugin, Messages messages, Database db, List<Long> ranks) {
+    public Career(Plugin plugin, Messages messages, Database db, List<Long> ranks) {
         this.plugin = plugin;
         this.messages = messages;
         this.db = db;
         this.ranks = ranks;
     }
 
-    void createTable() {
+    public void createTable() {
         db.execute("CREATE TABLE IF NOT EXISTS bc_sternenfront_career (player_uuid VARCHAR(36) NOT NULL PRIMARY KEY, "
                 + "name VARCHAR(16) NOT NULL, points BIGINT NOT NULL, best_round INT NOT NULL)");
     }

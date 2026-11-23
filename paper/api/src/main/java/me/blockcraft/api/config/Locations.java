@@ -1,6 +1,8 @@
 package me.blockcraft.api.config;
 
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.IOException;
@@ -33,6 +35,23 @@ public final class Locations<K> {
     /** Empty when the key is unset or its world is not loaded. */
     public Optional<Location> get(K key) {
         return Optional.ofNullable(yaml.getLocation(path.apply(key))).filter(Location::isWorldLoaded);
+    }
+
+    /**
+     * The places as they lie in {@code world}, whichever world they were set in: for a round that plays a fresh copy
+     * of the map they were set on. A place whose world is not loaded counts too, since only its coordinates matter.
+     */
+    public Function<K, Optional<Location>> in(World world) {
+        return key -> switch (yaml.get(path.apply(key))) {
+            case Location location -> {
+                var moved = location.clone();
+                moved.setWorld(world);
+                yield Optional.of(moved);
+            }
+            case ConfigurationSection section -> Optional.of(new Location(world, section.getDouble("x"), section.getDouble("y"),
+                    section.getDouble("z"), (float) section.getDouble("yaw"), (float) section.getDouble("pitch")));
+            case null, default -> Optional.empty();
+        };
     }
 
     public void set(K key, Location location) {

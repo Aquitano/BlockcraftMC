@@ -14,6 +14,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,8 +42,10 @@ final class AnimatedBodies implements AutoCloseable {
     private static final String PAULDRON = "_pauldron";
 
     private final Set<RigBody> bodies = EnumSet.noneOf(RigBody.class);
+    private final Map<RigBody, Boolean> modelled = new EnumMap<>(RigBody.class);
     private final BiPredicate<Player, LivingEntity> outlined;
     private final int hurtTint;
+    private final Logger logger;
     private final Map<UUID, Trackers> drawn = new HashMap<>();
 
     private static final class Trackers {
@@ -126,23 +129,25 @@ final class AnimatedBodies implements AutoCloseable {
         }
         this.outlined = outlined;
         this.hurtTint = hurtTint;
+        this.logger = logger;
     }
 
-    /** BetterModel registers its models once the server has loaded, after every plugin has enabled. */
-    void dropBodiesWithoutModels(Logger logger) {
-        bodies.removeIf(body -> {
-            boolean modelled = BetterModel.model(body.family()).isPresent() && BetterModel.model(body.family() + OUTLINED).isPresent();
-            if (!modelled) {
-                logger.severe("BetterModel has no " + body.family() + " or " + body.family() + OUTLINED + " model, so that body"
-                        + " in appearance.animated-bodies stays a plain rig. Generate it with resourcepack/RigModels.py and"
-                        + " dev/verify/verify.py models.");
-            }
-            return !modelled;
-        });
-    }
-
+    /**
+     * BetterModel registers its models once the server has loaded, after every plugin has enabled, so a body's models
+     * are looked up when it is first drawn.
+     */
     boolean draws(RigBody body) {
-        return bodies.contains(body);
+        return bodies.contains(body) && modelled.computeIfAbsent(body, this::modelled);
+    }
+
+    private boolean modelled(RigBody body) {
+        boolean modelled = BetterModel.model(body.family()).isPresent() && BetterModel.model(body.family() + OUTLINED).isPresent();
+        if (!modelled) {
+            logger.severe("BetterModel has no " + body.family() + " or " + body.family() + OUTLINED + " model, so that body"
+                    + " in appearance.animated-bodies stays a plain rig. Generate it with resourcepack/RigModels.py and"
+                    + " dev/verify/verify.py models.");
+        }
+        return modelled;
     }
 
     boolean drawing(Entity actor) {

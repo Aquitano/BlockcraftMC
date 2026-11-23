@@ -6,7 +6,8 @@ global-stats-head: Kevos
 # The lobby counts down once players.min are there; a full lobby jumps to countdown.full seconds, /start to
 # countdown.start. In the round the players wait countdown.freeze seconds in their cages. refill-after seconds later
 # every chest fills once more, from border-after seconds the border closes on the middle, and countdown.round seconds
-# after the start the round ends in a draw.
+# after the start the round ends in a draw. countdown.restart seconds after a round, the next one's lobby opens on this
+# server and counts down from countdown.reopen; after rounds-in-place rounds in a row the server restarts instead.
 countdown:
   lobby: 60
   start: 10
@@ -16,6 +17,8 @@ countdown:
   refill-after: 300
   border-after: 600
   restart: 15
+  reopen: 20
+rounds-in-place: 10
 idle-restart-minutes: 50
 timer-bar: true
 

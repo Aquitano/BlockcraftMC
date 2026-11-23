@@ -9,8 +9,10 @@ import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GameServices;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
 import me.blockcraft.api.game.SetupCommand;
 import me.blockcraft.api.game.StartCommand;
+import me.blockcraft.api.world.MainWorldCopy;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.quicksg.command.DebugCommands;
 import me.blockcraft.quicksg.config.LocationKey;
@@ -29,7 +31,7 @@ import java.util.Locale;
 
 public final class QuickSGPlugin extends JavaPlugin {
 
-    private Game game;
+    private RoundHost<Game> host;
 
     @Override
     public void onEnable() {
@@ -43,24 +45,26 @@ public final class QuickSGPlugin extends JavaPlugin {
         var locations = Locations.load(api.map().file(this, "locations.yml"), LocationKey::key);
 
         var items = new GameItems(messages);
-        game = new Game(this, gameConfig, config, messages, locations, stats, services.menus(), api.map(), items);
+        var copy = new MainWorldCopy(this, "quicksg");
         api.presence().maxPlayers(config.maxPlayers());
-        game.applyLobbyWorldBorder();
-
-        var lootChests = new LootChests(config.loot(), entry -> items.loot(entry.material(), entry.amount()));
-
-        services.listen(
-                new RoundConnections(game),
-                new DeathListener(game),
-                new ProtectionListener(game, api.buildMode()),
-                WorldProtection.during(game::isLobby, api.buildMode()).rescue(game::lobbySpawn),
-                new ArenaProtection(game::frozen),
-                game.lobbyHotbar(),
-                new ItemListener(game, messages, lootChests, new CompassTracker(messages, config.tracker())));
+        host = RoundHost.start(this, gameConfig, round -> {
+            var game = new Game(round, gameConfig, config, messages, locations, copy, stats, services.menus(), api.map(), items);
+            game.applyLobbyWorldBorder();
+            var lootChests = new LootChests(config.loot(), entry -> items.loot(entry.material(), entry.amount()));
+            round.listen(
+                    new RoundConnections(game),
+                    new DeathListener(game),
+                    new ProtectionListener(game, api.buildMode()),
+                    WorldProtection.during(game::isLobby, api.buildMode()).rescue(game::lobbySpawn),
+                    new ArenaProtection(game::frozen),
+                    game.lobbyHotbar(),
+                    new ItemListener(game, messages, lootChests, new CompassTracker(messages, config.tracker())));
+            return game;
+        });
 
         services.commands(commands -> {
-            commands.register(StartCommand.of(game.lobbyCountdown())
-                    .then(DebugCommands.timer(game))
+            commands.register(StartCommand.of(host)
+                    .then(DebugCommands.timer(() -> host.current()))
                     .build());
             commands.register(SetupCommand.locations(messages, List.of(LocationKey.values()).stream()
                             .filter(key -> api.waitingLobby().isEmpty() || key != LocationKey.LOBBY && key != LocationKey.LOBBY_CENTER).toList(),
@@ -71,8 +75,8 @@ public final class QuickSGPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         Bukkit.getOnlinePlayers().forEach(Player::kick);
-        if (game != null) {
-            game.shutdown();
+        if (host != null) {
+            host.close();
         }
         Bukkit.getScheduler().cancelTasks(this);
     }

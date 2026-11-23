@@ -28,6 +28,7 @@ public final class TemplateDimensions {
     private final String namespace;
     private final Consumer<World> settle;
     private final Set<String> copyingOrLoading = ConcurrentHashMap.newKeySet();
+    private volatile Path root;
 
     /** {@code settle} sets the rules every one of these worlds keeps, right after it loads. */
     public TemplateDimensions(String namespace, Consumer<World> settle) {
@@ -55,25 +56,45 @@ public final class TemplateDimensions {
 
     /** Blocking file work, run before {@link #load}; only an unloaded dimension may be replaced. */
     public void copy(Path template, String name) {
-        copy(name, WorldTemplate.at(template)::restore);
+        reserved(name, () -> copyReserved(template, name));
     }
 
     /** {@link #copy} for a whole level's template, of which only the overworld and the map's bundle are played. */
     public void copyLevel(WorldTemplate level, String name) {
-        copy(name, level::restoreDimension);
+        reserved(name, () -> copyLevelReserved(level, name));
     }
 
-    private synchronized void copy(String name, Consumer<Path> into) {
-        if (!copyingOrLoading.add(name)) {
-            throw new IllegalStateException("The world is being copied or loaded: " + name);
+    /**
+     * On the main thread: holds the map, unloaded, so that nothing loads, copies or publishes it until
+     * {@link #release}; false if it is loaded or held already. Each map is held on its own, so a background copy
+     * waiting on another process's template lock never holds up the main thread's work on a different map.
+     */
+    public boolean reserve(String name) {
+        return loaded(name).isEmpty() && copyingOrLoading.add(name);
+    }
+
+    public void release(String name) {
+        copyingOrLoading.remove(name);
+    }
+
+    /** {@link #copy} into a map held with {@link #reserve}, from any thread. */
+    public void copyReserved(Path template, String name) {
+        WorldTemplate.at(template).restore(folder(name));
+    }
+
+    /** {@link #copyLevel} into a map held with {@link #reserve}, from any thread. */
+    public void copyLevelReserved(WorldTemplate level, String name) {
+        level.restoreDimension(folder(name));
+    }
+
+    private void reserved(String name, Runnable work) {
+        if (!reserve(name)) {
+            throw new IllegalStateException("The world is loaded, or being copied or loaded: " + name);
         }
         try {
-            if (loaded(name).isPresent()) {
-                throw new IllegalStateException("Cannot copy into a loaded world: " + name);
-            }
-            into.accept(folder(name));
+            work.run();
         } finally {
-            copyingOrLoading.remove(name);
+            release(name);
         }
     }
 
@@ -101,14 +122,27 @@ public final class TemplateDimensions {
     }
 
     /** Flushes a world a builder edited and copies it back into its template. */
-    public synchronized void publish(World world, Path template) {
+    public void publish(World world, Path template) {
         var name = nameOf(world).orElseThrow(() -> new IllegalArgumentException("Not a " + namespace + " world: " + world.getKey()));
-        world.save(true);
-        WorldTemplate.at(template).publish(folder(name));
+        if (!copyingOrLoading.add(name)) {
+            throw new IllegalStateException("The world is being copied or loaded: " + name);
+        }
+        try {
+            world.save(true);
+            WorldTemplate.at(template).publish(folder(name));
+        } finally {
+            copyingOrLoading.remove(name);
+        }
     }
 
+    /** Resolved once on the main thread, so that background copies never read Bukkit's world list. */
     Path folder(String name) {
-        var level = Bukkit.getWorlds().getFirst().getName();
-        return Bukkit.getWorldContainer().toPath().resolve(level).resolve("dimensions").resolve(namespace).resolve(name);
+        var dimensions = root;
+        if (dimensions == null) {
+            var level = Bukkit.getWorlds().getFirst().getName();
+            dimensions = Bukkit.getWorldContainer().toPath().resolve(level).resolve("dimensions").resolve(namespace);
+            root = dimensions;
+        }
+        return dimensions.resolve(name);
     }
 }

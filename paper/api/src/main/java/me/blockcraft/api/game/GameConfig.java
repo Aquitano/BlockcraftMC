@@ -9,10 +9,16 @@ import org.bukkit.configuration.ConfigurationSection;
  * ({@code countdown.lobby}, {@code countdown.start}, {@code countdown.restart}), when an empty server restarts
  * ({@code idle-restart-minutes}), whether timed phases show a boss bar ({@code timer-bar}), whose head the global
  * stats wear ({@code global-stats-head}) and how long a round keeps the place of a player who dropped out
- * ({@code rejoin-seconds}, off at 0 and left out by games that keep no places).
+ * ({@code rejoin-seconds}, off at 0 and left out by games that keep no places), and how many rounds in a row a
+ * {@link RoundHost} plays on the same server before it restarts ({@code rounds-in-place}, 1 or left out restarts
+ * after every round) and what the lobby countdown runs down to for the players who stay for the next of them
+ * ({@code countdown.reopen}).
  */
 public record GameConfig(int minPlayers, int lobbySeconds, int startSeconds, int restartSeconds,
-                         int idleRestartMinutes, boolean timerBar, String globalStatsHead, int rejoinSeconds) {
+                         int idleRestartMinutes, boolean timerBar, String globalStatsHead, int rejoinSeconds,
+                         int roundsInPlace, int reopenSeconds) {
+
+    private static final int DEFAULT_REOPEN_SECONDS = 20;
 
     public static GameConfig from(ConfigurationSection config) {
         return from(config, LobbyCountdown.ROUND_MINIMUM);
@@ -28,6 +34,8 @@ public record GameConfig(int minPlayers, int lobbySeconds, int startSeconds, int
                 Math.max(1, config.integer("idle-restart-minutes")),
                 config.flag("timer-bar"),
                 config.text("global-stats-head"),
-                config.has("rejoin-seconds") ? Math.max(0, config.integer("rejoin-seconds")) : 0);
+                config.has("rejoin-seconds") ? Math.max(0, config.integer("rejoin-seconds")) : 0,
+                config.has("rounds-in-place") ? Math.max(1, config.integer("rounds-in-place")) : 1,
+                config.has("countdown.reopen") ? Math.max(1, config.integer("countdown.reopen")) : DEFAULT_REOPEN_SECONDS);
     }
 }

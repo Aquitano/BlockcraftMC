@@ -157,6 +157,11 @@ public final class Spectators implements Listener {
         watched.clear();
     }
 
+    /** No longer watching on this server, as when a {@link RoundHost} closes the round they watched. */
+    static void unwatch(UUID id) {
+        WATCHING.remove(id);
+    }
+
     /** No longer counted or followed, as when they leave the server. */
     public void forget(UUID id) {
         spectators.remove(id);

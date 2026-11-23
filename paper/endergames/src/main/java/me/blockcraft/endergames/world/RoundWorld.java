@@ -4,7 +4,6 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.endergames.config.EnderGamesConfig.WorldSettings;
 import me.blockcraft.endergames.config.MapSeed;
-import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRules;
 import org.bukkit.HeightMap;
@@ -18,6 +17,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.plugin.Plugin;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,16 +25,19 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
- * The round's world: a vanilla overworld generated at every server start from one of the configured seeds, picked
- * at random. While the lobby waits it puts the border around that seed's centre and loads every chunk inside, so
- * the round starts without generating terrain; only then is it {@link #ready()}.
+ * A round's world: a vanilla overworld generated for every round from one of the configured seeds, picked at random.
+ * Before the round starts it puts the border around that seed's centre and loads every chunk inside, so the round
+ * starts without generating terrain; only then is it {@link #ready()}.
  */
 public final class RoundWorld {
 
-    private static final NamespacedKey KEY = new NamespacedKey("endergames", "runde");
     private static final int LOADS_IN_FLIGHT = 16;
+    /** Far longer than a world takes to generate here; past it, something went wrong that waiting will not fix. */
+    private static final Duration PREPARE_LIMIT = Duration.ofMinutes(5);
     private static final long DAY = 1000L;
     private static final Set<Material> UNSAFE = Set.of(Material.LAVA, Material.MAGMA_BLOCK, Material.CACTUS,
             Material.CAMPFIRE, Material.SOUL_CAMPFIRE, Material.POWDER_SNOW, Material.SWEET_BERRY_BUSH,
@@ -46,7 +49,7 @@ public final class RoundWorld {
     private final Random random = new Random();
     private final int centerX;
     private final int centerZ;
-    private boolean ready;
+    private final CompletableFuture<Void> loaded = new CompletableFuture<>();
     private Optional<StartIsland> startIsland = Optional.empty();
 
     private RoundWorld(Plugin plugin, World world, WorldSettings settings, MapSeed seed) {
@@ -57,12 +60,12 @@ public final class RoundWorld {
         this.centerZ = seed.z();
     }
 
-    /** Throws the last start's world away and generates the next from a random seed of the pool; the dimension must not be loaded yet. */
-    public static RoundWorld create(Plugin plugin, WorldSettings settings) {
+    /** Throws away what is left of the dimension {@code key} and generates it anew from a random seed of the pool. */
+    static RoundWorld create(Plugin plugin, WorldSettings settings, NamespacedKey key) {
         var seed = settings.seeds().get(new Random().nextInt(settings.seeds().size()));
-        plugin.getSLF4JLogger().info("EnderGames world from seed {}, centred on {}, {}", seed.seed(), seed.x(), seed.z());
-        Worlds.discard(KEY);
-        var world = Objects.requireNonNull(WorldCreator.ofKey(KEY)
+        plugin.getSLF4JLogger().info("EnderGames world {} from seed {}, centred on {}, {}", key, seed.seed(), seed.x(), seed.z());
+        Worlds.discard(key);
+        var world = Objects.requireNonNull(WorldCreator.ofKey(key)
                 .environment(World.Environment.NORMAL)
                 .type(WorldType.NORMAL)
                 .seed(seed.seed())
@@ -87,7 +90,22 @@ public final class RoundWorld {
     }
 
     public boolean ready() {
-        return ready;
+        return loaded.isDone() && !loaded.isCompletedExceptionally();
+    }
+
+    /**
+     * Runs {@code action} on the main thread once the world is ready, or {@code failed} if a chunk or the start island
+     * failed or the world is not ready after {@link #PREPARE_LIMIT}; neither once {@code holder} was disabled.
+     */
+    public void whenReady(Plugin holder, Runnable action, Runnable failed) {
+        loaded.orTimeout(PREPARE_LIMIT.toMillis(), TimeUnit.MILLISECONDS).whenComplete((done, failure) -> Tasks.sync(holder, () -> {
+            if (failure == null) {
+                action.run();
+            } else {
+                plugin.getSLF4JLogger().error("EnderGames world {} did not get ready", world.getKey(), failure);
+                failed.run();
+            }
+        }));
     }
 
     public boolean contains(World other) {
@@ -96,18 +114,22 @@ public final class RoundWorld {
 
     /**
      * Sets the border round the seed's centre, loads its chunks and builds the start island with {@code startChests}
-     * chests over them; {@code onReady} runs on the main thread.
+     * chests over them.
      */
-    public void prepare(int startChests, Runnable onReady) {
+    void prepare(int startChests) {
         var border = world.getWorldBorder();
         border.setCenter(centerX + 0.5, centerZ + 0.5);
         border.setSize(settings.radius() * 2.0);
         preload(chunksInside(), () -> {
-            startIsland = Optional.of(StartIsland.build(world, centerX, centerZ, startChests));
-            world.setSpawnLocation(spectatorSpawn());
-            ready = true;
-            plugin.getSLF4JLogger().info("EnderGames world is loaded");
-            onReady.run();
+            try {
+                startIsland = Optional.of(StartIsland.build(world, centerX, centerZ, startChests));
+                world.setSpawnLocation(spectatorSpawn());
+            } catch (RuntimeException e) {
+                loaded.completeExceptionally(e);
+                return;
+            }
+            plugin.getSLF4JLogger().info("EnderGames world {} is loaded", world.getKey());
+            loaded.complete(null);
         });
     }
 
@@ -148,10 +170,17 @@ public final class RoundWorld {
             while (running < LOADS_IN_FLIGHT && !pending.isEmpty()) {
                 var chunk = pending.removeLast();
                 running++;
-                world.getChunkAtAsync(chunk[0], chunk[1]).whenComplete((loaded, failure) -> Tasks.sync(plugin, () -> {
+                world.getChunkAtAsync(chunk[0], chunk[1]).whenComplete((chunkLoaded, failure) -> Tasks.sync(plugin, () -> {
                     running--;
-                    if (loaded != null) {
-                        loaded.addPluginChunkTicket(plugin);
+                    if (failure != null || chunkLoaded == null) {
+                        pending.clear();
+                        loaded.completeExceptionally(failure != null ? failure
+                                : new IllegalStateException("Chunk " + chunk[0] + ", " + chunk[1] + " did not load"));
+                        return;
+                    }
+                    chunkLoaded.addPluginChunkTicket(plugin);
+                    if (loaded.isDone()) {
+                        return;
                     }
                     if (pending.isEmpty() && running == 0) {
                         done.run();
@@ -226,10 +255,13 @@ public final class RoundWorld {
         return type.isSolid() && !ground.isLiquid() && !UNSAFE.contains(type);
     }
 
-    /** Leaves nothing on disk; the next start generates anew anyway. */
-    public void discard() {
-        world.getPlayers().forEach(player -> player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation()));
+    /** Lets the chunks nobody stands near unload, once the round in this world is over. */
+    public void release() {
         world.removePluginChunkTickets(plugin);
-        Bukkit.unloadWorld(world, false);
+    }
+
+    /** Unloads the world, which nobody may be in, and leaves nothing of it on disk. */
+    void discard() {
+        Worlds.discard(world.getKey());
     }
 }

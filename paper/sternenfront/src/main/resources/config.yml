@@ -3,8 +3,9 @@ teams:
   players-per-team: 6
 
 # The lobby counts down once players.min are there. A full lobby jumps to countdown.full seconds, /start to
-# countdown.start. After countdown.round seconds the faction with more reinforcements wins, and the server restarts
-# countdown.restart seconds after the round.
+# countdown.start. After countdown.round seconds the faction with more reinforcements wins, and the next round follows
+# on the same server countdown.restart seconds after the round, its lobby counting down from countdown.reopen. After
+# rounds-in-place rounds the server restarts instead.
 players:
   min: 1
 debug:
@@ -253,6 +254,8 @@ countdown:
   full: 20
   round: 1200
   restart: 30
+  reopen: 20
+rounds-in-place: 10
 idle-restart-minutes: 50
 # ObjectiveHud shows the time left.
 timer-bar: false

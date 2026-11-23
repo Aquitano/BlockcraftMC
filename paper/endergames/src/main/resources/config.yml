@@ -6,7 +6,9 @@ global-stats-head: Kevos
 # The lobby counts down once players.min are there; a full lobby jumps to countdown.full seconds, /start to
 # countdown.start. In the round the players stand still for countdown.freeze seconds, nobody is hurt for
 # countdown.protection seconds, and countdown.round seconds later the round ends in a draw. Every player gets a
-# compass countdown.tracker-after seconds into the fight.
+# compass countdown.tracker-after seconds into the fight. countdown.restart seconds after a round, the next one's lobby
+# opens on this server and counts down from countdown.reopen; after rounds-in-place rounds in a row the server
+# restarts instead.
 countdown:
   lobby: 60
   start: 10
@@ -16,13 +18,15 @@ countdown:
   round: 1800
   tracker-after: 900
   restart: 15
+  reopen: 20
+rounds-in-place: 10
 idle-restart-minutes: 50
 timer-bar: true
 
-# The round's world is generated anew at every server start from one of seeds, picked at random, and the border
-# holds radius blocks around that seed's centre x/z. The seeds were picked from 360 centres of 40 random seeds for
-# land, trees and relief, then by eye for variety. shrink-after seconds into the fight the border closes to
-# final-radius by the end of the round.
+# Every round's world is generated anew from one of seeds, picked at random, and the border holds radius blocks around
+# that seed's centre x/z; the next round's world generates while the last round's summary shows. The seeds were picked
+# from 360 centres of 40 random seeds for land, trees and relief, then by eye for variety. shrink-after seconds into
+# the fight the border closes to final-radius by the end of the round.
 world:
   radius: 150
   seeds:

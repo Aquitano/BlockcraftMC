@@ -26,7 +26,6 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -150,11 +149,6 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return actor.isValid() && game.onField(actor) && actor.getWorld().equals(game.map().world())
                 && game.factionOf(actor).filter(riggedSides::contains).isPresent()
                 && (!(actor instanceof Player player) || !BlockcraftApi.get().buildMode().isEnabled(player));
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onServerLoad(ServerLoadEvent event) {
-        animated.ifPresent(bodies -> bodies.dropBodiesWithoutModels(plugin.getLogger()));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

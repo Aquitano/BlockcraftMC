@@ -9,11 +9,13 @@ import me.blockcraft.api.game.ForceMapCommand;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GameServices;
 import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
 import me.blockcraft.api.game.SetupCommand;
 import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.zombies.arena.ArenaChoice;
 import me.blockcraft.zombies.arena.ArenaMap;
+import me.blockcraft.zombies.arena.ArenaMaps;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import me.blockcraft.zombies.game.ZombiesGame;
 import me.blockcraft.zombies.menu.GuideDialog;
@@ -27,10 +29,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Optional;
 
 public final class ZombiesPlugin extends JavaPlugin {
 
-    private ZombiesGame game;
+    private RoundHost<ZombiesGame> host;
 
     @Override
     public void onEnable() {
@@ -47,7 +50,7 @@ public final class ZombiesPlugin extends JavaPlugin {
         var api = BlockcraftApi.get();
         var config = ZombiesConfig.from(getConfig());
         var gameConfig = GameConfig.from(getConfig(), 1);
-        var arenaFile = api.map().file(this, ArenaChoice.FILE);
+        var arenaFile = api.map().file(this, ArenaMaps.FILE);
         if (Files.notExists(arenaFile)) {
             try (var bundled = getResource("arena.yml")) {
                 if (bundled == null) {
@@ -66,18 +69,23 @@ public final class ZombiesPlugin extends JavaPlugin {
         var messages = services.messages().with(
                 Formatter.number("max-waves", config.waves().total()),
                 Formatter.number("heal-delay", config.healthRegenTicks() / 20));
-        var maps = new ArenaChoice(this, messages, arena);
-        if (!maps.rotates()) {
-            arena.keepLoaded(this);
-        }
-        game = new ZombiesGame(this, gameConfig, config, messages, maps,
-                BundledDefaults.strict(getConfig()).integer("countdown.vote-closes-at"), services.stats(), services.menus());
+        var maps = new ArenaMaps(this, messages, arena);
+        int voteClosesAt = BundledDefaults.strict(getConfig()).integer("countdown.vote-closes-at");
         api.presence().maxPlayers(config.maxPlayers());
-        services.listen(new RoundConnections(game), new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
-                WorldProtection.during(() -> !game.running(), api.buildMode()).rescue(() -> java.util.Optional.of(game.lobbySpawn())));
+        if (!maps.copied()) {
+            getSLF4JLogger().warn("No Zombies map template to copy; every round plays the main world and restarts the server");
+        }
+        host = RoundHost.start(this, gameConfig, round -> {
+            var game = new ZombiesGame(round, gameConfig, config, messages, new ArenaChoice(maps, round), voteClosesAt,
+                    services.stats(), services.menus());
+            round.listen(new RoundConnections(game), new GameListener(round, game), new AbilityListener(game), game.lobbyHotbar(),
+                    new ArenaProtection(() -> false),
+                    WorldProtection.during(() -> !game.running(), api.buildMode()).rescue(() -> Optional.of(game.lobbySpawn())));
+            return game;
+        });
         services.commands(commands -> {
-            commands.register(StartCommand.of(game.lobbyCountdown()).build());
-            commands.register(ForceMapCommand.create(messages, maps.vote()::keys, () -> game.isLobby() && maps.vote().open(),
+            commands.register(StartCommand.of(host).build());
+            commands.register(ForceMapCommand.create(messages, maps.vote()::keys, () -> host.current().isLobby() && maps.vote().open(),
                     maps.vote()::force));
             var setup = SetupCommand.root().executes(context -> {
                 context.getSource().getSender().sendMessage(messages.get("setup.help"));
@@ -89,7 +97,7 @@ public final class ZombiesPlugin extends JavaPlugin {
                 }
                 setup.then(Commands.literal(point).executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
-                    if (!game.isLobby() || !player.getWorld().equals(arena.world())) {
+                    if (!host.current().isLobby() || !player.getWorld().equals(arena.world())) {
                         player.sendMessage(messages.get("setup.lobby-only"));
                         return 0;
                     }
@@ -110,13 +118,13 @@ public final class ZombiesPlugin extends JavaPlugin {
                         return Command.SINGLE_SUCCESS;
                     }).build());
         });
-        Bukkit.getOnlinePlayers().forEach(game::join);
+        Bukkit.getOnlinePlayers().forEach(host.current()::join);
     }
 
     @Override
     public void onDisable() {
-        if (game != null) {
-            game.stop();
+        if (host != null) {
+            host.close();
         }
         Bukkit.getScheduler().cancelTasks(this);
     }

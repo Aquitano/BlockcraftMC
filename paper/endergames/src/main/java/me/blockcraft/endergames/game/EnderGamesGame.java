@@ -15,7 +15,8 @@ import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.LootTable;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
-import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
+import me.blockcraft.api.game.RoundScope;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
@@ -61,11 +62,11 @@ import java.util.stream.Stream;
 import java.util.OptionalInt;
 
 /**
- * One server, one round of EnderGames, as GommeHD played it: survival games in a world nobody has seen before. Every
+ * One round of EnderGames, as GommeHD played it: survival games in a world nobody has seen before. Every
  * player brings a kit; after a short protection time it is every player for themselves until one is left. Ender
  * chests with loot wander the map, two players trade places now and then, and the border closes in towards the end.
  */
-public final class EnderGamesGame implements KitPlayers, RoundConnections.Seating {
+public final class EnderGamesGame implements KitPlayers, RoundHost.Game {
 
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(60, 30, 10, 5, 4, 3, 2, 1);
     private static final int SECONDS_PER_MINUTE = 60;
@@ -73,10 +74,11 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
     private static final int ISLAND_WARNING = 10;
     private static final int SLOW_FALL_TICKS = 30 * 20;
 
-    private final Plugin plugin;
+    private final RoundScope plugin;
     private final EnderGamesConfig config;
     private final Messages messages;
     private final RoundWorld world;
+    private final Runnable generateNextWorld;
     private final Location lobbySpawn;
     private final RoundSummary summary;
     private final Round round;
@@ -98,12 +100,14 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
     private Countdown protectionTimer;
     private Countdown fightTimer;
 
-    public EnderGamesGame(Plugin plugin, GameConfig gameConfig, EnderGamesConfig config, Messages messages,
-                          RoundWorld world, Location lobbySpawn, StatsRepository stats, StatsMenus statsMenus) {
+    public EnderGamesGame(RoundScope plugin, GameConfig gameConfig, EnderGamesConfig config, Messages messages,
+                          RoundWorld world, Runnable generateNextWorld, Location lobbySpawn, StatsRepository stats,
+                          StatsMenus statsMenus) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
         this.world = world;
+        this.generateNextWorld = generateNextWorld;
         this.lobbySpawn = lobbySpawn;
         this.startSeconds = gameConfig.startSeconds();
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
@@ -123,6 +127,9 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobbySpawn),
                 () -> Optional.of(isIngame() ? world.spectatorSpawn() : lobbySpawn),
                 OptionalInt.of(config.countdowns().full()), this::welcome);
+        if (!world.ready()) {
+            world.whenReady(plugin, this::worldReady, () -> plugin.abandon("the EnderGames world did not get ready"));
+        }
     }
 
     public GamePhase phase() {
@@ -137,7 +144,8 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         return phase() == GamePhase.INGAME;
     }
 
-    public LobbyCountdown countdown() {
+    @Override
+    public LobbyCountdown lobbyCountdown() {
         return countdown;
     }
 
@@ -214,10 +222,13 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         }
     }
 
-    /** A countdown that ran out while the world was loading starts again now, even below players.min after /start. */
-    public void worldReady() {
+    /**
+     * A countdown that ran out while the world was loading runs down from countdown.start now, even below players.min
+     * after /start.
+     */
+    private void worldReady() {
         Bukkit.broadcast(messages.get("lobby.world-ready"));
-        if (startWhenReady && isLobby() && !countdown.isRunning() && round.playerCount() >= LobbyCountdown.ROUND_MINIMUM) {
+        if (startWhenReady && isLobby() && round.playerCount() >= LobbyCountdown.ROUND_MINIMUM) {
             countdown.shorten(startSeconds);
         }
         startWhenReady = false;
@@ -434,7 +445,12 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         enderChests.clear();
         abilities.reset();
         round.players().forEach(player -> player.setAllowFlight(false));
-        round.end();
+        if (round.end()) {
+            world.release();
+            if (round.playsOn()) {
+                generateNextWorld.run();
+            }
+        }
         refreshAll();
     }
 
@@ -488,7 +504,8 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         return item;
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         countdown.cancel();
         if (chestTask != null) {
             chestTask.cancel();

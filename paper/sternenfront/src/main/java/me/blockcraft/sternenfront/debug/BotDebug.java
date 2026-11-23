@@ -8,7 +8,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.sternenfront.appearance.BodyRigs;
+import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.appearance.RigSnapshot;
 import me.blockcraft.sternenfront.bot.BotSnapshot;
 import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
@@ -29,6 +29,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public final class BotDebug implements Listener, AutoCloseable {
     private record Block(int x, int y, int z, String data) { }
@@ -58,8 +60,9 @@ public final class BotDebug implements Listener, AutoCloseable {
 
     private static final Gson JSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static final double REACH = 6;
-    private final SternenfrontGame game;
-    private final Optional<BodyRigs> rigs;
+    private final Plugin plugin;
+    private final Messages messages;
+    private final Supplier<SternenfrontGame> game;
     private final Set<UUID> observers = new HashSet<>();
     private final Map<UUID, BotTrace<Frame>> traces = new HashMap<>();
     private final Map<UUID, Request> requests = new HashMap<>();
@@ -69,15 +72,16 @@ public final class BotDebug implements Listener, AutoCloseable {
     private final int cooldownTicks;
     private final BukkitTask task;
 
-    public BotDebug(SternenfrontGame game, BodyRigs rigs) {
+    public BotDebug(Plugin plugin, Messages messages, Supplier<SternenfrontGame> game) {
+        this.plugin = plugin;
+        this.messages = messages;
         this.game = game;
-        this.rigs = Optional.ofNullable(rigs);
-        var read = BundledDefaults.strict(game.plugin().getConfig());
+        var read = BundledDefaults.strict(plugin.getConfig());
         historyTicks = Math.clamp(read.integer("debug.history-ticks"), 20, 200);
         captureTicks = Math.clamp(read.integer("debug.capture-ticks"), 20, 600);
         cooldownTicks = Math.clamp(read.integer("debug.cooldown-ticks"), 20, 1200);
-        Bukkit.getPluginManager().registerEvents(this, game.plugin());
-        task = Bukkit.getScheduler().runTaskTimer(game.plugin(), this::tick, 1, 1);
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+        task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
     }
 
     private static boolean permitted(Player player) {
@@ -96,14 +100,14 @@ public final class BotDebug implements Listener, AutoCloseable {
                     if (!observers.remove(player.getUniqueId())) {
                         observers.add(player.getUniqueId());
                     }
-                    player.sendMessage(game.messages().get(enabled(player) ? "debug.enabled" : "debug.disabled",
+                    player.sendMessage(messages.get(enabled(player) ? "debug.enabled" : "debug.disabled",
                             Formatter.number("history", historyTicks / 20), Formatter.number("seconds", (captureTicks + 19) / 20)));
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.literal("off").executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
                     observers.remove(player.getUniqueId());
-                    player.sendMessage(game.messages().get("debug.disabled"));
+                    player.sendMessage(messages.get("debug.disabled"));
                     return Command.SINGLE_SUCCESS;
                 }))
                 .then(Commands.literal("capture").executes(context -> {
@@ -137,10 +141,10 @@ public final class BotDebug implements Listener, AutoCloseable {
     }
 
     private Optional<LivingEntity> actor(Entity clicked) {
-        if (clicked instanceof LivingEntity living && game.bots().aim(living).isPresent()) {
+        if (clicked instanceof LivingEntity living && game.get().bots().aim(living).isPresent()) {
             return Optional.of(living);
         }
-        return rigs.flatMap(appearance -> appearance.actor(clicked)).filter(body -> game.bots().aim(body).isPresent());
+        return game.get().rigs().flatMap(appearance -> appearance.actor(clicked)).filter(body -> game.get().bots().aim(body).isPresent());
     }
 
     private Optional<LivingEntity> pointedAt(Player player) {
@@ -152,13 +156,13 @@ public final class BotDebug implements Listener, AutoCloseable {
 
     private void inspect(Player player, Optional<LivingEntity> selected) {
         if (selected.isEmpty()) {
-            player.sendMessage(game.messages().get("debug.no-bot"));
+            player.sendMessage(messages.get("debug.no-bot"));
             return;
         }
         var body = selected.get();
         if (!body.getWorld().equals(player.getWorld()) || player.getEyeLocation().distanceSquared(body.getEyeLocation()) > REACH * REACH
                 || !player.hasLineOfSight(body)) {
-            player.sendMessage(game.messages().get("debug.no-bot"));
+            player.sendMessage(messages.get("debug.no-bot"));
             return;
         }
         if (requests.containsKey(body.getUniqueId())) {
@@ -166,7 +170,7 @@ public final class BotDebug implements Listener, AutoCloseable {
         }
         long tick = Bukkit.getCurrentTick();
         if (requests.size() >= 3 || tick < cooldowns.getOrDefault(player.getUniqueId(), 0L)) {
-            player.sendMessage(game.messages().get("debug.busy"));
+            player.sendMessage(messages.get("debug.busy"));
             return;
         }
         var trace = traces.computeIfAbsent(body.getUniqueId(), ignored -> new BotTrace<>(historyTicks, captureTicks));
@@ -176,10 +180,10 @@ public final class BotDebug implements Listener, AutoCloseable {
         String file = "npc-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID() + ".json";
         requests.put(body.getUniqueId(), new Request(player.getUniqueId(), body.getUniqueId(), file, Instant.now().toString(),
                 tick, Point.of(at), at.getYaw(), at.getPitch(),
-                body.getWorld().getKey().asString(), Bukkit.getVersion(), game.plugin().getPluginMeta().getVersion(),
-                System.getProperty("java.version"), game.plugin().getConfig().saveToString()));
+                body.getWorld().getKey().asString(), Bukkit.getVersion(), plugin.getPluginMeta().getVersion(),
+                System.getProperty("java.version"), plugin.getConfig().saveToString()));
         cooldowns.put(player.getUniqueId(), tick + cooldownTicks);
-        player.sendMessage(game.messages().get("debug.started", Formatter.number("number", game.bots().snapshot(body).orElseThrow().number()),
+        player.sendMessage(messages.get("debug.started", Formatter.number("number", game.get().bots().snapshot(body).orElseThrow().number()),
                 Formatter.number("seconds", (captureTicks + 19) / 20)));
     }
 
@@ -194,7 +198,7 @@ public final class BotDebug implements Listener, AutoCloseable {
         }
         long tick = Bukkit.getCurrentTick();
         var present = new HashSet<UUID>();
-        for (var body : game.bots().entities()) {
+        for (var body : game.get().bots().entities()) {
             present.add(body.getUniqueId());
             var trace = traces.computeIfAbsent(body.getUniqueId(), ignored -> new BotTrace<>(historyTicks, captureTicks));
             trace.sample(tick, frame(body));
@@ -207,8 +211,8 @@ public final class BotDebug implements Listener, AutoCloseable {
     }
 
     private Frame frame(LivingEntity body) {
-        return new Frame(Bukkit.getCurrentTick(), game.tick(), System.nanoTime(), Bukkit.getAverageTickTime(),
-                game.bots().snapshot(body).orElseThrow(), rigs.flatMap(appearance -> appearance.snapshot(body)).orElse(null),
+        return new Frame(Bukkit.getCurrentTick(), game.get().tick(), System.nanoTime(), Bukkit.getAverageTickTime(),
+                game.get().bots().snapshot(body).orElseThrow(), game.get().rigs().flatMap(appearance -> appearance.snapshot(body)).orElse(null),
                 blocks(body), body.getWorld().getNearbyLivingEntities(body.getLocation(), 3).stream()
                 .filter(entity -> !entity.equals(body)).limit(12).map(entity -> new Nearby(entity.getUniqueId(),
                         entity.getType().name(), Point.of(entity.getLocation()), Point.of(entity.getVelocity()), entity.isCollidable())).toList());
@@ -232,11 +236,11 @@ public final class BotDebug implements Listener, AutoCloseable {
 
     private void save(Request request, String reason, List<Frame> frames, boolean synchronous) {
         var report = new Report(2, request, Instant.now().toString(), reason, frames);
-        var file = game.plugin().getDataFolder().toPath().resolve("debug").resolve(request.file());
+        var file = plugin.getDataFolder().toPath().resolve("debug").resolve(request.file());
         if (synchronous) {
             completed(request, write(file, report));
         } else {
-            Tasks.async(game.plugin(), () -> write(file, report), result -> completed(request, result),
+            Tasks.async(plugin, () -> write(file, report), result -> completed(request, result),
                     () -> message(request.reporter(), "debug.failed", request.file()));
         }
     }
@@ -253,10 +257,10 @@ public final class BotDebug implements Listener, AutoCloseable {
 
     private void completed(Request request, Written written) {
         if (written.error().isEmpty()) {
-            game.plugin().getSLF4JLogger().info("NPC diagnostic saved: {}", written.file());
+            plugin.getSLF4JLogger().info("NPC diagnostic saved: {}", written.file());
             message(request.reporter(), "debug.saved", "Sternenfront/debug/" + request.file());
         } else {
-            game.plugin().getSLF4JLogger().warn("NPC diagnostic write failed: {}", written.error());
+            plugin.getSLF4JLogger().warn("NPC diagnostic write failed: {}", written.error());
             message(request.reporter(), "debug.failed", request.file());
         }
     }
@@ -264,7 +268,7 @@ public final class BotDebug implements Listener, AutoCloseable {
     private void message(UUID recipient, String key, String file) {
         var player = Bukkit.getPlayer(recipient);
         if (player != null) {
-            player.sendMessage(game.messages().get(key, Placeholder.unparsed("file", file)));
+            player.sendMessage(messages.get(key, Placeholder.unparsed("file", file)));
         }
     }
 

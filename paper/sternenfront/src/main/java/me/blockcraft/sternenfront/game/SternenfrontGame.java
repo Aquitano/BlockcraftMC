@@ -14,7 +14,8 @@ import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
-import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
+import me.blockcraft.api.game.RoundScope;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.ShotEvent;
@@ -84,7 +85,6 @@ import org.bukkit.entity.Mob;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -108,13 +108,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 
 /**
- * One server, one round of Sternenfront: the Kolonien against the Hegemonie for the map's command posts. Players
+ * One round of Sternenfront: the Kolonien against the Hegemonie for the map's command posts. Players
  * pick a faction and a class in the lobby; in the round every death costs a ticket, the faction holding more posts
  * drains the other, and the dead watch their killer, then choose a class, a hero if their battle points pay for
  * one, and a spawn while they watch from above. The relic blade appears after a while and makes whoever takes it
  * the champion until they fall. Falling tickets and passing time carry the round through its three acts.
  */
-public final class SternenfrontGame implements RoundConnections.Seating {
+public final class SternenfrontGame implements RoundHost.Game {
 
     private static final int MOST_CHAINED_BONUSES = 3;
 
@@ -209,10 +209,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private boolean dirty;
     private Optional<Faction> winner = Optional.empty();
 
-    public SternenfrontGame(JavaPlugin plugin, GameConfig gameConfig, SternenfrontConfig config, HeroConfig heroConfig,
+    public SternenfrontGame(RoundScope scope, GameConfig gameConfig, SternenfrontConfig config, HeroConfig heroConfig,
                             FeelConfig feel, Messages messages, FrontChoice maps, int voteClosesAt, Location lobby,
-                            StatsRepository stats, StatsMenus statsMenus) {
-        this.plugin = plugin;
+                            Career career, StatsRepository stats, StatsMenus statsMenus) {
+        this.plugin = scope;
         this.config = config;
         this.messages = messages;
         this.maps = maps;
@@ -268,8 +268,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.battlefield = new Battlefield(this, Battlefield.Rules.from(plugin.getConfig()));
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak(), feel.botsPerStreakKill());
-        this.career = new Career(plugin, messages, BlockcraftApi.get().database(), plugin.getConfig().getLongList("career.ranks"));
-        Tasks.async(plugin, career::createTable);
+        this.career = career;
         this.reinforcements = new Reinforcements(config.tickets());
         this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
@@ -284,7 +283,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public FieldObjectives fieldObjectives() { return fieldObjectives; }
 
-    public LobbyCountdown countdown() {
+    @Override
+    public LobbyCountdown lobbyCountdown() {
         return countdown;
     }
 
@@ -294,11 +294,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public FrontMap map() {
         return map;
-    }
-
-    /** Whether the round's map is known: always with one map, with several once the lobby's vote closed. */
-    public boolean mapChosen() {
-        return maps.chosen().isPresent();
     }
 
     public Messages messages() {
@@ -355,6 +350,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     /** The plugin hands the body rigs over once they run; until then every client draws fighters as themselves. */
     public void rigs(BodyRigs bodies) {
         rigs = Optional.of(bodies);
+    }
+
+    public Optional<BodyRigs> rigs() {
+        return rigs;
     }
 
     /** What the viewer's client draws of {@code entity}: a part of its body rig while it shows them one, else the entity. */
@@ -826,7 +825,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void lobbySecond(int remaining) {
-        if (remaining <= voteClosesAt && maps.vote().open()) {
+        if (remaining <= voteClosesAt && !maps.decided()) {
             maps.decide();
             round.players().forEach(hotbar::refreshChoices);
             refreshAll();
@@ -1877,11 +1876,19 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         presentation.close();
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         countdown.cancel();
         cleanUp();
         intro.close();
         round.stop();
+        Bukkit.getOnlinePlayers().forEach(SternenfrontGame::endCooldowns);
+    }
+
+    /** Item cooldowns outlast the round for a player who stays on the server, which a restart used to clear. */
+    private static void endCooldowns(Player player) {
+        Arrays.stream(Ability.values()).forEach(ability -> player.setCooldown(ability.material(), 0));
+        Arrays.stream(HeroAbility.values()).forEach(ability -> player.setCooldown(ability.material(), 0));
     }
 
     @Override
@@ -1891,7 +1898,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void show(Player player) {
         var icons = GameSidebar.icons(player);
-        var mapName = maps.chosen().<Component>map(chosen -> Component.text(chosen.name()))
+        var mapName = maps.chosenName().<Component>map(Component::text)
                 .orElseGet(() -> messages.get("scoreboard.map-vote"));
         switch (phase()) {
             case LOBBY -> sidebar.lobby(player, config.capacity(), mapName, List.of(

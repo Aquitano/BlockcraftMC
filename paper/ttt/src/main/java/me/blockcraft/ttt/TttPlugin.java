@@ -15,7 +15,7 @@ import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
-import me.blockcraft.ttt.arena.MapCopies;
+import me.blockcraft.api.world.MapCopies;
 import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.TownBuilder;
 import me.blockcraft.ttt.arena.TownMaps;

@@ -10,7 +10,8 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
-import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
+import me.blockcraft.api.game.RoundScope;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.SpawnProtection;
@@ -43,7 +44,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
@@ -60,11 +60,11 @@ import java.util.UUID;
 import java.util.OptionalInt;
 
 /**
- * One server, one round of Cores, as GommeHD played it: red against blue, two cores each. Players pick a team in
+ * One round of Cores, as GommeHD played it: red against blue, two cores each. Players pick a team in
  * the lobby; in the round they respawn without end, mine and craft their gear from what the map holds, and the
  * first team to break every enemy core wins. An enemy near a core sounds its team's alarm and mines it slowly.
  */
-public final class CoresGame implements RoundConnections.Seating {
+public final class CoresGame implements RoundHost.Game {
 
     private static final long RESPAWN_TICKS = 10L;
     private static final long WATCH_TICKS = 10L;
@@ -77,7 +77,7 @@ public final class CoresGame implements RoundConnections.Seating {
     private static final double REACH_SLACK = 1.0 + Math.sqrt(3) / 2;
     private static final Title.Times CORE_TITLE = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500));
 
-    private final Plugin plugin;
+    private final RoundScope scope;
     private final CoresConfig config;
     private final Messages messages;
     private final CoresMap map;
@@ -97,20 +97,20 @@ public final class CoresGame implements RoundConnections.Seating {
     private Optional<Side> winner = Optional.empty();
     private int secondsLeft;
 
-    public CoresGame(Plugin plugin, GameConfig gameConfig, CoresConfig config, Messages messages, CoresMap map,
+    public CoresGame(RoundScope scope, GameConfig gameConfig, CoresConfig config, Messages messages, CoresMap map,
                      StatsRepository stats, StatsMenus statsMenus) {
-        this.plugin = plugin;
+        this.scope = scope;
         this.config = config;
         this.messages = messages;
         this.map = map;
         this.teams = new Teams(config.playersPerTeam());
         this.kit = new Kit(config.kit());
-        this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
-        this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
+        this.summary = new RoundSummary(scope, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
+        this.round = new Round(scope, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         round.backToLobby(this::backToLobby);
         round.playArea(map.world(), map.border().bounds());
-        this.countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
-        this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.TEAM, messages.get("item.team"),
+        this.countdown = new LobbyCountdown(scope, round, gameConfig, this::start);
+        this.hotbar = new LobbyHotbar(scope, List.of(new LobbyHotbar.Choice(MenuIcon.TEAM, messages.get("item.team"),
                 player -> new TeamMenu(messages, teams, config.playersPerTeam(), this::choose).open(player))),
                 statsMenus, countdown);
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
@@ -123,7 +123,8 @@ public final class CoresGame implements RoundConnections.Seating {
         return round.phase();
     }
 
-    public LobbyCountdown countdown() {
+    @Override
+    public LobbyCountdown lobbyCountdown() {
         return countdown;
     }
 
@@ -293,7 +294,7 @@ public final class CoresGame implements RoundConnections.Seating {
                 refreshAll();
             }
         }, () -> endRound(Optional.empty()));
-        watch = Bukkit.getScheduler().runTaskTimer(plugin, this::watchCores, WATCH_TICKS, WATCH_TICKS);
+        watch = Bukkit.getScheduler().runTaskTimer(scope, this::watchCores, WATCH_TICKS, WATCH_TICKS);
         refreshAll();
     }
 
@@ -402,7 +403,7 @@ public final class CoresGame implements RoundConnections.Seating {
         var side = teams.of(player.getUniqueId());
         if (round.isPlaying(player) && side.isPresent()) {
             event.setRespawnLocation(map.spawn(side.get()));
-            Tasks.sync(plugin, () -> {
+            Tasks.sync(scope, () -> {
                 if (phase() != GamePhase.INGAME) {
                     return;
                 }
@@ -440,7 +441,7 @@ public final class CoresGame implements RoundConnections.Seating {
 
     /** After the round everyone meets in the lobby again, seen by all, with nothing but the way out. */
     private void backToLobby(Player player) {
-        Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, player));
+        Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(scope, player));
         PlayerReset.reset(player, GameMode.ADVENTURE);
         player.teleport(map.lobbySpawn());
         hotbar.giveHub(player);
@@ -489,11 +490,10 @@ public final class CoresGame implements RoundConnections.Seating {
         return TagResolver.resolver(teamName(core.side()), Placeholder.component("core", messages.get("core." + core.key())));
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         countdown.cancel();
-        if (watch != null) {
-            watch.cancel();
-        }
         round.stop();
+        Bukkit.getOnlinePlayers().forEach(BlockcraftApi.get().tabTeams()::clearColor);
     }
 }

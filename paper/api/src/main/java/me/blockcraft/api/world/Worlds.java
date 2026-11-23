@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 public final class Worlds {
@@ -63,9 +64,23 @@ public final class Worlds {
         if (loaded != null) {
             Bukkit.unloadWorld(loaded, false);
         }
-        var folder = Bukkit.getWorldContainer().toPath().resolve(Bukkit.getWorlds().getFirst().getName())
+        deleteRecursively(folder(key));
+    }
+
+    /**
+     * Deletes the folder of the unloaded dimension {@code key} off the main thread, where deleting the many region
+     * files of a generated world would stall the tick; the future completes once it is gone. The folder is resolved
+     * on the calling thread, the main one.
+     */
+    public static CompletableFuture<Void> deleteInBackground(NamespacedKey key) {
+        var folder = folder(key);
+        return CompletableFuture.runAsync(() -> deleteRecursively(folder),
+                task -> Thread.ofVirtual().name("world-delete-" + key.getKey()).start(task));
+    }
+
+    private static Path folder(NamespacedKey key) {
+        return Bukkit.getWorldContainer().toPath().resolve(Bukkit.getWorlds().getFirst().getName())
                 .resolve("dimensions").resolve(key.getNamespace()).resolve(key.getKey());
-        deleteRecursively(folder);
     }
 
     private static void deleteRecursively(Path path) {

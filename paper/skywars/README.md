@@ -6,10 +6,11 @@ wins. Up to `players.max` play; `players.min` start the lobby countdown. Every n
 
 ## The maps
 
-Three maps, **Wolkenhain**, **Frostspitze** and **Wüstenwind** (`map/Theme`), built in code into the empty world
-`skywars:inseln` when the round starts, so the service needs no world template. The lobby votes with the hotbar's vote
-item, or leaves it to chance; staff decide with `/forcemap <map>`. Each map draws its shapes from its own seed, so it is
-the same at every start.
+Three maps, **Wolkenhain**, **Frostspitze** and **Wüstenwind** (`map/Theme`), built in code when the round starts
+into the world `skywars:inseln`, which every round creates empty and throws away when it closes, so the service needs
+no world template. The chunks the islands will stand in are loaded in the background while the lobby waits. The lobby
+votes with the hotbar's vote item, or leaves it to chance; staff decide with `/forcemap <map>`. Each map draws its
+shapes from its own seed, so it is the same in every round.
 
 All three share one layout (`map/ArenaBuilder`): twelve spawn islands in a ring, each with a glass cage on the player's
 spawn and three chests behind it, four semi-middles between them, and the middle with a shrine round an enchanting
@@ -45,3 +46,5 @@ in `bc_unlocks` as `skywars.kit.<key>`. Whoever picks nothing plays Standard.
 The module has no unit tests. In a client, with
 `/start` to shorten the lobby: the vote and `/forcemap`, kit choice and purchase, the cages opening, the chests'
 loot by category, the refill, the border, a void death crediting the last hitter, and the win.
+The next round then plays on the same server, on islands built anew with full border and nothing left of the last
+round.

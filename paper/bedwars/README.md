@@ -14,7 +14,8 @@ travel inside it, one directory per map under `blockcraft/BedWars/maps/<key>/`:
 - `world/` is the map's dimension folder.
 
 A round copies the voted map to `dimensions/bedwars/<key>` of the running level and loads it as the world
-`bedwars:<key>`. The restart after the round throws it away again.
+`bedwars:<key>`. When the round closes, the world is unloaded and the map copied anew in the background, so that the
+next round on this server finds it as it was.
 
 ## Editing
 
@@ -28,7 +29,7 @@ its pool. A map is in the vote once nothing is missing for the teams `config.yml
 Opening a map for editing keeps its loaded dimension out of votes and forced choices. Save the changes you want to keep,
 then restart the backend to use that map in rounds. Editing a chosen map before the round starts cancels that start
 instead of replacing files beneath the loaded world. The map a round was started on can be neither opened nor saved until
-the restart, since its world holds the players' blocks.
+that round closes, since its world holds the players' blocks.
 
 To try a map alone, `/forcemap <key>` and then `/start solo`, which starts the round with one player. It runs until that
 player leaves or the round timer ends.

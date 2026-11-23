@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Which map the round is played on: the lobby votes among the maps or leaves it to chance until the round starts,
@@ -78,20 +79,31 @@ public final class MapVote {
         forced = Optional.empty();
     }
 
-    /** Loads the chosen map, falling back to the first, already-built map if loading fails. */
-    public Town decide() {
-        var choice = forced.or(() -> ballot.winner(keys(), random).flatMap(this::choice)).orElseThrow();
-        Town town;
-        try {
-            town = choice.town().get();
-        } catch (RuntimeException failure) {
-            logger.warn("Could not load TTT map {}; using {}", choice.key(), choices.getFirst().key(), failure);
-            choice = choices.getFirst();
-            town = choice.town().get();
+    /** The map the vote chose: the forced one, or else the winner, with ties broken at random. */
+    public String pick() {
+        return forced.or(() -> ballot.winner(keys(), random).flatMap(this::choice)).orElseThrow().key();
+    }
+
+    /**
+     * Loads the map {@code key}, or when it does not load the first other map that does, the already-built one first;
+     * empty when none does.
+     */
+    public Optional<Town> decide(String key) {
+        var chosen = choice(key).orElseThrow();
+        var candidates = Stream.concat(Stream.of(chosen), choices.stream().filter(choice -> choice != chosen)).toList();
+        for (var choice : candidates) {
+            Town town;
+            try {
+                town = choice.town().get();
+            } catch (RuntimeException failure) {
+                logger.warn("Could not load TTT map {}", choice.key(), failure);
+                continue;
+            }
+            messages.getLines("vote.result", Placeholder.unparsed("map", choice.name())).forEach(Bukkit::broadcast);
+            Sounds.NOTIFY.playToAll();
+            return Optional.of(town);
         }
-        messages.getLines("vote.result", Placeholder.unparsed("map", choice.name())).forEach(Bukkit::broadcast);
-        Sounds.NOTIFY.playToAll();
-        return town;
+        return Optional.empty();
     }
 
     /** {@code key} empty is a vote to leave the map to chance. */
