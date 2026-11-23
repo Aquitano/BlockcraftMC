@@ -5,6 +5,7 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.network.RejoinRepository;
@@ -46,6 +47,7 @@ public final class Round implements Listener {
     private static final Set<Integer> END_ANNOUNCEMENTS = Set.of(600, 300, 180, 60);
     private static final long TICKS_PER_SECOND = 20L;
     private static final int SECONDS_PER_MINUTE = 60;
+    private static final String REJOINS = "rejoins";
 
     private final Plugin plugin;
     private final BlockcraftApi api;
@@ -61,6 +63,8 @@ public final class Round implements Listener {
     private final List<TimerBar> bars = new ArrayList<>();
     private final Map<UUID, Away> away = new HashMap<>();
     private final RejoinRepository rejoins;
+    /** One queue for every hold and release, so a late write of one round never lands after the next round's. */
+    private final SerialTasks<String> rejoinWrites;
     private volatile GamePhase phase = GamePhase.LOBBY;
     private boolean playsOn;
     private PlayArea playArea;
@@ -77,6 +81,7 @@ public final class Round implements Listener {
         this.capacity = capacity;
         this.config = config;
         this.rejoins = new RejoinRepository(api.database());
+        this.rejoinWrites = plugin instanceof RoundScope scope ? scope.host().rejoinWrites() : new SerialTasks<>(plugin);
         this.spectators = new Spectators(plugin, arena, this::players, () -> phase == GamePhase.INGAME);
         Bukkit.getPluginManager().registerEvents(this, plugin);
         releaseRejoins();
@@ -207,7 +212,7 @@ public final class Round implements Listener {
         var kept = new Away(player.getName(), player.isDead(), onForfeit);
         away.put(id, kept);
         var server = api.server().name();
-        Tasks.async(plugin, () -> rejoins.hold(id, server, seconds));
+        rejoinWrites.run(REJOINS, () -> rejoins.hold(id, server, seconds));
         Tasks.later(plugin, seconds * TICKS_PER_SECOND, () -> {
             if (away.get(id) == kept) {
                 forfeit(id);
@@ -248,12 +253,12 @@ public final class Round implements Listener {
 
     private void release(UUID id) {
         var server = api.server().name();
-        Tasks.async(plugin, () -> rejoins.release(id, server));
+        rejoinWrites.run(REJOINS, () -> rejoins.release(id, server));
     }
 
     private void releaseRejoins() {
         var server = api.server().name();
-        Tasks.async(plugin, () -> rejoins.releaseAll(server));
+        rejoinWrites.run(REJOINS, () -> rejoins.releaseAll(server));
     }
 
     @EventHandler

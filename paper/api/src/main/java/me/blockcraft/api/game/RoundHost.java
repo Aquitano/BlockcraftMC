@@ -3,6 +3,7 @@ package me.blockcraft.api.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Countdown;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.world.WaitingLobby;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -95,6 +97,8 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
     private final int roundsInPlace;
     private final int reopenSeconds;
     private final PlayerBaseline baseline = new PlayerBaseline();
+    private final SerialTasks<String> rejoinWrites;
+    private final SerialTasks<UUID> recapWrites;
     private RoundScope scope;
     private G game;
     private int rounds = 1;
@@ -104,6 +108,8 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
         this.plugin = plugin;
         this.roundsInPlace = config.roundsInPlace();
         this.reopenSeconds = config.reopenSeconds();
+        this.rejoinWrites = new SerialTasks<>(plugin);
+        this.recapWrites = new SerialTasks<>(plugin);
         this.factory = factory;
     }
 
@@ -120,6 +126,18 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
 
     public G current() {
         return game;
+    }
+
+    /**
+     * Database writes that rounds queue and that must keep their order across rounds, run under the plugin itself so
+     * that a round closing does not drop the last of its writes.
+     */
+    SerialTasks<String> rejoinWrites() {
+        return rejoinWrites;
+    }
+
+    SerialTasks<UUID> recapWrites() {
+        return recapWrites;
     }
 
     private void open() {
@@ -178,19 +196,26 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
      */
     private void next() {
         var players = List.copyOf(Bukkit.getOnlinePlayers());
-        var away = away();
-        for (var player : players) {
-            if (player.isDead()) {
-                player.spigot().respawn();
+        boolean closed;
+        try {
+            var away = away();
+            for (var player : players) {
+                if (player.isDead()) {
+                    player.spigot().respawn();
+                }
+                player.leaveVehicle();
+                player.eject();
+                if (scope.owns(player.getWorld())) {
+                    player.teleport(away);
+                }
             }
-            player.leaveVehicle();
-            player.eject();
-            if (scope.owns(player.getWorld())) {
-                player.teleport(away);
-            }
+            closed = close();
+        } catch (RuntimeException e) {
+            plugin.getSLF4JLogger().error("Could not close the last round", e);
+            closed = false;
         }
-        if (!close()) {
-            restart("a round world stayed loaded");
+        if (!closed) {
+            restart("the last round did not close cleanly");
             return;
         }
         var api = BlockcraftApi.get();
@@ -212,6 +237,12 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
         }
     }
 
+    void abandon(RoundScope abandoned, String reason) {
+        if (abandoned == scope) {
+            restart(reason);
+        }
+    }
+
     private void restart(String reason) {
         plugin.getSLF4JLogger().warn("Restarting instead of playing on: {}", reason);
         Bukkit.getOnlinePlayers().forEach(player -> ProxyMessaging.hub(plugin, player));
@@ -223,14 +254,16 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
                 .orElseGet(() -> Bukkit.getWorlds().getFirst().getSpawnLocation());
     }
 
-    /** Closes the round under way, as when the server stops; false if one of its worlds stayed loaded. */
+    /** Closes the round under way, as when the server stops; false if any part of it did not close. */
     public boolean close() {
+        boolean clean = true;
         try {
             game.close();
         } catch (RuntimeException e) {
             plugin.getSLF4JLogger().warn("Closing the round's game failed", e);
+            clean = false;
         }
-        return scope.close(away());
+        return scope.close(away()) && clean;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

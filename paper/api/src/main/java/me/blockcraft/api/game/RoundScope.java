@@ -126,15 +126,26 @@ public final class RoundScope implements Plugin {
     }
 
     /**
-     * Takes back what the round registered. Everyone must have left the round's own worlds before; false if one of
-     * them could not be unloaded, which only a restart can clean up then.
+     * The round cannot go on, such as one whose world never got ready: everyone goes back to a lobby and the server
+     * restarts, as it did after every round before.
+     */
+    public void abandon(String reason) {
+        if (open) {
+            host.abandon(this, reason);
+        }
+    }
+
+    /**
+     * Takes back what the round registered, as far as it can. Everyone must have left the round's own worlds before;
+     * false if any step failed, such as a world that could not be unloaded or discarded, which only a restart cleans up.
      */
     boolean close(Location away) {
         if (!open) {
             return true;
         }
+        boolean clean = true;
         while (!closing.isEmpty()) {
-            run(closing.pop());
+            clean &= run(closing.pop());
         }
         resetVisibility();
         open = false;
@@ -160,7 +171,6 @@ public final class RoundScope implements Plugin {
             }
         }
         spawned.clear();
-        boolean clean = true;
         for (var entry : new ArrayList<>(worlds.entrySet())) {
             var world = Bukkit.getWorld(entry.getKey());
             if (world == null) {
@@ -168,7 +178,7 @@ public final class RoundScope implements Plugin {
             }
             world.getPlayers().forEach(player -> player.teleport(away));
             if (Bukkit.unloadWorld(world, false)) {
-                run(() -> entry.getValue().accept(world));
+                clean &= run(() -> entry.getValue().accept(world));
             } else {
                 clean = false;
                 plugin.getSLF4JLogger().warn("Could not unload the round's world {}", world.getKey());
@@ -212,11 +222,13 @@ public final class RoundScope implements Plugin {
         }
     }
 
-    private void run(Runnable action) {
+    private boolean run(Runnable action) {
         try {
             action.run();
+            return true;
         } catch (RuntimeException e) {
             plugin.getSLF4JLogger().warn("Closing the round failed in part", e);
+            return false;
         }
     }
 

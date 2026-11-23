@@ -5,10 +5,13 @@ import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
@@ -22,6 +25,7 @@ import java.util.function.Consumer;
 public final class MapCopies {
 
     private static final CompletableFuture<Void> DONE = CompletableFuture.completedFuture(null);
+    private static final Duration READY_WAIT = Duration.ofSeconds(2);
 
     private final Plugin plugin;
     private final TemplateDimensions dimensions;
@@ -69,15 +73,24 @@ public final class MapCopies {
         copiers.put(key, name -> dimensions.copy(template, name));
     }
 
-    /** The world of the map {@code key}; a background copy that failed is tried once more here, and throws if it fails again. */
+    /**
+     * The world of the map {@code key}, on the main thread. A copy still running is waited for only briefly, since a
+     * copy held up by another process's template lock could stall the server for minutes; one that is not done by
+     * then, or that failed, throws, and the caller falls back. A failed copy is tried again in the background for a
+     * later round.
+     */
     public World load(String key) {
         var copy = copies.getOrDefault(key, DONE);
         try {
-            copy.join();
-        } catch (CompletionException failed) {
-            plugin.getSLF4JLogger().warn("Copying the map {} failed; trying once more", key, failed.getCause());
-            copies.remove(key);
-            copiers.get(key).accept(key);
+            copy.get(READY_WAIT.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            throw new IllegalStateException("The map " + key + " is still being copied");
+        } catch (ExecutionException failed) {
+            recopy(key);
+            throw new IllegalStateException("Copying the map " + key + " failed", failed.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting for the map " + key, e);
         }
         return dimensions.load(key);
     }

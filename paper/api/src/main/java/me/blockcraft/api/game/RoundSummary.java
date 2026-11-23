@@ -98,7 +98,8 @@ public final class RoundSummary {
 
     /** {@code gameMessages} is the game's own file; it names the game as {@code game-name} and lends its prefix. */
     public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards, StatsRepository stats) {
-        this(plugin, gameMessages, rewards, stats, new SerialTasks<>(plugin));
+        this(plugin, gameMessages, rewards, stats,
+                plugin instanceof RoundScope scope ? scope.host().recapWrites() : new SerialTasks<>(plugin));
     }
 
     public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards, StatsRepository stats,
