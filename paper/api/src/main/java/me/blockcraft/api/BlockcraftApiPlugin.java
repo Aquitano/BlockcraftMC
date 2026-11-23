@@ -30,6 +30,7 @@ import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.nick.NickStats;
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.performance.SlowTicks;
 import me.blockcraft.api.player.FlightGrants;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.proxy.ProxyMessageListener;
@@ -109,6 +110,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     }
 
     private void enable() {
+        if (Boolean.parseBoolean(System.getenv("BLOCKCRAFT_JFR_SLOW_TICKS"))) {
+            getServer().getPluginManager().registerEvents(new SlowTicks(), this);
+        }
         if (getServer().getPluginManager().isPluginEnabled("Nexo")) scenery.add(new FurnitureSolids(this));
         var resources = ApiResources.load(getDataPath(), this::getResource);
         var config = resources.config();
