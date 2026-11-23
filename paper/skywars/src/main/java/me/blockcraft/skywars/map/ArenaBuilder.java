@@ -12,6 +12,7 @@ import org.bukkit.block.data.type.Lantern;
 import org.bukkit.block.data.type.Leaves;
 import org.bukkit.block.data.type.Slab;
 import org.bukkit.block.data.type.Snow;
+import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -32,6 +33,9 @@ public final class ArenaBuilder {
     private static final int SPAWN_RING = 40;
     private static final int SEMI_RING = 21;
     private static final int BORDER_MARGIN = 14;
+    private static final int CLOUDS_OUTER = SPAWN_RING + BORDER_MARGIN + 16;
+    private static final int CLOUD_SIZE = 6;
+    private static final int REACH = CLOUDS_OUTER + 2 * CLOUD_SIZE;
     private static final double TAU = Math.PI * 2;
 
     private final World world;
@@ -51,6 +55,22 @@ public final class ArenaBuilder {
 
     public static SkyArena build(World world, Theme theme) {
         return new ArenaBuilder(world, theme).build();
+    }
+
+    /**
+     * Loads every chunk a build sets blocks in off the main thread and holds it for {@code holder}, so that the build
+     * at the round's start only sets blocks.
+     */
+    public static void preload(World world, Plugin holder) {
+        for (int x = -REACH >> 4; x <= REACH >> 4; x++) {
+            for (int z = -REACH >> 4; z <= REACH >> 4; z++) {
+                world.getChunkAtAsync(x, z).thenAccept(chunk -> {
+                    if (holder.isEnabled()) {
+                        chunk.addPluginChunkTicket(holder);
+                    }
+                });
+            }
+        }
     }
 
     /** The waiting lobby: a grassy island with a tree among clouds, barriers round its edge. */
@@ -87,7 +107,7 @@ public final class ArenaBuilder {
         }
         middle();
         if (theme == Theme.WOLKENHAIN) {
-            clouds(18, SPAWN_RING + BORDER_MARGIN + 4, SPAWN_RING + BORDER_MARGIN + 16, 6);
+            clouds(18, SPAWN_RING + BORDER_MARGIN + 4, CLOUDS_OUTER, CLOUD_SIZE);
         }
         var byKind = new EnumMap<ChestKind, List<Block>>(ChestKind.class);
         chests.forEach((kind, blocks) -> byKind.put(kind, List.copyOf(blocks)));
