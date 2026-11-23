@@ -14,7 +14,7 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
-import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
@@ -49,7 +49,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.OptionalInt;
 
-public final class Game implements RoundConnections.Seating {
+public final class Game implements RoundHost.Game {
 
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final double INGAME_MAX_HEALTH = 14.0;
@@ -98,6 +98,7 @@ public final class Game implements RoundConnections.Seating {
                 () -> isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR), OptionalInt.empty(), kits::restore);
     }
 
+    @Override
     public LobbyCountdown lobbyCountdown() {
         return lobbyCountdown;
     }
@@ -352,7 +353,8 @@ public final class Game implements RoundConnections.Seating {
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void close() {
         lobbyCountdown.cancel();
         round.stop();
     }
