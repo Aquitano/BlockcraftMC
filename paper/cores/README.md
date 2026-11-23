@@ -11,3 +11,6 @@ radii, kit and loot.
 - Team chat is the default during a round. A message that starts with `@` goes to everyone.
 
 The map, Himmelsfeste, is built by `SkyMap` into an empty world at every start, so the service needs no world template.
+The server keeps that world in `cores-built-maps/` as a template. Every round plays a fresh copy of it, which is thrown
+away with the round; two copies take turns, so one is copied anew in the background while the other is played. The next
+round follows on the same server, `rounds-in-place` times before it restarts.

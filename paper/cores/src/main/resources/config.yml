@@ -3,8 +3,9 @@ teams:
   players-per-team: 4
 
 # The lobby counts down once players.min are there. A full lobby jumps to countdown.full seconds, /start to
-# countdown.start. A round ends in a draw after countdown.round seconds, and the server restarts countdown.restart
-# seconds after it.
+# countdown.start. A round ends in a draw after countdown.round seconds. countdown.restart seconds after a round, the
+# next one's lobby opens on this server and counts down from countdown.reopen; after rounds-in-place rounds in a row the
+# server restarts instead.
 players:
   min: 4
 countdown:
@@ -13,6 +14,8 @@ countdown:
   full: 20
   round: 2700
   restart: 30
+  reopen: 20
+rounds-in-place: 10
 idle-restart-minutes: 50
 timer-bar: true
 global-stats-head: Kevos
@@ -58,7 +61,7 @@ kit:
   - {item: COOKED_BEEF, amount: 16}
   - {item: ARROW, amount: 8}
 
-# The chests on the mid and side islands; each rolls between min-items and max-items of loot when the map is built.
+# The chests on the mid and side islands; each rolls between min-items and max-items of loot for every round.
 chests:
   min-items: 3
   max-items: 6
