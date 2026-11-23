@@ -147,27 +147,33 @@ public final class RoundScope implements Plugin {
         while (!closing.isEmpty()) {
             clean &= run(closing.pop());
         }
-        resetVisibility();
+        // A stopping server needs no one shown again, and Paper lets no disabled plugin hide anything.
+        if (plugin.isEnabled()) {
+            clean &= run(this::resetVisibility);
+        }
         open = false;
         // An async task of a round is a one-shot write, such as a rejoin release, queued for the scheduler's next tick;
         // cancelling it would lose the write, and its continuation on the main thread does nothing once the scope closed.
-        Bukkit.getScheduler().getPendingTasks().stream()
+        clean &= run(() -> Bukkit.getScheduler().getPendingTasks().stream()
                 .filter(task -> task.getOwner() == this && task.isSync())
-                .forEach(task -> task.cancel());
-        HandlerList.unregisterAll(this);
-        var messenger = Bukkit.getMessenger();
-        messenger.unregisterOutgoingPluginChannel(this);
-        messenger.unregisterIncomingPluginChannel(this);
+                .forEach(task -> task.cancel()));
+        clean &= run(() -> HandlerList.unregisterAll(this));
+        clean &= run(() -> {
+            var messenger = Bukkit.getMessenger();
+            messenger.unregisterOutgoingPluginChannel(this);
+            messenger.unregisterIncomingPluginChannel(this);
+        });
         for (var world : Bukkit.getWorlds()) {
-            world.removePluginChunkTickets(this);
+            clean &= run(() -> world.removePluginChunkTickets(this));
             if (owns(world)) {
                 continue;
             }
-            spawned.stream().map(Bukkit::getEntity).filter(entity -> entity != null && entity.getWorld().equals(world))
-                    .forEach(Entity::remove);
+            clean &= run(() -> spawned.stream().map(Bukkit::getEntity)
+                    .filter(entity -> entity != null && entity.getWorld().equals(world))
+                    .forEach(Entity::remove));
             var border = borders.get(world.getUID());
             if (border != null) {
-                border.restore(world.getWorldBorder());
+                clean &= run(() -> border.restore(world.getWorldBorder()));
             }
         }
         spawned.clear();
@@ -176,7 +182,7 @@ public final class RoundScope implements Plugin {
             if (world == null) {
                 continue;
             }
-            world.getPlayers().forEach(player -> player.teleport(away));
+            clean &= run(() -> world.getPlayers().forEach(player -> player.teleport(away)));
             if (Bukkit.unloadWorld(world, false)) {
                 clean &= run(() -> entry.getValue().accept(world));
             } else {

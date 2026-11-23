@@ -27,6 +27,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.vehicle.VehicleCreateEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -138,6 +139,11 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
 
     SerialTasks<UUID> recapWrites() {
         return recapWrites;
+    }
+
+    /** The plugin itself, for what a round starts that has to finish after the round closed. */
+    Plugin owner() {
+        return plugin;
     }
 
     private void open() {

@@ -82,6 +82,10 @@ public final class Round implements Listener {
         this.config = config;
         this.rejoins = new RejoinRepository(api.database());
         this.rejoinWrites = plugin instanceof RoundScope scope ? scope.host().rejoinWrites() : new SerialTasks<>(plugin);
+        if (plugin instanceof RoundScope scope) {
+            // A restart used to end the summary along with the JVM; closing it lets the kills it still holds be written.
+            scope.onClose(() -> this.summary.close());
+        }
         this.spectators = new Spectators(plugin, arena, this::players, () -> phase == GamePhase.INGAME);
         Bukkit.getPluginManager().registerEvents(this, plugin);
         releaseRejoins();

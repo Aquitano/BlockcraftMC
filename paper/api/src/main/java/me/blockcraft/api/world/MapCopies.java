@@ -5,19 +5,15 @@ import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
  * Every map's world, a copy of its template under the map's key. A world a round played in is copied anew in the
  * background once it is unloaded, so that the next round on that map finds it as it was; a round that picks it
- * before the copy is done waits for it. A {@code RoundScope} that {@code own}s the world unloads it and hands it to
+ * before the copy is done cannot load it and falls back. A {@code RoundScope} that {@code own}s the world unloads it and hands it to
  * {@link #recopy}. The copies run on threads of their own rather than Bukkit's async scheduler, which starts a task
  * only on the main thread's next tick: a main thread waiting in {@link #load} for a copy queued that tick would wait
  * forever.
@@ -25,7 +21,6 @@ import java.util.function.Consumer;
 public final class MapCopies {
 
     private static final CompletableFuture<Void> DONE = CompletableFuture.completedFuture(null);
-    private static final Duration READY_WAIT = Duration.ofSeconds(2);
 
     private final Plugin plugin;
     private final TemplateDimensions dimensions;
@@ -73,24 +68,25 @@ public final class MapCopies {
         copiers.put(key, name -> dimensions.copy(template, name));
     }
 
+    /** Whether the map {@code key} can be loaded now, its copy done, so that a game can choose a map that is. */
+    public boolean ready(String key) {
+        var copy = copies.getOrDefault(key, DONE);
+        return copy.isDone() && !copy.isCompletedExceptionally();
+    }
+
     /**
-     * The world of the map {@code key}, on the main thread. A copy still running is waited for only briefly, since a
-     * copy held up by another process's template lock could stall the server for minutes; one that is not done by
-     * then, or that failed, throws, and the caller falls back. A failed copy is tried again in the background for a
-     * later round.
+     * The world of the map {@code key}, on the main thread. The main thread never waits for a copy, which another
+     * process's template lock can hold up for minutes: a copy not done yet, or one that failed, throws, and the caller
+     * falls back. A failed copy is tried again in the background for a later round.
      */
     public World load(String key) {
         var copy = copies.getOrDefault(key, DONE);
-        try {
-            copy.get(READY_WAIT.toMillis(), TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
+        if (!copy.isDone()) {
             throw new IllegalStateException("The map " + key + " is still being copied");
-        } catch (ExecutionException failed) {
+        }
+        if (copy.isCompletedExceptionally()) {
             recopy(key);
-            throw new IllegalStateException("Copying the map " + key + " failed", failed.getCause());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted while waiting for the map " + key, e);
+            throw new IllegalStateException("Copying the map " + key + " failed", copy.exceptionNow());
         }
         return dimensions.load(key);
     }

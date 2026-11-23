@@ -71,6 +71,11 @@ public final class RoundSummary {
             .build();
 
     private final Plugin plugin;
+    /**
+     * Where stats, coins, rivalries and the achievements they unlock are written: the plugin itself for a hosted round,
+     * since its scope closes before a late write or the evaluation after it would get to run.
+     */
+    private final Plugin durable;
     private final BlockcraftApi api;
     private final Component game;
     private final Messages messages;
@@ -106,13 +111,14 @@ public final class RoundSummary {
                         SerialTasks<UUID> recapWrites) {
         this.recapWrites = recapWrites;
         this.plugin = plugin;
+        this.durable = plugin instanceof RoundScope scope ? scope.host().owner() : plugin;
         this.api = BlockcraftApi.get();
         this.game = gameMessages.get("game-name");
         this.messages = api.messages().prefixedLike(gameMessages);
         this.rewards = rewards;
         this.stats = stats;
         var config = api.roundConfig();
-        this.rivalries = new Rivalries(plugin, api, messages, new RivalryRepository(api.database()), config.nemesisLead());
+        this.rivalries = new Rivalries(durable, api, messages, new RivalryRepository(api.database()), config.nemesisLead());
         this.respects = new Respects(plugin, messages, config.respectWindow());
         this.accusations = new Accusations(plugin, messages, config.accusationWindow(), config.accusations());
         this.deathLines = new DeathLines(messages);
@@ -296,7 +302,7 @@ public final class RoundSummary {
         score.xp += api.xp().award(winner, XpReward.WIN);
         int paid = rewards.win() * coinFactor;
         if (paid > 0) {
-            Coins.award(plugin, winner, score.name, paid);
+            Coins.award(durable, winner, score.name, paid);
             score.coins += paid;
         }
     }
@@ -461,7 +467,7 @@ public final class RoundSummary {
                 rows.add(new Row(id, score.name, delta));
             }
         });
-        Tasks.async(plugin, () -> {
+        Tasks.async(durable, () -> {
             rows.forEach(this::bookRow);
             return participants;
         }, players -> api.achievements().afterRound(api.server().group(), players));
@@ -493,7 +499,7 @@ public final class RoundSummary {
     private int pay(Player player, int coins) {
         int paid = coins * coinFactor;
         if (paid > 0) {
-            Coins.award(plugin, player, paid);
+            Coins.award(durable, player, paid);
             score(player).coins += paid;
         }
         return Math.max(0, paid);
