@@ -174,6 +174,11 @@ docker compose restart velocity lobby replay bedwars mlgrush duell zombies ender
 Adding a game means a service in `docker-compose.yml` named like its group, an entry in `docker-compose.prod.yml`, and
 the group in `x-on-demand-groups`.
 
+### Performance recording
+
+Use the [JFR Compose overlay](dev/performance/README.md#record-the-network-for-a-few-days) to collect CPU samples,
+allocation sites, and slow ticks from several days of play, including games that start on demand.
+
 ### Alt detection secret
 
 Alt detection stores login addresses only as an HMAC-SHA256 under a secret the proxy generates once into

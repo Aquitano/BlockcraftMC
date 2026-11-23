@@ -3,6 +3,60 @@
 Keep captures under `run/performance/`, which Git ignores. The summary tool requires Python 3.10 or newer.
 Reading JFR files also requires the JDK's `jfr` executable on `PATH`. It processes recordings locally.
 
+## Record the network for a few days
+
+Enable `docker-compose.jfr.yml` after the production Compose files in `.env`.
+
+```dotenv
+COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml:docker-compose.jfr.yml
+```
+
+Use the normal deployment staging step to include the BlockcraftAPI slow-tick listener. During a maintenance window,
+recreate the JVM containers so they get the new flags and mounts. These Bash commands assume the game services run on
+demand and `story` is off. Run them as the deployment operator from the production checkout after enabling the overlay.
+
+```sh
+mapfile -t games < <(docker compose config --services | awk '!/^(velocity|lobby|replay|mariadb|replay-storage|waker)$/')
+for service in velocity lobby replay "${games[@]}"; do
+    sudo install -d -m 0750 -o 1000 -g 1000 "run/performance/jfr/$service"
+done
+docker compose up --no-start --no-deps --force-recreate "${games[@]}"
+docker compose up -d --no-deps --force-recreate velocity lobby replay
+```
+
+If you run any games continuously, bring those services back up with `docker compose start <game>`. If `story` is in
+use, include its profile when listing services and recreate it too. The waker can start the newly created sleeping games.
+
+Each JVM records into a disk ring in its container with a seven-day age limit and a default 512 MiB size limit, rounded
+to JFR chunks. Set `BLOCKCRAFT_JFR_MAX_SIZE` in `.env` to change the size before recreating containers. A busy JVM can
+fill its ring sooner. Each normal shutdown writes the remaining ring into `run/performance/jfr/<service>/`, including
+round restarts and waker stops. A forced kill or host failure can lose the current recording. The overlay disables
+Spark's background sampler during the capture. The 4 MiB JFR buffer setting
+excludes per-thread buffers and metadata. Check the size of exit files with `du -sh run/performance/jfr/*`. Keep exit
+dumps for seven days by running this daily on the host during an extended capture.
+
+```sh
+find run/performance/jfr -mindepth 2 -maxdepth 2 -type f -name 'hotspot-pid-*.jfr' -mtime +6 -delete
+```
+
+After a few days, remove `docker-compose.jfr.yml` from `COMPOSE_FILE` and repeat the two recreation commands with the
+same service sets. The old JVMs dump their rings as they stop. This also turns recording off for the new JVMs and works
+with the JRE images. Keep or archive the files before starting another capture so the next report covers that run alone.
+
+Run the report with JDK 25. You can copy the directory to another machine and run the same command there.
+
+```sh
+mise x java@25 -- java -Xmx256m dev/performance/Hotspots.java run/performance/jfr 20
+```
+
+Check the dates first to see how much data each server kept. The report ranks Java methods by sample count and allocation
+sites by JFR sample weight. It also shows the nearest sampled plugin frame, the peak heap used after GC, and peak JVM RSS
+when those events are available. Allocation weight measures allocation pressure. For the slowest Paper ticks over 50 ms,
+the report lists overlapping GC time and Java samples on the tick thread. Those samples can point to a plugin, though a
+short stall or a thread waiting on native code or I/O may have no Java samples. Velocity has no tick events.
+
+## Prepare a local capture directory
+
 Create the output directory from the repository root:
 
 ```powershell
