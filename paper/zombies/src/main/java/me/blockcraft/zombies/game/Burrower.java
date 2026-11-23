@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 /**
  * Something under the floor that punishes standing still. A fighter who stays near one spot feels the ground rumble,
@@ -59,7 +60,11 @@ final class Burrower {
         if (wave < config.fromWave() || tick % CHECK_TICKS != 0) {
             return;
         }
-        for (var player : game.fighters()) {
+        var fighters = game.fighters();
+        var ids = fighters.stream().map(Player::getUniqueId).collect(Collectors.toSet());
+        standing.keySet().retainAll(ids);
+        warned.retainAll(ids);
+        for (var player : fighters) {
             var at = player.getLocation();
             var stand = standing.get(player.getUniqueId());
             if (stand == null || tick < quietUntil || game.busy(player) || !stand.at().getWorld().equals(at.getWorld())

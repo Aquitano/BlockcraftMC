@@ -26,7 +26,7 @@ interface Bodies {
     /** Whether the mob now wears the model; it does not when the model is missing. */
     boolean draw(Mob mob, String model, double scale);
 
-    /** Plays one of the rig's clips once: {@code attack}, {@code damage} or {@code death}. */
+    /** Plays one of the rig's clips once, such as {@code attack}, {@code death} or an ability's own clip. */
     void play(Mob mob, String animation);
 
     void clear();

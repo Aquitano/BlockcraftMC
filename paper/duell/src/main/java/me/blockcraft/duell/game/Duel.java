@@ -129,6 +129,7 @@ public final class Duel {
         if (!isLobby() || !isParticipant(player) || challenge != null) return;
         boolean now = !ready.contains(player.getUniqueId());
         if (now) ready.add(player.getUniqueId()); else ready.remove(player.getUniqueId());
+        if (!now) lobbyCountdown.cancel();
         player.sendMessage(messages.get(now ? "ready.you" : "ready.you-not"));
         opponentsOf(player).forEach(opponent -> opponent.sendMessage(messages.get(now ? "ready.opponent" : "ready.opponent-not",
                 Placeholder.unparsed("player", player.getName()))));
@@ -422,7 +423,8 @@ public final class Duel {
             round.spectators().stream().filter(player -> !BlockcraftApi.get().isVanished(player))
                     .limit(MAX_PARTICIPANTS - round.playerCount()).forEach(this::join);
         }
-        if (settled()) lobbyCountdown.start(); else lobbyCountdown.cancel();
+        if (settled()) lobbyCountdown.start();
+        participants().forEach(lobbyHotbar::refreshChoices);
         refreshScoreboards();
     }
 
@@ -606,6 +608,7 @@ public final class Duel {
             series = DuelSeries.challenge(duellists, new DuelVote.Outcome(challenged.get(), maps.get(random.nextInt(maps.size()))),
                     challenge.rules().bestOf());
         } else {
+            if (challenge != null) Bukkit.broadcast(messages.get("challenge.unplayable"));
             series = new DuelSeries(duellists, schedule);
         }
         schedule = series.schedule();

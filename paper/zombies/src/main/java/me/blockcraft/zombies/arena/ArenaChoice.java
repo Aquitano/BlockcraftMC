@@ -14,7 +14,7 @@ import java.util.Optional;
 
 /**
  * Which arena the round is played in. With several map templates each is copied into a world of its own at the start,
- * the lobby votes among them, and the chosen one loads and is prepared once the vote closes, before the round starts.
+ * the lobby votes among them, and the chosen one loads once the vote closes and is prepared when the round starts.
  * With one the round plays the main world, as do /setup and /map save in either case.
  */
 public final class ArenaChoice {
@@ -27,6 +27,7 @@ public final class ArenaChoice {
     private final MapRotation rotation;
     private final MapVote vote;
     private Optional<ArenaMap> chosen = Optional.empty();
+    private boolean prepared;
 
     public ArenaChoice(Plugin plugin, Messages messages, ArenaMap main) {
         this.plugin = plugin;
@@ -66,7 +67,10 @@ public final class ArenaChoice {
         return rotates() ? chosen : Optional.of(main);
     }
 
-    /** Closes the vote and loads its map, unless that happened already; the main world's arena without a vote. */
+    /**
+     * Closes the vote and loads its map's world, whose chunks then load in the background, unless that happened
+     * already; the main world's arena without a vote.
+     */
     public ArenaMap decide() {
         if (!rotates()) {
             return main;
@@ -77,13 +81,24 @@ public final class ArenaChoice {
         return chosen.orElseThrow();
     }
 
+    /** {@link #decide()}, with the arena prepared for its round: done at the start, once its chunks had time to load. */
+    public ArenaMap prepared() {
+        var arena = decide();
+        if (arena != main && !prepared) {
+            prepared = true;
+            if (!arena.prepare()) {
+                plugin.getSLF4JLogger().error("The Zombies map {} is not ready; the round plays {} instead", arena.name(), main.name());
+                main.keepLoaded(plugin);
+                chosen = Optional.of(main);
+            }
+        }
+        return chosen().orElseThrow();
+    }
+
     private ArenaMap load(MapVote.Choice choice) {
         var map = rotation.map(choice.key()).orElseThrow();
         try {
             var arena = new ArenaMap(rotation.file(map, plugin, FILE), rotation.load(map));
-            if (!arena.prepare()) {
-                throw new IllegalStateException("The arena is not ready");
-            }
             arena.keepLoaded(plugin);
             return arena;
         } catch (RuntimeException e) {

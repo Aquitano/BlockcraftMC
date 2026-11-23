@@ -49,6 +49,7 @@ public final class WorldTemplate {
     private static final String VANILLA_DIMENSIONS = "minecraft";
     private static final String OVERWORLD = "overworld";
     private static final String BUNDLE = "blockcraft";
+    private static final String PAPER_METADATA = "data/paper/metadata.dat";
 
     private final Path directory;
 
@@ -119,6 +120,8 @@ public final class WorldTemplate {
                 Files.createDirectories(dimension);
                 clear(dimension, name -> true);
                 copyContents(overworld, dimension, name -> true);
+                // Paper refuses a second world with the same id, and the main world may come from this template too.
+                Files.deleteIfExists(dimension.resolve(PAPER_METADATA));
                 Path bundle = directory.resolve(BUNDLE);
                 if (Files.isDirectory(bundle)) {
                     copyRecursively(bundle, dimension.resolve(BUNDLE));

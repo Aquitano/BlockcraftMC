@@ -22,6 +22,8 @@ SURFACE_TOP = 16
 EDGE = 52
 BAY_DEPTH = 7
 BULB = "waxed_copper_bulb[lit=false,powered=false]"
+# Lit without power: a redstone lamp would go dark at the next neighbour update, a copper bulb keeps its state.
+LIT_BULB = "waxed_copper_bulb[lit=true,powered=false]"
 DOOR = "waxed_cut_copper"
 BOARD = "oak_slab[type=top,waterlogged=false]"
 SILO_RADIUS = 15.5
@@ -202,7 +204,7 @@ class Builder:
         self.column(x, z, y, y + height - 1, "polished_deepslate")
         self.put(x, y + height, z, "iron_block")
         self.put(x + toward_x, y + height, z + toward_z, BULB)
-        self.put(x - toward_x, y + height, z - toward_z, "lantern")
+        self.put(x - toward_x, y + height, z - toward_z, BULB)
         self.put(x, y + height + 1, z, "lightning_rod[facing=up]")
 
     def sandbags(self, x1, z1, x2, z2, y=0):
@@ -606,7 +608,7 @@ def radio_tower(b):
     # The station block, its roof the deck.
     x1, z1, x2, z2 = 30, -46, 46, -30
     wall_box(b, x1, z1, x2, z2, 0, 5, "white_concrete")
-    b.box(x1, 0, z1, x2, 0, z2, "light_gray_concrete")
+    wall_box(b, x1, z1, x2, z2, 0, 0, "light_gray_concrete")
     b.box(x1, 3, z1, x2, 3, z1, "cyan_terracotta")
     b.box(x1, 3, z2, x2, 3, z2, "cyan_terracotta")
     b.box(x1, 3, z1, x1, 3, z2, "cyan_terracotta")
@@ -632,11 +634,8 @@ def radio_tower(b):
     for z in (-34, -42):
         b.box(x2 - 1, 0, z - 1, x2 - 1, 2, z + 1, "iron_block")
         b.put(x2 - 1, 1, z, "cyan_stained_glass")
-    b.box(x1 + 1, 0, -35, x1 + 1, 0, -32, "red_bed[part=foot,facing=south]")
-    b.put(x1 + 1, 0, -32, "air")
-    b.put(x1 + 1, 0, -34, "red_bed[part=head,facing=north]")
-    b.put(x1 + 1, 0, -35, "red_bed[part=foot,facing=north]")
-    b.put(x1 + 1, 0, -33, "air")
+    b.put(x1 + 1, 0, -35, "red_bed[part=head,facing=north]")
+    b.put(x1 + 1, 0, -34, "red_bed[part=foot,facing=north]")
     for x in (34, 42):
         for z in (-42, -34):
             b.hanging_lamp(x, 5, z, 4, BULB if x == 34 else "lantern[hanging=true]")
@@ -649,21 +648,21 @@ def radio_tower(b):
     b.box(27, 6, -41, 29, 6, -37, "polished_andesite")
     b.box(26, 0, -41, 26, 7, -30, "polished_andesite")
     b.box(26, 6, -41, 29, 6, -41, "polished_andesite")
-    b.box(27, 7, -41, 29, 7, -41, "iron_bars")
+    b.box(27, 7, -41, 29, 8, -41, "iron_bars")
     b.box(26, 8, -41, 26, 8, -30, "polished_andesite_slab[type=bottom]")
     b.put(26, 8, -37, "lantern")
     b.put(26, 8, -31, "lantern")
-    # The deck: railing, mast, dish, cover.
+    # The deck: a railing two high, so that nobody climbs it onto the stairway's wall or the corner posts.
     for x in range(x1, x2 + 1):
-        b.put(x, 7, z1, "iron_bars")
-        b.put(x, 7, z2, "iron_bars")
+        b.box(x, 7, z1, x, 8, z1, "iron_bars")
+        b.box(x, 7, z2, x, 8, z2, "iron_bars")
     for z in range(z1, z2 + 1):
-        b.put(x2, 7, z, "iron_bars")
+        b.box(x2, 7, z, x2, 8, z, "iron_bars")
         if not -41 <= z <= -30:
-            b.put(x1, 7, z, "iron_bars")
+            b.box(x1, 7, z, x1, 8, z, "iron_bars")
     for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
-        b.put(x, 7, z, "polished_deepslate")
-        b.put(x, 8, z, "lantern")
+        b.box(x, 7, z, x, 8, z, "polished_deepslate")
+        b.put(x, 9, z, "lantern")
     b.box(37, 6, -39, 39, 6, -37, "iron_block")
     for y in range(7, 31):
         for x, z in ((37, -39), (39, -39), (37, -37), (39, -37)):
@@ -675,11 +674,11 @@ def radio_tower(b):
     b.box(38, 7, -39, 38, 7, -37, "iron_block")
     b.put(38, 8, -38, BULB)
     b.box(38, 31, -38, 38, 33, -38, "iron_bars")
-    b.put(38, 34, -38, "redstone_lamp[lit=true]")
+    b.put(38, 34, -38, LIT_BULB)
     b.put(38, 35, -38, "lightning_rod[facing=up]")
     for y in (18, 26):
         for x, z in ((36, -38), (40, -38), (38, -40), (38, -36)):
-            b.put(x, y, z, "redstone_lamp[lit=true]")
+            b.put(x, y, z, LIT_BULB)
     b.column(42, -44, 7, 8, "polished_deepslate")
     b.disc(42, -44.5, 2.6, 9, 13, "air")
     for y in range(9, 14):
@@ -777,10 +776,6 @@ def greenhouse(b):
         for z in (-13, -5, 5, 13):
             top = 7 + (20 - abs(z)) // 3
             b.put(x, top - 1, z, "spore_blossom" if b.chance(0.5) else "air")
-        b.box(x, 11, -3, x, 13, -3, "cave_vines[berries=true,age=25]")
-        b.put(x, 14, -3, "cave_vines_plant[berries=false]")
-        b.box(x, 11, 3, x, 13, 3, "cave_vines[berries=false,age=25]")
-        b.put(x, 14, 3, "cave_vines_plant[berries=true]")
     for x in range(24, 50, 4):
         for z in (-3, 3):
             top = 7 + (20 - abs(z)) // 3
@@ -863,6 +858,9 @@ def power(b):
     wall_box(b, -20, 20, 20, 52, 0, 9, "deepslate_tiles")
     b.box(-20, 4, 20, 20, 4, 52, "polished_blackstone")
     b.box(-19, 4, 21, 19, 4, 51, "air")
+    # The hall's north wall is the yard's south facade, whose barred windows the wall above just covered.
+    for x in range(-18, 19, 6):
+        b.box(x, 6, 20, x + 1, 7, 20, "iron_bars")
     for x in range(-20, 21, 5):
         b.column(x, 52, 0, 10, "polished_deepslate")
     for z in range(20, 53, 6):
@@ -903,7 +901,7 @@ def power(b):
     b.box(-6, 0, 51, 6, 3, 51, "iron_block")
     for x in range(-6, 7):
         b.put(x, 1, 50, "lever[face=wall,facing=north,powered=true]" if x % 3 == 0 else "air")
-        b.put(x, 3, 50, "redstone_lamp[lit=true]" if x % 4 == 0 else "air")
+        b.put(x, 3, 50, LIT_BULB if x % 4 == 0 else "air")
     b.box(-6, 4, 51, 6, 4, 51, "polished_blackstone")
     b.box(-1, -1, 47, 1, -1, 50, "polished_blackstone")
     b.stripes(-2, 46, 2, 46)
@@ -933,7 +931,7 @@ def schleuse(b):
     b.box(-8, 5, 35, -2, 5, 35, "black_concrete")
     for x in (-8, -6, -4, -2):
         b.put(x, 5, 35, "yellow_concrete")
-    b.put(-5, 4, 36, "redstone_lamp[lit=true]")
+    b.put(-5, 4, 36, LIT_BULB)
     b.box(-7, 5, 29, -3, 5, 34, "polished_deepslate_slab[type=bottom]")
     b.stripes(-7, 36, -3, 36)
     b.box(-6, -2, 34, -4, -2, 34, "polished_blackstone")
@@ -1180,7 +1178,7 @@ def boss_chamber(b):
         b.box(x, y1 + 6, z, x, y2, z, "iron_chain[axis=y]")
     b.box(x1 + 2, y1, -1, x1 + 3, y1 + 2, 1, "glass")
     b.box(x1 + 2, y1, 0, x1 + 3, y1 + 1, 0, "air")
-    b.put(x1 + 1, y2, 0, "soul_lantern[hanging=false]")
+    b.put(x1 + 1, y2, 0, "soul_lantern[hanging=true]")
     gx1, gy1, gz1, gx2, gy2, gz2 = BOSS_GATE
     b.box(gx1, gy1, gz1, gx2, gy2, gz2, "reinforced_deepslate")
     for y in range(gy1, gy2 + 1):
@@ -1193,8 +1191,8 @@ def boss_chamber(b):
     b.box(gx1 - 1, gy2 + 2, -2, gx1 - 1, gy2 + 3, 2, "air")
     for x, y, z in ((gx2, gy1 + 3, gz1 + 1), (gx2, gy1 + 5, gz2 - 2), (gx2, gy1 + 1, 0)):
         b.put(x, y, z, "cracked_deepslate_bricks")
-    b.put(gx2 + 1, gy2 + 1, gz1 - 2, "redstone_lamp[lit=true]")
-    b.put(gx2 + 1, gy2 + 1, gz2 + 2, "redstone_lamp[lit=true]")
+    b.put(gx2 + 1, gy2 + 1, gz1 - 2, LIT_BULB)
+    b.put(gx2 + 1, gy2 + 1, gz2 + 2, LIT_BULB)
 
 
 def bay(b, window_id, spec):
@@ -1350,7 +1348,7 @@ def build():
 PASSABLE = ("air", "cave_air", "light", "short_grass", "fern", "large_fern", "tall_grass", "dead_bush", "bush",
             "short_dry_grass", "tall_dry_grass", "snow", "lever", "torchflower", "redstone_wire", "spore_blossom",
             "cave_vines", "cave_vines_plant", "pitcher_plant", "glow_lichen", "sculk_vein", "vine", "rail", "tripwire")
-TALL = ("_fence", "_wall", "iron_bars", "_pane")
+TALL = ("_fence", "_wall")
 
 
 def base(block):

@@ -33,9 +33,9 @@ record CreatureBody(String model, double width, double height, double length, do
         return new BoundingBox(feet.getX() - x, feet.getY(), feet.getZ() - z, feet.getX() + x, feet.getY() + height * scale, feet.getZ() + z);
     }
 
-    /** Whether {@code hit} lies in the front {@code head} of the model's length. */
+    /** Whether {@code hit} lies in the front {@code head} of the model's length and its upper half. */
     boolean isHead(Vector feet, float yaw, double scale, Vector hit) {
         double ahead = hit.clone().subtract(feet).setY(0).dot(facing(yaw));
-        return ahead >= (length / 2 - head) * scale;
+        return ahead >= (length / 2 - head) * scale && hit.getY() - feet.getY() >= height * scale / 2;
     }
 }

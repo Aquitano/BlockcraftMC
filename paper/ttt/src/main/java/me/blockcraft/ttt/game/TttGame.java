@@ -266,6 +266,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         BlockcraftApi.get().tabTeams().clearColor(player);
         if (phase() == GamePhase.LOBBY) {
             karma.remove(player.getUniqueId());
+            karmaLoaded.remove(player.getUniqueId());
             vote.withdraw(player);
         }
         if (phase() == GamePhase.INGAME && wasPlaying) {
@@ -845,9 +846,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             }
         }
         played.ifPresent(copies::renew);
-        countdown.start();
         // The group that just played is still here, so it waits only as long as a full lobby would.
         countdown.hurry(config.fullSeconds());
+        countdown.start();
         Bukkit.broadcast(messages.get("round.reopened"));
         refreshAll();
     }

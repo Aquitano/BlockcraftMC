@@ -32,14 +32,12 @@ final class Pouncer implements Ability {
 
     private static final class Attack {
         final UUID prey;
-        final int started;
         Stage stage = Stage.CROUCH;
         int until;
         int since;
 
-        Attack(UUID prey, int started, int until) {
+        Attack(UUID prey, int until) {
             this.prey = prey;
-            this.started = started;
             this.until = until;
         }
     }
@@ -71,7 +69,7 @@ final class Pouncer implements Ability {
         var mob = enemy.mob;
         if (tick >= enemy.specialAt && mob.getLocation().distanceSquared(target.getLocation()) <= config.leapRange() * config.leapRange()
                 && mob.hasLineOfSight(target)) {
-            attacks.put(enemy, new Attack(target.getUniqueId(), tick, tick + config.windupTicks()));
+            attacks.put(enemy, new Attack(target.getUniqueId(), tick + config.windupTicks()));
             mob.setAware(false);
             mob.getPathfinder().stopPathfinding();
             mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_SPIDER_AMBIENT, SoundCategory.HOSTILE, 1.4f, 0.5f);
@@ -136,7 +134,7 @@ final class Pouncer implements Ability {
                 .findFirst();
         if (caught.isPresent()) {
             var player = caught.get();
-            var pin = new Attack(player.getUniqueId(), attack.started, tick + (game.fighters().size() == 1 ? config.soloPinTicks() : config.pinTicks()));
+            var pin = new Attack(player.getUniqueId(), tick + (game.fighters().size() == 1 ? config.soloPinTicks() : config.pinTicks()));
             pin.stage = Stage.PIN;
             pin.since = tick;
             attacks.put(enemy, pin);

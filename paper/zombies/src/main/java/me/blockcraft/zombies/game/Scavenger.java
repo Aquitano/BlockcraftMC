@@ -18,7 +18,6 @@ final class Scavenger implements Ability {
     private final ZombiesGame game;
     private final Enemies enemies;
     private final ZombiesConfig.Scavenger config;
-    private final Optional<Location> generator;
     private int gnawed;
     private int warnedAt = -WARNING_TICKS;
 
@@ -26,7 +25,11 @@ final class Scavenger implements Ability {
         this.game = game;
         this.enemies = enemies;
         this.config = config;
-        this.generator = game.arena().generator().map(at -> at.clone().add(0.5, 0, 0.5));
+    }
+
+    /** Read each time, because the arena is the voted map's copy only once the lobby closes. */
+    private Optional<Location> generator() {
+        return game.arena().generator().map(at -> at.clone().add(0.5, 0, 0.5));
     }
 
     @Override
@@ -41,6 +44,7 @@ final class Scavenger implements Ability {
 
     @Override
     public boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+        var generator = generator();
         if (!game.powered() || generator.isEmpty()) {
             return false;
         }
@@ -50,12 +54,13 @@ final class Scavenger implements Ability {
     }
 
     private boolean gnawing(Enemies.Enemy enemy) {
-        return game.powered() && generator.filter(at -> at.getWorld().equals(enemy.mob.getWorld())
+        return game.powered() && generator().filter(at -> at.getWorld().equals(enemy.mob.getWorld())
                 && enemy.mob.getLocation().distanceSquared(at) <= config.gnawRadius() * config.gnawRadius()).isPresent();
     }
 
     @Override
     public void tick(int tick) {
+        var generator = generator();
         if (generator.isEmpty() || !game.inWave()) {
             return;
         }
