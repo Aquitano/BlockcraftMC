@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 /** The heat or guard meter on the action bar, and the ability tiles the pack moves into the bottom-right corner. */
@@ -34,8 +36,24 @@ public final class CombatHud {
     /** Each ability's name as the tiles spell it, parsed once instead of on every redraw. */
     private final Map<String, String> names = new HashMap<>();
 
+    private record Meter(boolean blade, boolean red, String state, int seconds, int cells, Optional<Heat.Window> window) { }
+    private record MeterDisplay(Component text, int width) { }
+    private record Abilities(List<Slot> slots, Tint tint) { }
+
+    private static final class Display {
+        Meter meter;
+        MeterDisplay meterDisplay;
+        Abilities abilities;
+        Component abilityDisplay = Component.empty();
+    }
+
+    private final Map<UUID, Display> displays = new HashMap<>();
+    private final int fixedWidth;
+
     public CombatHud(SternenfrontGame game) {
         this.game = game;
+        fixedWidth = UiFont.width(hud(Component.empty(), Component.empty(), Component.empty()))
+                + METER_ICON_ADVANCE + METER_ADVANCE;
     }
 
     /** Wide enough for the longest state, so the line does not slide when one appears. */
@@ -59,16 +77,49 @@ public final class CombatHud {
         var heat = fighter.heat();
         boolean venting = heat.venting(game.tick());
         boolean hot = !blade && game.feedback().hot(player);
-        var state = game.messages().get(blade ? guard.broken(game.tick()) ? "combat.broken" : guard.raised()
-                        ? "combat.guarding" : "combat.guard" : venting ? "combat.venting" : hot ? "combat.hot" : "combat.heat",
-                Formatter.number("seconds", seconds(heat.ventTicks(game.tick()))));
-        var meter = hud(UiFont.glyph(blade ? GUARD_ICON : HEAT_ICON), (blade ? bar(guard.level()) : venting ? vent(heat) : bar(heat.level()))
-                .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD), UiFont.leftAligned(state, STATE_WIDTH));
-        int width = UiFont.width(hud(Component.empty(), Component.empty(), Component.empty()))
-                + METER_ICON_ADVANCE + METER_ADVANCE + Math.max(STATE_WIDTH, UiFont.width(state));
-        var abilities = BlockcraftApi.get().resourcePack().applied(player)
-                ? AbilityPanel.render(slots(player, blade), game.factionOf(player).map(Faction::text).map(Tint::of).orElse(Tint.WHITE)) : Component.empty();
-        game.feedback().show(player, new CombatFeedback.ActionBar(meter, width, abilities));
+        long tick = game.tick();
+        String state = blade ? guard.broken(tick) ? "combat.broken" : guard.raised()
+                        ? "combat.guarding" : "combat.guard" : venting ? "combat.venting" : hot ? "combat.hot" : "combat.heat";
+        var meter = new Meter(blade, hot || venting, state, seconds(heat.ventTicks(tick)),
+                blade ? cells(guard.level()) : venting ? heat.litCells(tick) : cells(heat.level()),
+                !blade && venting ? heat.window(tick) : Optional.empty());
+        var display = displays.computeIfAbsent(player.getUniqueId(), ignored -> new Display());
+        if (!meter.equals(display.meter)) {
+            display.meterDisplay = render(meter);
+            display.meter = meter;
+        }
+        if (BlockcraftApi.get().resourcePack().applied(player)) {
+            var abilities = new Abilities(slots(player, blade), game.factionOf(player).map(Faction::text).map(Tint::of).orElse(Tint.WHITE));
+            if (!abilities.equals(display.abilities)) {
+                display.abilityDisplay = AbilityPanel.render(abilities.slots(), abilities.tint());
+                display.abilities = abilities;
+            }
+        } else {
+            display.abilities = null;
+            display.abilityDisplay = Component.empty();
+        }
+        game.feedback().show(player, new CombatFeedback.ActionBar(display.meterDisplay.text(),
+                display.meterDisplay.width(), display.abilityDisplay));
+    }
+
+    void forget(Player player) {
+        displays.remove(player.getUniqueId());
+    }
+
+    void clear() {
+        displays.clear();
+    }
+
+    private MeterDisplay render(Meter meter) {
+        var state = game.messages().get(meter.state(), Formatter.number("seconds", meter.seconds()));
+        var window = meter.window().map(cells -> IntStream.range(cells.low(), cells.high())
+                .mapToObj(cell -> UiFont.over((char) (FIRST_VENT_CELL + cell), METER_ADVANCE))
+                .reduce(Component.empty(), Component::append)).orElse(Component.empty());
+        var bar = meter(meter.cells());
+        if (meter.state().equals("combat.venting")) bar = bar.append(window.color(NamedTextColor.AQUA));
+        bar = bar.color(meter.red() ? NamedTextColor.RED : NamedTextColor.GOLD);
+        return new MeterDisplay(hud(UiFont.glyph(meter.blade() ? GUARD_ICON : HEAT_ICON), bar,
+                UiFont.leftAligned(state, STATE_WIDTH)), fixedWidth + Math.max(STATE_WIDTH, UiFont.width(state)));
     }
 
     private Component hud(Component icon, Component bar, Component state) {
@@ -114,20 +165,11 @@ public final class CombatHud {
         return (ticks + SternenfrontGame.TICKS_PER_SECOND - 1) / SternenfrontGame.TICKS_PER_SECOND;
     }
 
-    private static Component bar(double level) {
-        return meter((int) Math.round(Math.clamp(level, 0, 1) * Heat.METER_CELLS));
+    private static int cells(double level) {
+        return (int) Math.round(Math.clamp(level, 0, 1) * Heat.METER_CELLS);
     }
 
     private static Component meter(int cells) {
         return UiFont.glyph((char) (FIRST_METER + Math.clamp(cells, 0, Heat.METER_CELLS)));
-    }
-
-    /** The cooling meter with the vent's window bracketed over it, so a pull is timed against what the player sees. */
-    private Component vent(Heat heat) {
-        long tick = game.tick();
-        var window = heat.window(tick).map(cells -> IntStream.range(cells.low(), cells.high())
-                .mapToObj(cell -> UiFont.over((char) (FIRST_VENT_CELL + cell), METER_ADVANCE))
-                .reduce(Component.empty(), Component::append)).orElse(Component.empty());
-        return meter(heat.litCells(tick)).append(window.color(NamedTextColor.AQUA));
     }
 }

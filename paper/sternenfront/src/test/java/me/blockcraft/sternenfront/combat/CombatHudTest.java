@@ -46,6 +46,14 @@ public class CombatHudTest {
         }
     }
 
+    @Test
+    public void cooldownInputsCompareByTheSecondsAndFillShown() {
+        var first = new AbilityPanel.State.Cooling(2, 0.49);
+        assertEquals(first, new AbilityPanel.State.Cooling(2, 0.51));
+        assertNotEquals(first, new AbilityPanel.State.Cooling(2, 0.54));
+        assertNotEquals(first, new AbilityPanel.State.Cooling(1, 0.51));
+    }
+
     /** The ability panel goes in the action bar's middle, which the HUD finds from these widths. */
     @Test
     public void theMetersGlyphsAreAsWideAsTheHudCounts() throws IOException {

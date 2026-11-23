@@ -293,10 +293,12 @@ public final class Combat {
 
     public void forget(Player player) {
         states.remove(player.getUniqueId());
+        hud.forget(player);
         player.clearActiveItem();
     }
 
     public void clear() {
         states.clear();
+        hud.clear();
     }
 }
