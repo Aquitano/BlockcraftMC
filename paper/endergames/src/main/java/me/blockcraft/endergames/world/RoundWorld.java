@@ -17,6 +17,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.plugin.Plugin;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A round's world: a vanilla overworld generated for every round from one of the configured seeds, picked at random.
@@ -34,6 +36,8 @@ import java.util.concurrent.CompletableFuture;
 public final class RoundWorld {
 
     private static final int LOADS_IN_FLIGHT = 16;
+    /** Far longer than a world takes to generate here; past it, something went wrong that waiting will not fix. */
+    private static final Duration PREPARE_LIMIT = Duration.ofMinutes(5);
     private static final long DAY = 1000L;
     private static final Set<Material> UNSAFE = Set.of(Material.LAVA, Material.MAGMA_BLOCK, Material.CACTUS,
             Material.CAMPFIRE, Material.SOUL_CAMPFIRE, Material.POWDER_SNOW, Material.SWEET_BERRY_BUSH,
@@ -86,16 +90,22 @@ public final class RoundWorld {
     }
 
     public boolean ready() {
-        return loaded.isDone();
+        return loaded.isDone() && !loaded.isCompletedExceptionally();
     }
 
-    /** Runs {@code action} on the main thread once the world is ready, unless {@code holder} was disabled by then. */
-    public void whenReady(Plugin holder, Runnable action) {
-        loaded.thenRun(() -> {
-            if (holder.isEnabled()) {
+    /**
+     * Runs {@code action} on the main thread once the world is ready, or {@code failed} if a chunk or the start island
+     * failed or the world is not ready after {@link #PREPARE_LIMIT}; neither once {@code holder} was disabled.
+     */
+    public void whenReady(Plugin holder, Runnable action, Runnable failed) {
+        loaded.orTimeout(PREPARE_LIMIT.toMillis(), TimeUnit.MILLISECONDS).whenComplete((done, failure) -> Tasks.sync(holder, () -> {
+            if (failure == null) {
                 action.run();
+            } else {
+                plugin.getSLF4JLogger().error("EnderGames world {} did not get ready", world.getKey(), failure);
+                failed.run();
             }
-        });
+        }));
     }
 
     public boolean contains(World other) {
@@ -111,8 +121,13 @@ public final class RoundWorld {
         border.setCenter(centerX + 0.5, centerZ + 0.5);
         border.setSize(settings.radius() * 2.0);
         preload(chunksInside(), () -> {
-            startIsland = Optional.of(StartIsland.build(world, centerX, centerZ, startChests));
-            world.setSpawnLocation(spectatorSpawn());
+            try {
+                startIsland = Optional.of(StartIsland.build(world, centerX, centerZ, startChests));
+                world.setSpawnLocation(spectatorSpawn());
+            } catch (RuntimeException e) {
+                loaded.completeExceptionally(e);
+                return;
+            }
             plugin.getSLF4JLogger().info("EnderGames world {} is loaded", world.getKey());
             loaded.complete(null);
         });
@@ -155,10 +170,17 @@ public final class RoundWorld {
             while (running < LOADS_IN_FLIGHT && !pending.isEmpty()) {
                 var chunk = pending.removeLast();
                 running++;
-                world.getChunkAtAsync(chunk[0], chunk[1]).whenComplete((loaded, failure) -> Tasks.sync(plugin, () -> {
+                world.getChunkAtAsync(chunk[0], chunk[1]).whenComplete((chunkLoaded, failure) -> Tasks.sync(plugin, () -> {
                     running--;
-                    if (loaded != null) {
-                        loaded.addPluginChunkTicket(plugin);
+                    if (failure != null || chunkLoaded == null) {
+                        pending.clear();
+                        loaded.completeExceptionally(failure != null ? failure
+                                : new IllegalStateException("Chunk " + chunk[0] + ", " + chunk[1] + " did not load"));
+                        return;
+                    }
+                    chunkLoaded.addPluginChunkTicket(plugin);
+                    if (loaded.isDone()) {
+                        return;
                     }
                     if (pending.isEmpty() && running == 0) {
                         done.run();

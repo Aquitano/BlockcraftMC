@@ -16,6 +16,7 @@ import me.blockcraft.api.game.LootTable;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundHost;
+import me.blockcraft.api.game.RoundScope;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
@@ -73,7 +74,7 @@ public final class EnderGamesGame implements KitPlayers, RoundHost.Game {
     private static final int ISLAND_WARNING = 10;
     private static final int SLOW_FALL_TICKS = 30 * 20;
 
-    private final Plugin plugin;
+    private final RoundScope plugin;
     private final EnderGamesConfig config;
     private final Messages messages;
     private final RoundWorld world;
@@ -99,7 +100,7 @@ public final class EnderGamesGame implements KitPlayers, RoundHost.Game {
     private Countdown protectionTimer;
     private Countdown fightTimer;
 
-    public EnderGamesGame(Plugin plugin, GameConfig gameConfig, EnderGamesConfig config, Messages messages,
+    public EnderGamesGame(RoundScope plugin, GameConfig gameConfig, EnderGamesConfig config, Messages messages,
                           RoundWorld world, Runnable generateNextWorld, Location lobbySpawn, StatsRepository stats,
                           StatsMenus statsMenus) {
         this.plugin = plugin;
@@ -127,7 +128,7 @@ public final class EnderGamesGame implements KitPlayers, RoundHost.Game {
                 () -> Optional.of(isIngame() ? world.spectatorSpawn() : lobbySpawn),
                 OptionalInt.of(config.countdowns().full()), this::welcome);
         if (!world.ready()) {
-            world.whenReady(plugin, this::worldReady);
+            world.whenReady(plugin, this::worldReady, () -> plugin.abandon("the EnderGames world did not get ready"));
         }
     }
 
