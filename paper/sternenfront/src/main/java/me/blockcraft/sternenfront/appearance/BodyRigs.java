@@ -52,7 +52,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private final Color hurtTint;
     private final UnitColours unitColours;
 
-    private BodyRigs(Plugin plugin, SternenfrontGame game, Set<Faction> riggedSides) {
+    private BodyRigs(Plugin plugin, SternenfrontGame game, Set<Faction> riggedSides, TargetOutlines.Rule outlines) {
         this.plugin = plugin;
         this.game = game;
         this.riggedSides = Set.copyOf(riggedSides);
@@ -67,17 +67,16 @@ public final class BodyRigs implements Listener, AutoCloseable {
         }
         var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
         // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
-        var outlines = TargetOutlines.Rule.from(game);
         animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
                 : Optional.of(new AnimatedBodies(animatedBodies,
-                (viewer, actor) -> outlines.outline(viewer, actor).filter(TargetOutlines.Outline.ENEMY::equals).isPresent(),
+                outlines::animatedEnemy,
                 hurtTint.asRGB(), plugin.getLogger()));
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
-    public static BodyRigs start(Plugin plugin, SternenfrontGame game, Set<Faction> riggedSides) {
-        return new BodyRigs(plugin, game, riggedSides);
+    public static BodyRigs start(Plugin plugin, SternenfrontGame game, Set<Faction> riggedSides, TargetOutlines.Rule outlines) {
+        return new BodyRigs(plugin, game, riggedSides, outlines);
     }
 
     public Optional<LivingEntity> actor(Entity clicked) {

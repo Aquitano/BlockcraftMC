@@ -34,7 +34,8 @@ final class Frost implements Ability {
     }
 
     @Override
-    public boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+    public boolean hunt(Enemies.Enemy enemy, Player target, int tick, boolean navigate, boolean useAbility) {
+        if (!useAbility) return false;
         var mob = enemy.mob;
         mob.getWorld().spawnParticle(Particle.SNOWFLAKE, mob.getLocation().add(0, 1, 0), 6, 0.4, 0.6, 0.4, 0.01);
         double radius = config.auraRadius();

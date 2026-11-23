@@ -202,7 +202,9 @@ public final class WorldTemplate {
                 Thread.sleep(LOCK_POLL);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new InterruptedIOException("Interrupted while waiting for " + directory);
+                var failure = new InterruptedIOException("Interrupted while waiting for " + directory);
+                failure.initCause(e);
+                throw failure;
             }
         }
     }

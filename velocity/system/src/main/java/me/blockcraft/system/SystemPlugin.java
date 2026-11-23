@@ -135,6 +135,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "blockcraft-system", name = "BlockcraftSystem", version = BuildConstants.VERSION, authors = {"Aquitano"},
@@ -145,6 +146,7 @@ public final class SystemPlugin {
     private final Logger logger;
     private final Path dataDirectory;
     private Database database;
+    private CompletableFuture<Void> occupancyWrites = CompletableFuture.completedFuture(null);
     private Optional<NetworkPack> pack = Optional.empty();
 
     @Inject
@@ -192,7 +194,7 @@ public final class SystemPlugin {
         var lookup = new PlayerLookup(proxy, visibility, repositories.players(), messages);
         var directory = new ServerDirectory(proxy, config.lobbyGroup(), Duration.ofSeconds(config.discovery().seatSeconds()),
                 Duration.ofSeconds(config.discovery().maxSnapshotAgeSeconds()),
-                counts -> proxy.getScheduler().buildTask(this, () -> storeOccupancy(servers, counts)).schedule());
+                counts -> queueOccupancy(servers, counts));
         var parties = new PartyManager(proxy, visibility, choices, ignores, directory, messages);
         var groupStates = new GroupStateRepository(database);
         var onDemand = config.onDemand().enabled()
@@ -400,6 +402,13 @@ public final class SystemPlugin {
         if (database != null) {
             database.close();
         }
+    }
+
+    private synchronized void queueOccupancy(ServerRepository servers, Map<String, Integer> counts) {
+        occupancyWrites = occupancyWrites.handleAsync((ignored, failure) -> {
+            storeOccupancy(servers, counts);
+            return null;
+        }, task -> proxy.getScheduler().buildTask(this, task).schedule());
     }
 
     private void storeOccupancy(ServerRepository servers, Map<String, Integer> counts) {

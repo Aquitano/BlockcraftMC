@@ -70,6 +70,11 @@ public final class PlayerChoices {
                 : Optional.ofNullable(cached.get(setting)));
     }
 
+    public boolean enabled(UUID player, PlayerSetting setting, Optional<String> storedValue) {
+        var cached = choices.get(player);
+        return setting.enabled(cached == null ? storedValue : Optional.ofNullable(cached.get(setting)));
+    }
+
     public void set(Player player, PlayerSetting setting, String value) {
         choices.computeIfAbsent(player.getUniqueId(), ignored -> new ConcurrentHashMap<>()).put(setting, value);
     }

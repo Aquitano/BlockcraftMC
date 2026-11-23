@@ -25,26 +25,48 @@ final class SeasonalJournal {
     }
 
     private final Path directory;
+    private long revision;
 
     SeasonalJournal(Path directory) {
         this.directory = directory;
     }
 
+    synchronized long revision() {
+        return revision;
+    }
+
+    synchronized void invalidate() {
+        revision++;
+    }
+
     void write(Chunk chunk, List<Change> changes) throws IOException {
+        write(chunk, changes, revision());
+    }
+
+    void write(Chunk chunk, List<Change> changes, long expectedRevision) throws IOException {
         Files.createDirectories(directory);
         Path target = file(chunk);
-        Path staging = target.resolveSibling(target.getFileName() + ".tmp");
-        try (var out = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(staging)))) {
-            out.writeInt(MAGIC);
-            out.writeInt(changes.size());
-            for (var change : changes) {
-                out.writeInt(change.at().x());
-                out.writeInt(change.at().y());
-                out.writeInt(change.at().z());
-                out.writeUTF(change.original());
-                out.writeUTF(change.replacement());
+        Path staging = Files.createTempFile(directory, target.getFileName().toString(), ".tmp");
+        try {
+            try (var out = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(staging)))) {
+                out.writeInt(MAGIC);
+                out.writeInt(changes.size());
+                for (var change : changes) {
+                    out.writeInt(change.at().x());
+                    out.writeInt(change.at().y());
+                    out.writeInt(change.at().z());
+                    out.writeUTF(change.original());
+                    out.writeUTF(change.replacement());
+                }
             }
+            publish(staging, target, expectedRevision);
+        } finally {
+            Files.deleteIfExists(staging);
         }
+    }
+
+    private synchronized void publish(Path staging, Path target, long expectedRevision) throws IOException {
+        if (revision != expectedRevision) return;
         try {
             Files.move(staging, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (AtomicMoveNotSupportedException unavailable) {

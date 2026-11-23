@@ -1,6 +1,8 @@
 package me.blockcraft.replay.data;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public sealed interface ReplayEvent {
@@ -62,7 +64,19 @@ public sealed interface ReplayEvent {
     enum Motion { SWING_MAIN_HAND, SWING_OFF_HAND, HURT, DEATH, EXPLOSION, SHOT }
 
     record Chunk(int tick, UUID world, int x, int z, int minY, int height,
-                 List<String> palette, int[] blocks) implements ReplayEvent { }
+                 List<String> palette, int[] blocks) implements ReplayEvent {
+        @Override
+        public boolean equals(Object other) {
+            return this == other || other instanceof Chunk chunk && tick == chunk.tick && x == chunk.x && z == chunk.z
+                    && minY == chunk.minY && height == chunk.height && Objects.equals(world, chunk.world)
+                    && Objects.equals(palette, chunk.palette) && Arrays.equals(blocks, chunk.blocks);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * Objects.hash(tick, world, x, z, minY, height, palette) + Arrays.hashCode(blocks);
+        }
+    }
 
     record Blocks(int tick, List<Block> blocks) implements ReplayEvent {
         public Blocks {

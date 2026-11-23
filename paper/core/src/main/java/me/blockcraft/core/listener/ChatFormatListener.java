@@ -25,6 +25,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Level, rank prefix, optional chat tag, nick-aware name (staff see the real one too) and premium colour codes; a
@@ -32,6 +33,8 @@ import java.util.Optional;
  * highlighted and hears it.
  */
 public final class ChatFormatListener implements Listener {
+
+    private record Line(Component rank, Component name, Component message) { }
 
     private final Plugin plugin;
     private final Messages messages;
@@ -58,15 +61,22 @@ public final class ChatFormatListener implements Listener {
         String shown = shownName(source);
         var click = ClickEvent.suggestCommand(PlainTextComponentSerializer.plainText()
                 .serialize(messages.get("chat.msg-command", Placeholder.unparsed("name", shown))));
+        var lines = new ConcurrentHashMap<Line, Component>();
+        var colours = new ConcurrentHashMap<Component, Component>();
+        var hovers = new ConcurrentHashMap<Component, HoverEvent<Component>>();
         event.renderer((ChatRenderer) (player, displayName, message, viewer) -> {
             var shownRank = rank.map(prefix -> prefix.shownTo(viewer)).orElse(Component.empty());
-            var hover = hover(shownRank, shown, level);
-            return messages.get("chat.format",
-                    Placeholder.component("level", levelBadge),
-                    Placeholder.component("tag", tag),
-                    Placeholder.component("rank", shownRank.hoverEvent(hover).clickEvent(click)),
-                    Placeholder.component("name", name(player, displayName, viewer).hoverEvent(hover).clickEvent(click)),
-                    Placeholder.component("message", rendered(player, colour(player, message), viewer)));
+            var body = rendered(player, colours.computeIfAbsent(message, text -> colour(player, text)), viewer);
+            var line = new Line(shownRank, name(player, displayName, viewer), body);
+            return lines.computeIfAbsent(line, key -> {
+                var hover = hovers.computeIfAbsent(key.rank(), prefix -> hover(prefix, shown, level));
+                return messages.get("chat.format",
+                        Placeholder.component("level", levelBadge),
+                        Placeholder.component("tag", tag),
+                        Placeholder.component("rank", key.rank().hoverEvent(hover).clickEvent(click)),
+                        Placeholder.component("name", key.name().hoverEvent(hover).clickEvent(click)),
+                        Placeholder.component("message", key.message()));
+            });
         });
     }
 

@@ -8,6 +8,7 @@ import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.ChunkSnapshot;
 import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -46,10 +47,13 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public final class SeasonalBlocks implements Listener, AutoCloseable {
 
@@ -57,6 +61,12 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
     private static final Display.Brightness FROZEN_PAD_LIGHT = new Display.Brightness(12, 15);
     private static final float PAD_VIEW_RANGE = 0.5f;
     private static final double DRIFT_SPAN = 7;
+
+    private static final int NO_SURFACE = Integer.MIN_VALUE;
+
+    private record Candidate(Change change, Point neighbour, String expectedNeighbour, int surfaceY) { }
+
+    private record Preparation(SeasonalJournal.Chunk key, CompletableFuture<List<Candidate>> result) { }
 
     private final Plugin plugin;
     private final World world;
@@ -68,6 +78,11 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
     private final Map<Point, Change> protectedBlocks = new HashMap<>();
     private final Map<Point, BlockDisplay> frozenPads = new HashMap<>();
     private final Set<Occasion> shown;
+    private final int minHeight;
+    private final int maxHeight;
+    private final Set<SeasonalJournal.Chunk> queued = new LinkedHashSet<>();
+    private Preparation preparing;
+    private BukkitTask workTask;
     private Set<Occasion> occasions = Set.of();
     private BukkitTask task;
     private boolean suspended = true;
@@ -76,6 +91,8 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
     private SeasonalBlocks(Plugin plugin, World world, NetworkCalendar calendar, Path settings) {
         this.plugin = plugin;
         this.world = world;
+        minHeight = world.getMinHeight();
+        maxHeight = world.getMaxHeight();
         this.calendar = calendar;
         this.layout = SeasonalLayout.load(settings);
         var shown = EnumSet.of(Occasion.WINTER);
@@ -83,7 +100,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         this.shown = Set.copyOf(shown);
         this.journal = new SeasonalJournal(world.getWorldFolder().toPath().resolve("data/blockcraft-seasons"));
         // Before the snowfall starts its sweep, so a journal that cannot be restored leaves nothing running.
-        restoreAll();
+        restoreAll(true);
         this.snowfall = layout.snowfallRadius() > 0 ? Optional.of(new Snowfall(plugin, () -> Optional.of(world.getSpawnLocation()))) : Optional.empty();
     }
 
@@ -93,6 +110,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         blocks.snowfall.ifPresent(snow -> Bukkit.getPluginManager().registerEvents(snow, plugin));
         blocks.suspended = false;
         blocks.refresh();
+        blocks.workTask = Bukkit.getScheduler().runTaskTimer(plugin, blocks::work, 1, 1);
         blocks.task = Bukkit.getScheduler().runTaskTimer(plugin, blocks::refresh, 100L, 100L);
         return blocks;
     }
@@ -124,7 +142,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
     private void applyLoaded() {
         if (!closed && !suspended) {
             for (var chunk : world.getLoadedChunks()) {
-                apply(chunk);
+                enqueue(chunk);
             }
         }
     }
@@ -134,50 +152,118 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         if (!closed && !suspended && event.getWorld().equals(world)) {
             var applied = changed.get(new SeasonalJournal.Chunk(event.getChunk().getX(), event.getChunk().getZ()));
             if (applied == null) {
-                apply(event.getChunk());
+                enqueue(event.getChunk());
             } else {
                 applied.forEach(this::freezeIn);
             }
         }
     }
 
-    private void apply(Chunk chunk) {
+    private void enqueue(Chunk chunk) {
         var key = new SeasonalJournal.Chunk(chunk.getX(), chunk.getZ());
-        if (changed.containsKey(key)) {
-            return;
+        if (changed.containsKey(key) || preparing != null && preparing.key().equals(key)) return;
+        boolean winter = occasions.contains(Occasion.WINTER);
+        if (winter && (layout.snow().stream().anyMatch(box -> box.intersects(key.x(), key.z()))
+                || layout.freeze().stream().anyMatch(box -> box.intersects(key.x(), key.z())))
+                || layout.decorations().stream().anyMatch(decoration -> inChunk(decoration.at(), key)
+                        && decoration.during().stream().anyMatch(occasions::contains))) {
+            queued.add(key);
         }
-        var changes = new LinkedHashMap<Point, Change>();
-        if (occasions.contains(Occasion.WINTER)) {
-            snow(chunk, changes);
-            freeze(chunk, changes);
+    }
+
+    private static boolean inChunk(Point at, SeasonalJournal.Chunk key) {
+        return at.x() >> 4 == key.x() && at.z() >> 4 == key.z();
+    }
+
+    private void work() {
+        if (closed || suspended) return;
+        if (preparing != null) {
+            if (!preparing.result().isDone()) return;
+            var finished = preparing;
+            preparing = null;
+            try {
+                apply(finished.key(), finished.result().getNow(List.of()));
+            } catch (CompletionException failure) {
+                plugin.getSLF4JLogger().error("Could not prepare seasonal blocks in {}", world.getName(), failure.getCause());
+            }
+        }
+        var keys = queued.iterator();
+        if (!keys.hasNext()) return;
+        var key = keys.next();
+        keys.remove();
+        if (!world.isChunkLoaded(key.x(), key.z())) return;
+        var snapshot = world.getChunkAt(key.x(), key.z()).getChunkSnapshot(false, false, false, false);
+        var active = occasions;
+        var surface = active.contains(Occasion.WINTER) && layout.snow().stream().anyMatch(box -> box.intersects(key.x(), key.z()))
+                ? surface(key) : new int[0];
+        long revision = journal.revision();
+        var result = CompletableFuture.supplyAsync(() -> prepare(snapshot, key, active, surface, revision),
+                task -> Bukkit.getScheduler().runTaskAsynchronously(plugin, task));
+        preparing = new Preparation(key, result);
+    }
+
+    // The snapshot's heightmap is MOTION_BLOCKING, which misses the plants the snow layer replaces.
+    private int[] surface(SeasonalJournal.Chunk key) {
+        var heights = new int[16 * 16];
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                heights[x * 16 + z] = world.getHighestBlockYAt((key.x() << 4) + x, (key.z() << 4) + z, HeightMap.WORLD_SURFACE);
+            }
+        }
+        return heights;
+    }
+
+    private List<Candidate> prepare(ChunkSnapshot snapshot, SeasonalJournal.Chunk key, Set<Occasion> active, int[] surface, long revision) {
+        var changes = new LinkedHashMap<Point, Candidate>();
+        if (active.contains(Occasion.WINTER)) {
+            if (surface.length > 0) snow(snapshot, surface, changes);
+            freeze(snapshot, changes);
         }
         for (var decoration : layout.decorations()) {
             var at = decoration.at();
-            if (at.x() >> 4 == chunk.getX() && at.z() >> 4 == chunk.getZ()
-                    && decoration.during().stream().anyMatch(occasions::contains)) {
-                var block = block(at);
-                if (decoration.from().matches(block.getBlockData())) {
-                    prepare(changes, at, decoration.to());
-                }
+            if (at.y() >= minHeight && at.y() < maxHeight && inChunk(at, key)
+                    && decoration.during().stream().anyMatch(active::contains)
+                    && decoration.from().matches(data(snapshot, at))) {
+                prepare(snapshot, changes, at, decoration.to(), at, NO_SURFACE);
             }
         }
-        if (changes.isEmpty()) {
-            changed.put(key, List.of());
-            return;
-        }
         var written = List.copyOf(changes.values());
-        try {
-            journal.write(key, written);
-        } catch (IOException failure) {
-            plugin.getSLF4JLogger().error("Could not journal seasonal blocks in {}: {}", world.getName(), failure.getMessage());
-            return;
+        if (!written.isEmpty()) {
+            try {
+                journal.write(key, written.stream().map(Candidate::change).toList(), revision);
+            } catch (IOException failure) {
+                throw new UncheckedIOException(failure);
+            }
         }
-        changed.put(key, written);
-        for (var change : written) {
+        return written;
+    }
+
+    private void apply(SeasonalJournal.Chunk key, List<Candidate> candidates) {
+        if (!world.isChunkLoaded(key.x(), key.z())) return;
+        var valid = candidates.stream().filter(this::matches).map(Candidate::change).toList();
+        changed.put(key, valid);
+        for (var change : valid) {
             protectedBlocks.put(change.at(), change);
             block(change.at()).setBlockData(Bukkit.createBlockData(change.replacement()), false);
             freezeIn(change);
         }
+    }
+
+    private boolean matches(Candidate candidate) {
+        var at = candidate.change().at();
+        return matches(at, candidate.change().original())
+                && (at.equals(candidate.neighbour()) || matches(candidate.neighbour(), candidate.expectedNeighbour()))
+                && (candidate.surfaceY() == NO_SURFACE
+                    || world.getHighestBlockYAt(at.x(), at.z(), HeightMap.WORLD_SURFACE) == candidate.surfaceY());
+    }
+
+    private boolean matches(Point point, String expected) {
+        var current = block(point);
+        return current.getBlockData().getAsString().equals(expected) && !(current.getState(false) instanceof TileState);
+    }
+
+    private static BlockData data(ChunkSnapshot snapshot, Point at) {
+        return snapshot.getBlockData(at.x() & 15, at.y(), at.z() & 15);
     }
 
     /**
@@ -206,31 +292,29 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         }));
     }
 
-    private void snow(Chunk chunk, Map<Point, Change> changes) {
+    private void snow(ChunkSnapshot chunk, int[] surface, Map<Point, Candidate> changes) {
         var zones = layout.snow().stream().filter(box -> box.intersects(chunk.getX(), chunk.getZ())).toList();
-        if (zones.isEmpty()) {
-            return;
-        }
+        if (zones.isEmpty()) return;
         for (int x = chunk.getX() << 4; x < (chunk.getX() << 4) + 16; x++) {
             for (int z = chunk.getZ() << 4; z < (chunk.getZ() << 4) + 16; z++) {
-                int y = world.getHighestBlockYAt(x, z, HeightMap.WORLD_SURFACE);
-                if (y < world.getMinHeight() || y + 1 >= world.getMaxHeight()) {
-                    continue;
-                }
-                var top = world.getBlockAt(x, y, z);
-                boolean plant = top.getType() == Material.SHORT_GRASS || top.getType() == Material.FERN;
-                var ground = plant ? top.getRelative(0, -1, 0) : top;
+                int y = surface[(x & 15) * 16 + (z & 15)];
+                if (y < minHeight || y + 1 >= maxHeight) continue;
+                var top = chunk.getBlockType(x & 15, y, z & 15);
+                boolean plant = top == Material.SHORT_GRASS || top == Material.FERN;
+                int groundY = plant ? y - 1 : y;
+                if (groundY < minHeight) continue;
+                var ground = new Point(x, groundY, z);
+                var groundType = chunk.getBlockType(x & 15, groundY, z & 15);
                 var at = new Point(x, plant ? y : y + 1, z);
-                if (zones.stream().noneMatch(box -> box.contains(at)) || layout.clear(new Point(x, ground.getY(), z))
-                        || (!ground.getType().isOccluding() && !Tag.LEAVES.isTagged(ground.getType()))
-                        || ground.getState() instanceof TileState
-                        || (!plant && !block(at).getType().isAir())) {
+                if (zones.stream().noneMatch(box -> box.contains(at)) || layout.clear(ground)
+                        || !groundType.isOccluding() && !Tag.LEAVES.isTagged(groundType)
+                        || !plant && !chunk.getBlockType(x & 15, y + 1, z & 15).isAir()) {
                     continue;
                 }
-                prepare(changes, at, snowLayer(x, z));
-                if (changes.containsKey(at) && ground.getBlockData() instanceof Snowable snowy) {
+                prepare(chunk, changes, at, snowLayer(x, z), ground, y);
+                if (changes.containsKey(at) && data(chunk, ground) instanceof Snowable snowy) {
                     snowy.setSnowy(true);
-                    prepare(changes, new Point(x, ground.getY(), z), snowy);
+                    prepare(chunk, changes, ground, snowy, at, y);
                 }
             }
         }
@@ -244,25 +328,22 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         return layer;
     }
 
-    private void freeze(Chunk chunk, Map<Point, Change> changes) {
+    private void freeze(ChunkSnapshot chunk, Map<Point, Candidate> changes) {
         for (var box : layout.freeze()) {
-            if (!box.intersects(chunk.getX(), chunk.getZ())) {
-                continue;
-            }
+            if (!box.intersects(chunk.getX(), chunk.getZ())) continue;
             for (int x = Math.max(box.min().x(), chunk.getX() << 4); x <= Math.min(box.max().x(), (chunk.getX() << 4) + 15); x++) {
                 for (int z = Math.max(box.min().z(), chunk.getZ() << 4); z <= Math.min(box.max().z(), (chunk.getZ() << 4) + 15); z++) {
-                    for (int y = Math.max(box.min().y(), world.getMinHeight()); y <= Math.min(box.max().y(), world.getMaxHeight() - 2); y++) {
-                        var block = world.getBlockAt(x, y, z);
-                        if (block.getType() != Material.WATER || !(block.getBlockData() instanceof Levelled water) || water.getLevel() != 0) {
-                            continue;
-                        }
-                        var above = block.getRelative(0, 1, 0).getType();
+                    for (int y = Math.max(box.min().y(), minHeight); y <= Math.min(box.max().y(), maxHeight - 2); y++) {
+                        if (chunk.getBlockType(x & 15, y, z & 15) != Material.WATER) continue;
+                        var at = new Point(x, y, z);
+                        if (!(data(chunk, at) instanceof Levelled water) || water.getLevel() != 0) continue;
+                        var above = chunk.getBlockType(x & 15, y + 1, z & 15);
+                        var neighbour = new Point(x, y + 1, z);
                         boolean pad = above == Material.LILY_PAD;
                         if (above.isAir() || pad) {
-                            var at = new Point(x, y, z);
-                            prepare(changes, at, Material.ICE.createBlockData());
+                            prepare(chunk, changes, at, Material.ICE.createBlockData(), neighbour, NO_SURFACE);
                             if (pad && changes.containsKey(at)) {
-                                prepare(changes, new Point(x, y + 1, z), Material.AIR.createBlockData());
+                                prepare(chunk, changes, neighbour, Material.AIR.createBlockData(), at, NO_SURFACE);
                             }
                         }
                     }
@@ -271,32 +352,31 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         }
     }
 
-    private void prepare(Map<Point, Change> changes, Point at, BlockData replacement) {
-        if (layout.clear(at) || at.y() < world.getMinHeight() || at.y() >= world.getMaxHeight()) {
-            return;
-        }
-        var block = block(at);
-        if (block.getState(false) instanceof TileState) {
-            return;
-        }
-        String original = block.getBlockData().getAsString();
+    private void prepare(ChunkSnapshot snapshot, Map<Point, Candidate> changes, Point at, BlockData replacement, Point neighbour, int surfaceY) {
+        if (layout.clear(at)) return;
+        String original = data(snapshot, at).getAsString();
         String next = replacement.getAsString();
         if (!original.equals(next)) {
-            changes.put(at, new Change(at, original, next));
+            changes.put(at, new Candidate(new Change(at, original, next), neighbour,
+                    at.equals(neighbour) ? original : data(snapshot, neighbour).getAsString(), surfaceY));
         }
     }
 
     private void restoreAll() {
+        restoreAll(false);
+    }
+
+    private void restoreAll(boolean recovering) {
+        journal.invalidate();
+        queued.clear();
+        preparing = null;
         frozenPads.values().forEach(BlockDisplay::remove);
         frozenPads.clear();
         try {
             var pending = journal.read();
-            if (pending.isEmpty()) {
-                changed.clear();
-                protectedBlocks.clear();
-                return;
-            }
-            for (var entry : pending.entrySet()) {
+            var applied = recovering ? pending : changed;
+            for (var entry : applied.entrySet()) {
+                if (entry.getValue().isEmpty()) continue;
                 world.getChunkAt(entry.getKey().x(), entry.getKey().z());
                 for (var change : entry.getValue()) {
                     var block = block(change.at());
@@ -305,7 +385,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
                     }
                 }
             }
-            world.save(true);
+            if (applied.values().stream().anyMatch(changes -> !changes.isEmpty())) world.save(true);
             for (var chunk : pending.keySet()) {
                 journal.remove(chunk);
             }
@@ -409,6 +489,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         if (task != null) {
             task.cancel();
         }
+        if (workTask != null) workTask.cancel();
         HandlerList.unregisterAll(this);
         snowfall.ifPresent(Snowfall::close);
         restoreAll();

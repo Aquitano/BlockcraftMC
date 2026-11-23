@@ -53,6 +53,28 @@ public class ServerDirectoryTest {
     private Instant now = Instant.parse("2026-01-01T00:00:00Z");
 
     @Test
+    public void ordinaryPollsPublishOnlyChangesAndReconciliationPublishesEveryCount() {
+        var first = game("quicksg-1", 0, 8);
+        var second = game("quicksg-2", 0, 8);
+        var directory = directoryOf(first, second);
+        assertEquals(Map.of("quicksg-1", 0, "quicksg-2", 0), published);
+
+        published.clear();
+        now = now.plusSeconds(5);
+        directory.update(List.of(first, second));
+        assertTrue(published.isEmpty());
+
+        var busy = game("quicksg-1", 1, 8);
+        directory.update(List.of(busy, second));
+        assertEquals(Map.of("quicksg-1", 1), published);
+
+        published.clear();
+        now = now.plusSeconds(55);
+        directory.update(List.of(busy, second));
+        assertEquals(Map.of("quicksg-1", 1, "quicksg-2", 0), published);
+    }
+
+    @Test
     public void staleDiscoveryClosesNewAdmissionsUntilAFreshRead() {
         var directory = directoryOf(game("quicksg-1", 0, 8),
                 server("playing", "quicksg", ServerState.INGAME));

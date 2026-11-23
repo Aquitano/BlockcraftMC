@@ -75,7 +75,9 @@ public final class SternenfrontPlugin extends JavaPlugin {
         host = RoundHost.start(this, gameConfig, round -> {
             var game = new SternenfrontGame(round, gameConfig, config, heroConfig, feel, messages, new FrontChoice(maps, round),
                     voteClosesAt, lobby, career, services.stats(), services.menus());
-            var bodyRigs = riggedSides.isEmpty() ? Optional.<BodyRigs>empty() : Optional.of(BodyRigs.start(round, game, riggedSides));
+            var outlineRule = TargetOutlines.Rule.from(game);
+            var bodyRigs = riggedSides.isEmpty() ? Optional.<BodyRigs>empty()
+                    : Optional.of(BodyRigs.start(round, game, riggedSides, outlineRule));
             bodyRigs.ifPresent(rigs -> {
                 game.rigs(rigs);
                 round.onClose(rigs::close);
@@ -83,7 +85,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
             var secrets = Secrets.start(round, game, messages);
             round.onClose(secrets::close);
             if (outlines) {
-                var targetOutlines = new TargetOutlines(round, game, bodyRigs);
+                var targetOutlines = new TargetOutlines(round, game, bodyRigs, outlineRule);
                 round.onClose(targetOutlines::close);
             }
             round.listen(

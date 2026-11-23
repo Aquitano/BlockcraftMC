@@ -30,7 +30,7 @@ interface Ability {
     }
 
     /** Whether it moved on its own, so it does not run at the nearest fighter. */
-    default boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+    default boolean hunt(Enemies.Enemy enemy, Player target, int tick, boolean navigate, boolean useAbility) {
         return false;
     }
 

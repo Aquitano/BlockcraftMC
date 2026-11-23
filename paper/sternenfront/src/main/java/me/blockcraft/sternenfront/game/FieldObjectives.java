@@ -12,6 +12,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
@@ -73,22 +75,37 @@ public final class FieldObjectives implements Listener {
         circuits.clear();
         devices.clear();
         var yaml = YamlConfiguration.loadConfiguration(file.toFile());
-        var listed = yaml.getConfigurationSection("circuits");
+        var listed = optionalSection(yaml, "circuits", file);
         if (listed != null) for (var id : listed.getKeys(false)) {
-            var section = listed.getConfigurationSection(id);
-            circuits.put(id, new Circuit(Faction.valueOf(section.getString("owner").toUpperCase(Locale.ROOT)),
+            var section = optionalSection(listed, id, file);
+            circuits.put(id, new Circuit(Faction.valueOf(requiredText(section, "owner", file).toUpperCase(Locale.ROOT)),
                     section.getStringList("doors"), section.getStringList("lights"), new PowerCircuit()));
         }
-        var sites = yaml.getConfigurationSection("devices");
+        var sites = optionalSection(yaml, "devices", file);
         if (sites != null) for (var id : sites.getKeys(false)) {
-            var section = sites.getConfigurationSection(id);
-            var kind = Kind.valueOf(section.getString("kind").toUpperCase(Locale.ROOT));
+            var section = optionalSection(sites, id, file);
+            var kind = Kind.valueOf(requiredText(section, "kind", file).toUpperCase(Locale.ROOT));
             var circuit = circuits.get(section.getString("circuit"));
             if (circuit == null) throw new IllegalArgumentException("Unknown circuit for field objective " + id);
             var shield = section.getStringList("shield").stream().map(value -> spot(game.map().world(), value).getBlock()).toList();
             if (kind == Kind.SHIELD_GENERATOR && shield.isEmpty()) throw new IllegalArgumentException("Shield generator needs shield cells: " + id);
             devices.add(new Device(kind, circuit, spot(game.map().world(), section.getString("at")), shield));
         }
+    }
+
+    private static ConfigurationSection optionalSection(ConfigurationSection parent, String key, Path file) {
+        var section = parent.getConfigurationSection(key);
+        if (section == null && parent.contains(key)) {
+            throw new IllegalArgumentException(file + ": " + MemorySection.createPath(parent, key) + " must be a section");
+        }
+        return section;
+    }
+
+    private static String requiredText(ConfigurationSection section, String key, Path file) {
+        if (!section.isString(key)) {
+            throw new IllegalArgumentException(file + ": " + MemorySection.createPath(section, key) + " must be text");
+        }
+        return section.getString(key);
     }
 
     private static Location spot(World world, String value) {

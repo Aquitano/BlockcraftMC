@@ -58,21 +58,23 @@ final class Arsonist implements Ability {
     }
 
     @Override
-    public boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+    public boolean hunt(Enemies.Enemy enemy, Player target, int tick, boolean navigate, boolean useAbility) {
         var mob = enemy.mob;
         var here = mob.getLocation();
         double distance = here.distance(target.getLocation());
         boolean inside = game.arena().enterable(here);
         boolean sight = mob.hasLineOfSight(target);
-        mob.lookAt(target);
-        if (distance < config.keepDistance()) {
-            retreat(mob, target, distance);
-        } else if (distance > config.throwRange() - 1 || !sight || !inside) {
-            mob.getPathfinder().moveTo(target, 1.0);
-        } else {
-            mob.getPathfinder().stopPathfinding();
+        if (navigate) {
+            mob.lookAt(target);
+            if (distance < config.keepDistance()) {
+                retreat(mob, target, distance);
+            } else if (distance > config.throwRange() - 1 || !sight || !inside) {
+                mob.getPathfinder().moveTo(target, 1.0);
+            } else {
+                mob.getPathfinder().stopPathfinding();
+            }
         }
-        if (tick >= enemy.specialAt && inside && sight && distance <= config.throwRange()) {
+        if (useAbility && tick >= enemy.specialAt && inside && sight && distance <= config.throwRange()) {
             enemy.specialAt = tick + config.throwTicks();
             toss(mob, target, game.enemies().damage(enemy));
         }

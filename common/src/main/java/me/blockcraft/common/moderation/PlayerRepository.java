@@ -1,6 +1,7 @@
 package me.blockcraft.common.moderation;
 
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.settings.PlayerSetting;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -79,6 +80,18 @@ public final class PlayerRepository {
     public Optional<KnownPlayer> lastSeenOn(byte[] addressHash) {
         return db.queryOne("SELECT " + COLUMNS + " FROM bc_players WHERE uuid = (SELECT player_uuid FROM bc_player_addresses "
                 + "WHERE address_hash = ? ORDER BY last_seen DESC LIMIT 1)", PlayerRepository::map, addressHash);
+    }
+
+    public record ReturningPlayer(UUID uuid, String name, Optional<String> greeting) { }
+
+    public Optional<ReturningPlayer> returningOn(byte[] addressHash) {
+        return db.queryOne("""
+                SELECT p.uuid, p.name, s.value
+                FROM bc_players p
+                LEFT JOIN bc_player_settings s ON s.player_uuid = p.uuid AND s.setting = ?
+                WHERE p.uuid = (SELECT player_uuid FROM bc_player_addresses WHERE address_hash = ? ORDER BY last_seen DESC LIMIT 1)
+                """, row -> new ReturningPlayer(UUID.fromString(row.getString("uuid")), row.getString("name"),
+                        Optional.ofNullable(row.getString("value"))), PlayerSetting.SERVER_LIST_GREETING.key(), addressHash);
     }
 
     private static KnownPlayer map(ResultSet row) throws SQLException {

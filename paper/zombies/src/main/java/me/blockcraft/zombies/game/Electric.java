@@ -41,7 +41,8 @@ final class Electric implements Ability {
     }
 
     @Override
-    public boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+    public boolean hunt(Enemies.Enemy enemy, Player target, int tick, boolean navigate, boolean useAbility) {
+        if (!useAbility) return false;
         var mob = enemy.mob;
         mob.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, mob.getEyeLocation(), 4, 0.3, 0.3, 0.3, 0.05);
         if (tick < enemy.specialAt || mob.getLocation().distanceSquared(target.getLocation()) > config.range() * config.range()

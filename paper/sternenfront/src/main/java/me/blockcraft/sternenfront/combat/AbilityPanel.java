@@ -36,7 +36,12 @@ final class AbilityPanel {
         record Ready() implements State { }
 
         /** Grey with the seconds left, behind a fill that rises as the ability recharges, {@code done} of the way. */
-        record Cooling(int seconds, double done) implements State { }
+        record Cooling(int seconds, double done) implements State {
+            public Cooling {
+                seconds = Math.clamp(seconds, 1, MAX_SECONDS);
+                done = (double) fillLevel(done) / FILL_LEVELS;
+            }
+        }
 
         /** Framed in gold: a reward that waits to be used. */
         record Armed() implements State { }
@@ -105,6 +110,10 @@ final class AbilityPanel {
     }
 
     /** The tile from its backing up: a recharging one adds its fill under a grey icon and its seconds over the frame. */
+    private static int fillLevel(double done) {
+        return (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
+    }
+
     private static List<Glyph> slot(Slot slot, int top, Tint side) {
         int left = -TILE;
         var glyphs = new ArrayList<Glyph>();
@@ -113,12 +122,12 @@ final class AbilityPanel {
             case State.Ready _ -> glyphs.addAll(face(FIRST_ICON, slot, side, left, top));
             case State.Armed _ -> glyphs.addAll(face(FIRST_ICON, slot, Tint.GOLD, left, top));
             case State.Cooling(int seconds, double done) -> {
-                int level = (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
+                int level = fillLevel(done);
                 if (level > 0) {
                     glyphs.add(glyph((char) (FIRST_FILL + level - 1), left, top, Tint.WHITE, TILE_ADVANCE));
                 }
                 glyphs.addAll(face(FIRST_COOLING_ICON, slot, Tint.DIMMED, left, top));
-                var digits = String.valueOf(Math.clamp(seconds, 1, MAX_SECONDS));
+                var digits = String.valueOf(seconds);
                 int width = DIGIT_WIDTH + (digits.length() - 1) * DIGIT_PITCH;
                 for (int index = 0; index < digits.length(); index++) {
                     glyphs.add(glyph((char) (FIRST_DIGIT + digits.charAt(index) - '0'), left + (TILE - width) / 2 + index * DIGIT_PITCH,

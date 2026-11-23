@@ -78,7 +78,8 @@ final class Ram implements Ability {
     }
 
     @Override
-    public boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+    public boolean hunt(Enemies.Enemy enemy, Player target, int tick, boolean navigate, boolean useAbility) {
+        if (!useAbility) return false;
         var mob = enemy.mob;
         double distance = mob.getLocation().distance(target.getLocation());
         if (tick < enemy.specialAt || distance > config.chargeRange() || distance < SMASH_CLOSE || !mob.hasLineOfSight(target)) {
