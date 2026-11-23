@@ -43,7 +43,18 @@ public final class ServerRepository {
 
     /** The proxy's own counts, which the heartbeat leaves alone. */
     public void occupancy(Map<String, Integer> counts) {
-        counts.forEach((name, count) -> db.update("UPDATE bc_servers SET occupancy = ? WHERE name = ?", count, name));
+        if (counts.isEmpty()) return;
+        db.transaction(connection -> {
+            try (var update = connection.prepareStatement("UPDATE bc_servers SET occupancy = ? WHERE name = ?")) {
+                for (var entry : counts.entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
+                    update.setInt(1, entry.getValue());
+                    update.setString(2, entry.getKey());
+                    update.addBatch();
+                }
+                update.executeBatch();
+            }
+            return null;
+        });
     }
 
     public void delete(String name) {

@@ -41,6 +41,8 @@ public final class ServerDirectory {
     /** How a player may go to one particular server: into a seat, as a spectator of its running round, or not at all. */
     public enum Entry { SEATED, WATCHING, CLOSED }
 
+    private static final Duration RECONCILE_INTERVAL = Duration.ofMinutes(1);
+
     private record Seat(String server, Instant expires) {
     }
 
@@ -55,6 +57,7 @@ public final class ServerDirectory {
     private final Map<String, Integer> published = new HashMap<>();
     private final Set<String> draining = new HashSet<>();
     private volatile Map<String, ServerRecord> servers = Map.of();
+    private Instant reconcileAt = Instant.MIN;
     private volatile Instant snapshotExpires = Instant.MIN;
 
     /** {@code publish} receives the counts that changed and must not block, since it is called while seats change. */
@@ -83,10 +86,17 @@ public final class ServerDirectory {
     }
 
     synchronized void update(List<ServerRecord> alive) {
+        var previous = servers;
         servers = alive.stream().collect(Collectors.toUnmodifiableMap(ServerRecord::name, Function.identity()));
-        snapshotExpires = clock.instant().plus(maxSnapshotAge);
-        // Every poll writes all counts again, which also mends a write that arrived out of order.
-        published.clear();
+        var now = clock.instant();
+        snapshotExpires = now.plus(maxSnapshotAge);
+        if (!now.isBefore(reconcileAt)) {
+            published.clear();
+            reconcileAt = now.plus(RECONCILE_INTERVAL);
+        } else {
+            published.keySet().removeIf(name -> !servers.containsKey(name)
+                    || !previous.get(name).identity().equals(servers.get(name).identity()));
+        }
         expireSeats();
         publishChanges();
     }
