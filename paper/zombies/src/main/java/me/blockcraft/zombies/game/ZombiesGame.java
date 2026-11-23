@@ -241,14 +241,23 @@ public final class ZombiesGame implements RoundHost.Game {
     }
 
     private void lobbySecond(int remaining) {
-        if (remaining <= voteClosesAt && !maps.decided()) {
-            maps.decide();
+        if (remaining > voteClosesAt) {
+            return;
+        }
+        boolean closes = !maps.decided();
+        maps.decide();
+        if (closes) {
             round.players().forEach(lobbyHotbar::refreshChoices);
             refreshSidebar();
         }
     }
 
     private void begin() {
+        if (maps.copying()) {
+            broadcast("vote.preparing");
+            lobbyCountdown.retry();
+            return;
+        }
         play(maps.prepared());
         round.enter(GamePhase.INGAME);
         phase = Phase.INTERMISSION;

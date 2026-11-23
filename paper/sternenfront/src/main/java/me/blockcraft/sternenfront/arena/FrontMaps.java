@@ -79,6 +79,11 @@ public final class FrontMaps {
         return bundle.file(plugin, name);
     }
 
+    /** Whether the map {@code choice}'s copy for the next round is still being made. */
+    boolean copying(MapVote.Choice choice) {
+        return maps.stream().anyMatch(map -> map.key().equals(choice.key())) && copies.copying(choice.key());
+    }
+
     /**
      * The copy of the map {@code choice} for the round in {@code scope}, whose basin then loads in the background; the
      * main world's map when there is no copy or it does not load.

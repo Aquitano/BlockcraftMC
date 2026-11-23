@@ -33,11 +33,12 @@ public final class FrontChoice {
 
     /** The name of the map chosen so far: the vote's once it closed, the only map's without a vote. */
     public Optional<String> chosenName() {
-        return chosen.map(front -> front.map().name()).or(() -> vote().offered() ? Optional.empty() : Optional.of(main().name()));
+        return chosen.map(front -> front.map().name()).or(() -> vote().decided().map(MapVote.Choice::name))
+                .or(() -> vote().offered() ? Optional.empty() : Optional.of(main().name()));
     }
 
     public boolean decided() {
-        return chosen.isPresent();
+        return vote().decided().isPresent();
     }
 
     /** A map-owned file of the chosen map, {@code blockcraft/Sternenfront/<name>}; the main world's until one is chosen. */
@@ -45,11 +46,26 @@ public final class FrontChoice {
         return chosen.map(front -> front.files().apply(name)).orElseGet(() -> maps.mainFile(name));
     }
 
-    /** Closes the vote and loads its map's copy, unless that happened already. */
-    public FrontMap decide() {
-        if (chosen.isEmpty()) {
-            chosen = Optional.of(maps.load(vote().decide(), scope));
+    /**
+     * Closes the vote and loads its map's copy, unless that happened already or the copy is still being made, which a
+     * later call loads once done.
+     */
+    public void decide() {
+        var choice = vote().decide();
+        if (chosen.isEmpty() && !maps.copying(choice)) {
+            chosen = Optional.of(maps.load(choice, scope));
         }
+    }
+
+    /** Whether the chosen map's copy is still being made, which the start waits for rather than playing another map. */
+    public boolean copying() {
+        decide();
+        return chosen.isEmpty();
+    }
+
+    /** The chosen map, once {@link #copying()} is false. */
+    public FrontMap chosen() {
+        decide();
         return chosen.orElseThrow().map();
     }
 }

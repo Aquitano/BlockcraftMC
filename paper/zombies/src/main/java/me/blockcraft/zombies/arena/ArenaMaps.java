@@ -62,6 +62,11 @@ public final class ArenaMaps {
         return !maps.isEmpty();
     }
 
+    /** Whether the map {@code choice}'s copy for the next round is still being made. */
+    boolean copying(MapVote.Choice choice) {
+        return maps.stream().anyMatch(map -> map.key().equals(choice.key())) && copies.copying(choice.key());
+    }
+
     /**
      * The world of the map {@code choice} for the round in {@code scope}, whose chunks then load in the background;
      * the main world's arena when there is no copy or it does not load.

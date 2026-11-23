@@ -829,8 +829,12 @@ public final class SternenfrontGame implements RoundHost.Game {
     }
 
     private void lobbySecond(int remaining) {
-        if (remaining <= voteClosesAt && !maps.decided()) {
-            maps.decide();
+        if (remaining > voteClosesAt) {
+            return;
+        }
+        boolean closes = !maps.decided();
+        maps.decide();
+        if (closes) {
             round.players().forEach(hotbar::refreshChoices);
             refreshAll();
         }
@@ -851,6 +855,11 @@ public final class SternenfrontGame implements RoundHost.Game {
     }
 
     private void start() {
+        if (maps.copying()) {
+            Bukkit.broadcast(messages.get("vote.preparing"));
+            countdown.retry();
+            return;
+        }
         teams.assignRest(round.players().stream().map(Player::getUniqueId).toList()).forEach((id, faction) -> {
             var player = Bukkit.getPlayer(id);
             if (player != null) {
@@ -867,7 +876,7 @@ public final class SternenfrontGame implements RoundHost.Game {
             BlockcraftApi.get().visuals().clearAccent(player);
             intro.cancel(player);
         }
-        play(maps.decide());
+        play(maps.chosen());
         round.enter(GamePhase.INGAME);
         secondsLeft = config.roundSeconds();
         for (var player : round.players()) {

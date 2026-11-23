@@ -19,6 +19,7 @@ vote:
   map: "<arrow><primary><map>"
   builders: "<bullet><muted>Erbaut von <accent><builders>"
   chance: "den Zufall"
+  preparing: "<prefix><muted>Die Map wird noch vorbereitet. Die Runde startet gleich."
   result:
     - "<prefix><muted>Gespielt wird <accent><map><muted>."
 guide:
