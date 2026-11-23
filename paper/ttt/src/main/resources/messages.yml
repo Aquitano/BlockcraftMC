@@ -50,6 +50,7 @@ vote:
   result:
     - "<prefix><muted>Gespielt wird <accent><map><muted>."
   unavailable: "<prefix><error>Gerade lässt sich keine Map laden. Die Runde startet gleich noch einmal."
+  preparing: "<prefix><muted>Die Map wird noch vorbereitet. Die Runde startet gleich."
 
 round:
   preparation: "<prefix><muted>Durchsucht die Kisten, danach werden die Rollen verteilt."

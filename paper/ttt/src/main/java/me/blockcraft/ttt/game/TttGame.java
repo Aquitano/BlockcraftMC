@@ -301,8 +301,15 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         return karma.getOrDefault(player, config.karma().start());
     }
 
+    /** A chosen map whose copy is still being made is waited for, so a forced map is not swapped for another. */
     private void start() {
-        var decided = vote.decide();
+        var pick = vote.pick();
+        if (copies.copying(pick)) {
+            Bukkit.broadcast(messages.get("vote.preparing"));
+            countdown.retry();
+            return;
+        }
+        var decided = vote.decide(pick);
         if (decided.isEmpty()) {
             Bukkit.broadcast(messages.get("vote.unavailable"));
             countdown.retry();

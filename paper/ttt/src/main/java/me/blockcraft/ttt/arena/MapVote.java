@@ -79,12 +79,17 @@ public final class MapVote {
         forced = Optional.empty();
     }
 
+    /** The map the vote chose: the forced one, or else the winner, with ties broken at random. */
+    public String pick() {
+        return forced.or(() -> ballot.winner(keys(), random).flatMap(this::choice)).orElseThrow().key();
+    }
+
     /**
-     * Loads the chosen map, or when it does not load, such as one whose copy is still being made, the first other map
-     * that does, the already-built one first; empty when none does.
+     * Loads the map {@code key}, or when it does not load the first other map that does, the already-built one first;
+     * empty when none does.
      */
-    public Optional<Town> decide() {
-        var chosen = forced.or(() -> ballot.winner(keys(), random).flatMap(this::choice)).orElseThrow();
+    public Optional<Town> decide(String key) {
+        var chosen = choice(key).orElseThrow();
         var candidates = Stream.concat(Stream.of(chosen), choices.stream().filter(choice -> choice != chosen)).toList();
         for (var choice : candidates) {
             Town town;

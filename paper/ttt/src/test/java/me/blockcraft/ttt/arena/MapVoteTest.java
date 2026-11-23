@@ -52,7 +52,7 @@ public class MapVoteTest {
                     })), NOPLogger.NOP_LOGGER);
             vote.force("broken");
 
-            assertSame(fallback, vote.decide().orElseThrow());
+            assertSame(fallback, vote.decide(vote.pick()).orElseThrow());
             assertEquals(List.of(Component.text("Fallback")), announcements);
         } finally {
             serverField.set(null, previous);
