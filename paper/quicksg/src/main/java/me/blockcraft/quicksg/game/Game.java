@@ -15,6 +15,7 @@ import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundHost;
+import me.blockcraft.api.game.RoundScope;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
@@ -22,6 +23,7 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.world.MainWorldCopy;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
@@ -41,12 +43,12 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.OptionalInt;
 
 public final class Game implements RoundHost.Game {
@@ -58,10 +60,13 @@ public final class Game implements RoundHost.Game {
     /** QuickSG's group in the achievement catalog, {@code achievements.quicksg} in BlockcraftAPI's config.yml. */
     private static final String ACHIEVEMENTS = "quicksg";
 
-    private final Plugin plugin;
+    private final RoundScope plugin;
     private final QuickSGConfig config;
     private final Messages messages;
     private final Locations<LocationKey> locations;
+    private final MainWorldCopy copy;
+    /** The arena's places: the main world's until the round loads its own copy of it as it starts. */
+    private Function<LocationKey, Optional<Location>> arena;
     private final GameScoreboard scoreboard;
     private final GameItems items;
     private final RoundSummary summary;
@@ -76,13 +81,15 @@ public final class Game implements RoundHost.Game {
     private Countdown protectionTimer;
     private Countdown gameTimer;
 
-    public Game(Plugin plugin, GameConfig gameConfig, QuickSGConfig config, Messages messages,
-                Locations<LocationKey> locations, StatsRepository stats, StatsMenus statsMenus,
+    public Game(RoundScope plugin, GameConfig gameConfig, QuickSGConfig config, Messages messages,
+                Locations<LocationKey> locations, MainWorldCopy copy, StatsRepository stats, StatsMenus statsMenus,
                 MapBundle map, GameItems items) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
         this.locations = locations;
+        this.copy = copy;
+        this.arena = locations::get;
         this.items = items;
         this.summary = new RoundSummary(plugin, messages,
                 new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
@@ -95,7 +102,7 @@ public final class Game implements RoundHost.Game {
                 List.of(new LobbyHotbar.Choice(MenuIcon.QUICKSG, messages.get("item.kits"), kitShop::open)),
                 statsMenus, lobbyCountdown);
         this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, this::lobbySpawn,
-                () -> isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR), OptionalInt.empty(), kits::restore);
+                () -> isLobby() ? lobbySpawn() : arena.apply(LocationKey.SPECTATOR), OptionalInt.empty(), kits::restore);
     }
 
     @Override
@@ -200,7 +207,7 @@ public final class Game implements RoundHost.Game {
     }
 
     public void respawn(PlayerRespawnEvent event) {
-        (isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR)).ifPresent(event::setRespawnLocation);
+        (isLobby() ? lobbySpawn() : arena.apply(LocationKey.SPECTATOR)).ifPresent(event::setRespawnLocation);
     }
 
     public void skipGameTimer(int remainingSeconds) {
@@ -222,7 +229,9 @@ public final class Game implements RoundHost.Game {
         }
     }
 
+    /** Survival play changes the map, cake eaten among other things, so every round plays a copy of its own. */
     private void start() {
+        copy.load(plugin).ifPresent(world -> arena = locations.in(world));
         round.enter(GamePhase.INGAME);
         protection = true;
         var spawns = spawns();
@@ -237,7 +246,7 @@ public final class Game implements RoundHost.Game {
             kits.kit(player).apply(player);
             config.combat().apply(player);
         }
-        locations.get(LocationKey.SPECTATOR).ifPresent(spawn -> round.spectators().forEach(player -> player.teleport(spawn)));
+        arena.apply(LocationKey.SPECTATOR).ifPresent(spawn -> round.spectators().forEach(player -> player.teleport(spawn)));
         refreshAll();
         applyWorldBorder(LocationKey.GAME_CENTER, config.worldBorder().ingameRadius());
         frozen = true;
@@ -332,14 +341,14 @@ public final class Game implements RoundHost.Game {
     }
 
     private List<Location> spawns() {
-        return LocationKey.spawns().stream().flatMap(key -> locations.get(key).stream()).toList();
+        return LocationKey.spawns().stream().flatMap(key -> arena.apply(key).stream()).toList();
     }
 
     private void applyWorldBorder(LocationKey center, double radius) {
         if (!config.worldBorder().enabled()) {
             return;
         }
-        locations.get(center).ifPresent(location -> {
+        (center == LocationKey.GAME_CENTER ? arena.apply(center) : locations.get(center)).ifPresent(location -> {
             var border = location.getWorld().getWorldBorder();
             border.setCenter(location);
             border.setSize(radius * 2);

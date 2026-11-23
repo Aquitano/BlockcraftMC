@@ -12,6 +12,7 @@ import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundHost;
 import me.blockcraft.api.game.SetupCommand;
 import me.blockcraft.api.game.StartCommand;
+import me.blockcraft.api.world.MainWorldCopy;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.quicksg.command.DebugCommands;
 import me.blockcraft.quicksg.config.LocationKey;
@@ -44,9 +45,10 @@ public final class QuickSGPlugin extends JavaPlugin {
         var locations = Locations.load(api.map().file(this, "locations.yml"), LocationKey::key);
 
         var items = new GameItems(messages);
+        var copy = new MainWorldCopy(this, "quicksg");
         api.presence().maxPlayers(config.maxPlayers());
         host = RoundHost.start(this, gameConfig, round -> {
-            var game = new Game(round, gameConfig, config, messages, locations, stats, services.menus(), api.map(), items);
+            var game = new Game(round, gameConfig, config, messages, locations, copy, stats, services.menus(), api.map(), items);
             game.applyLobbyWorldBorder();
             var lootChests = new LootChests(config.loot(), entry -> items.loot(entry.material(), entry.amount()));
             round.listen(
