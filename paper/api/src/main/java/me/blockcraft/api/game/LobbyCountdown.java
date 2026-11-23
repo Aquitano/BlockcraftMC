@@ -202,9 +202,14 @@ public final class LobbyCountdown implements Listener {
      * {@code countdown.start} again, and a start someone forced stays forced, with as few players as it allowed.
      */
     public void retry() {
+        retry(startSeconds);
+    }
+
+    /** As {@link #retry()}, running down to {@code seconds}, such as for a game whose vote must stay closed. */
+    public void retry(int seconds) {
         boolean wasForced = lastStartForced;
         startMinimum = lastStartMinimum;
-        if (!runDown(startSeconds, wasForced)) {
+        if (!runDown(Math.max(1, seconds), wasForced)) {
             start();
         }
     }

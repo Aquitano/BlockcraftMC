@@ -94,6 +94,8 @@ public final class Game implements RoundHost.Game {
             Material.LARGE_FERN, Material.DEAD_BUSH, Material.SUNFLOWER, Material.LILAC, Material.ROSE_BUSH, Material.PEONY);
 
     private final RoundScope scope;
+    /** A start that waits for its map's copy counts down again from here, so the vote it decided stays closed. */
+    private final int retrySeconds;
     private final BedWarsConfig config;
     private final Messages messages;
     private final LobbyLayout layout;
@@ -143,6 +145,7 @@ public final class Game implements RoundHost.Game {
                 Game::isDecoration, placed::add);
         this.maps = new MapChoice(config, messages, pool, arenas, api.calendar());
         this.lobbyCountdown = new LobbyCountdown(scope, round, gameConfig, this::lobbySecond, this::start);
+        this.retrySeconds = Math.min(gameConfig.startSeconds(), config.voteClosesAt());
         this.lobbyHotbar = new LobbyHotbar(scope, List.of(
                 new LobbyHotbar.Choice(MenuIcon.BEDWARS, messages.get("item.perks"), this::openPerks),
                 new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"), () -> maps.chosen().isEmpty(), this::openVote)),
@@ -449,7 +452,7 @@ public final class Game implements RoundHost.Game {
         }
         if (arenas.copying(map)) {
             broadcast("lobby.map-preparing");
-            lobbyCountdown.retry();
+            lobbyCountdown.retry(retrySeconds);
             return;
         }
         try {
