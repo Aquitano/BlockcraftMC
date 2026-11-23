@@ -6,12 +6,14 @@ in [config.yml](src/main/resources/config.yml).
 
 ## The world
 
-At every server start the plugin throws away the last round's world and generates a vanilla overworld as the
-dimension `endergames:runde`, so the service needs no world template. The seed is one of `world.seeds`, picked at
-random; each comes with the centre the border goes round. The eight bundled ones were chosen from 360 centres of 40
-random seeds for land (at least 92%), tree cover and moderate relief, then by eye for variety. While the lobby waits,
-the plugin puts the border `world.radius` blocks around the centre and loads every chunk inside. The sidebar shows
-whether the world is ready; a countdown that runs out before it is starts again. Time and weather stand still at day,
+Every round plays in a vanilla overworld generated for it and thrown away when it closes, so the service needs no world
+template. The dimensions `endergames:runde` and `endergames:runde-2` take turns. The seed is one of `world.seeds`,
+picked at random; each comes with the centre the border goes round. The eight bundled ones were chosen from 360 centres
+of 40 random seeds for land (at least 92%), tree cover and moderate relief, then by eye for variety. The plugin puts the
+border `world.radius` blocks around the centre and loads every chunk inside: for the first round while its lobby
+waits, for every later one as soon as the round before it ends, while its summary shows. The ended round's world then
+lets go of the chunks nobody stands in. The sidebar shows whether the world is ready; a countdown that runs out before
+it is runs down from `countdown.start` once it is. Time and weather stand still at day,
 phantoms, patrols and traders do not spawn, other mobs do, and portals lead nowhere.
 
 ## The round
@@ -46,4 +48,5 @@ the numbers, with health in half hearts.
 the world finishes loading before the first countdown runs out on its 1.5 GB; everyone starts on the start island, its
 chests and its ender chest per player open only after the freeze, an emptied ender chest vanishes, the jump down does
 no harm and the island crumbles at the end of the protection with Slow Falling for whoever stayed; ender chests appear, open, move after being opened and are visible from afar; swaps teleport both
-players; each kit's ability; the border shrink; the win and the recap.
+players; each kit's ability; the border shrink; the win and the recap. The next round then plays on the same server
+in a new world, after `countdown.restart` and a lobby of `countdown.reopen`, with nothing of the last round left.
