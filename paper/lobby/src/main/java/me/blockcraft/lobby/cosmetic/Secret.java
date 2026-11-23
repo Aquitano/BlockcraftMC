@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.cosmetic;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -63,14 +64,14 @@ public enum Secret {
     }
 
     public String item() {
-        return ITEM_PREFIX + key.toLowerCase();
+        return ITEM_PREFIX + key.toLowerCase(Locale.ROOT);
     }
 
     public String messageKey() {
-        return "secrets.name." + key.toLowerCase();
+        return "secrets.name." + key.toLowerCase(Locale.ROOT);
     }
 
     public String riddleKey() {
-        return "secrets.riddle." + key.toLowerCase();
+        return "secrets.riddle." + key.toLowerCase(Locale.ROOT);
     }
 }
