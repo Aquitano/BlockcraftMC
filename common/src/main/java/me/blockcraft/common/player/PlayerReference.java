@@ -14,7 +14,7 @@ public record PlayerReference(String name, Optional<UUID> uuid) {
         if (!isName(name)) {
             throw new IllegalArgumentException("Invalid player name");
         }
-        uuid = Objects.requireNonNull(uuid);
+        Objects.requireNonNull(uuid);
     }
 
     public static PlayerReference named(String name) {
