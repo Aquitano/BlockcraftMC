@@ -1,5 +1,8 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
     java
+    id("net.ltgt.errorprone")
 }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
@@ -23,8 +26,27 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.addAll(listOf("-Xmaxerrs", "2000", "-Xlint:deprecation"))
 }
 
+tasks.compileJava {
+    options.errorprone {
+        // Default warnings flag intentional identity checks, detached futures and nested map votes.
+        disableAllWarnings = true
+        error(
+            "EqualsBrokenForNull",
+            "ExpensiveLenientFormatString",
+            "InputStreamSlowMultibyteRead",
+            "NullOptional",
+            "OptionalNotPresent",
+            "StreamResourceLeak",
+        )
+    }
+}
+
+tasks.compileTestJava {
+    options.errorprone.enabled = false
+}
 
 dependencies {
+    add("errorprone", libs.findLibrary("error-prone-core").get())
     testImplementation(libs.findLibrary("junit").get())
 }
 

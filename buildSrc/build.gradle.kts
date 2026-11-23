@@ -7,6 +7,7 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.error.prone.gradle)
     implementation(libs.run.task)
     implementation(libs.shadow)
 }

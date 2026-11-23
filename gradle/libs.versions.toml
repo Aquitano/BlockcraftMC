@@ -1,5 +1,7 @@
 [versions]
 java = "25"
+error-prone = "2.53.0"
+error-prone-gradle = "5.2.0"
 minecraft = "26.3"
 paper-api = "26.3.build.206-stable"
 velocity-api = "4.2.0"
@@ -21,6 +23,7 @@ betonquest = "3.3.0"
 
 [libraries]
 junit = { module = "junit:junit", version = "4.13.2" }
+error-prone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "error-prone" }
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
@@ -38,6 +41,7 @@ betonquest-core = { module = "org.betonquest.betonquest:core", version.ref = "be
 betonquest-lib = { module = "org.betonquest.betonquest:lib", version.ref = "betonquest" }
 
 # Gradle plugins consumed by buildSrc convention plugins
+error-prone-gradle = { module = "net.ltgt.errorprone:net.ltgt.errorprone.gradle.plugin", version.ref = "error-prone-gradle" }
 run-task = { module = "xyz.jpenilla:run-task", version.ref = "run-task" }
 shadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
 
