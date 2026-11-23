@@ -141,7 +141,7 @@ public final class ReplayStore implements AutoCloseable {
         try (var raw = new BufferedInputStream(Files.newInputStream(file));
              var compressed = ReplayStreams.limited(raw, limits.maxArchiveBytes());
              var gzip = new ReplayStreams.StrictGzipInput(compressed);
-             var in = new DataInputStream(ReplayStreams.limited(gzip, limits.maxDecodedBytes()))) {
+             var in = new DataInputStream(new BufferedInputStream(ReplayStreams.limited(gzip, limits.maxDecodedBytes()), 65_536))) {
             ReplayHeader header = ReplayCodec.readHeader(in, limits);
             if (!header.id().equals(id)) throw new IOException("Replay ID does not match filename");
             return new ReplayCodec(limits, header).read(in, header, retainEvents);
