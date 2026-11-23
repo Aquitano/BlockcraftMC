@@ -190,6 +190,7 @@ item:
 lobby:
   no-map: "<prefix><error>Es gibt keine spielbare Map, die Runde kann nicht starten."
   map-failed: "<prefix><error>Die Map konnte nicht geladen werden, es wird neu abgestimmt."
+  map-preparing: "<prefix><muted>Die Map wird noch vorbereitet. Die Runde startet gleich."
   team-stand: "<team>"
   cps:
     name: "<bedwars>Schlag mich!"

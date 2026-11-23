@@ -447,6 +447,11 @@ public final class Game implements RoundHost.Game {
             scope.abandon("the BedWars map " + map.key() + " could not be copied");
             return;
         }
+        if (arenas.copying(map)) {
+            broadcast("lobby.map-preparing");
+            lobbyCountdown.retry();
+            return;
+        }
         try {
             match = new Match(scope, scope.own(maps.load(), arenas::discard), map, messages, config, dealers);
         } catch (RuntimeException e) {
