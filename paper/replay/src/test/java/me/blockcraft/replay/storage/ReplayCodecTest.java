@@ -82,6 +82,17 @@ public class ReplayCodecTest {
     }
 
     @Test
+    public void aDecodedChunkEqualsTheOriginalByBlockContents() throws Exception {
+        var chunk = new ReplayEvent.Chunk(0, new UUID(0, 1), -1, 2, -64, 16,
+                List.of("minecraft:air"), new int[4096]);
+        var decoded = (ReplayEvent.Chunk) decode(encode(header(), List.of(chunk))).events().getFirst();
+
+        assertNotSame(chunk.blocks(), decoded.blocks());
+        assertEquals(chunk, decoded);
+        assertEquals(chunk.hashCode(), decoded.hashCode());
+    }
+
+    @Test
     public void daytimeKeepsItsWorldAndTime() throws Exception {
         var daytime = new ReplayEvent.Daytime(3, new UUID(0, 1), 13_000);
         assertEquals(List.of(daytime), decode(encode(header(), List.of(daytime))).events());
