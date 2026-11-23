@@ -34,6 +34,20 @@ public class SeasonalJournalTest {
     }
 
     @Test
+    public void anInvalidatedWorkerCannotPublishItsJournal() throws IOException {
+        var chunk = new SeasonalJournal.Chunk(0, 0);
+        var changes = List.of(new SeasonalJournal.Change(new SeasonalLayout.Point(2, 40, 3),
+                "minecraft:water[level=0]", "minecraft:ice"));
+        var journal = new SeasonalJournal(folder.newFolder().toPath());
+        long old = journal.revision();
+        journal.invalidate();
+
+        journal.write(chunk, changes, old);
+
+        assertTrue(journal.read().isEmpty());
+    }
+
+    @Test
     public void anUnfinishedStagingFileDoesNotReplaceTheLastCompleteJournal() throws IOException {
         var directory = folder.newFolder().toPath();
         var chunk = new SeasonalJournal.Chunk(0, -1);
