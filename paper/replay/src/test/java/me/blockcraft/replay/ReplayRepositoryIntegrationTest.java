@@ -175,6 +175,41 @@ public class ReplayRepositoryIntegrationTest {
         }
     }
 
+    @Test
+    public void favouritesStayFirstAccessibleAndOutOfRetentionUntilDropped() throws Exception {
+        var directory = files.getRoot().toPath();
+        var limits = new ReplayLimits(2, 1200, 2, 16, 2, 1, 1, 16, 4, 100,
+                1024 * 1024, 2 * 1024 * 1024, 1, 256);
+        var config = new ReplayConfig("replay", directory, 1, 128L * 1024 * 1024, 0,
+                Duration.ofDays(7), Duration.ofMinutes(15), limits);
+        var owner = UUID.randomUUID();
+        var staff = UUID.randomUUID();
+        var header = recording(Instant.parse("2026-10-29T12:00:00Z"), owner).header();
+        var later = recording(Instant.parse("2026-10-29T13:00:00Z"), owner);
+        var expired = Instant.now().plus(Duration.ofDays(8));
+        try (var store = new ReplayStore(directory, limits, config.maxStoredBytes(), 0)) {
+            store.begin(header).finish(200, "MATCH_END").get(5, TimeUnit.SECONDS);
+            store.markReady(header.id());
+            repository.save(store.inspect(header.id()));
+            repository.save(later);
+
+            assertTrue(repository.favourite(staff, header.id(), true));
+            assertTrue(repository.accessible(header.id(), staff, false).orElseThrow().favourite());
+            assertEquals(List.of(header.id(), later.header().id()),
+                    repository.history(staff, true, 1).stream().map(ReplayRepository.Entry::id).toList());
+            assertFalse(repository.history(owner, false, 10).getFirst().favourite());
+
+            ReplayRetention.clean(store, repository, config, Set.of(), expired, NOPLogger.NOP_LOGGER);
+            assertTrue(Files.exists(store.path(header.id())));
+            assertTrue(store.kept(header.id()));
+
+            assertFalse(repository.favourite(staff, header.id(), false));
+            ReplayRetention.clean(store, repository, config, Set.of(), expired, NOPLogger.NOP_LOGGER);
+            assertFalse(Files.exists(store.path(header.id())));
+            assertFalse(store.kept(header.id()));
+        }
+    }
+
     private static ReplayStore.Saved recording(Instant started, UUID... players) {
         var participants = java.util.Arrays.stream(players)
                 .map(id -> new ReplayHeader.Participant(id, "Player", "", "")).toList();

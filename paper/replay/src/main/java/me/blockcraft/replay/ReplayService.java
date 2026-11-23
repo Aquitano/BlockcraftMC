@@ -100,6 +100,31 @@ final class ReplayService implements Listener, AutoCloseable {
                 }, ignored -> { }, ignored -> failed.run());
     }
 
+    /** Keeps the recording for good or lets it age out again; {@code done} runs once the change is stored. */
+    void favourite(Player player, ReplayRepository.Entry entry, Runnable done) {
+        if (!allowed(player)) {
+            return;
+        }
+        var viewer = player.getUniqueId();
+        boolean staff = player.hasPermission(ReplayPlugin.STAFF_PERMISSION);
+        boolean wanted = !entry.favourite();
+        BlockcraftApi.get().playerTasks().write(player, () -> {
+            if (repository.accessible(entry.id(), viewer, staff).isEmpty()) {
+                return false;
+            }
+            boolean kept = repository.favourite(viewer, entry.id(), wanted);
+            try {
+                store.keep(entry.id(), kept);
+            } catch (IOException error) {
+                plugin.getSLF4JLogger().warn("Could not mark replay {}; retention repairs the mark", entry.id(), error);
+            }
+            return true;
+        }, changed -> {
+            player.sendMessage(messages.get(!changed ? "playback.unavailable" : wanted ? "favourite.added" : "favourite.removed"));
+            done.run();
+        }, ignored -> player.sendMessage(messages.get("favourite.failed")));
+    }
+
     void play(Player player, UUID replay) {
         pendingNavigation.remove(player.getUniqueId());
         if (!ready) {
@@ -294,6 +319,14 @@ final class ReplayService implements Listener, AutoCloseable {
         return player.isOnline() && player.hasPermission(ReplayPlugin.USE_PERMISSION);
     }
 
+    /** On the replay backend a viewer waits for the recording on the shared waiting island, when it is mounted. */
+    @EventHandler
+    public void onSpawn(AsyncPlayerSpawnLocationEvent event) {
+        if (playbackBackend) {
+            BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn).ifPresent(event::setSpawnLocation);
+        }
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         if (!playbackBackend) {
@@ -313,14 +346,6 @@ final class ReplayService implements Listener, AutoCloseable {
                 }, ignored -> pendingNavigation.remove(viewer, token));
             }
         });
-    }
-
-    /** On the replay backend a viewer waits for the recording on the shared waiting island, when it is mounted. */
-    @EventHandler
-    public void onSpawn(AsyncPlayerSpawnLocationEvent event) {
-        if (playbackBackend) {
-            BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn).ifPresent(event::setSpawnLocation);
-        }
     }
 
     @EventHandler

@@ -220,6 +220,21 @@ public class ReplayStoreTest {
         }
     }
 
+    @Test
+    public void admissionLeavesKeptRecordingsOutOfTheBudget() throws Exception {
+        var favourite = UUID.randomUUID();
+        Files.write(temporary.getRoot().toPath().resolve(favourite + ".bcr"), new byte[4096]);
+        try (var store = new ReplayStore(temporary.getRoot().toPath(), LIMITS, LIMITS.maxArchiveBytes() + 4095, 0)) {
+            assertThrows(ExecutionException.class,
+                    () -> store.begin(header()).finish(0, "completed").get(5, TimeUnit.SECONDS));
+            store.keep(favourite, true);
+            assertTrue(store.kept(favourite));
+            store.begin(header()).finish(0, "completed").get(5, TimeUnit.SECONDS);
+            store.keep(favourite, false);
+            assertFalse(store.kept(favourite));
+        }
+    }
+
     private static ReplayHeader header() {
         return new ReplayHeader(UUID.randomUUID(), "rush", "test", "26.3", "test", "arena",
                 Instant.ofEpochMilli(1234), List.of(new ReplayHeader.Participant(UUID.randomUUID(), "Thomas", "", "")));

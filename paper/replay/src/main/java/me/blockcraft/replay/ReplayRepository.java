@@ -9,15 +9,24 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 final class ReplayRepository {
 
+    /** {@code favourite} is whether the viewer it was read for keeps it. */
     record Entry(UUID id, String game, String map, Instant startedAt, int durationTicks,
-                 String endReason, long bytes, String minecraft) { }
+                 String endReason, long bytes, String minecraft, boolean favourite) { }
 
     /** A viewing request; {@code origin} is the group the viewer left for it, empty when unknown. */
     record Request(UUID replay, Optional<String> origin) { }
+
+    /** Every query reads for one viewer; their favourites are theirs to watch, as the rounds they played are. */
+    private static final String SELECT = "SELECT r.*, f.player_uuid IS NOT NULL AS favourite FROM bc_replays r "
+            + "LEFT JOIN bc_replay_favourites f ON f.replay_uuid=r.replay_uuid AND f.player_uuid=? WHERE ";
+    private static final String ACCESS = "(f.player_uuid IS NOT NULL OR EXISTS (SELECT 1 FROM bc_replay_players p "
+            + "WHERE p.replay_uuid=r.replay_uuid AND p.player_uuid=?))";
 
     private final Database db;
 
@@ -37,6 +46,9 @@ final class ReplayRepository {
                 + "request_uuid CHAR(36) NOT NULL, "
                 + "expires_at TIMESTAMP NOT NULL, FOREIGN KEY (replay_uuid) REFERENCES bc_replays(replay_uuid) ON DELETE CASCADE)");
         db.execute("ALTER TABLE bc_replay_requests ADD COLUMN IF NOT EXISTS origin VARCHAR(64) NULL");
+        db.execute("CREATE TABLE IF NOT EXISTS bc_replay_favourites (player_uuid CHAR(36) NOT NULL, replay_uuid CHAR(36) NOT NULL, "
+                + "PRIMARY KEY (player_uuid, replay_uuid), INDEX favourite_replay (replay_uuid), "
+                + "FOREIGN KEY (replay_uuid) REFERENCES bc_replays(replay_uuid) ON DELETE CASCADE)");
     }
 
     void save(ReplayStore.Saved saved) {
@@ -54,17 +66,34 @@ final class ReplayRepository {
         });
     }
 
+    /** The viewer's favourites, all of them, then the latest {@code limit} other recordings they may watch. */
     List<Entry> history(UUID viewer, boolean staff, int limit) {
-        return db.queryList("SELECT r.* FROM bc_replays r WHERE " + (staff ? "1=1" :
-                        "EXISTS (SELECT 1 FROM bc_replay_players p WHERE p.replay_uuid=r.replay_uuid AND p.player_uuid=?)")
+        var favourites = db.queryList(SELECT + "f.player_uuid IS NOT NULL ORDER BY r.started_at DESC",
+                ReplayRepository::entry, viewer.toString());
+        var latest = db.queryList(SELECT + "f.player_uuid IS NULL AND " + (staff ? "1=1" : ACCESS)
                         + " ORDER BY r.started_at DESC LIMIT ?", ReplayRepository::entry,
-                staff ? new Object[]{limit} : new Object[]{viewer.toString(), limit});
+                staff ? new Object[]{viewer.toString(), limit} : new Object[]{viewer.toString(), viewer.toString(), limit});
+        return Stream.concat(favourites.stream(), latest.stream()).toList();
     }
 
     Optional<Entry> accessible(UUID id, UUID viewer, boolean staff) {
-        return db.queryOne("SELECT r.* FROM bc_replays r WHERE r.replay_uuid=? AND " + (staff ? "1=1" :
-                        "EXISTS (SELECT 1 FROM bc_replay_players p WHERE p.replay_uuid=r.replay_uuid AND p.player_uuid=?)"),
-                ReplayRepository::entry, staff ? new Object[]{id.toString()} : new Object[]{id.toString(), viewer.toString()});
+        return db.queryOne(SELECT + "r.replay_uuid=? AND " + (staff ? "1=1" : ACCESS), ReplayRepository::entry,
+                staff ? new Object[]{viewer.toString(), id.toString()}
+                        : new Object[]{viewer.toString(), id.toString(), viewer.toString()});
+    }
+
+    /** Keeps or drops the viewer's favourite and reports whether anyone still keeps the recording. */
+    boolean favourite(UUID viewer, UUID replay, boolean kept) {
+        db.update(kept ? "INSERT IGNORE INTO bc_replay_favourites (player_uuid,replay_uuid) VALUES (?,?)"
+                : "DELETE FROM bc_replay_favourites WHERE player_uuid=? AND replay_uuid=?", viewer.toString(), replay.toString());
+        return db.queryOne("SELECT 1 FROM bc_replay_favourites WHERE replay_uuid=? LIMIT 1", row -> true, replay.toString())
+                .isPresent();
+    }
+
+    /** The recordings at least one player keeps. */
+    Set<UUID> favourites() {
+        return Set.copyOf(db.queryList("SELECT DISTINCT replay_uuid FROM bc_replay_favourites",
+                row -> UUID.fromString(row.getString("replay_uuid"))));
     }
 
     void request(UUID viewer, UUID replay, UUID request, String origin) {
@@ -104,6 +133,6 @@ final class ReplayRepository {
     private static Entry entry(ResultSet row) throws SQLException {
         return new Entry(UUID.fromString(row.getString("replay_uuid")), row.getString("game"), row.getString("map_name"),
                 row.getTimestamp("started_at").toInstant(), row.getInt("duration_ticks"), row.getString("end_reason"),
-                row.getLong("bytes"), row.getString("minecraft"));
+                row.getLong("bytes"), row.getString("minecraft"), row.getBoolean("favourite"));
     }
 }

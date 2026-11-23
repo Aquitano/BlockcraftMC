@@ -103,6 +103,27 @@ public final class ReplayStore implements AutoCloseable {
         return Files.isRegularFile(directory.resolve(id + ".ready"), LinkOption.NOFOLLOW_LINKS);
     }
 
+    /**
+     * Marks a recording somebody keeps as a favourite, or clears the mark. The mark lets every backend's admission
+     * leave kept recordings out of the storage budget without asking the database.
+     */
+    public void keep(UUID id, boolean kept) throws IOException {
+        Path marker = directory.resolve(id + ".keep");
+        if (!kept) {
+            Files.deleteIfExists(marker);
+        } else if (!Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS)) {
+            Files.createDirectories(directory);
+            try {
+                Files.createFile(marker);
+            } catch (FileAlreadyExistsException ignored) {
+            }
+        }
+    }
+
+    public boolean kept(UUID id) {
+        return Files.isRegularFile(directory.resolve(id + ".keep"), LinkOption.NOFOLLOW_LINKS);
+    }
+
     public CompletableFuture<Void> markReadyAsync(UUID id) {
         var result = new CompletableFuture<Void>();
         Runnable mark = () -> {
@@ -156,7 +177,7 @@ public final class ReplayStore implements AutoCloseable {
                 String name = file.getFileName().toString();
                 String id = name.substring(0, name.lastIndexOf('.'));
                 try {
-                    if (!UUID.fromString(id).toString().equals(id)) continue;
+                    if (!UUID.fromString(id).toString().equals(id) || kept(UUID.fromString(id))) continue;
                 } catch (IllegalArgumentException ignored) {
                     continue;
                 }

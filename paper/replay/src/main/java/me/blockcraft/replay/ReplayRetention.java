@@ -39,14 +39,28 @@ final class ReplayRetention {
             logger.warn("Could not inspect replay retention", error);
             return;
         }
+        Set<UUID> favourites;
+        try {
+            favourites = repository.favourites();
+        } catch (RuntimeException error) {
+            logger.warn("Could not read replay favourites; retention waits for the next run", error);
+            return;
+        }
         archives.sort(Comparator.comparing(Archive::modified));
-        long total = archives.stream().mapToLong(Archive::bytes).sum();
+        long total = archives.stream().filter(archive -> !favourites.contains(archive.id())).mapToLong(Archive::bytes).sum();
         int recoveries = 0;
         for (var archive : archives) {
             if (Thread.currentThread().isInterrupted()) {
                 return;
             }
             try {
+                boolean favourite = favourites.contains(archive.id());
+                if (store.kept(archive.id()) != favourite) {
+                    store.keep(archive.id(), favourite);
+                }
+                if (favourite) {
+                    continue;
+                }
                 if (!active.contains(archive.id()) && (archive.modified().isBefore(now.minus(config.retention()))
                         || total > config.maxStoredBytes())) {
                     repository.remove(archive.id());

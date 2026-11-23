@@ -2,7 +2,7 @@
 
 BlockcraftReplay records rounds from the shared `Round` lifecycle and plays them in disposable worlds on a dedicated `replay` backend. It targets Paper 26.3 and Java 25. [config.yml](src/main/resources/config.yml) holds every limit named below.
 
-`/replay` opens the most recent recordings. Normal players can view rounds they participated in. `blockcraft.replay.staff` permits viewing all recorded rounds and defaults to operators. `blockcraft.replay.use` defaults to everyone. `/replay play <id>` opens a recording on the replay backend. The viewer's hotbar and `/replay pause`, `speed`, `seek` and `stop` control playback. Viewers cannot interact with the recording.
+`/replay` opens the most recent recordings. Normal players can view rounds they participated in. `blockcraft.replay.staff` permits viewing all recorded rounds and defaults to operators. `blockcraft.replay.use` defaults to everyone. A right click on a recording in the menu keeps it as the player's favourite: favourites come first, above the latest recordings, and are never deleted. `/replay play <id>` opens a recording on the replay backend. The viewer's hotbar and `/replay pause`, `speed`, `seek` and `stop` control playback. Viewers cannot interact with the recording.
 
 ## Run and test
 
@@ -30,7 +30,7 @@ Entities may use half of a recording's object budget, and a round that spends it
 
 Recordings enter the history after the round ends. A recording that reaches a duration, event, terrain, or object limit is marked as partial and stays private until that round ends. An overloaded writer queue aborts the recording instead of blocking the game thread.
 
-Storage admission reserves space for a recording's maximum size and counts incomplete files. Independent backends can race during admission, so the shared storage limit is not a transactional disk quota. Retention removes old completed files and incomplete files older than the configured duration plus one hour.
+Storage admission reserves space for a recording's maximum size and counts incomplete files, but not favourites, which a `<id>.keep` marker beside the archive names. Independent backends can race during admission, so the shared storage limit is not a transactional disk quota. Retention removes old completed files and incomplete files older than the configured duration plus one hour. It never removes a favourite, leaves favourites out of the storage limit, and brings the `.keep` markers back in line with `bc_replay_favourites`.
 
 These bounds limit retained work and data. They do not guarantee a tick-time target on every map or machine.
 
