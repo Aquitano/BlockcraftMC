@@ -9,7 +9,8 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
-import me.blockcraft.api.game.RoundConnections;
+import me.blockcraft.api.game.RoundHost;
+import me.blockcraft.api.game.RoundScope;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
@@ -20,7 +21,6 @@ import me.blockcraft.api.game.VoidLine;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.item.SpecialItems;
 import me.blockcraft.bedwars.lobby.CatchGame;
@@ -62,7 +62,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -77,11 +76,11 @@ import java.util.stream.Collectors;
 import java.util.OptionalInt;
 
 /**
- * One server, one round of BedWars. The lobby seats the players, lets them pick a team and vote for a map; when its
+ * One round of BedWars. The lobby seats the players, lets them pick a team and vote for a map; when its
  * countdown runs out the map loads, teams are filled up and everyone starts at their bed. A player whose bed still
  * stands comes back after a death; without it they are out, and the last team with anyone left wins.
  */
-public final class Game implements RoundConnections.Seating {
+public final class Game implements RoundHost.Game {
 
     private static final long RESPAWN_TICKS = 20L;
     private static final long HIDDEN_AFTER_RESPAWN_TICKS = 20L;
@@ -94,7 +93,7 @@ public final class Game implements RoundConnections.Seating {
     private static final Set<Material> DECORATION = Set.of(Material.SHORT_GRASS, Material.TALL_GRASS, Material.FERN,
             Material.LARGE_FERN, Material.DEAD_BUSH, Material.SUNFLOWER, Material.LILAC, Material.ROSE_BUSH, Material.PEONY);
 
-    private final Plugin plugin;
+    private final RoundScope scope;
     private final BedWarsConfig config;
     private final Messages messages;
     private final LobbyLayout layout;
@@ -115,7 +114,7 @@ public final class Game implements RoundConnections.Seating {
     private final Optional<JumpAndRun> jumpAndRun;
     private final CatchGame catchGame;
     private final MapChoice maps;
-    private final TemplateDimensions arenas;
+    private final ArenaCopies arenas;
     private final Set<Block> placed = new HashSet<>();
     /** Who started the round for which team; a win counts for all of them, also those out before the end. */
     private final Map<UUID, Team> roster = new HashMap<>();
@@ -124,37 +123,37 @@ public final class Game implements RoundConnections.Seating {
     private Optional<Team> winner = Optional.empty();
     private int secondsLeft;
 
-    public Game(Plugin plugin, GameConfig gameConfig, BedWarsConfig config, Messages messages, MapPool pool,
-                TemplateDimensions arenas, LobbyLayout layout, ShopCatalog catalog, StatsRepository stats, StatsMenus statsMenus) {
+    public Game(RoundScope scope, GameConfig gameConfig, BedWarsConfig config, Messages messages, MapPool pool,
+                ArenaCopies arenas, LobbyLayout layout, ShopCatalog catalog, StatsRepository stats, StatsMenus statsMenus) {
         var api = BlockcraftApi.get();
-        this.plugin = plugin;
+        this.scope = scope;
         this.config = config;
         this.messages = messages;
         this.layout = layout;
         this.arenas = arenas;
         this.teams = new Teams(config.teams(), config.playersPerTeam(), messages, api.tabTeams());
         this.perks = new Perks(api.settings());
-        this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
-        this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
+        this.summary = new RoundSummary(scope, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
+        this.round = new Round(scope, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         round.backToLobby(this::backToLobby);
         this.shop = new Shop(catalog, messages, perks, teams::colorOf);
         this.dealers = new Dealers(messages, shop, round::isPlaying);
-        this.chests = new TeamChests(plugin, messages, teams);
-        this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, this::canBuild,
+        this.chests = new TeamChests(scope, messages, teams);
+        this.specials = new SpecialItems(scope, messages, config, dealers, teams, round::isPlaying, this::canBuild,
                 Game::isDecoration, placed::add);
-        this.maps = new MapChoice(plugin, config, messages, pool, arenas, api.calendar());
-        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::lobbySecond, this::start);
-        this.lobbyHotbar = new LobbyHotbar(plugin, List.of(
+        this.maps = new MapChoice(config, messages, pool, arenas, api.calendar());
+        this.lobbyCountdown = new LobbyCountdown(scope, round, gameConfig, this::lobbySecond, this::start);
+        this.lobbyHotbar = new LobbyHotbar(scope, List.of(
                 new LobbyHotbar.Choice(MenuIcon.BEDWARS, messages.get("item.perks"), this::openPerks),
                 new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"), () -> maps.chosen().isEmpty(), this::openVote)),
                 statsMenus, lobbyCountdown);
         this.scoreboard = new GameScoreboard(this, messages, round);
-        this.selector = new TeamSelector(plugin, layout, teams, messages, this::chooseTeam);
-        this.cps = new CpsTester(plugin, layout.get(LobbyLayout.CPS_TESTER), messages);
+        this.selector = new TeamSelector(scope, layout, teams, messages, this::chooseTeam);
+        this.cps = new CpsTester(scope, layout.get(LobbyLayout.CPS_TESTER), messages);
         this.jumpAndRun = layout.get(LobbyLayout.JUMP_START).flatMap(start -> layout.get(LobbyLayout.JUMP_FINISH)
-                .map(finish -> new JumpAndRun(plugin, start, finish, messages, player -> GameItem.JUMP_RESET.build(
+                .map(finish -> new JumpAndRun(scope, start, finish, messages, player -> GameItem.JUMP_RESET.build(
                         MenuIcon.JUMP.item().name(messages.get("item.jump-reset"))))));
-        this.catchGame = new CatchGame(plugin, messages, round::players);
+        this.catchGame = new CatchGame(scope, messages, round::players);
         this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, this::lobbySpawn, this::arrival,
                 OptionalInt.empty(), player -> {
                     cps.show(player);
@@ -176,11 +175,12 @@ public final class Game implements RoundConnections.Seating {
         jumpAndRun.ifPresent(JumpAndRun::open);
         catchGame.open();
         if (!maps.hasMaps()) {
-            plugin.getSLF4JLogger().error("No map of the pool seats the teams {}; the lobby will wait for one.", config.teams());
+            scope.getSLF4JLogger().error("No map of the pool seats the teams {}; the lobby will wait for one.", config.teams());
         }
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         lobbyCountdown.cancel();
         round.stop();
         if (match != null) {
@@ -192,12 +192,14 @@ public final class Game implements RoundConnections.Seating {
         cps.stop();
         jumpAndRun.ifPresent(JumpAndRun::close);
         catchGame.close();
+        Bukkit.getOnlinePlayers().forEach(teams::leave);
     }
 
     public GamePhase phase() {
         return round.phase();
     }
 
+    @Override
     public LobbyCountdown lobbyCountdown() {
         return lobbyCountdown;
     }
@@ -252,7 +254,7 @@ public final class Game implements RoundConnections.Seating {
         return placed;
     }
 
-    /** Whether a round was started on the map {@code key}; its world keeps what players built until the restart. */
+    /** Whether this round was started on the map {@code key}; its world keeps what players built until the round closes. */
     public boolean playsOn(String key) {
         return match != null && match.map().key().equals(key);
     }
@@ -440,12 +442,11 @@ public final class Game implements RoundConnections.Seating {
             lobbyCountdown.start();
             return;
         }
-        ArenaMap map;
+        var map = maps.chosen().orElseThrow();
         try {
-            map = maps.awaitCopy();
-            match = new Match(plugin, arenas.load(map.key()), map, messages, config, dealers);
+            match = new Match(scope, scope.own(maps.load(), arenas::discard), map, messages, config, dealers);
         } catch (RuntimeException e) {
-            plugin.getSLF4JLogger().error("Could not load the map {}", maps.chosen().map(ArenaMap::key).orElse("?"), e);
+            scope.getSLF4JLogger().error("Could not load the map {}", map.key(), e);
             broadcast("lobby.map-failed");
             maps.redraw();
             voteChanged();
@@ -555,7 +556,7 @@ public final class Game implements RoundConnections.Seating {
         }
         if (round.isPlaying(player)) {
             teams.of(player).flatMap(Team::spawn).ifPresent(event::setRespawnLocation);
-            Tasks.sync(plugin, () -> {
+            Tasks.sync(scope, () -> {
                 config.combat().apply(player);
                 player.setSaturation(RESPAWN_SATURATION);
                 hideBriefly(player);
@@ -654,7 +655,7 @@ public final class Game implements RoundConnections.Seating {
                 backToLobby(player);
             }
         }
-        won.ifPresent(team -> layout.joiner(team.color()).ifPresent(spot -> Tasks.later(plugin, WINNER_FIREWORK_TICKS, () ->
+        won.ifPresent(team -> layout.joiner(team.color()).ifPresent(spot -> Tasks.later(scope, WINNER_FIREWORK_TICKS, () ->
                 spot.getWorld().spawn(spot, Firework.class, firework -> {
                     var meta = firework.getFireworkMeta();
                     meta.setPower(WINNER_FIREWORK_POWER);
@@ -691,10 +692,10 @@ public final class Game implements RoundConnections.Seating {
         hiddenAfterRespawn.add(player.getUniqueId());
         Bukkit.getOnlinePlayers().forEach(other -> {
             if (!other.equals(player)) {
-                other.hidePlayer(plugin, player);
+                other.hidePlayer(scope, player);
             }
         });
-        Tasks.later(plugin, HIDDEN_AFTER_RESPAWN_TICKS, () -> reveal(player));
+        Tasks.later(scope, HIDDEN_AFTER_RESPAWN_TICKS, () -> reveal(player));
     }
 
     /** A player hidden after respawning shows up when the moment passes, or at once when they hit someone. */
@@ -704,12 +705,12 @@ public final class Game implements RoundConnections.Seating {
         }
         boolean watching = round.isSpectator(player);
         Bukkit.getOnlinePlayers().stream().filter(other -> !watching || round.isSpectator(other))
-                .forEach(other -> other.showPlayer(plugin, player));
+                .forEach(other -> other.showPlayer(scope, player));
     }
 
     /** After the round everyone meets in the lobby again, seen by all, with nothing but the way out. */
     private void backToLobby(Player player) {
-        Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, player));
+        Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(scope, player));
         PlayerReset.reset(player, GameMode.ADVENTURE);
         lobbySpawn().ifPresent(player::teleport);
         lobbyHotbar.giveHub(player);

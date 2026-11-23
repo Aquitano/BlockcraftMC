@@ -12,14 +12,17 @@ players:
 # with always: true is in both, and either set stands in when the other has none), and closes
 # countdown.vote-closes-at seconds before the start, after which
 # /forcemap changes nothing; the chosen map is copied in those seconds, so countdown.start should not be shorter. A
-# round ends without a winner after countdown.round seconds, and the server restarts countdown.restart seconds after
-# the last round.
+# round ends without a winner after countdown.round seconds. countdown.restart seconds after a round, the next one's
+# lobby opens on this server and counts down from countdown.reopen; after rounds-in-place rounds in a row the server
+# restarts instead.
 countdown:
   lobby: 60
   start: 10
   vote-closes-at: 10
   round: 3600
   restart: 30
+  reopen: 20
+rounds-in-place: 10
 voting:
   maps: 3
 idle-restart-minutes: 50
