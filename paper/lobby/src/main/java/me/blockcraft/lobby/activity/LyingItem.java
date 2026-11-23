@@ -9,19 +9,19 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 /**
- * An item lying flat on top of a block, turned the way the spot faces, with a click box over it: a book on a table,
- * a note on a crate. Neither is saved into the map.
+ * An item lying flat on top of a block, slab or carpet, turned the way the spot faces, with a click box over it: a
+ * book on a table, a note on a crate. Neither is saved into the map.
  */
 record LyingItem(ItemDisplay display, Interaction box) {
 
     private static final float SCALE = 0.55f;
-    private static final double ABOVE_BLOCK = 1.02;
+    private static final double ABOVE_SURFACE = 0.02;
     private static final float BOX_WIDTH = 0.6f;
     private static final float BOX_HEIGHT = 0.3f;
 
     /** {@code spot} is the block it lies on, as {@code /lobbyset} stores a looked-at block, with the setter's facing. */
     static LyingItem place(Location spot, ItemStack item) {
-        var top = spot.toBlockLocation().add(0.5, ABOVE_BLOCK, 0.5);
+        var top = spot.toBlockLocation().add(0.5, spot.getBlock().getBoundingBox().getHeight() + ABOVE_SURFACE, 0.5);
         float yaw = (float) Math.toRadians(-spot.getYaw());
         var display = top.getWorld().spawn(top, ItemDisplay.class, spawned -> {
             spawned.setItemStack(item);
