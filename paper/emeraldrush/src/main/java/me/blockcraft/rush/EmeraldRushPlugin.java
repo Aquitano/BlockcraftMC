@@ -43,10 +43,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         var locations = Locations.load(api.map().file(this, "locations.yml"), SpawnPoint::key);
         var services = GameServices.load(this, gameConfig, "em_stats");
         var messages = services.messages();
-        var arenas = new ArenaCopies(this, api.map());
-        if (!arenas.copied()) {
-            getSLF4JLogger().warn("No EmeraldRush map template to copy; every round plays the main world and restarts the server");
-        }
+        var arenas = new ArenaCopies(this);
 
         api.presence().maxPlayers(config.maxPlayers());
         services.listen(new ArenaProtection(() -> false));
