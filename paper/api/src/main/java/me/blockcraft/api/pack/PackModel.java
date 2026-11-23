@@ -21,6 +21,8 @@ public enum PackModel {
     ZOMBIES_SHOTGUN(Material.STONE_HOE, "zombies/shotgun"),
     ZOMBIES_SNIPER(Material.DIAMOND_HOE, "zombies/sniper"),
     ZOMBIES_FLAMETHROWER(Material.GOLDEN_HOE, "zombies/flamethrower"),
+    ZOMBIES_KNIFE(Material.IRON_SWORD, "zombies/knife"),
+    ZOMBIES_RIOT_SHIELD(Material.SHIELD, "zombies/riot_shield"),
     ZOMBIES_DYNAMITE(Material.TNT, "zombies/dynamite"),
     ZOMBIES_INFERNO(Material.CARVED_PUMPKIN, "zombies/inferno"),
     // A stone button worn on the head sits inside it, so a client without the pack shows the bare head.

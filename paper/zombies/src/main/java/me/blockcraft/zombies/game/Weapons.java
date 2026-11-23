@@ -3,7 +3,7 @@ package me.blockcraft.zombies.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.api.item.HotbarItem;
-import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import net.kyori.adventure.text.Component;
@@ -12,7 +12,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
@@ -97,7 +96,7 @@ public final class Weapons {
         if (slot < MAX_WEAPONS) {
             player.getInventory().setItem(1, null);
         }
-        player.getInventory().setItem(2, Items.of(Material.IRON_SWORD).name(game.messages().get("weapon.knife"))
+        player.getInventory().setItem(2, PackModel.ZOMBIES_KNIFE.item().name(game.messages().get("weapon.knife"))
                 .lore(game.messages().get("weapon.knife-lore")).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build());
     }
 

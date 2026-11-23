@@ -29,7 +29,7 @@ final class ShieldBearer implements Ability {
         equipment.setHelmet(PackModel.ZOMBIES_SHIELD_HELM.item().build());
         equipment.setChestplate(Enemies.gear(Items.of(Material.CHAINMAIL_CHESTPLATE)));
         equipment.setLeggings(Enemies.gear(Items.of(Material.CHAINMAIL_LEGGINGS)));
-        var shield = Enemies.gear(Items.of(Material.SHIELD));
+        var shield = Enemies.gear(PackModel.ZOMBIES_RIOT_SHIELD.item());
         shield.setData(DataComponentTypes.BASE_COLOR, DyeColor.BLACK);
         shield.setData(DataComponentTypes.BANNER_PATTERNS, BannerPatternLayers.bannerPatternLayers()
                 .add(new Pattern(DyeColor.WHITE, PatternType.STRIPE_MIDDLE))

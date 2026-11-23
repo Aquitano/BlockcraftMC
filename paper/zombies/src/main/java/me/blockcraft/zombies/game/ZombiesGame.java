@@ -272,6 +272,7 @@ public final class ZombiesGame implements RoundHost.Game {
         }
         round.spectators().forEach(player -> player.teleport(arena.point("spectator")));
         racks.show(tick);
+        mysteryBox.showFrames();
         broadcast("game.started", Formatter.number("players", teamSize), Formatter.number("waves", config.waves().total()));
         intermission();
     }

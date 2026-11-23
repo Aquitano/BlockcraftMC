@@ -3,6 +3,7 @@ package me.blockcraft.zombies.game;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.zombies.arena.ArenaMap;
+import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import me.blockcraft.zombies.menu.ReplaceWeaponMenu;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -46,11 +47,24 @@ public final class MysteryBox {
 
     private final ZombiesGame game;
     private final ZombiesConfig.Mystery config;
+    private final Map<ArenaMap.Station, MysteryBoxFrame> frames = new HashMap<>();
     private final Map<ArenaMap.Station, Roll> rolls = new HashMap<>();
 
     MysteryBox(ZombiesGame game) {
         this.game = game;
         this.config = game.config().mystery();
+    }
+
+    void showFrames() {
+        for (var station : game.arena().stations()) {
+            if (station.kind() == StationKind.MYSTERY) {
+                frame(station);
+            }
+        }
+    }
+
+    private MysteryBoxFrame frame(ArenaMap.Station station) {
+        return frames.computeIfAbsent(station, key -> new MysteryBoxFrame(key.location().getBlock()));
     }
 
     public boolean busy(ArenaMap.Station station) {
@@ -153,6 +167,8 @@ public final class MysteryBox {
     void clear() {
         rolls.values().forEach(Roll::remove);
         rolls.clear();
+        frames.values().forEach(MysteryBoxFrame::remove);
+        frames.clear();
     }
 
     /**
@@ -184,6 +200,7 @@ public final class MysteryBox {
         private final int started;
         private final List<Integer> swaps = swapTicks(config.rollTicks());
         private final List<Weapon> pool = Weapon.buyable();
+        private final MysteryBoxFrame frame;
         private final Location centre;
         private final ItemDisplay display;
         private final Interaction box;
@@ -193,6 +210,7 @@ public final class MysteryBox {
         Roll(UUID buyer, ArenaMap.Station station, Weapon weapon, int started) {
             this.buyer = buyer;
             this.station = station;
+            frame = frame(station);
             this.weapon = weapon;
             this.started = started;
             var block = station.location().getBlock();
@@ -236,6 +254,7 @@ public final class MysteryBox {
                 }
             }
             if (age == sinkAt()) {
+                frame.lit(false);
                 move(lifted(0), config.sinkTicks());
                 buyer().ifPresent(player -> {
                     player.sendMessage(game.messages().get("mystery.gone", weaponName()));
@@ -252,6 +271,7 @@ public final class MysteryBox {
         }
 
         private void reveal() {
+            frame.lit(true);
             centre.getWorld().getPlayers().forEach(player -> Sounds.NOTE_PLING.note(player, REVEAL_NOTE, centre));
             buyer().ifPresent(player -> player.sendMessage(game.messages().get("mystery.result", weaponName(),
                     Formatter.number("seconds", config.takeTicks() / 20))));
@@ -286,6 +306,7 @@ public final class MysteryBox {
         }
 
         void remove() {
+            frame.lit(false);
             display.remove();
             box.remove();
             lid(false);
