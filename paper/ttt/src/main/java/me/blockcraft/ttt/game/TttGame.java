@@ -305,7 +305,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         var decided = vote.decide();
         if (decided.isEmpty()) {
             Bukkit.broadcast(messages.get("vote.unavailable"));
-            countdown.start();
+            countdown.retry();
             return;
         }
         var built = decided.get();
