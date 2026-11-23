@@ -38,6 +38,7 @@ public class ProxyMessageCodecTest {
                 new ProxyMessage.Welcome("{\"text\":\"Regeln\"}"),
                 new ProxyMessage.Announcement("{\"text\":\"Gefunden\"}"),
                 new ProxyMessage.Rematch(UUID.randomUUID()),
+                new ProxyMessage.Wake("zombies"),
                 new ProxyMessage.Newcomer(UUID.randomUUID(), "Mia", 60),
                 new ProxyMessage.RankedMatch(UUID.randomUUID()),
                 new ProxyMessage.DuelSetup(UUID.randomUUID(), UUID.randomUUID(), "Thomas"),

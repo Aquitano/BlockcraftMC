@@ -586,10 +586,12 @@ throw-fight:
 
 
 # A figure in front of each game's area, at the map's npc-<area> spot (/lobbyset npc-<area>, where you stand and
-# look). It turns to the nearest player within look-radius and one of them moves every idle-seconds. skins names
-# the player whose skin each figure wears; empty wears the game host's skin.
+# look). It turns to the nearest player within look-radius and one of them moves every idle-seconds. A player within
+# wake-radius of a sleeping game's figure starts that game's server. skins names the player whose skin each figure
+# wears; empty wears the game host's skin.
 game-npcs:
   look-radius: 8
+  wake-radius: 16
   idle-seconds: 6
   skins:
     qsg: ""

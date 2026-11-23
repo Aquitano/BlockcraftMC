@@ -52,6 +52,7 @@ public final class ProxyMessageCodec {
     private static final int PROFILE_REQUEST = 26;
     private static final int PROFILE_READY = 27;
     private static final int DUEL_REQUEST = 28;
+    private static final int WAKE = 29;
 
     private ProxyMessageCodec() {
     }
@@ -93,6 +94,10 @@ public final class ProxyMessageCodec {
                 case ProxyMessage.Play play -> {
                     out.writeByte(PLAY);
                     out.writeUTF(play.group());
+                }
+                case ProxyMessage.Wake wake -> {
+                    out.writeByte(WAKE);
+                    out.writeUTF(wake.group());
                 }
                 case ProxyMessage.ReplayPlay replay -> {
                     out.writeByte(REPLAY_PLAY);
@@ -235,6 +240,7 @@ public final class ProxyMessageCodec {
         return switch (in.readUnsignedByte()) {
             case DUEL_SETUP -> new ProxyMessage.DuelSetup(uuid(in), uuid(in), in.readUTF());
             case DUEL_REQUEST -> new ProxyMessage.DuelRequest(uuid(in));
+            case WAKE -> new ProxyMessage.Wake(in.readUTF());
             case DUEL_INVITATION -> new ProxyMessage.DuelInvitation(uuid(in), rules(in));
             case DUEL_MATCH -> new ProxyMessage.DuelMatch(uuid(in), uuid(in), rules(in));
             case DUEL_CANCELLED -> new ProxyMessage.DuelCancelled(uuid(in));

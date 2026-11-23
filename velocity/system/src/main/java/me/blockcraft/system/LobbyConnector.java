@@ -89,6 +89,10 @@ public final class LobbyConnector {
         directory.send(player, lobby.get());
     }
 
+    public void wake(String group) {
+        onDemand.ifPresent(servers -> servers.wake(group.toLowerCase(Locale.ROOT)));
+    }
+
     /**
      * Joins the fullest open server of a game group, which is what signs, /play and the navigator do. A party leader
      * takes the whole party along, so the server needs a seat for every member who will follow. The lobby group is

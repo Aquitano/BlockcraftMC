@@ -10,6 +10,7 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.lobby.activity.Skins;
 import me.blockcraft.lobby.config.GameNpcConfig;
@@ -45,7 +46,9 @@ import java.util.UUID;
  * A figure in front of every game's area, at the map's {@code npc-<area>} spot: it holds the game's item, a card
  * above it names the game, says whether it is open and how many play, and a click of either hand joins the game the
  * way the navigator does. It turns to the nearest player within {@code look-radius} and now and then swings its arm
- * or crouches. Without NMS a figure's head turns for every viewer alike, so it faces the nearest player.
+ * or crouches. Without NMS a figure's head turns for every viewer alike, so it faces the nearest player. A player
+ * within {@code wake-radius} of a sleeping game's figure starts its server, which takes about 45 seconds, so it is up
+ * or nearly so by the time they click.
  */
 public final class GameNpcs implements Listener, AutoCloseable {
 
@@ -54,6 +57,9 @@ public final class GameNpcs implements Listener, AutoCloseable {
     private static final double CARD_HEIGHT = 2.6;
     private static final long CROUCH_TICKS = 12L;
     private static final long CLICK_GAP_MILLIS = 1000L;
+    private static final long WAKE_TICKS = 20L;
+    /** The lobby sees a woken group as starting only after the proxy's next poll, so it is not asked twice meanwhile. */
+    private static final long WAKE_GAP_MILLIS = 30_000L;
 
     private record Npc(LobbyLocation area, Location base, Mannequin figure, TextDisplay card) {
     }
@@ -68,9 +74,11 @@ public final class GameNpcs implements Listener, AutoCloseable {
     private final List<Npc> npcs = new ArrayList<>();
     private final SpotEntities.Group<Npc> placed;
     private final Map<UUID, Long> lastClick = new HashMap<>();
+    private final Map<String, Long> wokenAt = new HashMap<>();
     private final Random random = new Random();
     private final BukkitTask look;
     private final BukkitTask idle;
+    private final BukkitTask wake;
 
     public GameNpcs(Plugin plugin, SpotEntities entities, Locations<String> spots, GameNpcConfig config, Map<LobbyLocation, String> groups,
                     ServerGroups status, Messages messages, Messages shared) {
@@ -87,6 +95,7 @@ public final class GameNpcs implements Listener, AutoCloseable {
         look = Bukkit.getScheduler().runTaskTimer(plugin, this::look, LOOK_TICKS, LOOK_TICKS);
         long idleTicks = config.idleSeconds() * 20L;
         idle = Bukkit.getScheduler().runTaskTimer(plugin, this::idle, idleTicks, idleTicks);
+        wake = Bukkit.getScheduler().runTaskTimer(plugin, this::wakeNear, WAKE_TICKS, WAKE_TICKS);
     }
 
     public static String spot(LobbyLocation area) {
@@ -157,13 +166,16 @@ public final class GameNpcs implements Listener, AutoCloseable {
         ProxyMessaging.play(plugin, player, group);
     }
 
+    private static boolean seen(Player player) {
+        return player.getGameMode() != GameMode.SPECTATOR && !BlockcraftApi.get().isVanished(player);
+    }
+
     private void look() {
-        var api = BlockcraftApi.get();
         double radiusSquared = config.lookRadius() * config.lookRadius();
         for (var npc : npcs) {
             var eyes = npc.base().clone().add(0, EYES, 0);
             var nearest = eyes.getWorld().getPlayers().stream()
-                    .filter(player -> player.getGameMode() != GameMode.SPECTATOR && !api.isVanished(player))
+                    .filter(GameNpcs::seen)
                     .filter(player -> player.getEyeLocation().distanceSquared(eyes) <= radiusSquared)
                     .min(Comparator.comparingDouble(player -> player.getEyeLocation().distanceSquared(eyes)));
             if (nearest.isPresent()) {
@@ -174,6 +186,26 @@ public final class GameNpcs implements Listener, AutoCloseable {
             } else if (npc.figure().getYaw() != npc.base().getYaw() || npc.figure().getPitch() != 0) {
                 npc.figure().setRotation(npc.base().getYaw(), 0);
             }
+        }
+    }
+
+    private void wakeNear() {
+        long now = System.currentTimeMillis();
+        double radiusSquared = config.wakeRadius() * config.wakeRadius();
+        for (var npc : npcs) {
+            var group = groups.get(npc.area());
+            if (group == null || group.isBlank() || status.status(group).availability() != GroupStatus.Availability.SLEEPING
+                    || now - wokenAt.getOrDefault(group, 0L) < WAKE_GAP_MILLIS) {
+                continue;
+            }
+            npc.base().getWorld().getPlayers().stream()
+                    .filter(GameNpcs::seen)
+                    .filter(player -> player.getLocation().distanceSquared(npc.base()) <= radiusSquared)
+                    .findAny()
+                    .ifPresent(player -> {
+                        wokenAt.put(group, now);
+                        ProxyMessaging.wake(plugin, player, group);
+                    });
         }
     }
 
@@ -209,6 +241,7 @@ public final class GameNpcs implements Listener, AutoCloseable {
     public void close() {
         look.cancel();
         idle.cancel();
+        wake.cancel();
         removeAll();
     }
 }
