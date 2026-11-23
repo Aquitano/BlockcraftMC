@@ -61,13 +61,14 @@ public final class SternenfrontPlugin extends JavaPlugin {
         if (read.flag("appearance.infantry")) {
             riggedSides.add(Faction.KOLONIEN);
         }
+        var outlines = TargetOutlines.Rule.from(game);
         if (!riggedSides.isEmpty()) {
-            bodyRigs = BodyRigs.start(this, game, riggedSides);
+            bodyRigs = BodyRigs.start(this, game, riggedSides, outlines);
             game.rigs(bodyRigs);
         }
         secrets = Secrets.start(this, game, messages);
         if (read.flag("outlines.enabled")) {
-            targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs));
+            targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs), outlines);
         }
         botDebug = new BotDebug(game, bodyRigs);
 
