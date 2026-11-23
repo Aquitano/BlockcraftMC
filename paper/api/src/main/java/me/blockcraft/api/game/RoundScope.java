@@ -53,9 +53,14 @@ public final class RoundScope implements Plugin {
                     border.getWarningDistance());
         }
 
+        /** Worlds saved by older versions hold a size above the most Paper accepts, so only a changed one is set. */
         void restore(WorldBorder border) {
-            border.setCenter(center);
-            border.setSize(size);
+            if (!border.getCenter().equals(center)) {
+                border.setCenter(center);
+            }
+            if (border.getSize() != size) {
+                border.setSize(Math.clamp(size, 1.0, border.getMaxSize()));
+            }
             border.setDamageAmount(damage);
             border.setDamageBuffer(buffer);
             border.setWarningDistance(warningDistance);
@@ -137,7 +142,8 @@ public final class RoundScope implements Plugin {
 
     /**
      * Takes back what the round registered, as far as it can. Everyone must have left the round's own worlds before;
-     * false if any step failed, such as a world that could not be unloaded or discarded, which only a restart cleans up.
+     * false if a step failed that leaves something behind only a restart cleans up, such as a world that could not be
+     * unloaded or discarded. Entities left over and borders not put back cost the next round nothing but looks.
      */
     boolean close(Location away) {
         if (!open) {
@@ -168,12 +174,12 @@ public final class RoundScope implements Plugin {
             if (owns(world)) {
                 continue;
             }
-            clean &= run(() -> spawned.stream().map(Bukkit::getEntity)
+            run(() -> spawned.stream().map(Bukkit::getEntity)
                     .filter(entity -> entity != null && entity.getWorld().equals(world))
                     .forEach(Entity::remove));
             var border = borders.get(world.getUID());
             if (border != null) {
-                clean &= run(() -> border.restore(world.getWorldBorder()));
+                run(() -> border.restore(world.getWorldBorder()));
             }
         }
         spawned.clear();

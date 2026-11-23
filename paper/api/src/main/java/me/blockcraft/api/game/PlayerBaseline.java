@@ -2,7 +2,6 @@ package me.blockcraft.api.game;
 
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.GameMode;
-import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
@@ -71,11 +70,11 @@ final class PlayerBaseline {
         player.getEnderChest().clear();
         player.setRespawnLocation(null);
         player.setCompassTarget(player.getWorld().getSpawnLocation());
-        for (var material : Material.values()) {
-            if (material.isItem() && player.hasCooldown(material)) {
-                player.setCooldown(material, 0);
+        Registry.ITEM.forEach(item -> {
+            if (player.getCooldown(item.getKey()) > 0) {
+                player.setCooldown(item.getKey(), 0);
             }
-        }
+        });
         var bars = new ArrayList<BossBar>();
         player.activeBossBars().forEach(bars::add);
         bars.forEach(player::hideBossBar);
