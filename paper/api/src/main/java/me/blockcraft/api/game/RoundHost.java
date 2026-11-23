@@ -91,7 +91,6 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
     private static final StackWalker STACK = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
     private static final List<Class<? extends Entity>> DEBRIS = List.of(Item.class, ExperienceOrb.class, Projectile.class,
             TNTPrimed.class, FallingBlock.class, AreaEffectCloud.class, Boat.class, Minecart.class);
-    private static final int ANNOUNCE_FROM = 5;
 
     private final JavaPlugin plugin;
     private final Function<RoundScope, G> factory;
@@ -182,14 +181,18 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
         return new Footprint(listeners, tasks, worlds);
     }
 
-    /** Counts down to the next round, which follows once {@code beforeLeaving} has run. */
+    /**
+     * Counts down to the next round in a boss bar that tells everyone to stay, until the next lobby's own bar takes
+     * over; the next round follows once {@code beforeLeaving} has run.
+     */
     Countdown nextRoundIn(Arena arena, int seconds, Runnable beforeLeaving) {
         int duration = Math.max(MINIMUM_SECONDS, seconds);
         arena.announceNextRound(duration);
+        var bar = new TimerBar(BlockcraftApi.get().messages(), "arena.next-round-bar", duration);
+        bar.update(duration);
+        scope.onClose(bar::hide);
         return Countdown.start(scope, duration, remaining -> {
-            if (remaining >= 1 && remaining <= ANNOUNCE_FROM) {
-                arena.announceNextRound(remaining);
-            }
+            bar.update(remaining);
             if (remaining == 1) {
                 beforeLeaving.run();
             }

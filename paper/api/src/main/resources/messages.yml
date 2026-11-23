@@ -147,6 +147,7 @@ arena:
   restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
   next-round-in: "<prefix><muted>Die nächste Runde beginnt in <accent><seconds> <muted>Sekunden."
   next-round-here: "<prefix><muted>Bleib einfach hier, die nächste Runde beginnt auf diesem Server."
+  next-round-bar: "<muted>Nächste Runde in <accent><seconds>s <dark>● <success>Bleib einfach hier"
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>beim Spielen zu."
   running: "<prefix><muted>Die Runde läuft schon, du schaust zu. <pick> <lobby>"
   running-pick: "<primary>[Spieler wählen]"
