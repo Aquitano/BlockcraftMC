@@ -118,10 +118,19 @@ public final class Database implements AutoCloseable {
 
     private static PreparedStatement prepare(Connection connection, String sql, Object... params) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(sql);
-        for (int i = 0; i < params.length; i++) {
-            statement.setObject(i + 1, params[i]);
+        try {
+            for (int i = 0; i < params.length; i++) {
+                statement.setObject(i + 1, params[i]);
+            }
+            return statement;
+        } catch (SQLException | RuntimeException | Error failure) {
+            try {
+                statement.close();
+            } catch (SQLException closeFailure) {
+                failure.addSuppressed(closeFailure);
+            }
+            throw failure;
         }
-        return statement;
     }
 
     @Override
