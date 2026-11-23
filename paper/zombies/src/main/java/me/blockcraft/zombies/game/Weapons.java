@@ -22,6 +22,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +35,8 @@ public final class Weapons {
 
     private final ZombiesGame game;
     private final Flames flames;
+    private final Map<Weapon, Component> names = new EnumMap<>(Weapon.class);
+    private final Map<Weapon, Component> upgradedNames = new EnumMap<>(Weapon.class);
 
     public Weapons(ZombiesGame game) {
         this.game = game;
@@ -73,8 +76,13 @@ public final class Weapons {
 
     public Component displayName(Player player, Weapon weapon) {
         var ammo = game.survivor(player).weapons().get(weapon);
-        return game.messages().get(ammo != null && ammo.upgraded() ? "weapon.upgraded" : "weapon.name",
-                Placeholder.component("weapon", game.messages().get("weapon." + weapon.key())));
+        return displayName(weapon, ammo != null && ammo.upgraded());
+    }
+
+    private Component displayName(Weapon weapon, boolean upgraded) {
+        return (upgraded ? upgradedNames : names).computeIfAbsent(weapon, gun ->
+                game.messages().get(upgraded ? "weapon.upgraded" : "weapon.name",
+                        Placeholder.component("weapon", game.messages().get("weapon." + gun.key()))));
     }
 
     public void render(Player player) {
@@ -84,21 +92,23 @@ public final class Weapons {
         }
         int slot = 0;
         for (var entry : survivor.weapons().entrySet()) {
-            var weapon = entry.getKey();
-            var ammo = entry.getValue();
-            var builder = weapon.model().item().name(displayName(player, weapon))
-                    .lore(game.messages().getLines("weapon.lore", Formatter.number("clip", ammo.clip()), Formatter.number("reserve", ammo.reserve())))
-                    .hideAttributes().edit(meta -> meta.setUnbreakable(true));
-            if (ammo.upgraded()) {
-                builder.glow();
-            }
-            player.getInventory().setItem(slot++, weapon.build(builder));
+            renderGun(player, slot++, entry.getKey(), entry.getValue());
         }
         if (slot < MAX_WEAPONS) {
             player.getInventory().setItem(1, null);
         }
         player.getInventory().setItem(2, Items.of(Material.IRON_SWORD).name(game.messages().get("weapon.knife"))
                 .lore(game.messages().get("weapon.knife-lore")).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build());
+    }
+
+    private void renderGun(Player player, int slot, Weapon weapon, Ammo ammo) {
+        var builder = weapon.model().item().name(displayName(weapon, ammo.upgraded()))
+                .lore(game.messages().getLines("weapon.lore", Formatter.number("clip", ammo.clip()), Formatter.number("reserve", ammo.reserve())))
+                .hideAttributes().edit(meta -> meta.setUnbreakable(true));
+        if (ammo.upgraded()) {
+            builder.glow();
+        }
+        player.getInventory().setItem(slot, weapon.build(builder));
     }
 
     public void reload(Player player, int tick) {
@@ -163,7 +173,14 @@ public final class Weapons {
         if (!volley.hits().isEmpty()) {
             Sounds.NOTE_PLING.note(player, volley.hits().values().stream().anyMatch(hit -> hit.head() > 0) ? 20 : 12);
         }
-        render(player);
+        int slot = 0;
+        for (var entry : survivor.weapons().entrySet()) {
+            if (entry.getKey() == weapon) {
+                renderGun(player, slot, weapon, entry.getValue());
+                break;
+            }
+            slot++;
+        }
     }
 
     private record Hit(double body, double head) {
@@ -254,11 +271,15 @@ public final class Weapons {
         var survivor = game.survivor(player);
         if (survivor != null && survivor.fighting()) {
             boolean changed = false;
-            for (var ammo : survivor.weapons().values()) {
-                changed |= ammo.tick(tick);
+            int slot = 0;
+            for (var entry : survivor.weapons().entrySet()) {
+                if (entry.getValue().tick(tick)) {
+                    renderGun(player, slot, entry.getKey(), entry.getValue());
+                    changed = true;
+                }
+                slot++;
             }
             if (changed) {
-                render(player);
                 Sounds.EQUIP.play(player);
             }
         }
