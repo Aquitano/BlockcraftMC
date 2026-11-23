@@ -43,13 +43,15 @@ final class Scavenger implements Ability {
     }
 
     @Override
-    public boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+    public boolean hunt(Enemies.Enemy enemy, Player target, int tick, boolean navigate, boolean useAbility) {
         var generator = generator();
         if (!game.powered() || generator.isEmpty()) {
             return false;
         }
-        enemy.mob.setTarget(null);
-        enemy.mob.getPathfinder().moveTo(generator.get(), 1.0);
+        if (navigate) {
+            enemy.mob.setTarget(null);
+            enemy.mob.getPathfinder().moveTo(generator.get(), 1.0);
+        }
         return true;
     }
 

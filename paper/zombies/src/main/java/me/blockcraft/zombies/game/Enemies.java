@@ -13,6 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -40,6 +41,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class Enemies {
 
+    private static final int HUNT_INTERVAL = 10;
+    private static final Set<EnemyKind> HUNT_ABILITIES = EnumSet.of(EnemyKind.EXPLODER, EnemyKind.TOXIC, EnemyKind.INFERNO,
+            EnemyKind.FROST, EnemyKind.ARSONIST, EnemyKind.ELECTRIC, EnemyKind.SHADOW, EnemyKind.POUNCER, EnemyKind.RAM);
     private static final String OWNER_TAG = "blockcraft_zombies_enemy";
     private static final Color RUNNER_COLOR = Color.fromRGB(0xE0, 0x6C, 0x1F);
     /** The server rejects a higher max health (spigot.yml, settings.attribute.maxHealth.max). */
@@ -53,6 +57,8 @@ public final class Enemies {
     private final Set<EnemyKind> introduced = EnumSet.noneOf(EnemyKind.class);
     private final Map<UUID, Enemy> enemies = new LinkedHashMap<>();
     private final Map<String, Integer> breaking = new HashMap<>();
+    private final Map<String, List<Block>> boards = new HashMap<>();
+    private int nextNavigationSlot;
     private int nextSpawn;
     private int unspawned;
     private WavePlan plan;
@@ -66,6 +72,7 @@ public final class Enemies {
         /** The model it wears, absent for a plain mob and wherever BetterModel is missing. */
         final Optional<CreatureBody> body;
         final double scale;
+        int navigationSlot;
         boolean breached;
         UUID attacker;
         int specialAt;
@@ -129,6 +136,7 @@ public final class Enemies {
                 nextSpawn = tick + plan.spawnTicks();
             }
         }
+        boards.clear();
         abilities.tick(tick);
         boolean stragglers = unspawned == 0 && enemies.size() <= waves.stragglers();
         for (var enemy : new ArrayList<>(enemies.values())) {
@@ -155,8 +163,12 @@ public final class Enemies {
             }
             if (!enemy.breached) {
                 breach(enemy, tick);
-            } else if (tick % 10 == 0) {
-                hunt(enemy, tick);
+            } else {
+                boolean navigate = navigates(enemy, tick);
+                boolean useAbility = tick % HUNT_INTERVAL == 0 && HUNT_ABILITIES.contains(enemy.kind);
+                if (navigate || useAbility) {
+                    hunt(enemy, tick, navigate, useAbility);
+                }
             }
         }
     }
@@ -217,6 +229,8 @@ public final class Enemies {
         }
         var enemy = new Enemy(mob, kind, window, toughness, body, stats.scale());
         enemy.breached = breached;
+        enemy.navigationSlot = nextNavigationSlot;
+        nextNavigationSlot = (nextNavigationSlot + 1) % HUNT_INTERVAL;
         enemies.put(mob.getUniqueId(), enemy);
         return enemy;
     }
@@ -277,16 +291,20 @@ public final class Enemies {
         }
     }
 
+    private static boolean navigates(Enemy enemy, int tick) {
+        return tick % HUNT_INTERVAL == enemy.navigationSlot;
+    }
+
     private void breach(Enemy enemy, int tick) {
-        var boards = enemy.window.boards().blocks(game.arena().world());
-        var remaining = boards.stream().filter(block -> !block.getType().isAir()).toList();
+        var remaining = boards.computeIfAbsent(enemy.window.id(), ignored -> enemy.window.boards().blocks(game.arena().world())
+                .stream().filter(block -> !block.getType().isAir()).toList());
         if (remaining.isEmpty()) {
             enemy.breached = true;
             enemy.mob.getPathfinder().moveTo(enemy.window.entry(), 1.0);
             return;
         }
         var approach = enemy.window.approach();
-        if (tick % 10 == 0) {
+        if (navigates(enemy, tick)) {
             enemy.mob.getPathfinder().moveTo(approach, 1.0);
         }
         if (enemy.mob.getLocation().distanceSquared(approach) > 4) {
@@ -301,22 +319,26 @@ public final class Enemies {
         var block = remaining.getFirst();
         block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation().add(0.5, 0.5, 0.5), 8, 0.3, 0.3, 0.3, block.getBlockData());
         BlockChanges.set(block, Material.AIR);
+        boards.remove(enemy.window.id());
         block.getWorld().playSound(block.getLocation(), Sound.BLOCK_WOOD_BREAK, 0.6f, 0.8f);
         breaking.put(enemy.window.id(), tick + game.config().breakTicks());
     }
 
-    private void hunt(Enemy enemy, int tick) {
-        var target = game.fighters().stream().min(Comparator.comparingDouble(player -> player.getLocation().distanceSquared(enemy.mob.getLocation())));
+    private void hunt(Enemy enemy, int tick, boolean navigate, boolean useAbility) {
+        var at = enemy.mob.getLocation();
+        var target = game.fighters().stream().min(Comparator.comparingDouble(player -> player.getLocation().distanceSquared(at)));
         if (target.isEmpty()) {
             return;
         }
         Player player = target.get();
-        if (abilities.of(enemy.kind).hunt(enemy, player, tick)) {
+        if (abilities.of(enemy.kind).hunt(enemy, player, tick, navigate, useAbility)) {
             return;
         }
-        enemy.mob.setTarget(player);
-        enemy.mob.getPathfinder().moveTo(player, 1.0);
-        if (tick < enemy.specialAt) {
+        if (navigate) {
+            enemy.mob.setTarget(player);
+            enemy.mob.getPathfinder().moveTo(player, 1.0);
+        }
+        if (!useAbility || tick < enemy.specialAt) {
             return;
         }
         var exploder = game.config().exploder();

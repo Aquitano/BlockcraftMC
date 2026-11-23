@@ -59,7 +59,7 @@ final class Pouncer implements Ability {
     }
 
     @Override
-    public boolean hunt(Enemies.Enemy enemy, Player nearest, int tick) {
+    public boolean hunt(Enemies.Enemy enemy, Player nearest, int tick, boolean navigate, boolean useAbility) {
         var fighters = game.fighters();
         var prey = loner(enemy.mob.getLocation().toVector(), fighters, player -> player.getLocation().toVector(), config.aloneRadius());
         if (prey.isEmpty()) {
@@ -67,7 +67,7 @@ final class Pouncer implements Ability {
         }
         var target = prey.get();
         var mob = enemy.mob;
-        if (tick >= enemy.specialAt && mob.getLocation().distanceSquared(target.getLocation()) <= config.leapRange() * config.leapRange()
+        if (useAbility && tick >= enemy.specialAt && mob.getLocation().distanceSquared(target.getLocation()) <= config.leapRange() * config.leapRange()
                 && mob.hasLineOfSight(target)) {
             attacks.put(enemy, new Attack(target.getUniqueId(), tick + config.windupTicks()));
             mob.setAware(false);
@@ -76,8 +76,10 @@ final class Pouncer implements Ability {
             enemies.play(enemy, "crouch");
             return true;
         }
-        mob.setTarget(target);
-        mob.getPathfinder().moveTo(target, 1.0);
+        if (navigate) {
+            mob.setTarget(target);
+            mob.getPathfinder().moveTo(target, 1.0);
+        }
         return true;
     }
 

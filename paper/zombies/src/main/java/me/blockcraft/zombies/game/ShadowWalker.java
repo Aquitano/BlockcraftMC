@@ -52,7 +52,8 @@ final class ShadowWalker implements Ability {
     }
 
     @Override
-    public boolean hunt(Enemies.Enemy enemy, Player target, int tick) {
+    public boolean hunt(Enemies.Enemy enemy, Player target, int tick, boolean navigate, boolean useAbility) {
+        if (!useAbility) return false;
         enemy.mob.getWorld().spawnParticle(Particle.LARGE_SMOKE, enemy.mob.getLocation().add(0, 0.2, 0), 3, 0.25, 0.1, 0.25, 0);
         return false;
     }
