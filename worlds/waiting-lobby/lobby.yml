@@ -92,8 +92,8 @@ teams:
         yaw: 90.0
         pitch: 0.0
 leaderboard:
-  x: -193.5
-  y: 49.8
-  z: -319.95
-  yaw: 0.0
+  x: -193.05
+  y: 48.4
+  z: -285.5
+  yaw: 90.0
   pitch: 0.0

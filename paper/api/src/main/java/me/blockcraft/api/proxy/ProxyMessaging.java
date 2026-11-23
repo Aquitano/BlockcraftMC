@@ -34,6 +34,11 @@ public final class ProxyMessaging {
         send(plugin, player, new ProxyMessage.Play(group));
     }
 
+    /** Starts the group's server if it sleeps, without moving the player. */
+    public static void wake(Plugin plugin, Player player, String group) {
+        send(plugin, player, new ProxyMessage.Wake(group));
+    }
+
     public static void replay(Plugin plugin, Player player, String group, String game) {
         send(plugin, player, new ProxyMessage.ReplayPlay(group, game));
     }

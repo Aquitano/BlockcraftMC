@@ -51,6 +51,9 @@ x-paper-env: &paper-env
   JVM_XX_OPTS: "-XX:+ExitOnOutOfMemoryError"
   JVM_OPTS: *german-formats
   SYNC_SKIP_NEWER_IN_DESTINATION: "false"
+  # The image otherwise deletes every library Paper itself does not list, and the plugins download theirs again from
+  # Maven Central on each start, about 5 seconds.
+  CLEAN_SERVER_LIBRARIES: "false"
   CREATE_CONSOLE_IN_PIPE: "true"
   # Empty rather than gone: the image then deletes the LuckPerms jar it downloaded before plugins were staged.
   PLUGINS: ""

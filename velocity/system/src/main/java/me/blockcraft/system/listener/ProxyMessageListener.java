@@ -81,6 +81,7 @@ public final class ProxyMessageListener {
             case ProxyMessage.PackRequest _ -> pack.get().ifPresentOrElse(networkPack -> networkPack.retry(player),
                     () -> NetworkPack.tell(player, PackStatus.UNAVAILABLE));
             case ProxyMessage.Play play -> lobby.play(player, play.group());
+            case ProxyMessage.Wake wake -> lobby.wake(wake.group());
             case ProxyMessage.ReplayPlay replay -> {
                 pack.get().ifPresent(networkPack -> networkPack.replay(player, replay.group(), replay.game()));
                 lobby.play(player, replay.group());

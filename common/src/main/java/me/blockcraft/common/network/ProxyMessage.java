@@ -37,6 +37,10 @@ public sealed interface ProxyMessage {
     record Play(String group) implements ToProxy {
     }
 
+    /** The player walked up to the group's game in the lobby: start its server if it sleeps, so it is up sooner. */
+    record Wake(String group) implements ToProxy {
+    }
+
     record ReplayPlay(String group, String game) implements ToProxy {
     }
 
