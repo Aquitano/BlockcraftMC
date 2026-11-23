@@ -62,6 +62,7 @@ public final class Round implements Listener {
     private final Map<UUID, Away> away = new HashMap<>();
     private final RejoinRepository rejoins;
     private volatile GamePhase phase = GamePhase.LOBBY;
+    private boolean playsOn;
     private PlayArea playArea;
     private String map;
     private Supplier<GameSidebar.Headcount> headcount = () -> new GameSidebar.Headcount(playerCount(), spectatorCount());
@@ -447,13 +448,32 @@ public final class Round implements Listener {
         return end(config.restartSeconds());
     }
 
-    /** As {@link #end()}, with a longer wait before the restart for a game that still has something to offer. */
+    /**
+     * As {@link #end()}, with a longer wait before the restart for a game that still has something to offer. A round
+     * of a {@link RoundHost} that plays on is followed by the next round on this server instead, after as long.
+     */
     public boolean end(int restartSeconds) {
+        if (plugin instanceof RoundScope scope && scope.host().playsNext(scope)) {
+            if (!endInPlace(player -> arena.tell(player, "arena.next-round-here"))) {
+                return false;
+            }
+            timer(scope.host().nextRoundIn(arena, restartSeconds, summary::closeRespects));
+            playsOn = true;
+            return true;
+        }
         if (!endInPlace(player -> ProxyMessaging.play(plugin, player, api.server().group()))) {
             return false;
         }
         timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects, summary::offerReturn, summary::returningIn));
         return true;
+    }
+
+    /**
+     * Whether the round has ended and the next round follows on this server rather than after a restart, for a game
+     * that prepares that round ahead.
+     */
+    public boolean playsOn() {
+        return playsOn;
     }
 
     public boolean endInPlace(Consumer<Player> playAgain) {

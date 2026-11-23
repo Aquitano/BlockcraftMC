@@ -29,7 +29,7 @@ import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.ttt.arena.MapCopies;
+import me.blockcraft.api.world.MapCopies;
 import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.TesterRoom;
 import me.blockcraft.ttt.arena.Town;

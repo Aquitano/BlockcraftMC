@@ -102,6 +102,10 @@ public final class Arena {
         Bukkit.broadcast(messages.get("arena.restart-in", Formatter.number("seconds", seconds)));
     }
 
+    void announceNextRound(int seconds) {
+        Bukkit.broadcast(messages.get("arena.next-round-in", Formatter.number("seconds", seconds)));
+    }
+
     void announceTrackers(int minutes) {
         messages.getLines("arena.tracker", Formatter.number("minutes", minutes)).forEach(Bukkit::broadcast);
     }

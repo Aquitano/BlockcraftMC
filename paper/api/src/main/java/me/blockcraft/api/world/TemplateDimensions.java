@@ -28,6 +28,7 @@ public final class TemplateDimensions {
     private final String namespace;
     private final Consumer<World> settle;
     private final Set<String> copyingOrLoading = ConcurrentHashMap.newKeySet();
+    private volatile Path root;
 
     /** {@code settle} sets the rules every one of these worlds keeps, right after it loads. */
     public TemplateDimensions(String namespace, Consumer<World> settle) {
@@ -68,7 +69,8 @@ public final class TemplateDimensions {
             throw new IllegalStateException("The world is being copied or loaded: " + name);
         }
         try {
-            if (loaded(name).isPresent()) {
+            // Off the main thread Bukkit's world list may change under the lookup, so a background copy relies on its caller.
+            if (Bukkit.isPrimaryThread() && loaded(name).isPresent()) {
                 throw new IllegalStateException("Cannot copy into a loaded world: " + name);
             }
             into.accept(folder(name));
@@ -107,8 +109,14 @@ public final class TemplateDimensions {
         WorldTemplate.at(template).publish(folder(name));
     }
 
+    /** Resolved once on the main thread, so that background copies never read Bukkit's world list. */
     Path folder(String name) {
-        var level = Bukkit.getWorlds().getFirst().getName();
-        return Bukkit.getWorldContainer().toPath().resolve(level).resolve("dimensions").resolve(namespace).resolve(name);
+        var dimensions = root;
+        if (dimensions == null) {
+            var level = Bukkit.getWorlds().getFirst().getName();
+            dimensions = Bukkit.getWorldContainer().toPath().resolve(level).resolve("dimensions").resolve(namespace);
+            root = dimensions;
+        }
+        return dimensions.resolve(name);
     }
 }
