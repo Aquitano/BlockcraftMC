@@ -400,11 +400,11 @@ services:
   replay:
     <<: *paper
     hostname: replay
-    mem_limit: 1280m
+    mem_limit: 1792m
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: replay
-      MEMORY: 768M
+      MEMORY: 1G
       # Viewers wait on the shared waiting island while a recording loads; nothing hostile may spawn there.
       DIFFICULTY: peaceful
       BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
