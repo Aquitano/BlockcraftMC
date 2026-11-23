@@ -46,6 +46,8 @@ public final class LobbyCountdown implements Listener {
     private final Runnable onStart;
     private boolean forced;
     private int startMinimum;
+    private boolean lastStartForced;
+    private int lastStartMinimum;
     private BossBar bar;
 
     public LobbyCountdown(Plugin plugin, Round round, GameConfig config, Runnable onStart) {
@@ -195,8 +197,22 @@ public final class LobbyCountdown implements Listener {
         }
     }
 
+    /**
+     * The round could not start when the countdown ran out, such as with no map ready to load: it runs down to
+     * {@code countdown.start} again, and a start someone forced stays forced, with as few players as it allowed.
+     */
+    public void retry() {
+        boolean wasForced = lastStartForced;
+        startMinimum = lastStartMinimum;
+        if (!runDown(startSeconds, wasForced)) {
+            start();
+        }
+    }
+
     /** A forced countdown may run out after players left; below the round's minimum it waits again. */
     private void finish() {
+        lastStartForced = forced;
+        lastStartMinimum = startMinimum;
         forced = false;
         int minimum = startMinimum;
         startMinimum = roundMinimum;

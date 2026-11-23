@@ -64,7 +64,11 @@ public final class TemplateDimensions {
         copy(name, level::restoreDimension);
     }
 
-    private synchronized void copy(String name, Consumer<Path> into) {
+    /**
+     * Guarded per map, not by one lock: a background copy waiting on another process's template lock must not hold
+     * up the main thread's work on a different map; the same map being copied or loaded refuses at once instead.
+     */
+    private void copy(String name, Consumer<Path> into) {
         if (!copyingOrLoading.add(name)) {
             throw new IllegalStateException("The world is being copied or loaded: " + name);
         }
@@ -103,10 +107,17 @@ public final class TemplateDimensions {
     }
 
     /** Flushes a world a builder edited and copies it back into its template. */
-    public synchronized void publish(World world, Path template) {
+    public void publish(World world, Path template) {
         var name = nameOf(world).orElseThrow(() -> new IllegalArgumentException("Not a " + namespace + " world: " + world.getKey()));
-        world.save(true);
-        WorldTemplate.at(template).publish(folder(name));
+        if (!copyingOrLoading.add(name)) {
+            throw new IllegalStateException("The world is being copied or loaded: " + name);
+        }
+        try {
+            world.save(true);
+            WorldTemplate.at(template).publish(folder(name));
+        } finally {
+            copyingOrLoading.remove(name);
+        }
     }
 
     /** Resolved once on the main thread, so that background copies never read Bukkit's world list. */

@@ -58,24 +58,25 @@ final class Rivalries {
         loading = true;
         var ids = players.stream().map(Player::getUniqueId).toList();
         Tasks.async(plugin, () -> new Standings(read.apply(ids)), loaded -> {
-            if (closed) {
-                return;
-            }
             standings = loaded;
-            for (var player : players) {
-                loaded.nemesis(player.getUniqueId(), ids, lead).ifPresent(nemesis -> {
-                    nemeses.put(player.getUniqueId(), nemesis);
-                    announce(player, Bukkit.getPlayer(nemesis), loaded.between(player.getUniqueId(), nemesis));
-                });
+            if (!closed) {
+                for (var player : players) {
+                    loaded.nemesis(player.getUniqueId(), ids, lead).ifPresent(nemesis -> {
+                        nemeses.put(player.getUniqueId(), nemesis);
+                        announce(player, Bukkit.getPlayer(nemesis), loaded.between(player.getUniqueId(), nemesis));
+                    });
+                }
             }
             finishLoading();
         }, this::finishLoading);
     }
 
+    /**
+     * Nothing more is announced. Kills that wait for the standings still being read stay queued: the read finishes
+     * after the round closed, under the plugin itself, writes them and grants a revenge they earned.
+     */
     void close() {
         closed = true;
-        standings = null;
-        finishLoading();
     }
 
     private void finishLoading() {

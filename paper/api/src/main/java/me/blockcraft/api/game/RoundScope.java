@@ -183,12 +183,12 @@ public final class RoundScope implements Plugin {
                 continue;
             }
             clean &= run(() -> world.getPlayers().forEach(player -> player.teleport(away)));
-            if (Bukkit.unloadWorld(world, false)) {
-                clean &= run(() -> entry.getValue().accept(world));
-            } else {
-                clean = false;
-                plugin.getSLF4JLogger().warn("Could not unload the round's world {}", world.getKey());
-            }
+            clean &= run(() -> {
+                if (!Bukkit.unloadWorld(world, false)) {
+                    throw new IllegalStateException("Could not unload the round's world " + world.getKey());
+                }
+                entry.getValue().accept(world);
+            });
         }
         worlds.clear();
         return clean;
