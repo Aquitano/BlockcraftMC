@@ -4,14 +4,22 @@ commands:
 menu:
   title: "<arrow><primary>Aufzeichnungen"
   empty: "<muted>Noch keine gespeicherten Runden vorhanden."
-  entry: "<primary><game> <dark>· <muted><map>"
+  entry: "<primary><game> <dark>· <muted><map><mark>"
   complete: "<success>Runde beendet"
   partial: "<accent>Teilaufzeichnung"
+  favourite-mark: " <accent>★ Favorit"
+  favourite-add: "<right>Als Favorit dauerhaft behalten"
+  favourite-remove: "<right>Aus den Favoriten entfernen"
   lore:
     - "<muted><date:'dd.MM.yyyy HH:mm'> <dark>· <muted><seconds> Sekunden"
     - "<result>"
     - "<muted><id>"
     - "<left>Aufzeichnung ansehen"
+    - "<favourite>"
+favourite:
+  added: "<prefix><success>Als Favorit gespeichert. Diese Aufzeichnung wird nicht mehr gelöscht."
+  removed: "<prefix><muted>Aus den Favoriten entfernt. Sie wird wieder wie jede Runde nach einer Weile gelöscht."
+  failed: "<prefix><error>Der Favorit konnte gerade nicht gespeichert werden. Versuche es gleich erneut."
 playback:
   starting: "<prefix><muted>Das Replay-System startet noch. Bitte versuche es gleich erneut."
   invalid-speed: "<prefix><error>Wähle als Tempo 0.5, 1 oder 2."

@@ -33,8 +33,11 @@ final class ReplayMenu extends ListMenu<ReplayRepository.Entry> {
                 Placeholder.unparsed("id", entry.id().toString()), Placeholder.unparsed("game", entry.game()),
                 Placeholder.unparsed("map", entry.map()), Formatter.number("seconds", entry.durationTicks() / 20),
                 Formatter.date("date", entry.startedAt().atZone(ZoneId.systemDefault())),
-                Placeholder.component("result", messages.get(entry.endReason().equals("MATCH_END") ? "menu.complete" : "menu.partial")));
-        return MenuIcon.RECAP.item().name(messages.get("menu.entry", tags)).lore(messages.getLines("menu.lore", tags)).build();
+                Placeholder.component("result", messages.get(entry.endReason().equals("MATCH_END") ? "menu.complete" : "menu.partial")),
+                Placeholder.component("mark", entry.favourite() ? messages.get("menu.favourite-mark") : Component.empty()),
+                Placeholder.component("favourite", messages.get(entry.favourite() ? "menu.favourite-remove" : "menu.favourite-add")));
+        var item = MenuIcon.RECAP.item().name(messages.get("menu.entry", tags)).lore(messages.getLines("menu.lore", tags));
+        return (entry.favourite() ? item.glow() : item).build();
     }
 
     @Override
@@ -44,7 +47,11 @@ final class ReplayMenu extends ListMenu<ReplayRepository.Entry> {
 
     @Override
     protected void onSelect(Player player, ReplayRepository.Entry entry, InventoryClickEvent event) {
-        service.play(player, entry.id());
+        if (event.isRightClick()) {
+            service.favourite(player, entry, () -> reload(player));
+        } else {
+            service.play(player, entry.id());
+        }
     }
 
     @Override

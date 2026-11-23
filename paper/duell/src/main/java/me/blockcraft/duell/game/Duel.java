@@ -612,6 +612,7 @@ public final class Duel {
             series = new DuelSeries(duellists, schedule);
         }
         schedule = series.schedule();
+        series.current().ifPresent(first -> round.map(mapName(first.mode(), first.map())));
         round.enter(GamePhase.INGAME);
         if (activeRating == DuelRating.RATED) { players.forEach(player -> ratings.load(player, this::refreshScoreboards)); }
         recognizeOpponents();

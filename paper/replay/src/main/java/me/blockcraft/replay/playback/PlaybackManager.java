@@ -1,5 +1,7 @@
 package me.blockcraft.replay.playback;
 
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.replay.data.ReplayHeader;
 import me.blockcraft.replay.data.ReplayLimits;
@@ -76,6 +78,24 @@ public final class PlaybackManager implements AutoCloseable {
         }
     }
 
+    /**
+     * Lets the viewer into {@code timeline} once the resource pack is on, or ends that playback when the pack failed;
+     * reports whether they went in. A late answer for a playback already replaced changes nothing.
+     */
+    public boolean packReady(Player viewer, PlaybackTimeline timeline, boolean applied) {
+        var session = sessions.get(viewer.getUniqueId());
+        if (session == null || !session.plays(timeline)) {
+            return false;
+        }
+        if (applied) {
+            session.release();
+            return true;
+        }
+        stop(viewer);
+        viewer.sendMessage(messages.get("playback.unavailable"));
+        return false;
+    }
+
     public boolean active(Player viewer) {
         return sessions.containsKey(viewer.getUniqueId());
     }
@@ -138,8 +158,10 @@ public final class PlaybackManager implements AutoCloseable {
         try {
             if (!session.restore() && !quitting) {
                 viewer.sendMessage(messages.get("playback.restore-failed"));
-                Bukkit.getWorlds().stream().filter(world -> !world.getKey().getNamespace().equals("replay"))
-                        .findFirst().ifPresent(world -> viewer.teleport(world.getSpawnLocation()));
+                BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn).or(() -> Bukkit.getWorlds().stream()
+                                .filter(world -> !world.getKey().getNamespace().equals("replay"))
+                                .findFirst().map(World::getSpawnLocation))
+                        .ifPresent(viewer::teleport);
             }
         } catch (RuntimeException failure) {
             plugin.getSLF4JLogger().error("Could not restore replay viewer {}", viewer.getUniqueId(), failure);

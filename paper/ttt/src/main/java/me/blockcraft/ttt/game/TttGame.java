@@ -307,6 +307,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         tester.get().showLabel();
         round.playArea(built.world(), built.bounds());
+        round.map(built.name());
         tasks = built.tasks().filter(layout -> mode == TttMode.TASKS).map(layout -> new TaskRound(plugin, config.tasks(),
                 messages, layout, built.tester().button(), built.traitorDoors(),
                 built.tester().trap().map(TesterRoom.Trap::button), () -> tester.filter(Tester::trapUsed).isPresent(),

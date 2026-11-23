@@ -274,6 +274,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
         round.playArea(map.world(), map.playArea());
+        round.map(map.name());
         intro = new BattleIntro(this, IntroConfig.from(plugin.getConfig()));
     }
 
@@ -843,6 +844,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         spectacle.mapChanged();
         fieldObjectives.load(maps.file(FIELD_OBJECTIVES));
         round.playArea(map.world(), map.playArea());
+        round.map(map.name());
     }
 
     private void start() {

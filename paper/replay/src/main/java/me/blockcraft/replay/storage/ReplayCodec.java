@@ -147,7 +147,9 @@ final class ReplayCodec {
                 out.writeInt(chunk.height());
                 out.writeInt(chunk.palette().size());
                 for (String block : chunk.palette()) text(out, block);
-                for (int index : chunk.blocks()) out.writeInt(index);
+                var raw = ByteBuffer.allocate(chunk.blocks().length * Integer.BYTES);
+                raw.asIntBuffer().put(chunk.blocks());
+                out.write(raw.array());
             }
             case ReplayEvent.Blocks changes -> {
                 count(changes.blocks().size(), limits.maxBlockChangesPerTick(), "block changes");
@@ -248,10 +250,11 @@ final class ReplayCodec {
                     addObjects(paletteSize);
                     List<String> palette = new ArrayList<>(paletteSize);
                     for (int i = 0; i < paletteSize; i++) palette.add(text(in));
+                    byte[] raw = new byte[Math.multiplyExact(blockCount, Integer.BYTES)];
+                    in.readFully(raw);
                     int[] blocks = new int[blockCount];
-                    for (int i = 0; i < blockCount; i++) {
-                        blocks[i] = count(in.readInt(), paletteSize - 1, "palette index");
-                    }
+                    ByteBuffer.wrap(raw).asIntBuffer().get(blocks);
+                    checkPalette(blocks, paletteSize);
                     yield new ReplayEvent.Chunk(tick, world, x, z, minY, height, palette, blocks);
                 }
                 case 3 -> {
@@ -434,7 +437,13 @@ final class ReplayCodec {
         int paletteSize = count(chunk.palette().size(), Math.min(size, 65_536), "palette entries");
         require(paletteSize > 0, "Empty chunk palette");
         addObjects(paletteSize);
-        for (int index : chunk.blocks()) count(index, paletteSize - 1, "palette index");
+        checkPalette(chunk.blocks(), paletteSize);
+    }
+
+    private static void checkPalette(int[] blocks, int paletteSize) throws IOException {
+        for (int index : blocks) {
+            if (index < 0 || index >= paletteSize) throw new IOException("Invalid palette index: " + index);
+        }
     }
 
     private int blockCount(int minY, int height) throws IOException {

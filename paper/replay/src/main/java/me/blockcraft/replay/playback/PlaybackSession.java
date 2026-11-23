@@ -41,6 +41,7 @@ final class PlaybackSession {
     private final Map<TerrainLog.Position, String> pending = new LinkedHashMap<>();
     private int loadingChunks;
     private int shownTick;
+    private boolean released;
     private boolean arrived;
     private boolean jumped;
     private boolean leaving;
@@ -115,8 +116,13 @@ final class PlaybackSession {
 
     PlaybackManager.State state() {
         return new PlaybackManager.State(timeline.header().id(), clock.tick(), timeline.durationTicks(),
-                clock.paused(), clock.speed(), loadingChunks > 0 || !pending.isEmpty());
+                clock.paused(), clock.speed(), !released || loadingChunks > 0 || !pending.isEmpty());
     }
+
+    boolean plays(PlaybackTimeline timeline) { return this.timeline == timeline; }
+
+    /** Lets the viewer in once their client wears the recording's resource pack. */
+    void release() { released = true; }
 
     void toggle() { clock.toggle(); }
     boolean speed(double speed) { return clock.speed(speed); }
@@ -134,7 +140,7 @@ final class PlaybackSession {
         if (leaving) {
             return;
         }
-        if (loadingChunks > 0) {
+        if (!released || loadingChunks > 0) {
             hud.update(state());
             return;
         }
