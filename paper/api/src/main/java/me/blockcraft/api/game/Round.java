@@ -153,7 +153,9 @@ public final class Round implements Listener {
 
     private void seat(Player player) {
         takeSeat(player);
-        arena.welcome(player, players.size(), capacity);
+        if (!(plugin instanceof RoundScope scope && scope.reseating())) {
+            arena.welcome(player, players.size(), capacity);
+        }
     }
 
     private void takeSeat(Player player) {

@@ -135,6 +135,7 @@ public final class SternenfrontGame implements RoundHost.Game {
     private record Burst(Player shooter, Blaster blaster, long at) { }
 
     private final Plugin plugin;
+    private final RoundScope scope;
     private final SternenfrontConfig config;
     private final Messages messages;
     private final FrontChoice maps;
@@ -213,6 +214,7 @@ public final class SternenfrontGame implements RoundHost.Game {
                             FeelConfig feel, Messages messages, FrontChoice maps, int voteClosesAt, Location lobby,
                             Career career, StatsRepository stats, StatsMenus statsMenus) {
         this.plugin = scope;
+        this.scope = scope;
         this.config = config;
         this.messages = messages;
         this.maps = maps;
@@ -576,7 +578,9 @@ public final class SternenfrontGame implements RoundHost.Game {
 
     @Override
     public void join(Player player) {
-        career.greet(player);
+        if (!scope.reseating()) {
+            career.greet(player);
+        }
         // Player data saved during a crash keeps a raised scope's walk speed, which would hold the player still.
         lowerAim(player);
         if (intro.running()) {

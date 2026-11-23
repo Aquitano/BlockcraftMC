@@ -216,7 +216,7 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
                 }
             }
             closed = close();
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | Error e) {
             plugin.getSLF4JLogger().error("Could not close the last round", e);
             closed = false;
         }
@@ -225,19 +225,26 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
             return;
         }
         var api = BlockcraftApi.get();
-        try {
-            for (var player : players) {
+        var staying = new ArrayList<Player>();
+        for (var player : players) {
+            try {
                 Spectators.unwatch(player.getUniqueId());
                 api.tabTeams().clearColor(player);
                 baseline.restore(player, GameMode.ADVENTURE);
+                staying.add(player);
+            } catch (RuntimeException e) {
+                plugin.getSLF4JLogger().warn("Could not reset {} for the next round; sending them to a lobby", player.getName(), e);
+                ProxyMessaging.hub(plugin, player);
             }
+        }
+        try {
             rounds++;
             open();
             api.presence().state(GamePhase.LOBBY.serverState());
-            players.stream().filter(Player::isOnline).forEach(game::join);
-            game.lobbyCountdown().hurry(reopenSeconds);
+            scope.reseat(() -> staying.stream().filter(Player::isOnline).forEach(game::join));
+            game.lobbyCountdown().reopen(reopenSeconds);
             game.reopened();
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | Error e) {
             plugin.getSLF4JLogger().error("Could not open the next round", e);
             restart("the next round did not open");
         }
@@ -265,7 +272,7 @@ public final class RoundHost<G extends RoundHost.Game> implements Listener {
         boolean clean = true;
         try {
             game.close();
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | Error e) {
             plugin.getSLF4JLogger().warn("Closing the round's game failed", e);
             clean = false;
         }

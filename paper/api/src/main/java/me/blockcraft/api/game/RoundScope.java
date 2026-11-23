@@ -75,6 +75,7 @@ public final class RoundScope implements Plugin {
     private final Deque<Runnable> closing = new ArrayDeque<>();
     private volatile boolean open = true;
     private boolean restartAfter;
+    private boolean reseating;
 
     RoundScope(JavaPlugin plugin, RoundHost<?> host) {
         this.plugin = plugin;
@@ -116,6 +117,23 @@ public final class RoundScope implements Plugin {
 
     boolean restartsAfter() {
         return restartAfter;
+    }
+
+    /**
+     * Whether the players of the last round are being seated in this one, who need no welcome and no announcement of a
+     * countdown the host shortens right after.
+     */
+    public boolean reseating() {
+        return reseating;
+    }
+
+    void reseat(Runnable seating) {
+        reseating = true;
+        try {
+            seating.run();
+        } finally {
+            reseating = false;
+        }
     }
 
     /** Runs when the round closes, before its registrations go, in the reverse order of registering. */

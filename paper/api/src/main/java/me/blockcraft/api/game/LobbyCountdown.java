@@ -110,6 +110,14 @@ public final class LobbyCountdown implements Listener {
         return runDown(toSeconds, false);
     }
 
+    /** The lobby of a round that follows on the same server, whose players are seated already: as {@link #hurry}, said aloud. */
+    public void reopen(int toSeconds) {
+        hurry(toSeconds);
+        if (round.playerCount() >= minPlayers) {
+            round.arena().announceStart(Math.min(toSeconds, countdown.remaining()));
+        }
+    }
+
     private boolean runDown(int toSeconds, boolean force) {
         if (countdown.isRunning() && countdown.remaining() <= toSeconds) {
             return false;
@@ -153,7 +161,9 @@ public final class LobbyCountdown implements Listener {
         }
         forced = false;
         updateBar(seconds);
-        round.arena().announceStart(seconds);
+        if (!(plugin instanceof RoundScope scope && scope.reseating())) {
+            round.arena().announceStart(seconds);
+        }
         countdown.start(seconds, this::tick, this::finish);
     }
 
