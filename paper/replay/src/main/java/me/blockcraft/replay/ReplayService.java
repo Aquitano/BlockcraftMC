@@ -1,9 +1,11 @@
 package me.blockcraft.replay;
 
+import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.replay.playback.PlaybackManager;
@@ -192,16 +194,17 @@ final class ReplayService implements Listener, AutoCloseable {
                         loading.remove(id);
                         player.sendMessage(messages.get("playback.unavailable"));
                     } else {
+                        loading.remove(id);
+                        if (!playback.start(player, loaded)) {
+                            player.sendMessage(messages.get("playback.full"));
+                            return;
+                        }
                         BlockcraftApi.get().resourcePack().profile(player, loaded.header().game(), applied -> {
-                            if (loading.get(id) != token) return;
-                            loading.remove(id);
-                            if (!player.isOnline() || !allowed(player)) return;
-                            if (!applied) player.sendMessage(messages.get("playback.unavailable"));
-                            else if (playback.start(player, loaded)) {
+                            if (player.isOnline() && playback.packReady(player, loaded, applied)) {
                                 player.sendMessage(messages.get("playback.started",
                                         Placeholder.unparsed("game", loaded.header().game()),
                                         Placeholder.unparsed("map", loaded.header().map())));
-                            } else player.sendMessage(messages.get("playback.full"));
+                            }
                         });
                     }
                 });
@@ -310,6 +313,14 @@ final class ReplayService implements Listener, AutoCloseable {
                 }, ignored -> pendingNavigation.remove(viewer, token));
             }
         });
+    }
+
+    /** On the replay backend a viewer waits for the recording on the shared waiting island, when it is mounted. */
+    @EventHandler
+    public void onSpawn(AsyncPlayerSpawnLocationEvent event) {
+        if (playbackBackend) {
+            BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn).ifPresent(event::setSpawnLocation);
+        }
     }
 
     @EventHandler
