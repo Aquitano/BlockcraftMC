@@ -1,5 +1,6 @@
 package me.blockcraft.system;
 
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.listener.TabHeaderListener;
 import net.kyori.adventure.text.Component;
@@ -39,6 +40,25 @@ public class TabHeaderListenerTest {
         listener.refreshAll();
         assertEquals(2, proxy.received(viewer).size());
         assertEquals(header(messages, config, 2), proxy.received(staff).getLast());
+    }
+
+    @Test
+    public void aBackendSwitchResendsEvenIfTheLabelStaysTheSame() throws Exception {
+        var proxy = new FakeProxy();
+        var viewer = proxy.join("Viewer");
+        var other = proxy.join("Other");
+        var connection = proxy.connect(viewer, "lobby");
+        var visibility = new PlayerVisibility(proxy.server, null, null, null);
+        var directory = Files.createTempDirectory("tab-header");
+        var config = SystemConfig.load(directory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
+        var messages = Messages.load(directory, () -> getClass().getResourceAsStream("/messages.yml"));
+        var listener = new TabHeaderListener(proxy.server, visibility, config, messages);
+
+        listener.refreshAll();
+        listener.onServerPostConnect(new ServerPostConnectEvent(viewer, connection.getServer()));
+
+        assertEquals(2, proxy.received(viewer).size());
+        assertEquals(1, proxy.received(other).size());
     }
 
     private Component header(Messages messages, SystemConfig config, int online) {

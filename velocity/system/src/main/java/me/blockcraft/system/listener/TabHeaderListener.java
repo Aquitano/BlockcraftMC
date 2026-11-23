@@ -16,6 +16,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -28,7 +29,9 @@ import java.util.stream.Collectors;
 public final class TabHeaderListener implements Runnable {
 
     private record Rendered(Component header, Component footer) {}
-    private final Map<UUID, Rendered> rendered = new HashMap<>();
+    private record Inputs(int visible, int max, String server) {}
+    private final Map<UUID, Inputs> sent = new HashMap<>();
+    private final Map<Inputs, Rendered> rendered = new HashMap<>();
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
     private final SystemConfig config;
@@ -43,7 +46,7 @@ public final class TabHeaderListener implements Runnable {
 
     @Subscribe
     public synchronized void onServerPostConnect(ServerPostConnectEvent event) {
-        rendered.remove(event.getPlayer().getUniqueId());
+        sent.remove(event.getPlayer().getUniqueId());
         refreshAll();
     }
 
@@ -64,21 +67,28 @@ public final class TabHeaderListener implements Runnable {
     }
 
     private void refreshExcept(Set<UUID> excluded) {
-        var max = Formatter.number("max", config.maxPlayers());
         var players = proxy.getAllPlayers().stream().filter(player -> player.isActive() && !excluded.contains(player.getUniqueId())).toList();
-        rendered.keySet().retainAll(players.stream().map(Player::getUniqueId).collect(Collectors.toSet()));
+        sent.keySet().retainAll(players.stream().map(Player::getUniqueId).collect(Collectors.toSet()));
         int publicCount = visibility.publicCount(players);
+        var active = new HashSet<Inputs>();
         for (Player player : players) {
             int visible = player.hasPermission(SystemPermissions.SEE_VANISHED) ? players.size()
                     : publicCount + (visibility.isVanished(player) ? 1 : 0);
-            var online = Formatter.number("online", visible);
-            var header = messages.getJoined("tab.header", max, online);
-            var footer = messages.getJoined("tab.footer", max, online,
-                    Placeholder.unparsed("server", CommandSupport.currentServer(player)));
-            var next = new Rendered(header, footer);
-            if (!next.equals(rendered.put(player.getUniqueId(), next))) {
-                player.sendPlayerListHeaderAndFooter(header, footer);
+            var inputs = new Inputs(visible, config.maxPlayers(), CommandSupport.currentServer(player));
+            active.add(inputs);
+            if (!inputs.equals(sent.get(player.getUniqueId()))) {
+                var next = rendered.computeIfAbsent(inputs, this::render);
+                player.sendPlayerListHeaderAndFooter(next.header(), next.footer());
+                sent.put(player.getUniqueId(), inputs);
             }
         }
+        rendered.keySet().retainAll(active);
+    }
+
+    private Rendered render(Inputs inputs) {
+        var online = Formatter.number("online", inputs.visible());
+        var max = Formatter.number("max", inputs.max());
+        return new Rendered(messages.getJoined("tab.header", max, online),
+                messages.getJoined("tab.footer", max, online, Placeholder.unparsed("server", inputs.server())));
     }
 }
