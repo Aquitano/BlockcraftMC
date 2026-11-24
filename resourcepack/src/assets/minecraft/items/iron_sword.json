@@ -17,6 +17,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/quicksg"
         }
+      },
+      {
+        "when": "blockcraft:zombies/knife",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/knife"
+        }
       }
     ],
     "fallback": {

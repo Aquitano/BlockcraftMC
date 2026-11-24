@@ -930,46 +930,47 @@ public final class HudArt {
     private static final List<String> ZOMBIES_GUNS = List.of("pistol", "rifle", "shotgun", "sniper", "flamethrower");
     private static final int GUN_WIDTH = 32;
     private static final int GUN_HEIGHT = 12;
-    /** The model's height, from its lowest grip to its highest sight, drawn centred in the icon. */
-    private static final double GUN_BOTTOM = 2, GUN_TOP = 11;
-    /**
-     * The vanilla blocks the guns' models are textured with, as a flat colour, a lit top and a shaded bottom. A dark
-     * block is lifted so the part still reads on the panel's dark glass.
-     */
-    private static final Map<String, int[]> GUN_MATERIALS = Map.of(
-            "metal", new int[] {0xFFC9CED6, 0xFFEEF1F5, 0xFF8C939E},
-            "dark", new int[] {0xFF5D636E, 0xFF808894, 0xFF3E434C},
-            "grip", new int[] {0xFF8A6239, 0xFFA87C4D, 0xFF5E4026},
-            "copper", new int[] {0xFFC8734F, 0xFFE3946E, 0xFF8E4A31});
+    /** Representative block colours, lifted slightly for the silhouettes on dark glass. */
+    private static final Map<String, Integer> GUN_MATERIALS = Map.ofEntries(
+            Map.entry("iron", 0xC9CED6), Map.entry("slate", 0x545662), Map.entry("black", 0x282A32),
+            Map.entry("wood", 0x966C43), Map.entry("darkwood", 0x674528), Map.entry("brass", 0xCA8056),
+            Map.entry("glass", 0x47887D), Map.entry("coil", 0x5B9E85), Map.entry("tank", 0xA45440),
+            Map.entry("light", 0xF7CB6B));
     private static final Pattern ELEMENT = Pattern.compile(
             "\"from\":\\s*\\[([^\\]]*)]\\s*,\\s*\"to\":\\s*\\[([^\\]]*)]\\s*,\\s*\"faces\":\\s*\\{\\s*\"\\w+\":\\s*\\{\\s*\"texture\":\\s*\"#(\\w+)\"");
 
     /**
-     * The gun from the side, muzzle to the right: each cuboid of the model filled in its material, one texel per half
+     * The gun from the side, muzzle to the right: each cuboid of the model filled in its material, up to one texel per half
      * unit, centred in the icon along the barrel.
      */
     private static BufferedImage gunSide(String model) {
-        record Part(double[] from, double[] to, int[] colours) { }
+        record Part(double[] from, double[] to, Color colour) { }
         var parts = new ArrayList<Part>();
         var elements = ELEMENT.matcher(model);
         while (elements.find()) {
-            parts.add(new Part(coordinates(elements.group(1)), coordinates(elements.group(2)), GUN_MATERIALS.get(elements.group(3))));
+            parts.add(new Part(coordinates(elements.group(1)), coordinates(elements.group(2)), new Color(GUN_MATERIALS.get(elements.group(3)))));
         }
         if (parts.isEmpty() || parts.size() != model.split("\"from\"", -1).length - 1) {
-            throw new IllegalStateException("A gun model's elements no longer read as cuboids of one material each");
+            throw new IllegalStateException("A gun model's elements no longer read as cuboids with a material");
         }
         double back = parts.stream().mapToDouble(part -> part.from()[2]).min().orElseThrow();
         double front = parts.stream().mapToDouble(part -> part.to()[2]).max().orElseThrow();
-        int left = (int) Math.round(GUN_WIDTH - (front - back));
-        int top = (int) Math.round(GUN_HEIGHT - (GUN_TOP - GUN_BOTTOM));
+        double bottom = parts.stream().mapToDouble(part -> part.from()[1]).min().orElseThrow();
+        double top = parts.stream().mapToDouble(part -> part.to()[1]).max().orElseThrow();
+        double scale = Math.min(2, (2.0 * GUN_HEIGHT - 2) / (top - bottom));
+        double left = GUN_WIDTH - scale * (front - back) / 2;
+        double inset = GUN_HEIGHT - scale * (top - bottom) / 2;
         var image = new BufferedImage(2 * GUN_WIDTH, 2 * GUN_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        parts.sort(java.util.Comparator.comparingDouble((Part part) -> part.from()[0]).reversed());
         for (var part : parts) {
-            int x0 = left + (int) Math.round(2 * (part.from()[2] - back)), x1 = left + (int) Math.round(2 * (part.to()[2] - back));
-            int y0 = top + (int) Math.round(2 * (GUN_TOP - part.to()[1])), y1 = top + (int) Math.round(2 * (GUN_TOP - part.from()[1]));
-            for (int y = y0; y < y1; y++) {
-                for (int x = x0; x < x1; x++) {
-                    image.setRGB(x, y, part.colours()[y == y0 ? 1 : y == y1 - 1 ? 2 : 0]);
-                }
+            int x0 = (int) Math.round(left + scale * (part.from()[2] - back));
+            int x1 = (int) Math.round(left + scale * (part.to()[2] - back));
+            int y0 = (int) Math.round(inset + scale * (top - part.to()[1]));
+            int y1 = (int) Math.round(inset + scale * (top - part.from()[1]));
+            fill(image, x0, y0, x1 - x0, y1 - y0, part.colour().getRGB());
+            if (y1 - y0 >= 3) {
+                fill(image, x0, y0, x1 - x0, 1, part.colour().brighter().getRGB());
+                fill(image, x0, y1 - 1, x1 - x0, 1, part.colour().darker().getRGB());
             }
         }
         padAdvance(image, image.getWidth() - 1, 0, image.getHeight());

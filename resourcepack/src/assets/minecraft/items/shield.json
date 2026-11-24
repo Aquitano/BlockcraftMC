@@ -10,6 +10,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/duell"
         }
+      },
+      {
+        "when": "blockcraft:zombies/riot_shield",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/riot_shield"
+        }
       }
     ],
     "fallback": {
