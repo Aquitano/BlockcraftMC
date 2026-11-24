@@ -80,6 +80,11 @@ the image builds, so a start only copies the plugins from `COPY_PLUGINS_SRC` and
 writes `server.properties` and starts Java: about 20 s faster than the itzg image it replaces. A Paper bump is a catalog
 change, `stagePlugins` and `docker compose up -d`; a server whose image is older than `runtime.env` refuses to start.
 
+The image runs Java 27, which turns on compact object headers by default, while Gradle stays on Java 25. Its build boots
+Paper twice and keeps an AOT cache of the classes the second start loads and links, so a start maps them instead of
+loading them again. The training boots run without plugins, so the cache holds Paper's and Minecraft's classes, and it
+works only with the jars and JVM it was made from, so it is rebuilt with the image.
+
 `start-paper` reads `EULA`, `MEMORY`, `JVM_XX_OPTS`, `JVM_OPTS`, `CREATE_CONSOLE_IN_PIPE`, `STOP_DURATION`,
 `RCON_PASSWORD` and the server.properties settings it lists. It refuses to start with an itzg setting it does not read,
 such as `VIEW_DISTANCE`, instead of ignoring it. `rcon-cli` and `mc-send-to-console` work as before, and `docker
