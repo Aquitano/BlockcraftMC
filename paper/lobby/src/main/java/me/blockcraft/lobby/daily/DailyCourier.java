@@ -11,8 +11,6 @@ import me.blockcraft.lobby.ChatTalk;
 import me.blockcraft.lobby.SpotEntities;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -28,9 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Where players take their daily reward: {@code /daily}, the chat line on arrival while today's is still open, and the
- * courier figure at the map's optional {@code daily} spot. Each has the courier say today's reward in chat, with a
- * button that claims it once.
+ * The daily reward: the first lobby arrival of a day pays it, and {@code /daily} and the courier figure at the map's
+ * optional {@code daily} spot have the courier say the streak in chat, with the coming days, or a button that claims
+ * today's reward should the arrival not have paid it.
  */
 public final class DailyCourier implements Listener, AutoCloseable {
 
@@ -45,7 +43,6 @@ public final class DailyCourier implements Listener, AutoCloseable {
     private final Messages messages;
     private final ChatTalk talk;
     private final SpotEntities.Group<String> courier;
-    private final Component claimButton;
 
     public DailyCourier(Plugin plugin, SpotEntities entities, ChatTalk talk, Locations<String> spots, DailyRewards rewards,
                         Messages messages) {
@@ -56,9 +53,6 @@ public final class DailyCourier implements Listener, AutoCloseable {
         this.talk = talk;
         courier = entities.group((player, spot) -> talk(player));
         table = new DailyRewardTable(BlockcraftApi.get().database(), rewards);
-        claimButton = messages.get("daily.claim-button")
-                .hoverEvent(HoverEvent.showText(messages.get("daily.claim-hover")))
-                .clickEvent(ClickEvent.runCommand("/daily"));
         refresh();
     }
 
@@ -71,22 +65,14 @@ public final class DailyCourier implements Listener, AutoCloseable {
         });
     }
 
-    /** Told after the arrival has settled, as the round recap is, so the line is not lost behind the loading screen. */
+    /** Paid after the arrival has settled, as the round recap is told, so the line is not lost behind the loading screen. */
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();
-        var id = player.getUniqueId();
-        var calendar = BlockcraftApi.get().calendar();
         Tasks.later(plugin, AFTER_ARRIVAL_TICKS, () -> {
-            if (!player.isOnline()) {
-                return;
+            if (player.isOnline()) {
+                pay(player, () -> {});
             }
-            Tasks.async(plugin, () -> table.today(id, calendar.today()), today -> {
-                if (!today.claimed() && player.isOnline()) {
-                    player.sendMessage(messages.get("daily.available", Formatter.number("coins", today.coins()),
-                            Placeholder.component("claim", claimButton)));
-                }
-            });
         });
     }
 
@@ -109,7 +95,9 @@ public final class DailyCourier implements Listener, AutoCloseable {
     private List<Component> buttons(Player player, DailyRewards.Today today) {
         var reward = TagResolver.resolver(Formatter.number("coins", today.coins()), Formatter.number("streak", today.streak()));
         var buttons = new ArrayList<Component>();
-        buttons.add(talk.once(player, messages.get("daily.take", reward), messages.get("daily.take-hover", reward), this::claim));
+        if (!today.claimed()) {
+            buttons.add(talk.once(player, messages.get("daily.take", reward), messages.get("daily.take-hover", reward), this::claim));
+        }
         if (rewards.previewDays() > 0) {
             buttons.add(talk.button(player, messages.get("daily.upcoming-button"), messages.get("daily.upcoming-hover"),
                     viewer -> viewer.sendMessage(upcoming(messages, rewards, today))));
@@ -117,16 +105,20 @@ public final class DailyCourier implements Listener, AutoCloseable {
         return buttons;
     }
 
-    /** Today's offer with its buttons, or once it is taken, when the next one comes. */
+    /** Today's offer, or once it is taken, when the next one comes; then the buttons, if there are any. */
     static List<Component> lines(Messages messages, DailyRewards.Today today, Duration untilNext, List<Component> buttons) {
         var name = messages.get("daily.name");
         var streak = Formatter.number("streak", today.streak());
-        if (today.claimed()) {
-            return List.of(ChatTalk.says(messages, name, messages.get("daily.done", streak,
-                    Formatter.number("hours", untilNext.toHours()), Formatter.number("minutes", untilNext.toMinutesPart()))));
+        var said = today.claimed()
+                ? messages.get("daily.done", streak, Formatter.number("hours", untilNext.toHours()),
+                        Formatter.number("minutes", untilNext.toMinutesPart()))
+                : messages.get("daily.offer", streak, Formatter.number("coins", today.coins()));
+        var lines = new ArrayList<Component>();
+        lines.add(ChatTalk.says(messages, name, said));
+        if (!buttons.isEmpty()) {
+            lines.add(messages.get("daily.actions", Placeholder.component("buttons", Component.join(JoinConfiguration.spaces(), buttons))));
         }
-        return List.of(ChatTalk.says(messages, name, messages.get("daily.offer", streak, Formatter.number("coins", today.coins()))),
-                messages.get("daily.actions", Placeholder.component("buttons", Component.join(JoinConfiguration.spaces(), buttons))));
+        return lines;
     }
 
     static Component upcoming(Messages messages, DailyRewards rewards, DailyRewards.Today today) {
@@ -139,6 +131,13 @@ public final class DailyCourier implements Listener, AutoCloseable {
     }
 
     private void claim(Player player) {
+        pay(player, () -> {
+            Sounds.MENU_DENY.play(player);
+            player.sendMessage(messages.get("daily.already-claimed"));
+        });
+    }
+
+    private void pay(Player player, Runnable alreadyPaid) {
         var id = player.getUniqueId();
         var name = BlockcraftApi.get().realName(player);
         var calendar = BlockcraftApi.get().calendar();
@@ -147,10 +146,7 @@ public final class DailyCourier implements Listener, AutoCloseable {
                     BlockcraftApi.get().notifications().rewardSound(player, Sounds.COINS);
                     player.sendMessage(messages.get("daily.claimed", Formatter.number("coins", today.coins()),
                             Formatter.number("streak", today.streak())));
-                }, () -> {
-                    Sounds.MENU_DENY.play(player);
-                    player.sendMessage(messages.get("daily.already-claimed"));
-                }));
+                }, alreadyPaid));
     }
 
     @Override

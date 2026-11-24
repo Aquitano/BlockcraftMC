@@ -22,16 +22,20 @@ public class DailyCourierTest {
             () -> getClass().getResourceAsStream("/messages.yml"));
 
     @Test
-    public void anOpenRewardComesWithItsButtonsAndATakenOneSaysWhenTheNextIsReady() {
+    public void anOpenRewardComesWithItsButtonsAndATakenOneSaysWhenTheNextIsReadyWithTheComingDays() {
         var open = plain(DailyCourier.lines(messages, new DailyRewards.Today(3, 20, false), Duration.ZERO,
                 List.of(Component.text("[claim]"), Component.text("[days]"))));
         assertEquals(2, open.size());
         assertTrue(open.getFirst(), open.getFirst().contains("Tag 3") && open.getFirst().contains("20 Coins"));
         assertTrue(open.get(1), open.get(1).contains("[claim] [days]"));
 
-        var taken = plain(DailyCourier.lines(messages, new DailyRewards.Today(3, 20, true), Duration.ofMinutes(4 * 60 + 5), List.of()));
-        assertEquals(1, taken.size());
+        var taken = plain(DailyCourier.lines(messages, new DailyRewards.Today(3, 20, true), Duration.ofMinutes(4 * 60 + 5),
+                List.of(Component.text("[days]"))));
+        assertEquals(2, taken.size());
         assertTrue(taken.getFirst(), taken.getFirst().contains("4 Std. 5 Min."));
+        assertTrue(taken.get(1), taken.get(1).contains("[days]"));
+
+        assertEquals(1, DailyCourier.lines(messages, new DailyRewards.Today(3, 20, true), Duration.ZERO, List.of()).size());
     }
 
     @Test

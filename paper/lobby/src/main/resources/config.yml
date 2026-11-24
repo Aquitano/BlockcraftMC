@@ -667,8 +667,9 @@ quests:
     reward: 50
     task: {type: play, table: bc_skywars_stats}
 
-# The daily login reward (/daily, a chat line on arrival, and a figure at the optional /lobbyset daily spot). One claim
-# per day in the network's calendar zone; consecutive days raise the streak, a missed day starts it again at day 1.
+# The daily login reward, paid on the first lobby arrival of a day; /daily and a figure at the optional /lobbyset daily
+# spot show the streak and the coming days. One claim per day in the network's calendar zone; consecutive days raise
+# the streak, a missed day starts it again at day 1.
 # coins pays day 1, 2, ... of a streak, the last value every day after. preview-days is how many coming days the
 # courier's [Nächste Tage] lists (0 to 7, 0 drops the button); skin is the figure's player name, empty for the default look.
 daily-rewards:

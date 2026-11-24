@@ -390,9 +390,9 @@ balance, so buying something never lowers a level. Level rewards live under `ach
 
 ## Daily reward
 
-`/daily` pays coins once a day in the lobby, and `/lobbyset daily` places an optional courier figure for it. A claim locks
-the player's row in `bc_daily_rewards`, moves the streak and credits `VCOINS` in one transaction, so two lobbies cannot pay
-the same day twice.
+The first lobby arrival of a day pays that day's coins. `/daily` and an optional courier figure at `/lobbyset daily` show
+the streak and the coming days. A claim locks the player's row in `bc_daily_rewards`, moves the streak and credits
+`VCOINS` in one transaction, so two lobbies cannot pay the same day twice.
 
 ## Nick and vanish across the network
 

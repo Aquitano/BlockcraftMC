@@ -51,7 +51,7 @@ help:
   - "  <click:suggest_command:'/coins'><hover:show_text:'<muted>Mit /coins top siehst du die Spieler mit den meisten Coins.'><primary>/coins <muted>- <white>Zeige deine Coins.</hover></click>"
   - "  <click:suggest_command:'/erfolge'><hover:show_text:'<muted>Zeigt, welche Erfolge du schon hast und welche noch fehlen.'><primary>/erfolge <muted>- <white>Öffne deine Erfolge.</hover></click>"
   - "  <click:suggest_command:'/elo'><hover:show_text:'<muted>Mit /elo top siehst du die besten Spieler der Saison.'><primary>/elo <muted>- <white>Zeige deine Duell-Elo.</hover></click>"
-  - "  <click:suggest_command:'/daily'><hover:show_text:'<muted>Nur in der Lobby. Jeden Tag wartet eine neue Belohnung.'><primary>/daily <muted>- <white>Hole deine tägliche Belohnung ab.</hover></click>"
+  - "  <click:suggest_command:'/daily'><hover:show_text:'<muted>Nur in der Lobby. Jeden Tag wartet eine neue Belohnung.'><primary>/daily <muted>- <white>Zeigt deine Serie der täglichen Belohnung.</hover></click>"
   - ""
   - " <accent>Server"
   - "  <click:suggest_command:'/report '><hover:show_text:'<muted>Das Team sieht sich deine Meldung an.'><primary>/report <Spieler> <muted>- <white>Melde einen verdächtigen Spieler.</hover></click>"
