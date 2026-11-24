@@ -49,7 +49,7 @@ public final class Pets {
         Animals pet = owner.getWorld().spawn(owner.getLocation(), type.entityClass(), animal -> {
             animal.customName(name(owner));
             animal.setCustomNameVisible(true);
-            animal.setRemoveWhenFarAway(true);
+            animal.setPersistenceRequired(false);
             animal.setPersistent(false);
             if (type.baby()) {
                 animal.setBaby();

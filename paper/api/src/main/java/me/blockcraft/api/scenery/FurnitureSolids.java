@@ -256,7 +256,7 @@ public final class FurnitureSolids implements Listener, AutoCloseable {
                 shulker.setInvulnerable(true);
                 shulker.setSilent(true);
                 shulker.setPersistent(false);
-                shulker.setRemoveWhenFarAway(false);
+                shulker.setPersistenceRequired(true);
                 shulker.setCollidable(true);
                 shulker.setPeek(0);
                 shulker.getAttribute(Attribute.SCALE).setBaseValue(size);

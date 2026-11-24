@@ -80,7 +80,7 @@ final class Creatures implements Listener, AutoCloseable {
         var entity = at.getWorld().spawn(at, Husk.class, mob -> {
             mob.setPersistent(false);
             mob.addScoreboardTag("blockcraft.starwars");
-            mob.setRemoveWhenFarAway(false);
+            mob.setPersistenceRequired(true);
             mob.setCanPickupItems(false);
             mob.setShouldBurnInDay(false);
             mob.setAdult();

@@ -88,7 +88,7 @@ public class AmbientCreaturesTest {
                 case "getLocation" -> this.at.clone();
                 case "teleport" -> { this.at = ((Location) args[0]).clone(); yield true; }
                 case "remove" -> { valid = false; yield null; }
-                case "setPersistent", "setRemoveWhenFarAway", "setAI", "setGravity", "setInvulnerable",
+                case "setPersistent", "setPersistenceRequired", "setAI", "setGravity", "setInvulnerable",
                      "setSilent", "setCollidable", "setCanPickupItems", "setVariant", "setBodyYaw", "setSitting" -> {
                     settings.put(method.getName(), args[0]);
                     yield null;
