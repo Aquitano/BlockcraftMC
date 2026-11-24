@@ -41,9 +41,9 @@ parkour-top:
 pond:
   ==: org.bukkit.Location
   world: world
-  x: -963.5
-  y: 28.0
-  z: 1641.5
+  x: -969.5
+  y: 24.0
+  z: 1593.5
   yaw: 0.0
   pitch: 0.0
 santa:

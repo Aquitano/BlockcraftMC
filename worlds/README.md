@@ -118,7 +118,7 @@ Run these checks after changing the imported maps or their setup data.
   on bottom stone-brick slabs at Y=7. Its headroom is clear.
 - Confirm that the shop has one villager and one current name card after startup and a
   periodic NPC respawn.
-- Inspect the gold-block BedWars navigator arrival. Cast into the winter fishing hole in the pond by spawn.
+- Inspect the gold-block BedWars navigator arrival. Cast into the winter fishing hole in the pool beside the hay bales north of spawn.
 - Complete the lobby course from its start plate. Check the finish sign, best time, leaderboard, and
   first-completion achievement. Repeat it to confirm the achievement pays only once.
 - Outside `/build`, right-click both sides of an ordinary sign. The editor must stay closed in survival and
@@ -154,7 +154,7 @@ The existing course starts on an oak plate of the imported build and finishes on
 sign. It uses zero checkpoints because no checkpoint markers exist in the imported build. Clicking the sign alone
 grants nothing.
 
-The pond by spawn has a three-block-wide winter fishing hole centered at `(-964, 27, 1641)`.
+The pool beside the hay bales north of spawn has a three-block-wide winter fishing hole centered at `(-970, 23, 1593)`.
 The [setup commands](../EASTER_EGGS.md#configure-the-lobby-map) let staff move the fishing area and check the map's activities.
 
 ## Shared waiting island
