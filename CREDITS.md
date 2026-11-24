@@ -235,6 +235,7 @@ modules declared in `gradle/libs.versions.toml`.
 | Server image `itzg/minecraft-server:2026.10.0-java25` | unknown, needs checking | Docker image `itzg/minecraft-server` | unknown, needs checking | Used as published | `docker-compose.yml` |
 | Proxy image `itzg/mc-proxy:2026.10.1-java25` | unknown, needs checking | Docker image `itzg/mc-proxy` | unknown, needs checking | Used as published | `docker-compose.yml` |
 | Waker's Java image `eclipse-temurin:25-jre` | unknown, needs checking | Docker image `eclipse-temurin` | unknown, needs checking | Used as published | `docker-compose.yml` |
+| Paper image's Java `eclipse-temurin:27-jre` | unknown, needs checking | Docker image `eclipse-temurin` | unknown, needs checking | Used as published | `docker/paper/Dockerfile` |
 
 ### At build time
 

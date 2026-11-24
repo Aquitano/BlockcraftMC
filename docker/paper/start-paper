@@ -80,7 +80,7 @@ printf 'password: "%s"\n' "$rcon_password" > "$HOME/.rcon-cli.yaml"
 
 memory=${MEMORY:-1G}
 # shellcheck disable=SC2206 # the option variables hold several space-separated options
-java_options=(${JVM_XX_OPTS:-} "-Xms$memory" "-Xmx$memory" ${JVM_OPTS:-})
+java_options=(-XX:AOTCache=/opt/paper/paper.aot ${JVM_XX_OPTS:-} "-Xms$memory" "-Xmx$memory" ${JVM_OPTS:-})
 
 runner_options=(--stop-duration "${STOP_DURATION:-60}s")
 console_pipe=${CREATE_CONSOLE_IN_PIPE:-}
