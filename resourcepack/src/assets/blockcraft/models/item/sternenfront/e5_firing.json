@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/e5",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        2.0,
+        176.0,
+        0.0
+      ],
+      "translation": [
+        0.7,
+        1.4,
+        0.44999999999999996
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        2.0,
+        176.0,
+        0.0
+      ],
+      "translation": [
+        0.7,
+        1.4,
+        0.44999999999999996
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    }
+  }
+}

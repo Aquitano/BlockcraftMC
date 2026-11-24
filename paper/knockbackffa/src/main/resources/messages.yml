@@ -1,0 +1,76 @@
+prefix: "<knockbackffa>Knockback FFA <dark>» <reset>"
+game-name: "<knockbackffa>Knockback FFA"
+commands:
+  ffa:
+    description: "Wechselt zwischen Mitspielen und Zuschauen"
+  stats:
+    description: "Zeigt die Knockback-FFA-Stats"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+command:
+  usage: "<prefix><muted>/ffa play zum Mitspielen, /ffa spectate zum Zuschauen, /hub zur Lobby."
+join:
+  introduction: "<prefix><muted>Stoße andere Spieler von den Inseln. Nach jedem Sturz spielst du sofort weiter. Alle kämpfen mit demselben Kit, das alle <accent><seconds> Sekunden <muted>wechselt."
+  playing: "<prefix><success>Du spielst mit! Nach dem Erscheinen schützt dich kurz ein Schild. Dein erster Treffer beendet ihn."
+  spectator: "<prefix><muted>Du schaust zu. Mit <accent>/ffa play <muted>spielst du wieder mit, mit <accent>/hub <muted>kehrst du zur Lobby zurück."
+item:
+  stick: "<primary>Rückstoß-Stick"
+  bow: "<accent>Bogen"
+  arrow: "<accent>Pfeil"
+  rod: "<accent>Angel"
+  snowball: "<accent>Schneeball"
+  grapple: "<accent>Enterhaken"
+  grapple-hint: "<right>Am Boden einholen, um dich hinzuziehen"
+  pearl: "<accent>Enderperle"
+  watch: "<primary>Zuschauen <dark>· <muted>Rechtsklick"
+  hub: "<primary>Zur Lobby <dark>· <muted>Rechtsklick"
+spawn:
+  protected: "<success>Startschutz <dark>· <muted>Dein erster Treffer beendet ihn."
+kit:
+  title: "<primary><display>Kitwechsel"
+  subtitle: "<accent><kit>"
+  countdown: "<accent>Kitwechsel in <seconds> Sekunden!"
+  countdown-second: "<accent>Kitwechsel in 1 Sekunde!"
+  standard: "Standard"
+  heavy: "Schwerer Stick"
+  archer: "Bogenschütze"
+  angler: "Angler"
+  snowman: "Schneemann"
+  grapple: "Enterhaken"
+  enderman: "Enderman"
+arena:
+  islands: "Inseln"
+  ring: "Ring"
+  crossroads: "Kreuzwege"
+rotation:
+  countdown: "<prefix><accent>Arenawechsel in <seconds> Sekunden."
+  countdown-second: "<prefix><accent>Arenawechsel in 1 Sekunde."
+  changed: "<prefix><success>Neue Arena: <map><success>! Deine Punkte und Serien bleiben erhalten."
+death:
+  kill: "<prefix><success>Du hast <accent><player> <success>von der Insel gestoßen."
+  killed: "<prefix><accent><player> <muted>hat dich von der Insel gestoßen."
+  fell: "<prefix><muted>Du bist gefallen. Neuer Versuch!"
+  streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
+launch:
+  countdown: "<accent>Sprungwelle in <seconds> Sekunden!"
+  countdown-second: "<accent>Sprungwelle in 1 Sekunde!"
+  now: "<prefix><accent>Sprungwelle! Halte dich auf den Inseln."
+scoreboard:
+  title: "<knockbackffa><bold>Knockback FFA"
+  kit: "<muted><icon:kit> KIT"
+  kit-value: "<kit> <dark>· <muted><kit_seconds>s"
+  score: "<muted><icon:kills> DEINE RUNDE"
+  kills: "<arrow><white><kills> <muted>Kills"
+  deaths: "<arrow><white><deaths> <muted>Stürze"
+  streak: "<arrow><white><streak> <muted>Serie"
+stats:
+  header: "<muted>Knockback-FFA-Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Stürze<dark>: <muted><deaths>"
+    - "<arrow><primary>K/D<dark>: <muted><kdr>"
+    - "<arrow><primary>Coins<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"

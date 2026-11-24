@@ -1,0 +1,171 @@
+{
+  "voice": {
+    "name": "de_DE-thorsten-high",
+    "author": "Thorsten Müller (Thorsten-Voice), Piper model by rhasspy",
+    "dataset_license": "CC0-1.0",
+    "dataset_source": "https://github.com/thorstenMueller/Thorsten-Voice",
+    "model_card": "https://huggingface.co/rhasspy/piper-voices/blob/main/de/de_DE/thorsten/high/MODEL_CARD",
+    "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
+    "engine": "piper-tts 1.4.2",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1",
+    "config_sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a",
+    "delivery": {
+      "kolonien": {
+        "length_scale": 0.9,
+        "noise_scale": 0.4,
+        "noise_w_scale": 0.6
+      },
+      "hegemonie": {
+        "length_scale": 0.96,
+        "noise_scale": 0.2,
+        "noise_w_scale": 0.4
+      }
+    }
+  },
+  "calls": {
+    "kolonien_contact": {
+      "message": "bot.voice.kolonien.contact",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_contact",
+      "event": "sternenfront.bot.kolonien.contact",
+      "duration_ticks": 30,
+      "sha256": "bf589de34c0bee44023cba06cf597ec01711a92c37615eeff7ecd1c4a25335e2",
+      "text_sha256": "5ec06b4ebe62c7cea936652eb2b2cc48b6154165e4b98a957eb958ce58ea26ab"
+    },
+    "kolonien_contact_2": {
+      "message": "bot.voice.kolonien.contact-2",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_contact_2",
+      "event": "sternenfront.bot.kolonien.contact",
+      "duration_ticks": 23,
+      "sha256": "b85710c084e40616923c79eb6863652cae0174c7b8faf80c7cbd98a7cfcb728a",
+      "text_sha256": "a815d3750ab7d15ae01939d022d724cc197ef5688a8d7258f243203c957b27fd"
+    },
+    "kolonien_cover": {
+      "message": "bot.voice.kolonien.cover",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_cover",
+      "event": "sternenfront.bot.kolonien.cover",
+      "duration_ticks": 24,
+      "sha256": "108bd86d23c4945f71036435da472504b34a28a121589b11aea881b04a0655b4",
+      "text_sha256": "6b6bac4fffcdcacdf31134185d9b4c72b5010886e975bb2367714f4245416a81"
+    },
+    "kolonien_cover_2": {
+      "message": "bot.voice.kolonien.cover-2",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_cover_2",
+      "event": "sternenfront.bot.kolonien.cover",
+      "duration_ticks": 30,
+      "sha256": "46385004aa461c954a54f8bc18a4b8348afb763f526d6f6b9d9bf2a64fd6fbac",
+      "text_sha256": "1ad2b9d1a76a80dd33cf523d9cb29c03cbb2689fa93368beed8b1fdf58d2dcd1"
+    },
+    "kolonien_advance": {
+      "message": "bot.voice.kolonien.advance",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_advance",
+      "event": "sternenfront.bot.kolonien.advance",
+      "duration_ticks": 36,
+      "sha256": "7681fec1f21e29833128c432018524e7c9ddd3ae3d2f5e2df38f19febc812a9d",
+      "text_sha256": "44c6ec6cddd103cd09ec6f2c1cf3c87e87ab17e032b4d1be735188bcf7190455"
+    },
+    "kolonien_advance_2": {
+      "message": "bot.voice.kolonien.advance-2",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_advance_2",
+      "event": "sternenfront.bot.kolonien.advance",
+      "duration_ticks": 27,
+      "sha256": "0fbc746118c7349d84b4eb1ae9bf2a990a9e4a2fb26926f01c742ab2b6a53688",
+      "text_sha256": "93f582261143d4beee44d9251180e6cb24a7d7fe65ec69d707ef1618d1a08455"
+    },
+    "kolonien_heal": {
+      "message": "bot.voice.kolonien.heal",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_heal",
+      "event": "sternenfront.bot.kolonien.heal",
+      "duration_ticks": 23,
+      "sha256": "751c6182c805947aec765db244d2b1098159b2826d36519acfcaf60dffd32ab6",
+      "text_sha256": "00e5532848958813f5656f647a05a7a7b67d0773afff94cda6adf3b73be65848"
+    },
+    "kolonien_heal_2": {
+      "message": "bot.voice.kolonien.heal-2",
+      "faction": "kolonien",
+      "sound": "bot_kolonien_heal_2",
+      "event": "sternenfront.bot.kolonien.heal",
+      "duration_ticks": 21,
+      "sha256": "b613fd1617a7ba0ebd68a6e2227d4446aa2114fc77d1b7e50b5f8f7991f02c53",
+      "text_sha256": "941aca63e90794d18cbe46d026498e6007ae05eac93f39bf458b406b79004af0"
+    },
+    "hegemonie_contact": {
+      "message": "bot.voice.hegemonie.contact",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_contact",
+      "event": "sternenfront.bot.hegemonie.contact",
+      "duration_ticks": 23,
+      "sha256": "9cd121ff8459998835e3424cf58ed4ded0e8e66ef81470f1cf0d60f0a1953a11",
+      "text_sha256": "bc951ab0be7ca52817c06328dd6a51f7b935899a844bcd32948f9190d5279327"
+    },
+    "hegemonie_contact_2": {
+      "message": "bot.voice.hegemonie.contact-2",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_contact_2",
+      "event": "sternenfront.bot.hegemonie.contact",
+      "duration_ticks": 45,
+      "sha256": "b291f39f20467b3a9de34dd392fcc8677ca995592c10a7345151d3a67a1ee247",
+      "text_sha256": "59381a488ee7f83849424e7fe92236bedd822d3a3130a8b892b14f7b8a8a37cf"
+    },
+    "hegemonie_cover": {
+      "message": "bot.voice.hegemonie.cover",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_cover",
+      "event": "sternenfront.bot.hegemonie.cover",
+      "duration_ticks": 28,
+      "sha256": "35bcf3d97cd3dddccfc4c2c14dd9cc36837ee0aba0ea437f2e497c0b9969089b",
+      "text_sha256": "9f56f6fc419c18775a9e18b0b30991a865ba7891b5904b6f7b017afd93bb480b"
+    },
+    "hegemonie_cover_2": {
+      "message": "bot.voice.hegemonie.cover-2",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_cover_2",
+      "event": "sternenfront.bot.hegemonie.cover",
+      "duration_ticks": 28,
+      "sha256": "d9c1f6d00cfbffcfb28a683a14f5d9e374f08538c03bf5253a87a8f00b9be7e0",
+      "text_sha256": "5439e136e4440c54ea5760b9aaecd758b0e3f977a3b4a7242cc4271f00ea8de6"
+    },
+    "hegemonie_advance": {
+      "message": "bot.voice.hegemonie.advance",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_advance",
+      "event": "sternenfront.bot.hegemonie.advance",
+      "duration_ticks": 39,
+      "sha256": "ebb4e01ec3b24d3b0bfc1ba69a265cc906d315c30027bfcef8a22d7309924ede",
+      "text_sha256": "3ea993f1e364d4446f41e95a479d197bd8739d105981dc0fdd086536259d02c6"
+    },
+    "hegemonie_advance_2": {
+      "message": "bot.voice.hegemonie.advance-2",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_advance_2",
+      "event": "sternenfront.bot.hegemonie.advance",
+      "duration_ticks": 29,
+      "sha256": "e7bc7b3d576f70d7ffec6e72a159d41a80314dc4a6dca1128815a956552f1a6a",
+      "text_sha256": "0d1fdfd81fb3c7205aae6354bd7a8c4e31a736efa02f3a60c1edf9c0be6bea83"
+    },
+    "hegemonie_heal": {
+      "message": "bot.voice.hegemonie.heal",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_heal",
+      "event": "sternenfront.bot.hegemonie.heal",
+      "duration_ticks": 30,
+      "sha256": "c91fa48966fb2d115d786dbe29d4ccbceb757255d3781b050e6a20ddfe4833b6",
+      "text_sha256": "3e4ab39180df091450c4ad6b08b670b226d43f960a0d3666233607dc1f3e255f"
+    },
+    "hegemonie_heal_2": {
+      "message": "bot.voice.hegemonie.heal-2",
+      "faction": "hegemonie",
+      "sound": "bot_hegemonie_heal_2",
+      "event": "sternenfront.bot.hegemonie.heal",
+      "duration_ticks": 23,
+      "sha256": "ff0d898439ad5f9bdce10107a87d2e07e765095b0b5906dde8fc31742446f7bd",
+      "text_sha256": "a34aa8da801a95cba40d9e5aeaa319b266d27adaa67f588957a6b8c5243bbf41"
+    }
+  }
+}

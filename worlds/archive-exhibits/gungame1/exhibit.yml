@@ -1,0 +1,21 @@
+name: Swamp
+origin: Blockcraft 2015–16
+category: Minispiele
+description: Die GunGame-Karte Swamp von Blockcraft mit Bäumen, Wasserflächen und
+  kleinen Parkbauten. Erbaut von Truuz und Ubica.
+icon: iron_sword
+arrival:
+  x: -2.5
+  y: 21.0
+  z: -105.5
+  yaw: -180.0
+  pitch: 0.0
+checkpoints:
+- name: Truuz’ Schaukel
+  description: Die am Bauwerk als „Truuz's Schaukel“ beschriftete Schaukel.
+  at:
+    x: 44.5
+    y: 22.0
+    z: -23.5
+    yaw: 180.0
+    pitch: 0.0

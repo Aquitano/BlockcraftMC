@@ -1,0 +1,864 @@
+blockcraft_planet_kamino_window_mullion:
+  itemname: <white>Ozeanfenster · Mittelsteg
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/window_mullion
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/window_mullion
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:light_blue_stained_glass
+        - -1,1,-1 minecraft:light_blue_stained_glass
+        - 0,0,-1 minecraft:light_blue_stained_glass
+        - 0,1,-1 minecraft:light_blue_stained_glass
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_window_rib:
+  itemname: <white>Ozeanfenster · Stützrippe
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/window_rib
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/window_rib
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:light_blue_stained_glass
+        - -1,1,-1 minecraft:light_blue_stained_glass
+        - 0,0,-1 minecraft:light_blue_stained_glass
+        - 0,1,-1 minecraft:light_blue_stained_glass
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_window_corner:
+  itemname: <white>Ozeanfenster · Ecke
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/window_corner
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/window_corner
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:light_blue_stained_glass
+        - -1,1,-1 minecraft:light_blue_stained_glass
+        - 0,0,-1 minecraft:light_blue_stained_glass
+        - 0,1,-1 minecraft:light_blue_stained_glass
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_platform_rim:
+  itemname: <white>Plattform · Rand
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/platform_rim
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/platform_rim
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_quartz
+        - 0,-1,-1 minecraft:smooth_quartz
+        cubes:
+        - -0.687500,-0.375000,0.000000 0.625000
+        - -0.229167,-0.375000,0.000000 0.625000
+        - 0.229167,-0.375000,0.000000 0.625000
+        - 0.687500,-0.375000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_platform_corner:
+  itemname: <white>Plattform · Ecke
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/platform_corner
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/platform_corner
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_quartz
+        - 0,-1,-1 minecraft:smooth_quartz
+        cubes:
+        - -0.687500,-0.375000,0.000000 0.625000
+        - -0.229167,-0.375000,0.000000 0.625000
+        - 0.229167,-0.375000,0.000000 0.625000
+        - 0.687500,-0.375000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_platform_rail:
+  itemname: <white>Plattform · Geländer
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/platform_rail
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/platform_rail
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_quartz
+        - 0,-1,-1 minecraft:smooth_quartz
+        cubes:
+        - -0.500000,0.375000,0.000000 1.000000
+        - 0.500000,0.375000,0.000000 1.000000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_platform_light:
+  itemname: <white>Plattform · Randlicht
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/platform_light
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/platform_light
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_quartz
+        - 0,-1,-1 minecraft:smooth_quartz
+        cubes:
+        - -0.687500,-0.375000,0.000000 0.625000
+        - -0.229167,-0.375000,0.000000 0.625000
+        - 0.229167,-0.375000,0.000000 0.625000
+        - 0.687500,-0.375000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+      lights:
+        lights:
+        - 0,-1,0 7
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/kamino/platform_light_off
+blockcraft_planet_kamino_storm_drain:
+  itemname: <white>Regenablauf
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/storm_drain
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/storm_drain
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: wall-detail
+        blocks:
+        - 0,0,-1 minecraft:smooth_quartz
+        cubes: []
+        model_shift: 0,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_storm_streak:
+  itemname: <white>Regenstreifen
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/storm_streak
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/storm_streak
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: wall-detail
+        blocks:
+        - 0,0,-1 minecraft:smooth_quartz
+        cubes: []
+        model_shift: 0,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_storm_seam:
+  itemname: <white>Undichte Fuge
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/storm_seam
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/storm_seam
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: wall-detail
+        blocks:
+        - 0,0,-1 minecraft:smooth_quartz
+        cubes: []
+        model_shift: 0,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_kamino_storm_panel:
+  itemname: <white>Abgenutzte Verkleidung
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/kamino/storm_panel
+  Pack:
+    model: blockcraft:item/sternenfront/kits/kamino/storm_panel
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: wall-detail
+        blocks:
+        - 0,0,-1 minecraft:smooth_quartz
+        cubes: []
+        model_shift: 0,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_roof_rim:
+  itemname: <white>Dach · Traufe
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/roof_rim
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/roof_rim
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_sandstone
+        - -1,-1,0 minecraft:smooth_sandstone
+        - 0,-1,-1 minecraft:smooth_sandstone
+        - 0,-1,0 minecraft:smooth_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_roof_corner:
+  itemname: <white>Dach · Ecke
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/roof_corner
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/roof_corner
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_sandstone
+        - -1,-1,0 minecraft:smooth_sandstone
+        - 0,-1,-1 minecraft:smooth_sandstone
+        - 0,-1,0 minecraft:smooth_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_roof_step:
+  itemname: <white>Dach · Stufe
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/roof_step
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/roof_step
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_sandstone
+        - -1,-1,0 minecraft:smooth_sandstone
+        - 0,-1,-1 minecraft:smooth_sandstone
+        - 0,-1,0 minecraft:smooth_sandstone
+        cubes:
+        - -0.500000,-0.500000,-0.500000 1.000000
+        - 0.500000,-0.500000,-0.500000 1.000000
+        - -0.500000,-0.125000,0.500000 1.000000
+        - 0.500000,-0.125000,0.500000 1.000000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_roof_dome:
+  itemname: <white>Dach · Kuppel
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/roof_dome
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/roof_dome
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,-1,-1 minecraft:smooth_sandstone
+        - -1,-1,0 minecraft:smooth_sandstone
+        - 0,-1,-1 minecraft:smooth_sandstone
+        - 0,-1,0 minecraft:smooth_sandstone
+        cubes:
+        - 0.000000,0.000000,0.000000 1.000000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_wall_straight:
+  itemname: <white>Putzwand · Gerade
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/wall_straight
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/wall_straight
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:smooth_sandstone
+        - -1,1,-1 minecraft:smooth_sandstone
+        - 0,0,-1 minecraft:smooth_sandstone
+        - 0,1,-1 minecraft:smooth_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_wall_corner:
+  itemname: <white>Putzwand · Ecke
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/wall_corner
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/wall_corner
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:smooth_sandstone
+        - -1,1,-1 minecraft:smooth_sandstone
+        - 0,0,-1 minecraft:smooth_sandstone
+        - 0,1,-1 minecraft:smooth_sandstone
+        - 0,0,0 minecraft:smooth_sandstone
+        - 0,1,0 minecraft:smooth_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_wall_patch:
+  itemname: <white>Putzwand · Reparatur
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/wall_patch
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/wall_patch
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:smooth_sandstone
+        - -1,1,-1 minecraft:smooth_sandstone
+        - 0,0,-1 minecraft:smooth_sandstone
+        - 0,1,-1 minecraft:smooth_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_entrance_recess:
+  itemname: <white>Eingang · Tiefer Rahmen
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/entrance_recess
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/entrance_recess
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,2,-1 minecraft:smooth_sandstone
+        - 0,2,-1 minecraft:smooth_sandstone
+        cubes:
+        - -0.843750,0.000000,0.000000 0.625000
+        - -0.843750,0.625000,0.000000 0.625000
+        - -0.843750,1.250000,0.000000 0.625000
+        - 0.843750,0.000000,0.000000 0.625000
+        - 0.843750,0.625000,0.000000 0.625000
+        - 0.843750,1.250000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_entrance_frame:
+  itemname: <white>Eingang · Außenrahmen
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/entrance_frame
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/entrance_frame
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,2,-1 minecraft:smooth_sandstone
+        - 0,2,-1 minecraft:smooth_sandstone
+        cubes:
+        - -0.843750,0.000000,0.000000 0.625000
+        - -0.843750,0.625000,0.000000 0.625000
+        - -0.843750,1.250000,0.000000 0.625000
+        - 0.843750,0.000000,0.000000 0.625000
+        - 0.843750,0.625000,0.000000 0.625000
+        - 0.843750,1.250000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_entrance_shutter:
+  itemname: <white>Eingang · Seitenladen
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/entrance_shutter
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/entrance_shutter
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,2,-1 minecraft:smooth_sandstone
+        - 0,2,-1 minecraft:smooth_sandstone
+        cubes:
+        - -0.843750,0.000000,0.000000 0.625000
+        - -0.843750,0.625000,0.000000 0.625000
+        - -0.843750,1.250000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_shade_awning:
+  itemname: <white>Markt · Sonnensegel
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/shade_awning
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/shade_awning
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: canopy
+        blocks:
+        - -1,-1,-1 minecraft:smooth_sandstone
+        - -1,-1,0 minecraft:smooth_sandstone
+        - 0,-1,-1 minecraft:smooth_sandstone
+        - 0,-1,0 minecraft:smooth_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_shade_pole:
+  itemname: <white>Markt · Stütze
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/shade_pole
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/shade_pole
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: post
+        blocks: []
+        cubes:
+        - 0.000000,0.000000,0.000000 0.625000
+        - 0.000000,0.458333,0.000000 0.625000
+        - 0.000000,0.916667,0.000000 0.625000
+        - 0.000000,1.375000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_shade_canopy:
+  itemname: <white>Markt · Baldachin
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/shade_canopy
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/shade_canopy
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: canopy
+        blocks:
+        - -1,-1,-1 minecraft:smooth_sandstone
+        - -1,-1,0 minecraft:smooth_sandstone
+        - 0,-1,-1 minecraft:smooth_sandstone
+        - 0,-1,0 minecraft:smooth_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_water_vaporator:
+  itemname: <white>Feuchtigkeitsverdampfer
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/water_vaporator
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/water_vaporator
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0,0
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks: []
+        cubes:
+        - 0.000000,0.000000,0.000000 0.625000
+blockcraft_planet_desert_water_cistern:
+  itemname: <white>Wasserzisterne
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/water_cistern
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/water_cistern
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0,0
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks: []
+        cubes:
+        - 0.000000,0.000000,0.000000 0.750000
+        - 0.000000,0.625000,0.000000 0.750000
+blockcraft_planet_desert_water_pump:
+  itemname: <white>Wasserpumpe mit Anschluss
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/water_pump
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/water_pump
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0,0
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks: []
+        cubes:
+        - 0.000000,0.000000,0.000000 0.625000
+        - 0.000000,0.250000,0.000000 0.625000
+blockcraft_planet_desert_power_generator:
+  itemname: <white>Lokaler Generator
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/power_generator
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/power_generator
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0,0
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks: []
+        cubes:
+        - -0.062500,0.000000,0.000000 0.750000
+        - -0.062500,0.125000,0.000000 0.750000
+        - 0.062500,0.000000,0.000000 0.750000
+        - 0.062500,0.125000,0.000000 0.750000
+      lights:
+        lights:
+        - 0,0,0 7
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/desert/power_generator_off
+blockcraft_planet_desert_power_distribution:
+  itemname: <white>Stromverteiler
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/power_distribution
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/power_distribution
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,0,0
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks: []
+        cubes:
+        - 0.000000,0.000000,0.000000 0.625000
+        - 0.000000,0.625000,0.000000 0.625000
+      lights:
+        lights:
+        - 0,0,0 7
+        toggleable: true
+        toggled_item_model: blockcraft:sternenfront/kits/desert/power_distribution_off
+blockcraft_planet_desert_canyon_strata:
+  itemname: <white>Canyon · Gesteinsschicht
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/canyon_strata
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/canyon_strata
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:red_sandstone
+        - 0,0,-1 minecraft:red_sandstone
+        cubes: []
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_canyon_ledge:
+  itemname: <white>Canyon · Felsvorsprung
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/canyon_ledge
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/canyon_ledge
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,0,-1 minecraft:red_sandstone
+        - 0,0,-1 minecraft:red_sandstone
+        cubes:
+        - -0.437500,-0.125000,0.250000 0.625000
+        - 0.000000,-0.125000,0.250000 0.625000
+        - 0.437500,-0.125000,0.250000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true
+blockcraft_planet_desert_canyon_cave:
+  itemname: <white>Canyon · Höhlenrand
+  material: PAPER
+  Components:
+    item_model: blockcraft:sternenfront/kits/desert/canyon_cave
+  Pack:
+    model: blockcraft:item/sternenfront/kits/desert/canyon_cave
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: -0.499,0.001,-0.499
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        barriers: []
+      blockcraft_collision:
+        mode: solid
+        blocks:
+        - -1,2,-1 minecraft:smooth_sandstone
+        - 0,2,-1 minecraft:smooth_sandstone
+        cubes:
+        - -0.843750,0.000000,0.000000 0.625000
+        - -0.843750,0.625000,0.000000 0.625000
+        - -0.843750,1.250000,0.000000 0.625000
+        - 0.843750,0.000000,0.000000 0.625000
+        - 0.843750,0.625000,0.000000 0.625000
+        - 0.843750,1.250000,0.000000 0.625000
+        grid: true
+        model_shift: -0.499,0.001,-0.499
+        keep_existing: true

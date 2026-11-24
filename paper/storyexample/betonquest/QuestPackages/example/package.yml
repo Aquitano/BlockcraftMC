@@ -1,0 +1,57 @@
+npcs:
+  mara: "blockcraft mara"
+
+npc_conversations:
+  mara: mara
+
+# The party shares its facts, so these hold for every member: `stage` is where the party stands, and a decided vote
+# becomes the fact of its topic. `/story state` shows them and `/story fact` changes them.
+conditions:
+  briefing: "storystage briefing"
+  signal: "storystage signal"
+  hold: "storystage hold"
+  report: "storystage report"
+  debrief: "storystage debrief"
+  voted: "storyvoted decision"
+  choseStay: "storyfact decision stay"
+  choseLeave: "storyfact decision leave"
+
+# The game runs `begin_<chapter>` once when a chapter starts, `enter_<stage>` once when the party enters a stage of
+# config.yml's `stages`, `stage_<stage>` for every member then and for a member who rejoins, and `decided_<topic>` once
+# a vote is decided. `/story jump <stage>` enters a stage without playing what comes before.
+actions:
+  begin_signal: "storyscene arrival then:toBriefing"
+  begin_relief: "storystage debrief"
+  relieve: "storyend relieved"
+  toBriefing: "storystage briefing"
+  depart: "storystage signal"
+  toHold: "storystage hold"
+  toReport: "storystage report"
+  voteStay: "storyvote decision stay"
+  voteLeave: "storyvote decision leave"
+  decided_decision: "storyafter 40 toEnding"
+  toEnding: "storystage ending"
+  enter_report: "storysound minecraft:block.note_block.chime volume:0.8"
+  enter_ending: "folder endStay,endLeave"
+  endStay: "storyend stay conditions:choseStay"
+  endLeave: "storyend leave conditions:choseLeave"
+  stage_briefing: "objective delete reach,keep"
+  stage_signal: "objective add reach"
+  stage_hold: "folder dropReach,giveKeep"
+  stage_report: "objective delete reach,keep"
+  stage_ending: "objective delete reach,keep"
+  dropReach: "objective delete reach"
+  giveKeep: "objective add keep"
+
+# `location` is BetonQuest's own and completes for each member who gets there; `holdspot` is the core's and completes
+# for the whole party at once, after fifteen seconds with a member standing within four blocks.
+objectives:
+  reach: "location 20.5;-60;8.5;world 4 actions:toHold"
+  keep: "holdspot 20.5;-60;8.5;world 4 15 actions:toReport"
+
+# The dialogue panel shows when a conversation starts and ends, so the chat stays out of it.
+notifications:
+  conversation_start:
+    io: suppress
+  conversation_end:
+    io: suppress

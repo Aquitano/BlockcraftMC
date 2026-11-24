@@ -1,0 +1,20 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/chat_tags",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/chat_tags"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/name_tag"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+step-ticks: 2
+creatures:
+  garden-bee-1:
+    type: bee
+    travel-ticks: 120
+    rest-ticks: 60
+    phase-ticks: 0
+    hover-blocks: 0.04
+    route:
+      - {x: -952.5, y: 25.4, z: 1596.5}
+      - {x: -950, y: 26, z: 1595.5}
+      - {x: -947.5, y: 25.7, z: 1597.5}
+  garden-bee-2:
+    type: bee
+    travel-ticks: 120
+    rest-ticks: 60
+    phase-ticks: 270
+    hover-blocks: 0.04
+    route:
+      - {x: -952.5, y: 25.4, z: 1596.5}
+      - {x: -950, y: 26, z: 1595.5}
+      - {x: -947.5, y: 25.7, z: 1597.5}

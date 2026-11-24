@@ -1,0 +1,66 @@
+package me.blockcraft.sternenfront.hero;
+
+import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.Blaster;
+import org.junit.Test;
+
+import java.util.UUID;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class HeroRosterTest {
+
+    @Test
+    public void cloneWarsHeroesFightForTheirOwnFaction() {
+        assertEquals(List.of(Hero.JEDI, Hero.COMMANDER), Hero.of(Faction.KOLONIEN));
+        assertEquals(List.of(Hero.BOUNTY_HUNTER, Hero.SITH), Hero.of(Faction.HEGEMONIE));
+        assertEquals(Blaster.TWIN_PISTOL, ((Hero.Weapon.Gun) Hero.COMMANDER.weapon()).blaster());
+        assertEquals(Blaster.WESTAR_PISTOLS, ((Hero.Weapon.Gun) Hero.BOUNTY_HUNTER.weapon()).blaster());
+    }
+
+    @Test
+    public void aFactionFieldsOnlyItsOwnHeroesUpToItsSlots() {
+        var roster = new HeroRoster(1);
+
+        assertFalse(roster.open(Faction.KOLONIEN, Hero.SITH));
+        assertTrue(roster.enlist(UUID.randomUUID(), Faction.KOLONIEN, Hero.JEDI));
+        assertFalse(roster.open(Faction.KOLONIEN, Hero.COMMANDER));
+        assertTrue(roster.open(Faction.HEGEMONIE, Hero.SITH));
+    }
+
+    @Test
+    public void aFallenHeroFreesTheSlotAndTheChampionTakesNone() {
+        var roster = new HeroRoster(1);
+        var jedi = UUID.randomUUID();
+        roster.enlist(jedi, Faction.KOLONIEN, Hero.JEDI);
+
+        assertTrue(roster.enlist(UUID.randomUUID(), Faction.KOLONIEN, Hero.CHAMPION));
+        roster.discharge(jedi);
+
+        assertTrue(roster.open(Faction.KOLONIEN, Hero.COMMANDER));
+    }
+
+    @Test
+    public void aGrantedSlotLetsOnlyThatFactionFieldOneMore() {
+        var roster = new HeroRoster(1);
+        roster.enlist(UUID.randomUUID(), Faction.KOLONIEN, Hero.JEDI);
+        roster.enlist(UUID.randomUUID(), Faction.HEGEMONIE, Hero.SITH);
+
+        roster.grantSlot(Faction.KOLONIEN);
+
+        assertTrue(roster.open(Faction.KOLONIEN, Hero.COMMANDER));
+        assertFalse(roster.open(Faction.HEGEMONIE, Hero.BOUNTY_HUNTER));
+    }
+
+    @Test
+    public void theSameHeroFightsOnlyOnceEvenWithMoreSlots() {
+        var roster = new HeroRoster(2);
+        roster.enlist(UUID.randomUUID(), Faction.HEGEMONIE, Hero.SITH);
+
+        assertFalse(roster.open(Faction.HEGEMONIE, Hero.SITH));
+        assertTrue(roster.open(Faction.HEGEMONIE, Hero.BOUNTY_HUNTER));
+    }
+}

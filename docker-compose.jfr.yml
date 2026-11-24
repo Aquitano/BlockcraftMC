@@ -1,0 +1,85 @@
+# Opt-in flight recording. See dev/performance/README.md.
+x-jfr: &jfr
+  JVM_OPTS: >-
+    -Duser.language.format=de -Duser.country.format=DE
+    -XX:FlightRecorderOptions:memorysize=4m,maxchunksize=8m
+    -XX:StartFlightRecording:name=blockcraft,settings=none,disk=true,maxage=7d,maxsize=${BLOCKCRAFT_JFR_MAX_SIZE:-512m},dumponexit=true,filename=/jfr,+jdk.ExecutionSample#enabled=true,+jdk.ExecutionSample#period=40ms,+jdk.ObjectAllocationSample#enabled=true,+jdk.ObjectAllocationSample#throttle=20/s,+jdk.ObjectAllocationSample#stackTrace=true,+jdk.CPULoad#enabled=true,+jdk.CPULoad#period=5s,+jdk.GCPhasePause#enabled=true,+jdk.GCHeapSummary#enabled=true,+jdk.ResidentSetSize#enabled=true,+jdk.ResidentSetSize#period=30s,+blockcraft.SlowTick#enabled=true
+
+x-paper-jfr: &paper-jfr
+  <<: *jfr
+  BLOCKCRAFT_JFR_SLOW_TICKS: "true"
+  SPARK_BACKGROUNDPROFILER: "false"
+
+services:
+  velocity:
+    environment: *jfr
+    volumes:
+      - ./run/performance/jfr/velocity:/jfr
+  lobby:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/lobby:/jfr
+  duell:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/duell:/jfr
+  emeraldrush:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/emeraldrush:/jfr
+  bedwars:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/bedwars:/jfr
+  mlgrush:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/mlgrush:/jfr
+  zombies:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/zombies:/jfr
+  cores:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/cores:/jfr
+  sternenfront:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/sternenfront:/jfr
+  story:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/story:/jfr
+  endergames:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/endergames:/jfr
+  ttt:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/ttt:/jfr
+  ttt2:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/ttt2:/jfr
+  knockbackffa:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/knockbackffa:/jfr
+  skywars:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/skywars:/jfr
+  archive:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/archive:/jfr
+  quicksg:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/quicksg:/jfr
+  replay:
+    environment: *paper-jfr
+    volumes:
+      - ./run/performance/jfr/replay:/jfr

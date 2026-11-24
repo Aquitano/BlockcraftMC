@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/skywars",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/skywars"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/jump_pack",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/jump_pack"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/feather"
+    }
+  }
+}

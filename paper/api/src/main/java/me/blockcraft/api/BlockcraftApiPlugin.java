@@ -1,0 +1,331 @@
+package me.blockcraft.api;
+
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.achievement.Achievements;
+import me.blockcraft.api.afk.Afk;
+import me.blockcraft.api.afk.AfkCommand;
+import me.blockcraft.api.audit.StaffAudit;
+import me.blockcraft.api.coins.CoinsJoinListener;
+import me.blockcraft.api.command.BuildCommand;
+import me.blockcraft.api.command.CoinsCommand;
+import me.blockcraft.api.command.CommandRegistry;
+import me.blockcraft.api.command.LevelCommand;
+import me.blockcraft.api.command.MapCommand;
+import me.blockcraft.api.config.ConfigOverrides;
+import me.blockcraft.api.cosmetic.WeaponStyles;
+import me.blockcraft.api.dialog.ServerMenu;
+import me.blockcraft.api.presentation.VisualEffects;
+import me.blockcraft.api.elo.Elo;
+import me.blockcraft.api.elo.SkillGroup;
+import me.blockcraft.api.game.LegacyDamage;
+import me.blockcraft.api.game.LegacyProjectiles;
+import me.blockcraft.api.game.RoundConfig;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.Streaks;
+import me.blockcraft.api.ignore.Ignores;
+import me.blockcraft.api.menu.MenuListener;
+import me.blockcraft.api.menu.Profiles;
+import me.blockcraft.api.network.ServerGroups;
+import me.blockcraft.api.network.ServerHeartbeat;
+import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.nick.NickStats;
+import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.performance.SlowTicks;
+import me.blockcraft.api.player.FlightGrants;
+import me.blockcraft.api.player.RealNames;
+import me.blockcraft.api.proxy.ProxyMessageListener;
+import me.blockcraft.api.rank.NickRanks;
+import me.blockcraft.api.player.VanillaProgress;
+import me.blockcraft.api.proxy.NetworkOperations;
+import me.blockcraft.api.rank.TabTeams;
+import me.blockcraft.api.settings.PlayerSettings;
+import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.task.PlayerTasks;
+import me.blockcraft.api.vanish.VanishedPlayers;
+import me.blockcraft.api.world.BuildMode;
+import me.blockcraft.api.world.JoinBorder;
+import me.blockcraft.api.world.MapBundle;
+import me.blockcraft.api.world.WorldTemplate;
+import me.blockcraft.api.world.WaitingLobby;
+import me.blockcraft.api.world.WorldProtection;
+import me.blockcraft.api.scenery.NexoScenery;
+import me.blockcraft.api.scenery.FurnitureSolids;
+import me.blockcraft.api.scenery.AmbientCreatures;
+import me.blockcraft.api.season.SeasonalBlocks;
+import me.blockcraft.api.xp.Levels;
+import me.blockcraft.api.xp.Xp;
+import me.blockcraft.api.notification.Notifications;
+import me.blockcraft.api.xp.XpReward;
+import me.blockcraft.common.coins.CoinsRepository;
+import me.blockcraft.common.calendar.ForcedOccasions;
+import me.blockcraft.common.calendar.NetworkCalendar;
+import me.blockcraft.common.config.StrictConfig;
+import me.blockcraft.common.db.Database;
+import me.blockcraft.common.db.DatabaseConfig;
+import me.blockcraft.common.db.DatabaseException;
+import me.blockcraft.common.elo.EloRepository;
+import me.blockcraft.common.ignore.IgnoreRepository;
+import me.blockcraft.common.moderation.SettingsRepository;
+import me.blockcraft.common.moderation.VanishRepository;
+import me.blockcraft.common.moderation.StaffActionRepository;
+import me.blockcraft.common.network.GroupStateRepository;
+import me.blockcraft.common.network.ProxyMessageCodec;
+import me.blockcraft.common.network.ServerRepository;
+import me.blockcraft.common.round.RoundRecapRepository;
+import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.common.shop.Shop;
+import me.blockcraft.common.xp.XpRepository;
+import net.luckperms.api.LuckPermsProvider;
+import org.bukkit.GameRules;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.time.Duration;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
+public final class BlockcraftApiPlugin extends JavaPlugin {
+
+    private Notifications notifications;
+    private VisualEffects visuals;
+    private Database database;
+    private ServerHeartbeat heartbeat;
+    private ServerGroups groups;
+    private final List<AutoCloseable> scenery = new ArrayList<>();
+
+    @Override
+    public void onEnable() {
+        try {
+            enable();
+        } catch (RuntimeException e) {
+            getSLF4JLogger().error("BlockcraftAPI failed to start; stopping the server so it restarts instead of running without plugins", e);
+            getServer().shutdown();
+        }
+    }
+
+    private void enable() {
+        if (Boolean.parseBoolean(System.getenv("BLOCKCRAFT_JFR_SLOW_TICKS"))) {
+            getServer().getPluginManager().registerEvents(new SlowTicks(), this);
+        }
+        if (getServer().getPluginManager().isPluginEnabled("Nexo")) scenery.add(new FurnitureSolids(this));
+        var resources = ApiResources.load(getDataPath(), this::getResource);
+        var config = resources.config();
+        var databaseConfig = DatabaseConfig.fromYaml(config.section("database"));
+        database = Database.connect(databaseConfig, getName());
+        database.migrate();
+
+        var servers = new ServerRepository(database);
+        var presence = new ServerPresence();
+        heartbeat = new ServerHeartbeat(this, servers, ServerHeartbeat.local(databaseConfig, getServer().getPort()), presence);
+        var self = heartbeat.self();
+        getSLF4JLogger().info("Announcing as {} (group {}) at {}:{}", self.name(), self.group(), self.host(), self.port());
+        var groupStatus = config.section("group-status");
+        groups = new ServerGroups(this, servers, new GroupStateRepository(database), groupStatus.integer("stale-seconds"));
+
+        var messages = resources.messages();
+        var resourcePack = new ResourcePacks(messages);
+        notifications = new Notifications(this, messages, resourcePack,
+                Notifications.Timing.from(config.section("notifications")));
+        visuals = new VisualEffects(this, resourcePack, config.section("presentation.gameplay"));
+        var settingRepository = new PlayerSettingRepository(database);
+        var settings = new PlayerSettings(this, settingRepository, messages);
+        var weapons = new WeaponStyles(settings);
+        var realNames = new RealNames();
+        var nickRanks = new NickRanks();
+        var xpRepository = new XpRepository(database);
+        var xp = new Xp(this, xpRepository, new Levels(config.integer("xp.level-step")),
+                xpRewards(config.section("xp.rewards")), notifications);
+        var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.rotation(config));
+        // The locator bar would take the level bar's place and point at hidden or hunted players. No server lets mobs
+        // spawn by themselves (the games' ArenaProtection, the lobby's ProtectionListener), so none spends ticks trying.
+        // The map is restored at every start, so nothing in it has to grow, spread or melt in between either; a world
+        // created later, like EnderGames' round, keeps the vanilla rules.
+        getServer().getWorlds().forEach(world -> {
+            world.setGameRule(GameRules.LOCATOR_BAR, false);
+            world.setGameRule(GameRules.SPAWN_MOBS, false);
+            world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
+        });
+        var buildMode = new BuildMode();
+        var flight = new FlightGrants();
+        var elo = new Elo(new EloRepository(database, resources.network().elo()),
+                SkillGroup.ladder(config.section("elo.groups")), messages);
+        var afk = new Afk(this, notifications, messages,
+                Duration.ofMinutes(Math.max(1, config.integer("afk.idle-minutes"))));
+        var ignores = new Ignores(this, new IgnoreRepository(database));
+        var vanished = new VanishedPlayers(this, new VanishRepository(database), messages);
+        var playerTasks = new PlayerTasks(this, messages);
+        var coins = new CoinsRepository(database);
+        var unlocks = new Unlocks(database);
+        var profileGames = profileGames(config.section("profile.games"));
+        var achievements = new Achievements(this, Achievements.parse(config.section("achievements").values()),
+                profileGames, unlocks, xp, messages, playerTasks, notifications);
+        var profiles = new Profiles(this, coins, profileGames, playerTasks, unlocks, achievements, xp, messages, realNames);
+        var nickStats = new NickStats(nickRanks, NickStats.Ranges.from(config.section("nick-stats")));
+        var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
+                StaffAudit.Notices.from(config.section("audit")), messages);
+        var tabTeams = new TabTeams(this, LuckPermsProvider.get(), messages, nickRanks, afk, vanished);
+        var calendar = resources.network().calendar();
+        var forcedOccasions = new ForcedOccasions(new SettingsRepository(database), calendar);
+        forcedOccasions.reload();
+        var waitingPath = Optional.ofNullable(System.getenv("BLOCKCRAFT_WAITING_TEMPLATE"))
+                .filter(value -> !value.isBlank()).orElse(config.text("waiting-lobby.template"));
+        var waiting = !waitingPath.isBlank()
+                ? waitingLobby(Path.of(waitingPath)) : Optional.<WaitingLobby>empty();
+        var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
+                unlocks, new Shop(database), new RoundRecapRepository(database), streaks(config.section("streaks")),
+                settings, resourcePack, profiles, weapons, messages,
+                servers, self, groups, config.text("lobby-group"), presence, resources.tags(), List.copyOf(resources.network().addresses().values()), xp, map,
+                waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
+                calendar, RoundConfig.from(config), visuals);
+        BlockcraftApi.install(api);
+        var mainWorld = getServer().getWorlds().getFirst();
+        startScenery(mainWorld, calendar, self.group(), getServer().getWorldContainer().toPath()
+                .resolve(mainWorld.getName()).resolve("blockcraft/scenery"));
+        waiting.ifPresent(lobby -> startScenery(lobby.world(), calendar, self.group(), lobby.directory()));
+        waiting.ifPresent(lobby -> getServer().getPluginManager().registerEvents(
+                WorldProtection.in(lobby.world(), buildMode).rescue(() -> Optional.of(lobby.spawn())), this));
+        getSLF4JLogger().info("Running map {}{}", map.name(), map.template().map(template -> " from " + template.directory()).orElse(""));
+        int startingCoins = config.integer("starting-coins");
+        getServer().getPluginManager().registerEvents(realNames, this);
+        getServer().getPluginManager().registerEvents(nickRanks, this);
+        getServer().getPluginManager().registerEvents(vanished, this);
+        getServer().getPluginManager().registerEvents(xp, this);
+        getServer().getPluginManager().registerEvents(achievements, this);
+        getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, coins, realNames, startingCoins), this);
+        getServer().getPluginManager().registerEvents(settings, this);
+        getServer().getPluginManager().registerEvents(weapons, this);
+        getServer().getPluginManager().registerEvents(resourcePack, this);
+        getServer().getPluginManager().registerEvents(ignores, this);
+        getServer().getMessenger().registerIncomingPluginChannel(this, ProxyMessageCodec.CHANNEL,
+                new ProxyMessageListener(this, resourcePack, ignores, settings));
+        getServer().getPluginManager().registerEvents(afk, this);
+        afk.start();
+        getServer().getPluginManager().registerEvents(new MenuListener(playerTasks), this);
+        getServer().getPluginManager().registerEvents(new ServerMenu(this, profiles), this);
+        getServer().getPluginManager().registerEvents(tabTeams, this);
+        getServer().getPluginManager().registerEvents(buildMode, this);
+        getServer().getPluginManager().registerEvents(flight, this);
+        getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
+        getServer().getPluginManager().registerEvents(new LegacyProjectiles(), this);
+        getServer().getPluginManager().registerEvents(new ConfigOverrides(), this);
+        getServer().getPluginManager().registerEvents(new LegacyDamage(), this);
+        getServer().getPluginManager().registerEvents(new JoinBorder(this), this);
+
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            var commands = new CommandRegistry(event.registrar(), messages);
+            commands.register(CoinsCommand.create(this, coins, audit, messages));
+            commands.register(LevelCommand.create(xp, achievements, messages));
+            commands.register(BuildCommand.create(buildMode, audit, messages));
+            commands.register(MapCommand.create(this, map, waiting, messages));
+            commands.register(AfkCommand.create(afk));
+        });
+
+        int heartbeatSeconds = config.integer("heartbeat-seconds");
+        heartbeat.start(Duration.ofSeconds(heartbeatSeconds));
+        getServer().getPluginManager().registerEvents(heartbeat, this);
+        groups.start(groupStatus.integer("refresh-ticks"));
+        long occasionTicks = resources.network().calendarPollSeconds() * 20L;
+        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            try {
+                forcedOccasions.reload();
+            } catch (DatabaseException e) {
+                getSLF4JLogger().warn("Could not read the forced occasions: {}", e.getCause().getMessage());
+            }
+        }, occasionTicks, occasionTicks);
+    }
+
+    /** Every game server shares these files, so a broken one leaves each game in its own lobby instead of stopping them all. */
+    private Optional<WaitingLobby> waitingLobby(Path directory) {
+        try {
+            return Optional.of(WaitingLobby.load(directory));
+        } catch (RuntimeException e) {
+            getSLF4JLogger().error("The shared waiting lobby at {} could not load, so this game waits in its own lobby", directory, e);
+            return Optional.empty();
+        }
+    }
+
+    private void startScenery(org.bukkit.World world, NetworkCalendar calendar, String group, Path directory) {
+        var creatures = directory.resolve("creatures.yml");
+        if (Files.isRegularFile(creatures)) {
+            startScenery(creatures, () -> new AmbientCreatures(this, world, creatures));
+        }
+        var furniture = directory.resolve("furniture.yml");
+        if (Files.isRegularFile(furniture)) {
+            if (getServer().getPluginManager().isPluginEnabled("Nexo")) {
+                startScenery(furniture, () -> new NexoScenery(this, world, calendar, group, furniture));
+            } else {
+                getSLF4JLogger().warn("Nexo is not installed; furniture from {} cannot be placed", furniture);
+            }
+        }
+        var seasons = directory.resolve("seasons.yml");
+        if (Files.isRegularFile(seasons)) {
+            startScenery(seasons, () -> SeasonalBlocks.start(this, world, calendar, seasons));
+        }
+    }
+
+    private void startScenery(Path file, Supplier<AutoCloseable> start) {
+        try {
+            scenery.add(start.get());
+        } catch (RuntimeException e) {
+            getSLF4JLogger().error("Running without the scenery of {}: {}", file, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * The profile card's games: menu key to legacy stats table, as configured. The table of a game the network does
+     * not run yet is created here, so it reads as zeroes instead of failing the whole card.
+     */
+    private Map<String, StatsRepository> profileGames(StrictConfig section) {
+        var games = new LinkedHashMap<String, StatsRepository>();
+        section.keys().forEach(key -> {
+            var repository = new StatsRepository(database, section.text(key));
+            repository.createTable();
+            games.put(key, repository);
+        });
+        return games;
+    }
+
+    private static Map<XpReward, Integer> xpRewards(StrictConfig section) {
+        var rewards = new EnumMap<XpReward, Integer>(XpReward.class);
+        for (var reward : XpReward.values()) {
+            rewards.put(reward, section.integer(reward.key()));
+        }
+        return rewards;
+    }
+
+    private static Streaks streaks(StrictConfig section) {
+        return new Streaks(section.integers("announce"));
+    }
+
+    @Override
+    public void onDisable() {
+        for (var service : scenery.reversed()) {
+            try {
+                service.close();
+            } catch (Exception failure) {
+                getSLF4JLogger().error("Could not restore lobby scenery", failure);
+            }
+        }
+        scenery.clear();
+        if (visuals != null) visuals.close();
+        if (notifications != null) {
+            notifications.close();
+        }
+        BlockcraftApi.uninstall();
+        if (groups != null) {
+            groups.stop();
+        }
+        if (heartbeat != null) {
+            heartbeat.stop();
+        }
+        if (database != null) {
+            database.close();
+        }
+    }
+}

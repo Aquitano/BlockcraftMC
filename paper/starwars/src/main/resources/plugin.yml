@@ -1,0 +1,10 @@
+name: StarWarsModels
+version: '${version}'
+main: me.blockcraft.starwars.StarWarsPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI, BetterModel]
+softdepend: [Nexo]
+permissions:
+  blockcraft.starwars.admin:
+    default: op

@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/wrist_blaster",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0.75,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        6.753,
+        -0.19399999999999998
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0.75,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        6.753,
+        -0.19399999999999998
+      ],
+      "scale": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    }
+  }
+}

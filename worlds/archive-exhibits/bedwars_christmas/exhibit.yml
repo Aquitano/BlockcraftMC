@@ -1,0 +1,11 @@
+name: Christmas
+origin: Blockcraft 2015–16
+category: BedWars
+description: 'Die Weihnachts-Map: verschneite Inseln mit Tannenbaum und Schneemännern,
+  für zwei Teams.'
+icon: snowball
+arrival:
+  x: -64.5
+  y: 70.0
+  z: -0.5
+  yaw: -89.8

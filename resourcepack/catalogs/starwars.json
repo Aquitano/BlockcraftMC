@@ -1,0 +1,123 @@
+[
+  {
+    "id": "blockcraft_sw_nexu_cub",
+    "model": "props/starwars/nexu_cub",
+    "kind": "creature",
+    "rig": "sw_nexu_cub",
+    "bones": [
+      "body",
+      "tail",
+      "head",
+      "leg_back_left",
+      "leg_front_left",
+      "leg_back_right",
+      "leg_front_right"
+    ]
+  },
+  {
+    "id": "blockcraft_sw_acklay",
+    "model": "props/starwars/acklay",
+    "kind": "creature",
+    "rig": "sw_acklay",
+    "bones": [
+      "body",
+      "head",
+      "tail",
+      "leg_back_left",
+      "leg_back_right",
+      "leg_middle_left",
+      "leg_middle_right",
+      "leg_front_left",
+      "leg_front_right"
+    ]
+  },
+  {
+    "id": "blockcraft_sw_rancor",
+    "model": "props/starwars/rancor",
+    "kind": "creature",
+    "rig": "sw_rancor",
+    "bones": [
+      "body",
+      "head",
+      "arm_left",
+      "arm_right",
+      "leg_back_left",
+      "leg_back_right"
+    ]
+  },
+  {
+    "id": "blockcraft_sw_nexu",
+    "model": "props/starwars/nexu",
+    "kind": "creature",
+    "rig": "sw_nexu",
+    "bones": [
+      "body",
+      "leg_back_right",
+      "leg_back_left",
+      "leg_front_right",
+      "leg_front_left",
+      "tail",
+      "head"
+    ]
+  },
+  {
+    "id": "blockcraft_sw_reek",
+    "model": "props/starwars/reek",
+    "kind": "creature",
+    "rig": "sw_reek",
+    "bones": [
+      "body",
+      "head",
+      "tail",
+      "leg_front_right",
+      "leg_front_left",
+      "leg_back_left",
+      "leg_back_right"
+    ]
+  },
+  {
+    "id": "blockcraft_sw_ca87",
+    "model": "props/starwars/ca87",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_dl44",
+    "model": "props/starwars/dl44",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_e11",
+    "model": "props/starwars/e11",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_ee3",
+    "model": "props/starwars/ee3",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_ee4",
+    "model": "props/starwars/ee4",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_amban",
+    "model": "props/starwars/amban",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_nn14",
+    "model": "props/starwars/nn14",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_rocket",
+    "model": "props/starwars/rocket",
+    "kind": "weapon"
+  },
+  {
+    "id": "blockcraft_sw_thermal",
+    "model": "props/starwars/thermal",
+    "kind": "weapon"
+  }
+]

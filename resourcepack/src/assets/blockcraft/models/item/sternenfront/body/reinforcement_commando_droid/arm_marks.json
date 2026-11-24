@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/reinforcement_commando_droid","particle":"blockcraft:block/sternenfront/rig/reinforcement_commando_droid"},
+  "elements":[
+    {"from":[6.736,8.608,6.656],"to":[9.264,9.056,9.344],"faces":{"north":{"uv":[11.625,13.75,12.875,14.0],"texture":"#rig","tintindex":0},"south":{"uv":[11.625,13.75,12.875,14.0],"texture":"#rig","tintindex":0},"east":{"uv":[9.75,13.75,11.125,14.0],"texture":"#rig","tintindex":0},"west":{"uv":[9.75,13.75,11.125,14.0],"texture":"#rig","tintindex":0},"up":{"uv":[8.875,6.0,10.125,7.375],"texture":"#rig","tintindex":0},"down":{"uv":[7.125,6.0,8.375,7.375],"texture":"#rig","tintindex":0}}}
+  ]
+}

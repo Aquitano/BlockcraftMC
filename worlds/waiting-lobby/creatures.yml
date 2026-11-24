@@ -1,0 +1,10 @@
+step-ticks: 2
+creatures:
+  roof-bird:
+    type: bird
+    at: {x: -192.5, y: 52.5, z: -282.5, yaw: 135}
+    cycle-ticks: 320
+    look-ticks: 80
+    look-degrees: 35
+    hop-ticks: 16
+    hop-height: 0.18

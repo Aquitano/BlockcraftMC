@@ -1,0 +1,279 @@
+blockcraft_sw_nexu_cub:
+  itemname: "<white>Nexu · Jungtier"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/nexu_cub
+  Pack:
+    model: blockcraft:item/props/starwars/nexu_cub
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.3516,0.7877
+
+blockcraft_sw_acklay:
+  itemname: "<white>Acklay"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/acklay
+  Pack:
+    model: blockcraft:item/props/starwars/acklay
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 5,5,5
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 5.6597,4.4082
+
+blockcraft_sw_rancor:
+  itemname: "<white>Rancor"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/rancor
+  Pack:
+    model: blockcraft:item/props/starwars/rancor
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 5,5,5
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 4.9128,6.0825
+
+blockcraft_sw_nexu:
+  itemname: "<white>Nexu"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/nexu
+  Pack:
+    model: blockcraft:item/props/starwars/nexu
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 6,6,6
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 6.7598,2.0675
+
+blockcraft_sw_reek:
+  itemname: "<white>Reek"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/reek
+  Pack:
+    model: blockcraft:item/props/starwars/reek
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 4,4,4
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 4.3111,2.7921
+
+blockcraft_sw_ca87:
+  itemname: "<white>CA-87"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/ca87
+  Pack:
+    model: blockcraft:item/props/starwars/ca87
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.0906,0.5656
+
+blockcraft_sw_dl44:
+  itemname: "<white>DL-44"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/dl44
+  Pack:
+    model: blockcraft:item/props/starwars/dl44
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.8437,1.0718
+
+blockcraft_sw_e11:
+  itemname: "<white>E-11"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/e11
+  Pack:
+    model: blockcraft:item/props/starwars/e11
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.5095,1.0434
+
+blockcraft_sw_ee3:
+  itemname: "<white>EE-3"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/ee3
+  Pack:
+    model: blockcraft:item/props/starwars/ee3
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 3,3,3
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 2.7197,0.7259
+
+blockcraft_sw_ee4:
+  itemname: "<white>EE-4"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/ee4
+  Pack:
+    model: blockcraft:item/props/starwars/ee4
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.5568,0.8224
+
+blockcraft_sw_amban:
+  itemname: "<white>Amban-Phasengewehr"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/amban
+  Pack:
+    model: blockcraft:item/props/starwars/amban
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 4,4,4
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 4.6363,0.6422
+
+blockcraft_sw_nn14:
+  itemname: "<white>NN-14"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/nn14
+  Pack:
+    model: blockcraft:item/props/starwars/nn14
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 2,2,2
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 1.7426,0.7097
+
+blockcraft_sw_rocket:
+  itemname: "<white>Raketenwerfer"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/rocket
+  Pack:
+    model: blockcraft:item/props/starwars/rocket
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 4,4,4
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 4.1094,0.9243
+
+blockcraft_sw_thermal:
+  itemname: "<white>Thermaldetonator"
+  material: PAPER
+  Components:
+    item_model: blockcraft:props/starwars/thermal
+  Pack:
+    model: blockcraft:item/props/starwars/thermal
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+        translation: 0,-0.5,0
+        scale: 1,1,1
+        view_range: 1.0
+      restricted_rotation: VERY_STRICT
+      preview_placement: true
+      hitbox:
+        interaction: 0,0,0 0.4526,0.4750

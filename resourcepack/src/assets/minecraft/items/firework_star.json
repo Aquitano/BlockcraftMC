@@ -1,0 +1,30 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:sternenfront/grenade",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/grenade"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/firework_star",
+      "tints": [
+        {
+          "type": "minecraft:constant",
+          "value": -1
+        },
+        {
+          "type": "minecraft:firework",
+          "default": -7697782
+        }
+      ]
+    }
+  }
+}

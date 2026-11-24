@@ -1,0 +1,293 @@
+{
+  "textures": {
+    "blade": "minecraft:block/gold_block",
+    "guard": "minecraft:block/raw_gold_block",
+    "grip": "minecraft:block/dark_oak_planks",
+    "gem": "minecraft:block/emerald_block",
+    "particle": "minecraft:block/gold_block"
+  },
+  "gui_light": "front",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        1,
+        1.5,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        1,
+        1.5,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        -85,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        1
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        -85,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        1
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "gui": {
+      "rotation": [
+        25,
+        140,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    }
+  },
+  "elements": [
+    {
+      "from": [
+        7,
+        7.5,
+        0
+      ],
+      "to": [
+        9,
+        8.5,
+        3
+      ],
+      "faces": {
+        "north": {
+          "texture": "#grip"
+        },
+        "south": {
+          "texture": "#grip"
+        },
+        "east": {
+          "texture": "#grip"
+        },
+        "west": {
+          "texture": "#grip"
+        },
+        "up": {
+          "texture": "#grip"
+        },
+        "down": {
+          "texture": "#grip"
+        }
+      }
+    },
+    {
+      "from": [
+        6.5,
+        7,
+        -1
+      ],
+      "to": [
+        9.5,
+        9,
+        0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#gem"
+        },
+        "south": {
+          "texture": "#gem"
+        },
+        "east": {
+          "texture": "#gem"
+        },
+        "west": {
+          "texture": "#gem"
+        },
+        "up": {
+          "texture": "#gem"
+        },
+        "down": {
+          "texture": "#gem"
+        }
+      }
+    },
+    {
+      "from": [
+        4,
+        6.5,
+        3
+      ],
+      "to": [
+        12,
+        9.5,
+        4
+      ],
+      "faces": {
+        "north": {
+          "texture": "#guard"
+        },
+        "south": {
+          "texture": "#guard"
+        },
+        "east": {
+          "texture": "#guard"
+        },
+        "west": {
+          "texture": "#guard"
+        },
+        "up": {
+          "texture": "#guard"
+        },
+        "down": {
+          "texture": "#guard"
+        }
+      }
+    },
+    {
+      "from": [
+        7.25,
+        7.25,
+        4
+      ],
+      "to": [
+        8.75,
+        8.75,
+        18
+      ],
+      "faces": {
+        "north": {
+          "texture": "#blade"
+        },
+        "south": {
+          "texture": "#blade"
+        },
+        "east": {
+          "texture": "#blade"
+        },
+        "west": {
+          "texture": "#blade"
+        },
+        "up": {
+          "texture": "#blade"
+        },
+        "down": {
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "from": [
+        7.5,
+        7.5,
+        18
+      ],
+      "to": [
+        8.5,
+        8.5,
+        21
+      ],
+      "faces": {
+        "north": {
+          "texture": "#blade"
+        },
+        "south": {
+          "texture": "#blade"
+        },
+        "east": {
+          "texture": "#blade"
+        },
+        "west": {
+          "texture": "#blade"
+        },
+        "up": {
+          "texture": "#blade"
+        },
+        "down": {
+          "texture": "#blade"
+        }
+      }
+    }
+  ]
+}

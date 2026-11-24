@@ -1,0 +1,99 @@
+{
+  "voice": {
+    "name": "de_DE-thorsten-high",
+    "author": "Thorsten Müller (Thorsten-Voice), Piper model by rhasspy",
+    "dataset_license": "CC0-1.0",
+    "dataset_source": "https://github.com/thorstenMueller/Thorsten-Voice",
+    "model_card": "https://huggingface.co/rhasspy/piper-voices/blob/main/de/de_DE/thorsten/high/MODEL_CARD",
+    "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
+    "engine": "piper-tts 1.4.2",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1",
+    "config_sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a",
+    "delivery": {
+      "kolonien": {
+        "length_scale": 0.9,
+        "noise_scale": 0.4,
+        "noise_w_scale": 0.6
+      },
+      "hegemonie": {
+        "length_scale": 0.96,
+        "noise_scale": 0.2,
+        "noise_w_scale": 0.4
+      }
+    }
+  },
+  "calls": {
+    "kolonien_assault": {
+      "message": "radio.kolonien.assault",
+      "faction": "kolonien",
+      "sound": "radio_kolonien_assault",
+      "event": "sternenfront.radio.kolonien.assault",
+      "duration_ticks": 45,
+      "sha256": "49e5929ac8d5302a00f75d2d5f0dbe24e59ebc86213a16e25eb3695f2f0a3686",
+      "text_sha256": "32eced1dfd40ccec59fea73dc15d9a139db23f8b840263ab34b2f3988bc2d862"
+    },
+    "kolonien_last_stand": {
+      "message": "radio.kolonien.last-stand",
+      "faction": "kolonien",
+      "sound": "radio_kolonien_last_stand",
+      "event": "sternenfront.radio.kolonien.last-stand",
+      "duration_ticks": 55,
+      "sha256": "befe7abe3e1b2bb43e6d7595b21fcd2f25961c2015629093953cdc4d28b32c7f",
+      "text_sha256": "4ee16e8f729734b766ea4fc2bb6fdeb1caf62916e1738e1f1b70690ac15a619f"
+    },
+    "kolonien_captured": {
+      "message": "radio.kolonien.captured",
+      "faction": "kolonien",
+      "sound": "radio_kolonien_captured",
+      "event": "sternenfront.radio.kolonien.captured",
+      "duration_ticks": 50,
+      "sha256": "c15fc40440f7c5cef2deb213be72efd48873394d4104828ab062cc0b33b49e19",
+      "text_sha256": "b9572885ac32bae5b399e7f319b88518c83b930f50a5b9ff3290f535a192a7ba"
+    },
+    "kolonien_lost": {
+      "message": "radio.kolonien.lost",
+      "faction": "kolonien",
+      "sound": "radio_kolonien_lost",
+      "event": "sternenfront.radio.kolonien.lost",
+      "duration_ticks": 50,
+      "sha256": "c33024be443c255962d978ef156f9f96097f61995ce697cfb5acbb086f8c054b",
+      "text_sha256": "808fbcfd22311fe0a184cf16731d760f7186e1b6b218b643b99d5839ef5f7fdc"
+    },
+    "hegemonie_assault": {
+      "message": "radio.hegemonie.assault",
+      "faction": "hegemonie",
+      "sound": "radio_hegemonie_assault",
+      "event": "sternenfront.radio.hegemonie.assault",
+      "duration_ticks": 56,
+      "sha256": "16abe9fa59854643e138efab8277175dd6a418590f20d41e078c6179c7102b62",
+      "text_sha256": "aca3770cbc32e6099386187d5b10dcdbc0ec6e4d58a6af028e1d70cd52c739ca"
+    },
+    "hegemonie_last_stand": {
+      "message": "radio.hegemonie.last-stand",
+      "faction": "hegemonie",
+      "sound": "radio_hegemonie_last_stand",
+      "event": "sternenfront.radio.hegemonie.last-stand",
+      "duration_ticks": 47,
+      "sha256": "f4b667f6736260e50b86be2a9f79c5d95943b422366c6c8d82232f03c7264cb0",
+      "text_sha256": "ba3c7a2a360abc89a8effddfe8eb592eeec4a3a477793e37a7949ed6f9d15e30"
+    },
+    "hegemonie_captured": {
+      "message": "radio.hegemonie.captured",
+      "faction": "hegemonie",
+      "sound": "radio_hegemonie_captured",
+      "event": "sternenfront.radio.hegemonie.captured",
+      "duration_ticks": 49,
+      "sha256": "188091d30af6f002a4a55b973005ff1551eb5bb7b66e09bc9bfe986b15d11a79",
+      "text_sha256": "ee57d9599fe8f13254b617f737500d28be226ff6a094416f333314761e59c325"
+    },
+    "hegemonie_lost": {
+      "message": "radio.hegemonie.lost",
+      "faction": "hegemonie",
+      "sound": "radio_hegemonie_lost",
+      "event": "sternenfront.radio.hegemonie.lost",
+      "duration_ticks": 49,
+      "sha256": "ac423677ef9b1c4add674fcb07d597067f276f5ee767462df77ef7a0d890b3cb",
+      "text_sha256": "e6361845d877da515087d9a583fdc9d72cffc593975f34919d19bdfb0a3211a0"
+    }
+  }
+}

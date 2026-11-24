@@ -1,0 +1,210 @@
+[
+  {
+    "id": "blockcraft_market_notice_board_wide",
+    "model": "props/imported/market_notice_board_wide"
+  },
+  {
+    "id": "blockcraft_market_notice_board_narrow",
+    "model": "props/imported/market_notice_board_narrow"
+  },
+  {
+    "id": "blockcraft_market_notice_board_wall",
+    "model": "props/imported/market_notice_board_wall"
+  },
+  {
+    "id": "blockcraft_market_menu_sign",
+    "model": "props/imported/market_menu_sign"
+  },
+  {
+    "id": "blockcraft_market_chalkboard",
+    "model": "props/imported/market_chalkboard"
+  },
+  {
+    "id": "blockcraft_market_chest",
+    "model": "props/imported/market_chest"
+  },
+  {
+    "id": "blockcraft_market_treasure_chest",
+    "model": "props/imported/market_treasure_chest"
+  },
+  {
+    "id": "blockcraft_market_coins_small",
+    "model": "props/imported/market_coins_small"
+  },
+  {
+    "id": "blockcraft_market_coins_medium",
+    "model": "props/imported/market_coins_medium"
+  },
+  {
+    "id": "blockcraft_market_coins_large",
+    "model": "props/imported/market_coins_large"
+  },
+  {
+    "id": "blockcraft_market_bread_tray",
+    "model": "props/imported/market_bread_tray"
+  },
+  {
+    "id": "blockcraft_market_carrot_tray",
+    "model": "props/imported/market_carrot_tray"
+  },
+  {
+    "id": "blockcraft_market_bread_table",
+    "model": "props/imported/market_bread_table"
+  },
+  {
+    "id": "blockcraft_market_carrot_table",
+    "model": "props/imported/market_carrot_table"
+  },
+  {
+    "id": "blockcraft_market_empty_table",
+    "model": "props/imported/market_empty_table"
+  },
+  {
+    "id": "blockcraft_market_empty_tray",
+    "model": "props/imported/market_empty_tray"
+  },
+  {
+    "id": "blockcraft_market_tray_stack",
+    "model": "props/imported/market_tray_stack"
+  },
+  {
+    "id": "blockcraft_market_notices_large",
+    "model": "props/imported/market_notices_large"
+  },
+  {
+    "id": "blockcraft_market_notices_small",
+    "model": "props/imported/market_notices_small"
+  },
+  {
+    "id": "blockcraft_market_notices_medium",
+    "model": "props/imported/market_notices_medium"
+  },
+  {
+    "id": "blockcraft_market_open_box",
+    "model": "props/imported/market_open_box"
+  },
+  {
+    "id": "blockcraft_market_crate_stack",
+    "model": "props/imported/market_crate_stack"
+  },
+  {
+    "id": "blockcraft_market_bunting_posts",
+    "model": "props/imported/market_bunting_posts"
+  },
+  {
+    "id": "blockcraft_market_bunting",
+    "model": "props/imported/market_bunting"
+  },
+  {
+    "id": "blockcraft_market_empty_cart",
+    "model": "props/imported/market_empty_cart"
+  },
+  {
+    "id": "blockcraft_market_loaded_cart",
+    "model": "props/imported/market_loaded_cart"
+  },
+  {
+    "id": "blockcraft_market_cloth_tray",
+    "model": "props/imported/market_cloth_tray"
+  },
+  {
+    "id": "blockcraft_market_fish_tray",
+    "model": "props/imported/market_fish_tray"
+  },
+  {
+    "id": "blockcraft_market_market_stall",
+    "model": "props/imported/market_market_stall"
+  },
+  {
+    "id": "blockcraft_market_crate",
+    "model": "props/imported/market_crate"
+  },
+  {
+    "id": "blockcraft_halloween_cauldron",
+    "model": "props/imported/halloween_cauldron"
+  },
+  {
+    "id": "blockcraft_halloween_decorated_lamp",
+    "model": "props/imported/halloween_decorated_lamp"
+  },
+  {
+    "id": "blockcraft_halloween_candle_short",
+    "model": "props/imported/halloween_candle_short"
+  },
+  {
+    "id": "blockcraft_halloween_candelabra",
+    "model": "props/imported/halloween_candelabra"
+  },
+  {
+    "id": "blockcraft_halloween_cauldron_broom",
+    "model": "props/imported/halloween_cauldron_broom"
+  },
+  {
+    "id": "blockcraft_halloween_lamp",
+    "model": "props/imported/halloween_lamp"
+  },
+  {
+    "id": "blockcraft_halloween_hanging_lantern",
+    "model": "props/imported/halloween_hanging_lantern"
+  },
+  {
+    "id": "blockcraft_halloween_fence",
+    "model": "props/imported/halloween_fence"
+  },
+  {
+    "id": "blockcraft_halloween_fence_reverse",
+    "model": "props/imported/halloween_fence_reverse"
+  },
+  {
+    "id": "blockcraft_halloween_fence_long",
+    "model": "props/imported/halloween_fence_long"
+  },
+  {
+    "id": "blockcraft_halloween_leafy_pumpkin",
+    "model": "props/imported/halloween_leafy_pumpkin"
+  },
+  {
+    "id": "blockcraft_halloween_pumpkin_candles",
+    "model": "props/imported/halloween_pumpkin_candles"
+  },
+  {
+    "id": "blockcraft_halloween_scarecrow",
+    "model": "props/imported/halloween_scarecrow"
+  },
+  {
+    "id": "blockcraft_halloween_grave_cross_decorated",
+    "model": "props/imported/halloween_grave_cross_decorated"
+  },
+  {
+    "id": "blockcraft_halloween_grave_cross",
+    "model": "props/imported/halloween_grave_cross"
+  },
+  {
+    "id": "blockcraft_halloween_pumpkin",
+    "model": "props/imported/halloween_pumpkin"
+  },
+  {
+    "id": "blockcraft_halloween_gravestone_decorated",
+    "model": "props/imported/halloween_gravestone_decorated"
+  },
+  {
+    "id": "blockcraft_halloween_gravestone",
+    "model": "props/imported/halloween_gravestone"
+  },
+  {
+    "id": "blockcraft_halloween_candle_cluster",
+    "model": "props/imported/halloween_candle_cluster"
+  },
+  {
+    "id": "blockcraft_halloween_candle",
+    "model": "props/imported/halloween_candle"
+  },
+  {
+    "id": "blockcraft_halloween_ghost",
+    "model": "props/imported/halloween_ghost"
+  },
+  {
+    "id": "blockcraft_quest_board",
+    "model": "props/imported/quest_board"
+  }
+]

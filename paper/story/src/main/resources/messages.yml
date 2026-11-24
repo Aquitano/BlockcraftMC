@@ -1,0 +1,69 @@
+# The core's texts, which a story game's own messages.yml lies on. The game adds what its mission says: `npc.<id>.name`
+# and `.role`, `chapter.<chapter>` for each chapter's name without its number, `stage.<stage>` for the boss bar and `stage-start.<stage>`
+# for the chat, `choice.<choice>` for each answer of a vote, `ending.<ending>.title`, `.subtitle` and `.summary`, and
+# `cutscene.<scene>.<n>` with `cutscene.speaker.<actor>` for a cutscene's lines. It usually words `prefix`, `game-name` and `join.introduction` anew.
+prefix: "<primary>Einsatz <dark>» <reset>"
+game-name: "<primary>Einsatz"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Ein Einsatz für bis zu vier Spieler."
+
+lobby:
+  previous: "<prefix><muted>Eure letzte Entscheidung: <accent><choice>"
+  resume: "<prefix><muted>Dein letzter Einsatz ist noch offen: <white><stage>"
+  chapter: "<prefix><muted>Dein nächstes Kapitel: <white><number>. <chapter>"
+
+campaign:
+  chapter: "<prefix><muted>Ihr spielt Kapitel <number>: <white><chapter><muted>."
+  resumed: "<prefix><muted>Der Einsatz geht weiter, beim letzten Abschnitt, den ihr erreicht habt."
+  unsaved: "<prefix><error>Der Abschluss des Einsatzes konnte nicht gespeichert werden."
+  unreadable: "<prefix><error>Euer Einsatz konnte nicht geladen werden. <muted>Der Countdown beginnt von vorn."
+  unreachable: "<prefix><error>Das nächste Kapitel konnte nicht geladen werden."
+
+travel:
+  loading: "<muted>Kapitel <number> <dark>· <muted>Lädt …"
+
+menu:
+  stats:
+    title: "<arrow><primary>Einsatz <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Einsätze geschafft<dark>: <muted><wins>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><primary>Einsatz <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Einsätze geschafft"
+
+dialogue:
+  hint:
+    advance: "Shift: weiter"
+    close: "Shift: schließen"
+    choose: "Zahl oder Mausrad wählen, Shift bestätigt"
+    watching: "<player> antwortet"
+
+stage:
+  done: "<primary>Einsatz <dark>● <white>Abgeschlossen"
+
+fallen: "<prefix><error>Du bist gefallen. <muted>Du bist zurück am Sammelpunkt."
+
+vote:
+  cast: "<prefix><accent><player> <muted>stimmt für <white><choice> <dark>(<votes>/<members>)"
+  decided: "<prefix><muted>Der Trupp hat entschieden: <accent><choice>"
+
+rejoin:
+  stage: "<prefix><muted>Willkommen zurück. Euer Trupp ist hier: <white><stage>"
+  choice: "<prefix><muted>Während du weg warst, hat der Trupp entschieden: <accent><choice>"
+
+cutscene:
+  loading: "<muted>Die Szene lädt …"
+  skip:
+    hint: "Shift halten: überspringen"
+    holding: "Überspringen: <holding> von <viewers> halten Shift"

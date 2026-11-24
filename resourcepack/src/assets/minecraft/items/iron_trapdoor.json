@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:sternenfront/yard/wall_panel",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/wall_panel"
+        }
+      },
+      {
+        "when": "blockcraft:ttt/bear_trap",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/ttt/bear_trap"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:block/iron_trapdoor_bottom"
+    }
+  }
+}

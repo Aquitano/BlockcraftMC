@@ -1,0 +1,8 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/fx","particle":"blockcraft:block/sternenfront/rig/fx"},
+  "elements":[
+    {"from":[0.0,6.24,8.0],"to":[16.0,9.76,8.0],"faces":{"north":{"uv":[0.0625,6.3125,3.0625,6.96875],"texture":"#rig"},"south":{"uv":[0.0625,6.3125,3.0625,6.96875],"texture":"#rig"}}},
+    {"from":[0.0,6.24,7.936],"to":[16.0,9.76,8.064],"light_emission":15,"shade":false,"faces":{"north":{"uv":[3.1875,6.3125,6.1875,6.96875],"texture":"#rig","tintindex":0},"south":{"uv":[3.1875,6.3125,6.1875,6.96875],"texture":"#rig","tintindex":0}}},
+    {"from":[0.0,6.24,7.872],"to":[16.0,9.76,8.128],"light_emission":15,"shade":false,"faces":{"north":{"uv":[12.28125,3.1875,15.28125,3.84375],"texture":"#rig"},"south":{"uv":[12.28125,3.1875,15.28125,3.84375],"texture":"#rig"}}}
+  ]
+}

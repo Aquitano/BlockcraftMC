@@ -1,0 +1,108 @@
+package me.blockcraft.system;
+
+import me.blockcraft.common.network.GroupState;
+import me.blockcraft.system.network.OnDemand;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class SystemConfigTest {
+
+    @Rule
+    public final TemporaryFolder folder = new TemporaryFolder();
+
+    @Test
+    public void packArchivesLiveUnderOneBaseUrlThatTheEnvironmentOverrides() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        var defaults = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml")).resourcePack();
+        assertEquals(URI.create("http://localhost:8080/"), defaults.baseUrl());
+        assertEquals(Map.of("sternenfront", List.of("starwars"), "story", List.of("starwars"), "replay", List.of()),
+                defaults.groups());
+        var production = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"),
+                Map.of("BLOCKCRAFT_RESOURCE_PACK_BASE_URL", "https://mc.example.net/packs")).resourcePack();
+        assertEquals(URI.create("https://mc.example.net/packs/"), production.baseUrl());
+    }
+
+    @Test
+    public void discoverySnapshotExpiryDefaultsForOlderConfigsAndCanBeConfigured() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        Files.writeString(file, "discovery:\n  poll-seconds: 5\n");
+        assertEquals(30, SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"))
+                .discovery().maxSnapshotAgeSeconds());
+
+        Files.writeString(file, "discovery:\n  max-snapshot-age-seconds: 45\n");
+        assertEquals(45, SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"))
+                .discovery().maxSnapshotAgeSeconds());
+    }
+
+    @Test
+    public void composeGroupsWakeArchive() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        var saved = "on-demand:\n  enabled: true\n";
+        Files.writeString(file, saved);
+        var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"),
+                Map.of("BLOCKCRAFT_ON_DEMAND_GROUPS", "bedwars, ARCHIVE, lobby, , archive"));
+
+        assertTrue(config.onDemand().enabled());
+        assertEquals(Set.of("bedwars", "archive"), config.onDemand().settings().groups());
+        var servers = new OnDemand(config.onDemand().settings());
+        var wake = servers.request("archive", UUID.randomUUID(), Instant.EPOCH).orElseThrow();
+        assertEquals(List.of(new OnDemand.Effect.Publish("archive", GroupState.STARTING),
+                new OnDemand.Effect.Start("archive")), wake.effects());
+        assertEquals(saved, Files.readString(file));
+    }
+
+    @Test
+    public void changesMadeInGameLeaveTheRestOfTheFileAsItWas() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        Files.writeString(file, """
+                # Edited in-game by /setmax and /motd.
+                max-players: 100
+
+                motd:
+                  # Shown when nothing random applies.
+                  default: "&cBlockcraftMC.net"
+                  random:
+                    - "&7Eins"
+
+                # Never banned by /strafe.
+                unbannable:
+                  - Aquitano
+                """);
+
+        var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"));
+        config.setMaxPlayers(250);
+        config.setDefaultMotd("&cNeu");
+        config.addRandomMotd("&7Zwei");
+
+        assertEquals("""
+                # Edited in-game by /setmax and /motd.
+                max-players: 250
+
+                motd:
+                  # Shown when nothing random applies.
+                  default: "&cNeu"
+                  random:
+                    - "&7Eins"
+                    - "&7Zwei"
+
+                # Never banned by /strafe.
+                unbannable:
+                  - Aquitano
+                """, Files.readString(file));
+        assertFalse(Files.exists(file.resolveSibling("config.yml.tmp")));
+    }
+}

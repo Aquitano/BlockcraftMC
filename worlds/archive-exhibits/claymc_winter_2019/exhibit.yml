@@ -1,0 +1,16 @@
+name: Winterlobby
+origin: ClayMC
+year: 2019
+category: Lobbys
+description: Die als Winter-2019 gesicherte ClayMC-Lobby mit verschneiten Inseln, den alten Schildern und Szenen aus Rüstungsständern.
+icon: snow_block
+arrival: {x: 0.5, y: 70.125, z: 0.5, yaw: 180.0}
+checkpoints:
+  - name: TTT
+    at: {x: -5.5, y: 71.125, z: -47.5, yaw: 180.0}
+  - name: ClayJump
+    at: {x: -45.5, y: 68.0, z: 8.5, yaw: 0.0}
+  - name: Lobby-PVP
+    at: {x: 28.5, y: 73.0, z: -82.5, yaw: 180.0}
+  - name: ClayShop
+    at: {x: 39.5, y: 68.0, z: -4.5, yaw: -90.0}

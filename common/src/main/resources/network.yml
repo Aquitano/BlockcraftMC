@@ -1,0 +1,66 @@
+# What the proxy and every Paper server must agree on. Both read this bundled file; a network.yml in BlockcraftSystem's
+# or BlockcraftAPI's data folder overrides keys for that one plugin only, so a network-wide change belongs here or in
+# the environment.
+
+# The addresses every message names as <ip>, <website>, <shop>, <teamspeak> and <discord>.
+# BLOCKCRAFT_NETWORK_<KEY> overrides an entry.
+network:
+  ip: BlockcraftMC.net
+  website: https://BlockcraftMC.net
+  shop: https://shop.BlockcraftMC.net
+  teamspeak: ts.BlockcraftMC.net
+  discord: https://discord.gg/kh3xaQ3
+
+# The network's colours as tags for every message, so a redesign happens here and nowhere else. The values are spliced
+# in before parsing, so a colour tag colours what follows it.
+palette:
+  primary: "<blue>"
+  accent: "<yellow>"
+  muted: "<gray>"
+  dark: "<dark_gray>"
+  success: "<green>"
+  error: "<red>"
+  bullet: "<dark_gray>● "
+  arrow: "<dark_gray>» "
+  left: "<green>Linksklick <dark_gray>· <gray>"
+  right: "<yellow>Rechtsklick <dark_gray>· <gray>"
+  click: "<green>Klicken <dark_gray>· <gray>"
+  quicksg: "<gold>"
+  emeraldrush: "<green>"
+  duell: "<aqua>"
+  bedwars: "<dark_aqua>"
+  mlgrush: "<light_purple>"
+  knockbackffa: "<aqua>"
+  zombies: "<dark_green>"
+  cores: "<yellow>"
+  sternenfront: "<#e8a33d>"
+  endergames: "<dark_purple>"
+  ttt: "<red>"
+  skywars: "<blue>"
+  archive: "<#d4a85a>"
+  premium: "<gold>"
+  youtuber: "<dark_purple>"
+
+# The days the network celebrates, counted in zone. Easter runs from days-before Easter Sunday to days-after it,
+# Halloween and winter from one month-day to the other (winter may run across New Year); founded is the yyyy-MM-dd
+# the network opened, and empty means it has no birthday to celebrate. OG has no date; staff switch it on with the
+# proxy's /event. poll-seconds is how often the occasions staff force with /event are read back.
+calendar:
+  zone: Europe/Berlin
+  easter:
+    days-before: 2
+    days-after: 7
+  halloween:
+    from: "10-17"
+    to: "10-31"
+  winter:
+    from: "12-01"
+    to: "02-29"
+  founded: ""
+  poll-seconds: 5
+
+# Ranked 1vs1 (bc_elo). A season is three months from January, April, July or October and starts everyone at
+# start-rating; a win moves k-factor points times how unexpected it was.
+elo:
+  start-rating: 1000
+  k-factor: 32

@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/staff_freeze",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/staff_freeze"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/frost_crown",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/frost_crown"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:block/packed_ice"
+    }
+  }
+}

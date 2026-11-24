@@ -1,0 +1,73 @@
+package me.blockcraft.knockbackffa;
+
+import me.blockcraft.api.world.Worlds;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
+final class FfaArena {
+
+    static final int FLOOR = 64;
+    static final int FALL = 48;
+
+    private final World world = Worlds.createArena(new NamespacedKey("knockbackffa", "inseln"));
+    private final List<Location> spawns = List.of(at(18, 0), at(-18, 0), at(0, 18), at(0, -18));
+    private ArenaLayout layout = ArenaLayout.ISLANDS;
+
+    FfaArena() {
+        build();
+        world.setSpawnLocation(watch());
+        world.getWorldBorder().setCenter(0.5, 0.5);
+        world.getWorldBorder().setSize(54);
+    }
+
+    void rotate() {
+        layout = layout.next();
+        build();
+    }
+
+    String name() {
+        return layout.key();
+    }
+
+    private void build() {
+        for (int x = -25; x <= 25; x++) {
+            for (int z = -25; z <= 25; z++) {
+                world.getBlockAt(x, FLOOR, z).setType(layout.floor(x, z)
+                        ? (Math.abs(x) <= 3 || Math.abs(z) <= 3 ? Material.SMOOTH_QUARTZ : Material.CYAN_TERRACOTTA)
+                        : Material.AIR, false);
+                for (int y = FLOOR + 1; y <= FLOOR + 5; y++) {
+                    world.getBlockAt(x, y, z).setType(Material.AIR, false);
+                }
+            }
+        }
+        for (int[] point : new int[][] {{-3, -3}, {-3, 3}, {3, -3}, {3, 3}}) {
+            if (layout.floor(point[0], point[1])) {
+                world.getBlockAt(point[0], FLOOR + 1, point[1]).setType(Material.QUARTZ_PILLAR, false);
+                world.getBlockAt(point[0], FLOOR + 2, point[1]).setType(Material.QUARTZ_PILLAR, false);
+            }
+        }
+    }
+
+    private Location at(int x, int z) {
+        var location = new Location(world, x + 0.5, FLOOR + 1, z + 0.5);
+        location.setDirection(new org.bukkit.util.Vector(-x, 0, -z));
+        return location;
+    }
+
+    World world() {
+        return world;
+    }
+
+    Location spawn() {
+        return spawns.get(ThreadLocalRandom.current().nextInt(spawns.size())).clone();
+    }
+
+    Location watch() {
+        return new Location(world, 0.5, FLOOR + 12, 0.5);
+    }
+}

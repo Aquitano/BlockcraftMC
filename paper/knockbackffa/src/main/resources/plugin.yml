@@ -1,0 +1,6 @@
+name: KnockbackFFA
+version: '${version}'
+main: me.blockcraft.knockbackffa.KnockbackFfaPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI]

@@ -1,0 +1,19 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/equipment_relic_blade","particle":"blockcraft:block/sternenfront/rig/equipment_relic_blade"},
+  "elements":[
+    {"from":[7.36,4.64,7.52],"to":[8.64,9.12,8.48],"faces":{"north":{"uv":[4.375,0.25,5.0,2.5],"texture":"#rig"},"south":{"uv":[4.375,0.25,5.0,2.5],"texture":"#rig"},"east":{"uv":[5.5,0.25,6.0,2.5],"texture":"#rig"},"west":{"uv":[5.5,0.25,6.0,2.5],"texture":"#rig"},"up":{"uv":[12.625,0.25,13.25,0.75],"texture":"#rig"},"down":{"uv":[11.5,0.25,12.125,0.75],"texture":"#rig"}}},
+    {"from":[6.96,9.24,7.36],"to":[9.04,9.96,8.64],"faces":{"north":{"uv":[0.25,10.375,1.25,10.75],"texture":"#rig"},"south":{"uv":[0.25,10.375,1.25,10.75],"texture":"#rig"},"east":{"uv":[1.75,10.375,2.375,10.75],"texture":"#rig"},"west":{"uv":[1.75,10.375,2.375,10.75],"texture":"#rig"},"up":{"uv":[10.0,0.25,11.0,0.875],"texture":"#rig"},"down":{"uv":[8.5,0.25,9.5,0.875],"texture":"#rig"}}},
+    {"from":[6.96,9.92,7.8],"to":[9.04,29.12,8.2],"faces":{"north":{"uv":[0.25,0.25,1.25,9.875],"texture":"#rig"},"south":{"uv":[0.25,0.25,1.25,9.875],"texture":"#rig"},"east":{"uv":[1.75,0.25,2.0,9.875],"texture":"#rig"},"west":{"uv":[1.75,0.25,2.0,9.875],"texture":"#rig"},"up":{"uv":[4.375,10.375,5.375,10.625],"texture":"#rig"},"down":{"uv":[2.875,10.375,3.875,10.625],"texture":"#rig"}}},
+    {"from":[7.2,10.08,8.16],"to":[8.8,28.96,8.352],"faces":{"north":{"uv":[2.5,0.25,3.25,9.75],"texture":"#rig"},"south":{"uv":[2.5,0.25,3.25,9.75],"texture":"#rig"},"east":{"uv":[3.75,0.25,3.875,9.75],"texture":"#rig"},"west":{"uv":[3.75,0.25,3.875,9.75],"texture":"#rig"},"up":{"uv":[9.625,10.375,10.375,10.5],"texture":"#rig"},"down":{"uv":[8.375,10.375,9.125,10.5],"texture":"#rig"}}},
+    {"from":[7.2,10.08,7.648],"to":[8.8,28.96,7.84],"faces":{"north":{"uv":[2.5,0.25,3.25,9.75],"texture":"#rig"},"south":{"uv":[2.5,0.25,3.25,9.75],"texture":"#rig"},"east":{"uv":[3.75,0.25,3.875,9.75],"texture":"#rig"},"west":{"uv":[3.75,0.25,3.875,9.75],"texture":"#rig"},"up":{"uv":[9.625,10.375,10.375,10.5],"texture":"#rig"},"down":{"uv":[8.375,10.375,9.125,10.5],"texture":"#rig"}}},
+    {"from":[7.024,28.72,7.8],"to":[8.464,30.16,8.2],"rotation":{"origin":[7.744,29.44,8.0],"axis":"z","angle":-45.0},"faces":{"north":{"uv":[6.5,0.25,7.25,1.0],"texture":"#rig"},"south":{"uv":[6.5,0.25,7.25,1.0],"texture":"#rig"},"east":{"uv":[7.75,0.25,8.0,1.0],"texture":"#rig"},"west":{"uv":[7.75,0.25,8.0,1.0],"texture":"#rig"},"up":{"uv":[7.125,10.375,7.875,10.625],"texture":"#rig"},"down":{"uv":[5.875,10.375,6.625,10.625],"texture":"#rig"}}},
+    {"from":[7.224,28.92,8.16],"to":[8.264,29.96,8.352],"rotation":{"origin":[7.744,29.44,8.256],"axis":"z","angle":-45.0},"faces":{"north":{"uv":[13.75,0.25,14.25,0.75],"texture":"#rig"},"south":{"uv":[13.75,0.25,14.25,0.75],"texture":"#rig"},"east":{"uv":[14.75,0.25,14.875,0.75],"texture":"#rig"},"west":{"uv":[14.75,0.25,14.875,0.75],"texture":"#rig"},"up":{"uv":[11.875,10.375,12.375,10.5],"texture":"#rig"},"down":{"uv":[10.875,10.375,11.375,10.5],"texture":"#rig"}}}
+  ],"display":{
+  "firstperson_righthand":{"rotation":[-22.0,0,15.0],"translation":[0.0,0.0,0],"scale":[0.7,0.7,0.7]},"firstperson_lefthand":{"rotation":[-22.0,0,15.0],"translation":[0.0,0.0,0],"scale":[0.7,0.7,0.7]},
+  "thirdperson_righthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
+  "thirdperson_lefthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
+  "gui":{"rotation":[0,0,-35],"translation":[-3,-3,0],"scale":[0.6,0.6,0.6]},
+  "ground":{"translation":[0,2,0],"scale":[0.4,0.4,0.4]},
+  "fixed":{"scale":[0.6,0.6,0.6]}}
+
+}

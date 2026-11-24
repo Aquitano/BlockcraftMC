@@ -1,0 +1,12 @@
+name: BuildBattle
+origin: Blockcraft 2015–16
+category: Minispiele
+description: Die für vier Spieler konfigurierte BuildBattle-Karte von Blockcraft mit
+  felsigen Bauinseln, Bäumen und kleinen Wasserflächen.
+icon: crafting_table
+arrival:
+  x: 112.5
+  y: 23.0
+  z: 117.5
+  yaw: 139.03
+  pitch: 0.0

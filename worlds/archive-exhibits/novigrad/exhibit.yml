@@ -1,0 +1,28 @@
+name: Novigrad
+origin: AQ Survival
+year: 2020
+category: Nachbauten
+description: Der Nachbau der Freien Stadt Novigrad aus The Witcher 3, den AQ Survival als eigene Welt zum Erkunden
+  geladen hatte. Erbaut von Elysium Fire.
+icon: bell
+arrival:
+  x: 876.5
+  y: 60.0
+  z: 1212.5
+checkpoints:
+- name: Die Erbauer
+  description: Rüstungsständer mit den Namen der Erbauer von Elysium Fire.
+  at:
+    x: 962.5
+    y: 95.0
+    z: 1120.5
+    yaw: -101.3
+    pitch: 10.0
+- name: Kellerbar
+  description: Die Bar von Elysium Fire mit den Schildern ihrer Erbauer.
+  at:
+    x: 619.5
+    y: 4.0
+    z: 1595.5
+    yaw: 98.1
+    pitch: 10.0

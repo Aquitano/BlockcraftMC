@@ -1,0 +1,423 @@
+package me.blockcraft.zombies.arena;
+
+import me.blockcraft.api.game.BlockChanges;
+import me.blockcraft.common.message.Messages;
+import me.blockcraft.zombies.game.Perk;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.data.type.CopperBulb;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Display;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.util.BoundingBox;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+public final class ArenaMap {
+
+    public record Room(String id, BlockBox bounds) { }
+    /** A room's own door unlocks it; a door in {@code doors} joins two rooms and unlocks whichever is still closed. */
+    public record Door(String id, BlockBox box, int price, List<String> rooms) {
+        public Component name(Messages messages) {
+            var first = messages.get("room." + rooms.getFirst());
+            return rooms.size() == 1 ? first : messages.get("room.pair", Placeholder.component("room", first),
+                    Placeholder.component("other", messages.get("room." + rooms.getLast())));
+        }
+    }
+    public record Window(String id, String room, BlockBox boards, Location spawn, Location entry, Optional<BlockBox> bay) {
+        public Location approach() {
+            var direction = spawn.toVector().subtract(entry.toVector()).setY(0).normalize();
+            return new Location(spawn.getWorld(), (boards.minX() + boards.maxX() + 1) / 2.0,
+                    boards.minY(), (boards.minZ() + boards.maxZ() + 1) / 2.0).add(direction.multiply(1.5));
+        }
+    }
+    /** A perk station with a {@code perk} sells that one perk; without one it sells them all. */
+    public record Station(String id, String room, StationKind kind, Location location, Optional<Perk> perk) {
+
+        /** The message key of the station's name, which for a single perk is the perk's. */
+        public String nameKey() {
+            return perk.map(each -> "perk." + each.key()).orElse("station." + kind.key());
+        }
+    }
+    public record Note(String id, String room, Location location) {
+        public static final String ITEM_PREFIX = "zombies.note.";
+        public String item() { return ITEM_PREFIX + id; }
+    }
+
+    private static final String DISPLAY_TAG = "blockcraft_zombies_display";
+    private final Path file;
+    private final World world;
+    private final YamlConfiguration yaml;
+    private final Map<String, Room> rooms = new LinkedHashMap<>();
+    private final List<Door> doors = new ArrayList<>();
+    private final Set<Door> opened = new HashSet<>();
+    private final List<Window> windows = new ArrayList<>();
+    private final List<Station> stations = new ArrayList<>();
+    private final List<Note> notes = new ArrayList<>();
+    private final List<Block> lights = new ArrayList<>();
+    private final Set<String> unlocked = new HashSet<>(Set.of("yard"));
+    private final List<BlockState> originals = new ArrayList<>();
+    private final List<TextDisplay> labels = new ArrayList<>();
+    private final Map<Station, TextDisplay> stationLabels = new LinkedHashMap<>();
+    private record DoorLabel(List<TextDisplay> displays, Component opened) { }
+    private final Map<Door, DoorLabel> doorLabels = new LinkedHashMap<>();
+    private Plugin chunkOwner;
+    private org.bukkit.block.data.BlockData windowData;
+
+    public ArenaMap(Path file, World world) {
+        this.file = file;
+        this.world = world;
+        this.yaml = YamlConfiguration.loadConfiguration(file.toFile());
+        for (String id : section("rooms").getKeys(false)) {
+            rooms.put(id, new Room(id, box("rooms." + id + ".bounds")));
+            if (!id.equals("yard") && yaml.isConfigurationSection("rooms." + id + ".door")) {
+                doors.add(new Door(id, box("rooms." + id + ".door"), Math.max(0, yaml.getInt("rooms." + id + ".price")), List.of(id)));
+            }
+        }
+        if (yaml.isConfigurationSection("doors")) {
+            for (String id : section("doors").getKeys(false)) {
+                String path = "doors." + id + ".";
+                doors.add(new Door(id, box(path + "box"), Math.max(0, yaml.getInt(path + "price")), List.copyOf(yaml.getStringList(path + "rooms"))));
+            }
+        }
+        for (String id : section("windows").getKeys(false)) {
+            String path = "windows." + id + ".";
+            windows.add(new Window(id, yaml.getString(path + "room", "yard"), box(path + "boards"), point(path + "spawn"), point(path + "entry"),
+                    yaml.isConfigurationSection(path + "bay") ? Optional.of(box(path + "bay")) : Optional.empty()));
+        }
+        for (String id : section("stations").getKeys(false)) {
+            String path = "stations." + id + ".";
+            stations.add(new Station(id, yaml.getString(path + "room", "yard"),
+                    StationKind.valueOf(yaml.getString(path + "kind")), point(path + "location"),
+                    Optional.ofNullable(yaml.getString(path + "perk")).map(perk -> Perk.valueOf(perk.toUpperCase(Locale.ROOT)))));
+        }
+        if (yaml.isConfigurationSection("notes")) {
+            for (String id : section("notes").getKeys(false)) {
+                String path = "notes." + id + ".";
+                notes.add(new Note(id, yaml.getString(path + "room", "yard"), point(path + "location")));
+            }
+        }
+    }
+
+    /** The same arena read anew from its file, without the doors, rooms and blocks this one opened or prepared. */
+    public ArenaMap fresh() {
+        return new ArenaMap(file, world);
+    }
+
+    public World world() { return world; }
+    public String name() { return yaml.getString("name", world.getName()); }
+    public Location point(String key) {
+        var origin = section("origin");
+        var point = section(key);
+        return new Location(world, origin.getInt("x") + point.getDouble("x"), origin.getInt("y") + point.getDouble("y"),
+                origin.getInt("z") + point.getDouble("z"), (float) point.getDouble("yaw"), (float) point.getDouble("pitch"));
+    }
+
+    public void setPoint(String key, Location location) {
+        if (!location.getWorld().equals(world)) {
+            return;
+        }
+        var origin = section("origin");
+        yaml.set(key + ".x", location.getX() - origin.getInt("x"));
+        yaml.set(key + ".y", location.getY() - origin.getInt("y"));
+        yaml.set(key + ".z", location.getZ() - origin.getInt("z"));
+        yaml.set(key + ".yaw", location.getYaw());
+        yaml.set(key + ".pitch", location.getPitch());
+        save();
+    }
+
+    public List<Window> windows() { return List.copyOf(windows); }
+    public List<Station> stations() { return List.copyOf(stations); }
+    public Optional<Location> generator() {
+        return stations.stream().filter(station -> station.kind() == StationKind.POWER).findFirst().map(station -> station.location().clone());
+    }
+    public List<Room> rooms() { return List.copyOf(rooms.values()); }
+    public List<Door> doors() { return List.copyOf(doors); }
+    public boolean opened(Door door) { return opened.contains(door); }
+    public List<Note> notes() { return List.copyOf(notes); }
+    public List<Block> lights() { return List.copyOf(lights); }
+    public boolean unlocked(String room) { return unlocked.contains(room); }
+    public void unlock(String room) { unlocked.add(room); }
+
+    public Optional<Room> roomAt(Location location) {
+        if (!location.getWorld().equals(world)) {
+            return Optional.empty();
+        }
+        return rooms.values().stream().filter(room -> room.bounds().contains(location)).findFirst();
+    }
+
+    public Optional<Door> doorAt(Block block) {
+        return doors.stream().filter(door -> door.box().contains(block.getLocation())).findFirst();
+    }
+
+    public Optional<Station> stationAt(Block block) {
+        return stations.stream().filter(station -> station.location().getBlock().equals(block)).findFirst();
+    }
+
+    public Optional<Note> noteAt(Block block) {
+        return notes.stream().filter(note -> note.location().getBlock().equals(block)).findFirst();
+    }
+
+    public boolean enterable(Location location) {
+        return roomAt(location).map(room -> unlocked(room.id())).orElse(false)
+                && windows.stream().noneMatch(window -> window.bay().map(bay -> bay.contains(location)).orElse(false));
+    }
+
+    public List<Window> activeWindows() {
+        return windows.stream().filter(window -> unlocked(window.room())).toList();
+    }
+
+    /** The rooms and everywhere enemies come from. */
+    public BoundingBox bounds() {
+        var bounds = rooms.get("yard").bounds().bounds();
+        rooms.values().forEach(room -> bounds.union(room.bounds().bounds()));
+        windows.forEach(window -> {
+            bounds.union(window.spawn());
+            window.bay().ifPresent(bay -> bounds.union(bay.bounds()));
+        });
+        return bounds;
+    }
+
+    /** Loads the arena's chunks in the background and keeps them loaded, so a map chosen in the lobby does not stall it. */
+    public void keepLoaded(Plugin plugin) {
+        chunkOwner = plugin;
+        for (var room : rooms.values()) {
+            for (int x = room.bounds().minX() >> 4; x <= room.bounds().maxX() >> 4; x++) {
+                for (int z = room.bounds().minZ() >> 4; z <= room.bounds().maxZ() >> 4; z++) {
+                    keep(x, z, plugin);
+                }
+            }
+        }
+        windows.forEach(window -> keep(window.spawn().getBlockX() >> 4, window.spawn().getBlockZ() >> 4, plugin));
+    }
+
+    private void keep(int x, int z, Plugin plugin) {
+        world.getChunkAtAsync(x, z).thenRun(() -> world.addPluginChunkTicket(x, z, plugin));
+    }
+
+    public boolean prepare() {
+        if (!validLayout()) {
+            return false;
+        }
+        if (yaml.getBoolean("starter.build") && !yaml.getBoolean("starter.built")) {
+            var origin = section("origin");
+            int radius = yaml.getInt("starter.radius", StarterArena.RADIUS);
+            int height = yaml.getInt("starter.height", StarterArena.HEIGHT);
+            if (radius < StarterArena.RADIUS || height < StarterArena.HEIGHT) {
+                return false;
+            }
+            var bounds = new BlockBox(origin.getInt("x") - radius, origin.getInt("y") - 1, origin.getInt("z") - radius,
+                    origin.getInt("x") + radius, origin.getInt("y") + height, origin.getInt("z") + radius);
+            boolean contained = rooms.values().stream().allMatch(room -> bounds.contains(room.bounds()))
+                    && doors.stream().allMatch(door -> bounds.contains(door.box()))
+                    && windows.stream().allMatch(window -> bounds.contains(window.boards()) && window.bay().map(bounds::contains).orElse(true))
+                    && stations.stream().allMatch(station -> bounds.contains(station.location().clone().add(0, -1, 0))
+                            && bounds.contains(station.location().clone().add(0, 5, 0)));
+            if (!contained || bounds.minY() < world.getMinHeight() || bounds.maxY() >= world.getMaxHeight()
+                    || bounds.blocks(world).stream().anyMatch(block -> !block.getType().isAir())) {
+                return false;
+            }
+            StarterArena.build(this, bounds);
+            yaml.set("starter.built", true);
+            save();
+        }
+        // A station added to the file after the starter map was built and saved has no block yet; it gets the starter's.
+        if (yaml.getBoolean("starter.build")) {
+            stations.stream().filter(station -> station.location().getBlock().getType().isAir()).forEach(StarterArena::station);
+        }
+        var doorData = org.bukkit.Bukkit.createBlockData(yaml.getString("door-block-data", "minecraft:waxed_cut_copper"));
+        windowData = org.bukkit.Bukkit.createBlockData(yaml.getString("window-block-data", "minecraft:oak_slab[type=top,waterlogged=false]"));
+        doors.forEach(door -> door.box().blocks(world).forEach(block -> {
+            block.setBlockData(doorData, false);
+            originals.add(block.getState());
+        }));
+        windows.forEach(window -> window.boards().blocks(world).forEach(block -> {
+            block.setBlockData(windowData, false);
+            originals.add(block.getState());
+        }));
+        rooms.values().stream().flatMap(room -> room.bounds().blocks(world).stream())
+                .filter(block -> block.getBlockData() instanceof CopperBulb).forEach(block -> {
+                    lit(block, false);
+                    originals.add(block.getState());
+                    lights.add(block);
+                });
+        world.setDifficulty(org.bukkit.Difficulty.valueOf(yaml.getString("difficulty", "NORMAL")));
+        world.setGameRule(org.bukkit.GameRules.NATURAL_HEALTH_REGENERATION, false);
+        world.setGameRule(org.bukkit.GameRules.ADVANCE_TIME, false);
+        world.setGameRule(org.bukkit.GameRules.ADVANCE_WEATHER, false);
+        world.setStorm(false);
+        me.blockcraft.api.world.Worlds.setTime(world, yaml.getLong("time", 18000));
+        return ready();
+    }
+
+    private boolean validLayout() {
+        return rooms.containsKey("yard") && windows.stream().anyMatch(window -> window.room().equals("yard"))
+                && doors.stream().allMatch(door -> door.box().blocks(world).size() <= 64 && List.of(1, 2).contains(door.rooms().size())
+                        && rooms.keySet().containsAll(door.rooms()))
+                && windows.stream().allMatch(window -> rooms.containsKey(window.room())
+                        && rooms.get(window.room()).bounds().contains(window.entry())
+                        && window.bay().map(bay -> bay.contains(window.spawn()) && !bay.contains(window.entry())).orElse(true))
+                && stations.stream().allMatch(station -> rooms.containsKey(station.room())
+                        && rooms.get(station.room()).bounds().contains(station.location())
+                        && (station.perk().isEmpty() || station.kind() == StationKind.PERKS))
+                && notes.stream().allMatch(note -> rooms.containsKey(note.room())
+                        && rooms.get(note.room()).bounds().contains(note.location()));
+    }
+
+    public boolean ready() {
+        return validLayout() && enterable(point("spawn")) && point("spawn").getBlock().isPassable()
+                && point("spawn").clone().add(0, 1, 0).getBlock().isPassable()
+                && point("spawn").clone().add(0, -1, 0).getBlock().getType().isSolid();
+    }
+
+    /** Unlocks the door's rooms and returns its blocks from the bottom row up; the caller clears the rows. */
+    public List<List<Block>> open(Door door) {
+        opened.add(door);
+        unlocked.addAll(door.rooms());
+        var label = doorLabels.get(door);
+        if (label != null) {
+            label.displays().forEach(display -> display.text(label.opened()));
+        }
+        var box = door.box();
+        return java.util.stream.IntStream.rangeClosed(box.minY(), box.maxY())
+                .mapToObj(y -> box.blocks(world).stream().filter(block -> block.getY() == y).toList()).toList();
+    }
+
+    public static void lit(Block block, boolean lit) {
+        if (block.getBlockData() instanceof CopperBulb bulb) {
+            bulb.setLit(lit);
+            bulb.setPowered(false);
+            BlockChanges.set(block, bulb);
+        }
+    }
+
+    public Optional<Block> repair(Window window) {
+        return window.boards().blocks(world).stream().filter(block -> block.getType().isAir()).findFirst().map(block -> {
+            BlockChanges.set(block, windowData);
+            return block;
+        });
+    }
+
+    public void labels(Messages messages) {
+        world.getEntitiesByClass(TextDisplay.class).stream().filter(entity -> entity.getScoreboardTags().contains(DISPLAY_TAG)).forEach(TextDisplay::remove);
+        labels.clear();
+        stationLabels.clear();
+        for (var station : stations) {
+            stationLabels.put(station, label(station.location().clone().add(0.5, 1.5, 0.5), messages.get("station.label",
+                    Placeholder.component("station", messages.get(station.nameKey())))));
+        }
+        doors.forEach(door -> {
+            var box = door.box();
+            var centre = new Location(world, (box.minX() + box.maxX() + 1) / 2.0, box.maxY() + 1.0, (box.minZ() + box.maxZ() + 1) / 2.0);
+            var roomName = Placeholder.component("room", door.name(messages));
+            var text = messages.get("room.label", roomName,
+                    net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("price", door.price()));
+            var displays = faces(box).stream().map(face -> label(centre.clone().add(face), text)).toList();
+            doorLabels.put(door, new DoorLabel(displays, messages.get("room.open-label", roomName)));
+        });
+    }
+
+    /**
+     * Just outside both faces of a door's wall, so its label shows from either room instead of sitting in the lintel.
+     */
+    private static List<org.bukkit.util.Vector> faces(BlockBox box) {
+        double out = 0.15;
+        if (box.maxX() - box.minX() <= box.maxZ() - box.minZ()) {
+            double half = (box.maxX() - box.minX() + 1) / 2.0 + out;
+            return List.of(new org.bukkit.util.Vector(half, 0, 0), new org.bukkit.util.Vector(-half, 0, 0));
+        }
+        double half = (box.maxZ() - box.minZ() + 1) / 2.0 + out;
+        return List.of(new org.bukkit.util.Vector(0, 0, half), new org.bukkit.util.Vector(0, 0, -half));
+    }
+
+    /** Tells everyone the stations of this kind have nothing left to sell, as the door labels do for an opened room. */
+    public void relabelStations(StationKind kind, Component text) {
+        stationLabels.forEach((station, display) -> {
+            if (station.kind() == kind) {
+                display.text(text);
+            }
+        });
+    }
+
+    /** Takes the labels of this kind away from one player, for whom these stations have nothing left to sell. */
+    public void hideStationLabels(StationKind kind, Player player, Plugin plugin) {
+        stationLabels.forEach((station, display) -> {
+            if (station.kind() == kind) {
+                player.hideEntity(plugin, display);
+            }
+        });
+    }
+
+    private TextDisplay label(Location location, Component text) {
+        var display = world.spawn(location, TextDisplay.class, entity -> {
+            entity.text(text);
+            entity.setBillboard(Display.Billboard.CENTER);
+            entity.setPersistent(false);
+            entity.setSeeThrough(false);
+            entity.setShadowed(true);
+            entity.setViewRange(0.4f);
+            entity.addScoreboardTag(DISPLAY_TAG);
+        });
+        labels.add(display);
+        return display;
+    }
+
+    public void restore() {
+        labels.forEach(TextDisplay::remove);
+        restoreBlocks();
+        originals.clear();
+        lights.clear();
+        if (chunkOwner != null) {
+            world.removePluginChunkTickets(chunkOwner);
+        }
+    }
+
+    public List<BlockState> snapshot() {
+        return originals.stream().map(state -> state.getBlock().getState()).toList();
+    }
+
+    public void restoreBlocks() {
+        originals.forEach(state -> state.update(true, false));
+    }
+
+    private BlockBox box(String path) {
+        var origin = section("origin");
+        var box = section(path);
+        return new BlockBox(origin.getInt("x") + box.getInt("x1"), origin.getInt("y") + box.getInt("y1"),
+                origin.getInt("z") + box.getInt("z1"), origin.getInt("x") + box.getInt("x2"),
+                origin.getInt("y") + box.getInt("y2"), origin.getInt("z") + box.getInt("z2"));
+    }
+
+    private ConfigurationSection section(String key) {
+        var section = yaml.getConfigurationSection(key);
+        if (section == null) {
+            throw new IllegalArgumentException("Missing arena section: " + key);
+        }
+        return section;
+    }
+
+    private void save() {
+        try {
+            yaml.save(file.toFile());
+        } catch (IOException exception) {
+            throw new UncheckedIOException("Could not save Zombies arena", exception);
+        }
+    }
+}

@@ -1,0 +1,39 @@
+#!/bin/bash
+# Boots Paper twice in a scratch directory and keeps an AOT cache of the classes the second start loads and links;
+# start-paper hands it to every server. The first boot only generates the world: training on a world being generated
+# interns more method types than the cache can hold, and a real start loads an existing world anyway.
+set -euo pipefail
+
+cache=/opt/paper/paper.aot
+scratch=$(mktemp -d)
+cd "$scratch"
+echo eula=true > eula.txt
+
+boot() {
+  rm -f console
+  mkfifo console
+  java -Xms1G -Xmx1G "$@" @/opt/paper/launch.args --nogui < console > server.log 2>&1 &
+  local server=$!
+  exec 3> console
+  until grep -q 'Done (' server.log; do
+    if ! kill -0 "$server" 2> /dev/null; then
+      cat server.log
+      exit 1
+    fi
+    sleep 1
+  done
+  echo stop >&3
+  wait "$server"
+  exec 3>&-
+}
+
+boot
+boot "-XX:AOTCacheOutput=$cache"
+# The JVM exits normally even when it could not write the cache.
+if [[ ! -s $cache ]]; then
+  grep -F '[aot' server.log >&2
+  echo "The AOT cache could not be written." >&2
+  exit 1
+fi
+cd /
+rm -rf "$scratch" "$cache.config"

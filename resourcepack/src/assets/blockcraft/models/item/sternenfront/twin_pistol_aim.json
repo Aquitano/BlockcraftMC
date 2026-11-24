@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/twin_pistol",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -7.04,
+        6.341,
+        2.156
+      ],
+      "scale": [
+        0.62,
+        0.62,
+        0.62
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -7.04,
+        6.341,
+        2.156
+      ],
+      "scale": [
+        0.62,
+        0.62,
+        0.62
+      ]
+    }
+  }
+}

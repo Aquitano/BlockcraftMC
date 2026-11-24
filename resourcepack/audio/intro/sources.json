@@ -1,0 +1,45 @@
+{
+  "voice": {
+    "name": "de_DE-thorsten-high",
+    "author": "Thorsten Müller (Thorsten-Voice), Piper model by rhasspy",
+    "dataset_license": "CC0-1.0",
+    "dataset_source": "https://github.com/thorstenMueller/Thorsten-Voice",
+    "model_card": "https://huggingface.co/rhasspy/piper-voices/blob/main/de/de_DE/thorsten/high/MODEL_CARD",
+    "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
+    "engine": "piper-tts 1.4.2",
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1",
+    "config_sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a",
+    "delivery": {
+      "kolonien": {
+        "length_scale": 0.9,
+        "noise_scale": 0.4,
+        "noise_w_scale": 0.6
+      },
+      "hegemonie": {
+        "length_scale": 0.96,
+        "noise_scale": 0.2,
+        "noise_w_scale": 0.4
+      }
+    }
+  },
+  "briefings": {
+    "kolonien": {
+      "message": "intro.briefing.kolonien",
+      "faction": "kolonien",
+      "sound": "intro_briefing_kolonien",
+      "event": "sternenfront.intro.briefing.kolonien",
+      "duration_ticks": 46,
+      "sha256": "b91802d5ee756c7c41410b35517fbd97bf9d0d5b166d32c4ec0d2d8acf585245",
+      "text_sha256": "6006e22c612d4bc6792332276fc6d43f723bd61c08eb9f9bf1541345006b5635"
+    },
+    "hegemonie": {
+      "message": "intro.briefing.hegemonie",
+      "faction": "hegemonie",
+      "sound": "intro_briefing_hegemonie",
+      "event": "sternenfront.intro.briefing.hegemonie",
+      "duration_ticks": 45,
+      "sha256": "8c3665bf531aebe5c147122e8a98c16c083e0a19da750ff2453638fef5ab009c",
+      "text_sha256": "e3f8fd3351b3e54107c65fde18896c29726870091f23ad74949b47cf96f0366d"
+    }
+  }
+}

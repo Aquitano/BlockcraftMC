@@ -1,0 +1,68 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/global_stats",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/global_stats"
+        }
+      },
+      {
+        "when": "blockcraft:icon/tool_friends",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/tool_friends"
+        }
+      },
+      {
+        "when": "blockcraft:icon/tool_heads",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/tool_heads"
+        }
+      },
+      {
+        "when": "blockcraft:icon/tool_profile",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/tool_profile"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:special",
+      "base": "minecraft:item/template_skull",
+      "model": {
+        "type": "minecraft:player_head"
+      },
+      "transformation": {
+        "left_rotation": [
+          1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        "right_rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "translation": [
+          0.5,
+          0.0,
+          0.5
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "generated_asset_files": 49,
+  "native_routes": 23,
+  "split_combined_source_files": 2443,
+  "split_packs": {
+    "base": 620,
+    "lobby": 205,
+    "modes": 71,
+    "starwars": 1808,
+    "exhibition": 27
+  },
+  "kit_exclusively_starwars": true,
+  "nexo_id_conflicts": 0,
+  "barrier_containment": "Every full block is contained in a solid cuboid at explicit scale",
+  "frame_opening_cells": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ]
+  ],
+  "reproducible": "49 assets, all 26 mesh renders, manifest, hashes, and Nexo YAML byte-identical in second isolated generation",
+  "nexo_jar_sha256": "af7b6860925a3eab8ac4a14bf496667ce62900ec2e6c8aee6259058435f1eef8",
+  "checks": [
+    "native element bounds [-16,32]",
+    "resolved parent and texture references",
+    "UV rectangles within [0,16]",
+    "3 opaque RGB atlases",
+    "23 Nexo IDs match native item routes",
+    "barrier containment in solid mesh",
+    "combined parent source split builder dependency verification",
+    "kit assets only in starwars layer",
+    "independent regeneration matches bytes",
+    "git diff --check"
+  ],
+  "not_run": [
+    "Full Sternenfront bot pathfinding around smaller native colliders"
+  ],
+  "native_collision": "FurnitureSolids: native world blocks, anchored closed shulkers for smaller shapes",
+  "client_movement_checks": [
+    {
+      "case": "door-closed",
+      "before": [
+        -751.5,
+        96.65,
+        1689.5
+      ],
+      "after": [
+        -751.5,
+        100.0,
+        1691.7
+      ]
+    },
+    {
+      "case": "door-open-walk",
+      "before": [
+        -751.5,
+        100.0,
+        1689.5
+      ],
+      "after": [
+        -751.5,
+        100.0,
+        1697.27
+      ]
+    },
+    {
+      "case": "door-back-closed",
+      "before": [
+        -751.5,
+        100.0,
+        1695.5
+      ],
+      "after": [
+        -751.5,
+        100.0,
+        1693.3
+      ]
+    },
+    {
+      "case": "vaporator",
+      "before": [
+        -779.5,
+        100.0,
+        1650.5
+      ],
+      "after": [
+        -779.5,
+        100.0,
+        1652.89
+      ]
+    },
+    {
+      "case": "cistern",
+      "before": [
+        -770.5,
+        100.0,
+        1650.5
+      ],
+      "after": [
+        -770.5,
+        100.0,
+        1652.82
+      ]
+    },
+    {
+      "case": "wall",
+      "before": [
+        -716.0,
+        100.0,
+        1633.0
+      ],
+      "after": [
+        -716.0,
+        100.0,
+        1634.7
+      ]
+    },
+    {
+      "case": "window",
+      "before": [
+        -779.8,
+        100.0,
+        1624.0
+      ],
+      "after": [
+        -779.8,
+        100.0,
+        1625.7
+      ]
+    },
+    {
+      "case": "entrance",
+      "before": [
+        -761.0,
+        100.0,
+        1641.0
+      ],
+      "after": [
+        -761.0,
+        100.0,
+        1648.77
+      ]
+    },
+    {
+      "case": "clear-lane",
+      "before": [
+        -768.5,
+        100.0,
+        1650.5
+      ],
+      "after": [
+        -768.5,
+        100.0,
+        1658.27
+      ]
+    }
+  ],
+  "physical_template_cleanup": {
+    "door_lower": "minecraft:air",
+    "door_upper": "minecraft:air",
+    "objective": "minecraft:air",
+    "wall": "minecraft:air",
+    "window": "minecraft:air"
+  },
+  "coplanar_face_audit": {
+    "models": 109,
+    "pairs": 0
+  },
+  "full_build": "Java 25 full build passed without compiler warnings"
+}

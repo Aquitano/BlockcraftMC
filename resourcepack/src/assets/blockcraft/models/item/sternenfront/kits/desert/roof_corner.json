@@ -1,0 +1,267 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/desert/atlas",
+    "particle": "blockcraft:item/sternenfront/kits/desert/atlas"
+  },
+  "elements": [
+    {
+      "name": "straight cornice",
+      "from": [
+        -8,
+        0,
+        5
+      ],
+      "to": [
+        24,
+        2,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            1.875,
+            8.0,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            5.625,
+            1.875,
+            6.375,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            5.625,
+            1.875,
+            6.375,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            1.625,
+            8.0,
+            2.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "straight cornice",
+      "from": [
+        -8,
+        0,
+        5
+      ],
+      "to": [
+        20,
+        2,
+        11
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            4.0,
+            1.875,
+            7.5,
+            2.125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "straight cornice",
+      "from": [
+        -8,
+        0,
+        5
+      ],
+      "to": [
+        19,
+        2,
+        11
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4.0,
+            1.625,
+            7.375,
+            2.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "straight cornice",
+      "from": [
+        19,
+        0,
+        5
+      ],
+      "to": [
+        24,
+        2,
+        7
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            7.375,
+            2.125,
+            8.0,
+            2.375
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "return cornice",
+      "from": [
+        20,
+        0,
+        11
+      ],
+      "to": [
+        24,
+        2,
+        24
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            5.75,
+            1.875,
+            6.25,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            5.1875,
+            1.875,
+            6.8125,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            5.1875,
+            1.875,
+            6.8125,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            5.75,
+            1.1875,
+            6.25,
+            2.8125
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "corner cap",
+      "from": [
+        19,
+        2,
+        7
+      ],
+      "to": [
+        24,
+        4,
+        24
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            1.6875,
+            1.875,
+            2.3125,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "north": {
+          "uv": [
+            1.6875,
+            1.875,
+            2.3125,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0.9375,
+            1.875,
+            3.0625,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0.9375,
+            1.875,
+            3.0625,
+            2.125
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            1.6875,
+            0.9375,
+            2.3125,
+            3.0625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "corner cap",
+      "from": [
+        19,
+        2,
+        11
+      ],
+      "to": [
+        20,
+        4,
+        24
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            1.6875,
+            1.4375,
+            1.8125,
+            3.0625
+          ],
+          "texture": "#atlas"
+        }
+      }
+    }
+  ]
+}

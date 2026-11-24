@@ -1,0 +1,6 @@
+{
+  "parent": "blockcraft:item/sternenfront/kits/shared/cover_low",
+  "textures": {
+    "atlas": "blockcraft:item/sternenfront/kits/shared/worn"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "blockcraft:item/sternenfront/kits/actors/mouse/rig/wheel_front_right",
+    "tints": [
+      {
+        "type": "minecraft:custom_model_data",
+        "default": 16777215
+      }
+    ]
+  }
+}

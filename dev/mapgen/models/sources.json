@@ -1,0 +1,141 @@
+{
+  "models": {
+    "venator": {
+      "creator": "SkyblockSquad",
+      "source_page": "https://www.planetminecraft.com/project/star-wars-venator-class-stardestroyer-1-19/",
+      "download": "https://drive.google.com/file/d/1xK32CqVPiNyDEhycFCj64s0g68JPirhR/view",
+      "retrieved": "2026-11-09",
+      "original_sha256": "940b5dcfa9891c795fc4ccb683cb9b61dbeb4b857fae207d2978f375faf82907",
+      "original_format": "Java 1.19 world ZIP",
+      "permission": "Free to use anywhere with creator credit.",
+      "permission_quote": "The Build is free to use anywhere, just make sure to credit us!",
+      "source_nonair_blocks": 2847607,
+      "source_bounds_x_y_z": [
+        9,
+        -59,
+        -179,
+        520,
+        191,
+        1036
+      ],
+      "derived": [
+        {
+          "file": "venator.json.gz",
+          "sha256": "9461475f0b263657fec512c5748ec0d58381f9350603316f65ab7f6c7d17eec7",
+          "size_x_y_z": [
+            86,
+            42,
+            204
+          ],
+          "uniform_scale": 0.16776315789473684,
+          "source_quarter_turns": 0,
+          "cuboids": 20880,
+          "palette_entries": 98
+        },
+        {
+          "file": "venator-distant.json.gz",
+          "sha256": "fe8640a2df0f0865cf8306ed01312c20d29238561ea72abba1904e12bb5883f7",
+          "size_x_y_z": [
+            26,
+            13,
+            60
+          ],
+          "uniform_scale": 0.049342105263157895,
+          "source_quarter_turns": 0,
+          "cuboids": 1362,
+          "palette_entries": 48
+        }
+      ]
+    },
+    "munificent": {
+      "creator": "4LFR3D0zzi",
+      "source_page": "https://www.planetminecraft.com/project/munificent-class-star-frigate-1-10/",
+      "download": "https://www.planetminecraft.com/project/munificent-class-star-frigate-1-10/download/schematic/",
+      "retrieved": "2026-11-09",
+      "original_sha256": "89ffb2e3eb9673da6542add72c5e763780d9a4df6e5d9659a3878d1440dee908",
+      "original_format": "Sponge schematic v2",
+      "permission": "Reuse offered with credit to the project page.",
+      "permission_quote": "You will credit this page",
+      "source_nonair_blocks": 5703,
+      "source_bounds_x_y_z": [
+        0,
+        0,
+        0,
+        82,
+        23,
+        40
+      ],
+      "derived": [
+        {
+          "file": "munificent.json.gz",
+          "sha256": "291e9b257c55372d18b2bc0b921dcbe845e02ae82f4346e760cde93795b42f2c",
+          "size_x_y_z": [
+            68,
+            39,
+            138
+          ],
+          "uniform_scale": 1.6626506024096386,
+          "source_quarter_turns": 3,
+          "cuboids": 3223,
+          "palette_entries": 371
+        },
+        {
+          "file": "munificent-distant.json.gz",
+          "sha256": "bc52d48d23b463c20cf1772b09dafa1729f166f28525b4b70aa4d4dbd5ae30b1",
+          "size_x_y_z": [
+            29,
+            17,
+            60
+          ],
+          "uniform_scale": 0.7228915662650602,
+          "source_quarter_turns": 3,
+          "cuboids": 1797,
+          "palette_entries": 277
+        }
+      ]
+    }
+  },
+  "geometry": "Geometry and materials come from the downloaded creator builds. Uniform voxel resampling retains occupied source cells; downsampled cells use their most frequent source block state, with lexical tie breaking. Upsampled cells use integer scaled boundaries. Nonoverlapping cuboids only combine identical states. No procedural hulls or warm palette replacements are applied.",
+  "source_ground_excluded": [
+    "air",
+    "cave_air",
+    "void_air",
+    "bedrock",
+    "dirt",
+    "grass_block"
+  ],
+  "placement_coordinates": "The model bow faces local positive Z. Local Y starts at the model bottom. The supplied formations raise every corresponding ship bottom by 22 blocks.",
+  "material_substitutions": {
+    "black_concrete_powder": "black_concrete",
+    "gray_concrete_powder": "gray_concrete",
+    "chain": "iron_chain"
+  },
+  "material_substitution_reason": "Matching solid concrete keeps decorative hull blocks fixed in the sky. Paper 26.3 names the legacy chain block iron_chain.",
+  "directional_states": "Source orientation and formation turns rotate facing, horizontal connection keys, axis, sign rotation, rail shapes and jigsaw orientation. Stair half and handedness remain unchanged.",
+  "source_lighting": {
+    "venator": {
+      "invisible_light_cells": 3289,
+      "local_bounds": [
+        -17,
+        8,
+        -6,
+        17,
+        13,
+        22
+      ]
+    },
+    "venator-distant": {
+      "invisible_light_cells": 175,
+      "local_bounds": [
+        -5,
+        2,
+        -2,
+        5,
+        3,
+        7
+      ]
+    },
+    "affects_model_bounds": false
+  },
+  "source_entities": "World entities and block-entity payloads are excluded. Decorative block states remain."
+}

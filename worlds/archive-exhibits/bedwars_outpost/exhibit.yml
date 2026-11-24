@@ -1,0 +1,10 @@
+name: Outpost
+origin: Blockcraft 2015–16
+category: BedWars
+description: Zwei verschneite Wachtürme gegeneinander, für zwei Teams.
+icon: crossbow
+arrival:
+  x: -103.6
+  y: 67.0
+  z: -17.4
+  yaw: -95.6

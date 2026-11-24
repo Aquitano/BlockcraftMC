@@ -1,0 +1,10 @@
+name: Guardians
+origin: Blockcraft 2015–16
+category: BedWars
+description: Vier Inseln in Wächter-Form um eine Mitte aus Prismarin. Erbaut von eventseen.
+icon: prismarine
+arrival:
+  x: 0.5
+  y: 60.0
+  z: 62.3
+  yaw: 182.1

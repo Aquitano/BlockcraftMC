@@ -1,0 +1,24 @@
+players:
+  max: 24
+idle-restart-minutes: 50
+knockback-level: 2
+hit-credit-seconds: 10
+spawn-protection-seconds: 3
+rewards:
+  kill-coins: 2
+  same-player-cooldown-seconds: 120
+kits:
+  interval-seconds: 120
+  ammo: 16
+  pearls: 3
+  grapple-cooldown-seconds: 3
+  heavy-knockback-level: 3
+  grapple-pull: 1.6
+  grapple-lift: 0.4
+  warning-seconds: 5
+rotation:
+  enabled: true
+  interval-seconds: 300
+launch:
+  enabled: false
+  interval-seconds: 100

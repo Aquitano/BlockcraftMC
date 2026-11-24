@@ -1,0 +1,20 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:sternenfront/siege_mode",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/siege_mode"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/netherite_scrap"
+    }
+  }
+}

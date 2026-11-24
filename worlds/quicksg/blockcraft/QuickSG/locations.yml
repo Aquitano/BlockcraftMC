@@ -1,0 +1,96 @@
+Pos1:
+  ==: org.bukkit.Location
+  world: world
+  x: -2.0
+  y: 121.0
+  z: 56.0
+  pitch: 0.78923655
+  yaw: -2.7324057
+Pos2:
+  ==: org.bukkit.Location
+  world: world
+  x: 29.0
+  y: 121.0
+  z: 88.0
+  pitch: 13.511183
+  yaw: -196.33997
+Pos3:
+  ==: org.bukkit.Location
+  world: world
+  x: -19.0
+  y: 121.0
+  z: 109.0
+  pitch: 10.586605
+  yaw: -51.297028
+Pos4:
+  ==: org.bukkit.Location
+  world: world
+  x: -27.0
+  y: 121.0
+  z: 65.0
+  pitch: -7.8382998
+  yaw: -287.73355
+Pos5:
+  ==: org.bukkit.Location
+  world: world
+  x: -48.0
+  y: 106.0
+  z: 96.0
+  pitch: -12.663839
+  yaw: -285.24765
+Pos6:
+  ==: org.bukkit.Location
+  world: world
+  x: 47.0
+  y: 106.0
+  z: 99.0
+  pitch: 1.1492524
+  yaw: -321.12268
+Pos7:
+  ==: org.bukkit.Location
+  world: world
+  x: 20.0
+  y: 106.0
+  z: 54.0
+  pitch: 7.3254614
+  yaw: -246.32307
+Pos8:
+  ==: org.bukkit.Location
+  world: world
+  x: -19.0
+  y: 106.0
+  z: 25.0
+  pitch: 21.644678
+  yaw: -291.26447
+InGamemitte:
+  ==: org.bukkit.Location
+  world: world
+  x: 1.0
+  y: 121.0
+  z: 72.0
+  pitch: 12.870905
+  yaw: -86.99875
+Lobby:
+  ==: org.bukkit.Location
+  world: world
+  x: 295.0
+  y: 91.0
+  z: -111.0
+  pitch: 1.677531
+  yaw: 0.54139835
+Spectator:
+  ==: org.bukkit.Location
+  world: world
+  x: 295.0
+  y: 91.0
+  z: -111.0
+  pitch: 1.677531
+  yaw: 0.54139835
+Lobbymitte:
+  ==: org.bukkit.Location
+  world: world
+  x: 289.0
+  y: 102.0
+  z: -74.0
+  pitch: 59.438087
+  yaw: 68.53801

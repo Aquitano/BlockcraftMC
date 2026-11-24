@@ -1,0 +1,31 @@
+plugins {
+    id("xyz.jpenilla.run-velocity")
+}
+
+val libs = the<VersionCatalogsExtension>().named("libs")
+
+// Runs one Velocity proxy (port 25565) with every plugin here plus LuckPerms; backends register themselves.
+
+tasks.runVelocity {
+    velocityVersion(libs.findVersion("velocity-api").get().requiredVersion)
+    runDirectory = rootProject.layout.projectDirectory.dir("run/velocity")
+    systemProperty("user.language.format", "de")
+    systemProperty("user.country.format", "DE")
+    dependsOn(":packRanks", ":resourcepack:packSplit")
+    doFirst {
+        copy {
+            from(rootProject.file("dev/velocity"))
+            into(runDirectory)
+        }
+        copy {
+            from(rootProject.layout.buildDirectory.file("luckperms/ranks.json.gz"))
+            into(runDirectory.dir("plugins/luckperms"))
+        }
+        copy {
+            from(project(":resourcepack").layout.buildDirectory.dir("split")) { include("blockcraft-*.zip") }
+            into(runDirectory.dir("plugins/blockcraft-system"))
+        }
+    }
+    pluginJars.from(provider { subprojects.map { it.tasks.named("shadowJar") } })
+    pluginJars.from(rootProject.tasks.named("downloadLuckPermsVelocity"))
+}

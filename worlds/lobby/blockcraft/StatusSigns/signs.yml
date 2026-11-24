@@ -1,0 +1,288 @@
+signs:
+  '1':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1560
+  '2':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1559
+  '3':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1558
+  '7':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1612
+  '8':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1614
+  '9':
+    group: quicksg
+    loc:
+      world: world
+      x: -946
+      y: 28
+      z: 1687
+  '10':
+    group: quicksg
+    loc:
+      world: world
+      x: -948
+      y: 28
+      z: 1687
+  '11':
+    group: quicksg
+    loc:
+      world: world
+      x: -950
+      y: 28
+      z: 1687
+  '12':
+    group: bedwars
+    loc:
+      world: world
+      x: -889
+      y: 32
+      z: 1577
+  '13':
+    group: bedwars
+    loc:
+      world: world
+      x: -889
+      y: 32
+      z: 1579
+  '14':
+    group: bedwars
+    loc:
+      world: world
+      x: -889
+      y: 32
+      z: 1581
+  '21':
+    group: endergames
+    loc:
+      world: world
+      x: -966
+      y: 28
+      z: 1686
+  '22':
+    group: endergames
+    loc:
+      world: world
+      x: -964
+      y: 28
+      z: 1686
+  '23':
+    group: endergames
+    loc:
+      world: world
+      x: -962
+      y: 28
+      z: 1686
+  '27':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1610
+  '76':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 29
+      z: 1696
+  '77':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 28
+      z: 1695
+  '78':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 28
+      z: 1697
+  '79':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 27
+      z: 1694
+  '80':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 27
+      z: 1696
+  '81':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 27
+      z: 1698
+  '82':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 26
+      z: 1695
+  '83':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 26
+      z: 1697
+  '15':
+    group: mlgrush
+    loc:
+      world: world
+      x: -898
+      y: 32
+      z: 1584
+  '16':
+    group: mlgrush
+    loc:
+      world: world
+      x: -896
+      y: 32
+      z: 1584
+  '17':
+    group: mlgrush
+    loc:
+      world: world
+      x: -894
+      y: 32
+      z: 1584
+  '93':
+    group: knockbackffa
+    loc:
+      world: world
+      x: -889
+      y: 37
+      z: 1634
+  '94':
+    group: knockbackffa
+    loc:
+      world: world
+      x: -887
+      y: 37
+      z: 1634
+  '95':
+    group: knockbackffa
+    loc:
+      world: world
+      x: -885
+      y: 37
+      z: 1634
+  '99':
+    group: skywars
+    loc:
+      world: world
+      x: -996
+      y: 29
+      z: 1596
+  '100':
+    group: skywars
+    loc:
+      world: world
+      x: -996
+      y: 29
+      z: 1598
+  '101':
+    group: skywars
+    loc:
+      world: world
+      x: -996
+      y: 29
+      z: 1600
+  '102':
+    group: ttt
+    loc:
+      world: world
+      x: -995
+      y: 30
+      z: 1563
+  '103':
+    group: ttt
+    loc:
+      world: world
+      x: -993
+      y: 30
+      z: 1563
+  '104':
+    group: ttt
+    loc:
+      world: world
+      x: -991
+      y: 30
+      z: 1563
+  '109':
+    group: zombies
+    loc:
+      world: world
+      x: -957
+      y: 23
+      z: 1548
+  '110':
+    group: zombies
+    loc:
+      world: world
+      x: -957
+      y: 23
+      z: 1550
+  '111':
+    group: zombies
+    loc:
+      world: world
+      x: -957
+      y: 23
+      z: 1552
+  '112':
+    group: cores
+    loc:
+      world: world
+      x: -939
+      y: 23
+      z: 1554
+  '113':
+    group: cores
+    loc:
+      world: world
+      x: -939
+      y: 23
+      z: 1552
+  '114':
+    group: cores
+    loc:
+      world: world
+      x: -939
+      y: 23
+      z: 1550

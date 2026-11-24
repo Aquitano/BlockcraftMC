@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/se14",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        5.808,
+        2.168
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        5.808,
+        2.168
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    }
+  }
+}

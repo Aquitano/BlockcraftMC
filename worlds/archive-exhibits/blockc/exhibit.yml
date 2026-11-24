@@ -1,0 +1,12 @@
+name: Blockunity
+origin: Blockcraft 2015–16
+category: Lobbys
+description: Der Blockunity-Bereich von Blockcraft mit Wegen, Auswahlflächen und den
+  alten YouTuber-Boxen.
+icon: lime_wool
+arrival:
+  x: -1.5
+  y: 4.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0

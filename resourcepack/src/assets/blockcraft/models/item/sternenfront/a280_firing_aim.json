@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/a280",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        2.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        2.403,
+        6.1049999999999995
+      ],
+      "scale": [
+        0.74,
+        0.74,
+        0.74
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        2.0,
+        180.0,
+        0.0
+      ],
+      "translation": [
+        -8.96,
+        2.403,
+        6.1049999999999995
+      ],
+      "scale": [
+        0.74,
+        0.74,
+        0.74
+      ]
+    }
+  }
+}

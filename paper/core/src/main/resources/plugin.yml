@@ -1,0 +1,10 @@
+name: BlockcraftCore
+version: '${version}'
+main: me.blockcraft.core.BlockcraftCorePlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI]
+softdepend: [GrimAC]
+permissions:
+  blockcraft.core.troll:
+    default: op

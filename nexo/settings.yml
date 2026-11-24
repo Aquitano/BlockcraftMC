@@ -1,0 +1,17 @@
+Plugin:
+  language: german
+  formatting:
+    chats:
+      player_chat: false
+      system_chat: false
+ConfigTools:
+  generate_default_configs: false
+Pack:
+  generation:
+    generate_pack: false
+  dispatch:
+    send_pre_join: false
+    send_on_join: false
+    send_on_reload: false
+Misc:
+  block_other_resourcepacks: false

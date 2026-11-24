@@ -1,0 +1,63 @@
+{
+  "targets": {
+    "targets": {},
+    "base": {},
+    "swap": {}
+  },
+  "passes": [
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "blockcraft:post/target_outline",
+      "inputs": [
+        { "sampler_name": "In", "target": "minecraft:entity_outline" },
+        { "sampler_name": "Depth", "target": "minecraft:main", "use_depth_buffer": true }
+      ],
+      "output": "targets"
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "blockcraft:post/target_outline_base",
+      "inputs": [ { "sampler_name": "In", "target": "minecraft:entity_outline" } ],
+      "output": "base"
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "minecraft:post/entity_sobel",
+      "inputs": [ { "sampler_name": "In", "target": "base" } ],
+      "output": "swap"
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "minecraft:post/entity_outline_box_blur",
+      "inputs": [ { "sampler_name": "In", "target": "swap", "bilinear": true } ],
+      "output": "base",
+      "uniforms": {
+        "BlurConfig": [
+          { "name": "BlurDir", "type": "vec2", "value": [ 1.0, 0.0 ] },
+          { "name": "Radius", "type": "float", "value": 2.0 }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "minecraft:post/entity_outline_box_blur",
+      "inputs": [ { "sampler_name": "In", "target": "base", "bilinear": true } ],
+      "output": "swap",
+      "uniforms": {
+        "BlurConfig": [
+          { "name": "BlurDir", "type": "vec2", "value": [ 0.0, 1.0 ] },
+          { "name": "Radius", "type": "float", "value": 2.0 }
+        ]
+      }
+    },
+    {
+      "vertex_shader": "minecraft:core/screenquad",
+      "fragment_shader": "blockcraft:post/target_outline_composite",
+      "inputs": [
+        { "sampler_name": "In", "target": "swap" },
+        { "sampler_name": "Targets", "target": "targets" }
+      ],
+      "output": "minecraft:entity_outline"
+    }
+  ]
+}

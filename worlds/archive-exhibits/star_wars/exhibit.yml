@@ -1,0 +1,11 @@
+name: Star Wars
+origin: Star Wars
+category: Abenteuer
+description: Eine Star-Wars-Abenteuerwelt aus dem Archiv „Star Wars [1.14]“. Der Spielstand
+  enthält auch ältere Bauabschnitte.
+icon: iron_sword
+arrival:
+  x: -244.5
+  y: 92.0
+  z: 201.5
+  yaw: 0.0

@@ -1,0 +1,23 @@
+{
+  "sources": {
+    "rough-sea.mp3": {
+      "title": "RoughSea.wav (public MP3 preview)",
+      "author": "ahill86",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/people/ahill86/sounds/207143/",
+      "download": "https://cdn.freesound.org/previews/207/207143_2568776-lq.mp3",
+      "sha256": "78735b898519d97383ad796fe3f055356b96758fb7479ccf9ff5aff4482b39dd"
+    }
+  },
+  "events": {
+    "sea.surf": {
+      "source": "rough-sea.mp3",
+      "start": 16,
+      "seconds": 8,
+      "gain_db": -3,
+      "fade_in_seconds": 0.6,
+      "fade_out_seconds": 0.8,
+      "attenuation_distance": 64
+    }
+  }
+}

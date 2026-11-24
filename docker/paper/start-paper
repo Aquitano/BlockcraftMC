@@ -1,0 +1,90 @@
+#!/bin/bash
+set -euo pipefail
+
+eula=${EULA:-}
+if [[ ${eula^^} != TRUE ]]; then
+  echo "Set EULA=TRUE to accept the Minecraft EULA (https://aka.ms/MinecraftEULA)." >&2
+  exit 1
+fi
+read -r image_version image_build < /opt/paper/version
+if [[ -v VERSION && -v PAPER_BUILD && "$VERSION $PAPER_BUILD" != "$image_version $image_build" ]]; then
+  echo "runtime.env wants Paper $VERSION build $PAPER_BUILD, but this image holds $image_version build $image_build." >&2
+  echo "Rebuild it after stagePlugins: docker compose build" >&2
+  exit 1
+fi
+
+# Settings the itzg image understood and this one does not; set, they would be ignored without a word.
+unsupported=(TYPE PLUGINS SPIGET_RESOURCES MODRINTH_PROJECTS VIEW_DISTANCE SIMULATION_DISTANCE OPS OPS_FILE WHITELIST
+  ENABLE_WHITELIST ENFORCE_WHITELIST PVP MODE LEVEL SEED ICON SERVER_NAME SERVER_PORT ENABLE_COMMAND_BLOCK HARDCORE
+  FORCE_GAMEMODE MAX_WORLD_SIZE MAX_TICK_TIME INIT_MEMORY MAX_MEMORY USE_AIKAR_FLAGS ENABLE_AUTOPAUSE RCON_CMDS_STARTUP
+  RCON_CMDS_ON_CONNECT RCON_CMDS_LAST_DISCONNECT CLEAN_SERVER_LIBRARIES SYNC_SKIP_NEWER_IN_DESTINATION)
+set_unsupported=()
+for name in "${unsupported[@]}"; do
+  if [[ -v $name ]]; then
+    set_unsupported+=("$name")
+  fi
+done
+if (( ${#set_unsupported[@]} )); then
+  echo "This image does not read ${set_unsupported[*]}; see docker/paper/start-paper for what it does." >&2
+  exit 1
+fi
+
+cd /data
+echo eula=true > eula.txt
+
+mkdir -p plugins
+IFS=, read -ra plugin_sources <<< "${COPY_PLUGINS_SRC:-}"
+for source in "${plugin_sources[@]}"; do
+  cp -R "$source"/. plugins/
+done
+
+# As the itzg image's REPLACE_ENV_DURING_SYNC: ${CFG_*} placeholders in /config take the environment's values.
+if [[ -d /config ]]; then
+  while IFS= read -r -d '' file; do
+    target=/data/config/${file#/config/}
+    mkdir -p "$(dirname "$target")"
+    text=$(<"$file")
+    for name in "${!CFG_@}"; do
+      text=${text//"\${$name}"/"${!name}"}
+    done
+    printf '%s\n' "$text" > "$target"
+  done < <(find /config -type f -print0)
+fi
+
+declare -A property_env=(
+  [allow-flight]=ALLOW_FLIGHT
+  [difficulty]=DIFFICULTY
+  [generate-structures]=GENERATE_STRUCTURES
+  [generator-settings]=GENERATOR_SETTINGS
+  [level-type]=LEVEL_TYPE
+  [max-players]=MAX_PLAYERS
+  [motd]=MOTD
+  [network-compression-threshold]=NETWORK_COMPRESSION_THRESHOLD
+  [online-mode]=ONLINE_MODE
+  [spawn-protection]=SPAWN_PROTECTION
+)
+rcon_password=${RCON_PASSWORD:-$(od -An -N12 -tx1 /dev/urandom | tr -d ' \n')}
+managed=(enable-rcon=true rcon.port=25575 "rcon.password=$rcon_password")
+for property in "${!property_env[@]}"; do
+  env=${property_env[$property]}
+  if [[ -v $env ]]; then
+    managed+=("$property=${!env}")
+  fi
+done
+touch server.properties
+printf '%s\n' "${managed[@]}" > /tmp/managed.properties
+awk -F= 'NR == FNR { managed[$1]; next } !($1 in managed)' /tmp/managed.properties server.properties \
+  | cat - /tmp/managed.properties > /tmp/server.properties
+mv /tmp/server.properties server.properties
+printf 'password: "%s"\n' "$rcon_password" > "$HOME/.rcon-cli.yaml"
+
+memory=${MEMORY:-1G}
+# shellcheck disable=SC2206 # the option variables hold several space-separated options
+java_options=(-XX:AOTCache=/opt/paper/paper.aot ${JVM_XX_OPTS:-} "-Xms$memory" "-Xmx$memory" ${JVM_OPTS:-})
+
+runner_options=(--stop-duration "${STOP_DURATION:-60}s")
+console_pipe=${CREATE_CONSOLE_IN_PIPE:-}
+if [[ ${console_pipe^^} == TRUE ]]; then
+  runner_options+=(--named-pipe /tmp/minecraft-console-in)
+fi
+exec mc-server-runner "${runner_options[@]}" -- java "${java_options[@]}" @/opt/paper/launch.args "$@"

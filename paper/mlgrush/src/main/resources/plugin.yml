@@ -1,0 +1,6 @@
+name: MLGRush
+version: '${version}'
+main: me.blockcraft.mlgrush.MlgRushPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI]

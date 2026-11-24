@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:sternenfront/bolt_hegemonie",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/bolt_hegemonie"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/bolt_kolonien",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/bolt_kolonien"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:block/end_rod"
+    }
+  }
+}

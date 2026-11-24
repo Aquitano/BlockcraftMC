@@ -1,0 +1,8 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/lander_kolonien","particle":"blockcraft:block/sternenfront/rig/lander_kolonien"},
+  "elements":[
+    {"from":[7.76,1.76,0.0],"to":[8.24,14.24,16.0],"faces":{"north":{"uv":[12.9375,0.0625,12.96875,1.21875],"texture":"#rig"},"south":{"uv":[12.9375,0.0625,12.96875,1.21875],"texture":"#rig"},"east":{"uv":[11.3125,0.0625,12.8125,1.21875],"texture":"#rig"},"west":{"uv":[11.3125,0.0625,12.8125,1.21875],"texture":"#rig"},"up":{"uv":[6.40625,0.0625,6.4375,1.5625],"texture":"#rig"},"down":{"uv":[6.25,0.0625,6.28125,1.5625],"texture":"#rig"}}},
+    {"from":[8.096,10.32,0.0],"to":[8.288,11.44,16.0],"faces":{"north":{"uv":[9.5625,5.625,9.59375,5.71875],"texture":"#rig"},"south":{"uv":[9.5625,5.625,9.59375,5.71875],"texture":"#rig"},"east":{"uv":[0.0625,5.625,1.5625,5.71875],"texture":"#rig"},"west":{"uv":[0.0625,5.625,1.5625,5.71875],"texture":"#rig"},"up":{"uv":[6.71875,0.0625,6.75,1.5625],"texture":"#rig"},"down":{"uv":[6.5625,0.0625,6.59375,1.5625],"texture":"#rig"}}},
+    {"from":[8.096,3.52,10.88],"to":[8.288,6.08,14.72],"faces":{"north":{"uv":[3.9375,5.25,3.96875,5.5],"texture":"#rig"},"south":{"uv":[3.9375,5.25,3.96875,5.5],"texture":"#rig"},"east":{"uv":[2.40625,5.25,2.78125,5.5],"texture":"#rig"},"west":{"uv":[2.40625,5.25,2.78125,5.5],"texture":"#rig"},"up":{"uv":[8.375,4.53125,8.40625,4.90625],"texture":"#rig"},"down":{"uv":[8.21875,4.53125,8.25,4.90625],"texture":"#rig"}}}
+  ]
+}

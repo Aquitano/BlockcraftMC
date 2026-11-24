@@ -1,0 +1,5 @@
+{
+  "providers": [
+    {"type":"bitmap","file":"blockcraft:font/deploy/icons.png","ascent":8,"height":9,"chars":["\ue100\ue101\ue102\ue103\ue104\ue105\ue106\ue107\ue108\ue109\ue10a\ue10b"]}
+  ]
+}

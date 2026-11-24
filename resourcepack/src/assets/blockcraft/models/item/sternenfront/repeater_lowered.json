@@ -1,0 +1,39 @@
+{
+  "parent": "blockcraft:item/sternenfront/repeater",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        -27.0,
+        151.0,
+        15.0
+      ],
+      "translation": [
+        -0.9,
+        -2.9000000000000004,
+        -0.3999999999999999
+      ],
+      "scale": [
+        0.66,
+        0.66,
+        0.66
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        -27.0,
+        151.0,
+        15.0
+      ],
+      "translation": [
+        -0.9,
+        -2.9000000000000004,
+        -0.3999999999999999
+      ],
+      "scale": [
+        0.66,
+        0.66,
+        0.66
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+placements:
+  waiting-luggage:
+    item: blockcraft_luggage
+    at: {x: -198, y: 47, z: -281}
+    yaw: 180
+  waiting-bench:
+    item: blockcraft_timber_bench
+    at: {x: -195, y: 47, z: -282}
+    yaw: 180
+    variants:
+      winter: blockcraft_winter_bench
+  waiting-lantern:
+    item: blockcraft_windmill_lantern
+    at: {x: -195, y: 47, z: -315}
+    yaw: 180
+  waiting-tree:
+    item: blockcraft_christmas_tree
+    at: {x: -196, y: 47, z: -290}
+    yaw: 180
+    during:
+    - advent
+    - christmas
+    fallback-block: spruce_leaves[persistent=true]
+    fallback-height: 2

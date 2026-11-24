@@ -1,0 +1,135 @@
+{
+  "sources": {
+    "hit2.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78669/",
+      "download": "https://cdn.freesound.org/previews/78/78669_1083679-hq.mp3",
+      "sha256": "552fac16935d34b6f78e9f827eb6c036e3aa8cb1ba224e2eb9bc442bc02b7b8d"
+    },
+    "hit3.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78670/",
+      "download": "https://cdn.freesound.org/previews/78/78670_1083679-hq.mp3",
+      "sha256": "808b066362adfe31ff055543ff4cc15e90f3dac98a925c2d510d4f6a9bd547b3"
+    },
+    "hit4.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78671/",
+      "download": "https://cdn.freesound.org/previews/78/78671_1083679-hq.mp3",
+      "sha256": "369e7c314b99240b9d9acbf1c3e2f7bb9579cf1ae129e6a5746c565b595aa7cb"
+    },
+    "idle1.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78672/",
+      "download": "https://cdn.freesound.org/previews/78/78672_1083679-hq.mp3",
+      "sha256": "06457ac764987a338728315b3ee57c446b07fe6ea3ec0f9eadcf1048db7f80b2"
+    },
+    "off0.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78673/",
+      "download": "https://cdn.freesound.org/previews/78/78673_1083679-hq.mp3",
+      "sha256": "4bf4df669476cbb05114a3503d48dbe951fe78f08f01e68129d5920be5c56cde"
+    },
+    "on0.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78674/",
+      "download": "https://cdn.freesound.org/previews/78/78674_1083679-hq.mp3",
+      "sha256": "e24d3f44c22c15c629134055ca54a377cf14ae34815b52683eecea24e11459a0"
+    },
+    "strike0.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78675/",
+      "download": "https://cdn.freesound.org/previews/78/78675_1083679-hq.mp3",
+      "sha256": "c8d010d658d54907d686b3f46b99c053aab1f5539823c90a8b320465e6d1bf65"
+    },
+    "strike1.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78676/",
+      "download": "https://cdn.freesound.org/previews/78/78676_1083679-hq.mp3",
+      "sha256": "c3db72c097f1e23b67c9fca143c8b9cb88f8e29fc61aa90d79823de3ec01d318"
+    },
+    "swing2.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78680/",
+      "download": "https://cdn.freesound.org/previews/78/78680_1083679-hq.mp3",
+      "sha256": "3255f6370fdbe7c964cf5121014a8003bd4e2d69a798dcf9b68365ed2d2c7b9a"
+    },
+    "swing4.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78682/",
+      "download": "https://cdn.freesound.org/previews/78/78682_1083679-hq.mp3",
+      "sha256": "3be49562989c0a418569671024106729377fd7189f3fe68d245f37a9d6c604bc"
+    },
+    "swing7.mp3": {
+      "author": "joe93barlow",
+      "license": "CC0-1.0",
+      "page": "https://freesound.org/people/joe93barlow/sounds/78685/",
+      "download": "https://cdn.freesound.org/previews/78/78685_1083679-hq.mp3",
+      "sha256": "630566f83ae3df8fea6b9442cf44dfc09e2030b259abb3c005ca7855fd494100"
+    }
+  },
+  "events": {
+    "saber.swing": {
+      "sources": [
+        "swing2.mp3",
+        "swing4.mp3",
+        "swing7.mp3"
+      ],
+      "peak": 0.7
+    },
+    "saber.hit": {
+      "sources": [
+        "hit2.mp3",
+        "hit3.mp3",
+        "hit4.mp3"
+      ],
+      "peak": 0.8
+    },
+    "saber.clash": {
+      "sources": [
+        "strike0.mp3"
+      ],
+      "peak": 0.85
+    },
+    "saber.ignite": {
+      "sources": [
+        "on0.mp3"
+      ],
+      "peak": 0.75
+    },
+    "saber.retract": {
+      "sources": [
+        "off0.mp3"
+      ],
+      "peak": 0.7
+    },
+    "saber.hum": {
+      "sources": [
+        "idle1.mp3"
+      ],
+      "peak": 0.45
+    },
+    "saber.deflect": {
+      "sources": [
+        "strike1.mp3"
+      ],
+      "peak": 0.75
+    },
+    "saber.throw": {
+      "sources": [
+        "swing2.mp3"
+      ],
+      "peak": 0.7
+    }
+  }
+}

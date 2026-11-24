@@ -1,0 +1,10 @@
+name: Serverlobby
+origin: GommeHD.net
+category: Lobbys
+description: Die gesicherte GommeHD.net-Lobby mit ihren Spielmodus-Schildern und Portalen.
+icon: compass
+arrival:
+  x: -1124.5
+  y: 16.0
+  z: 150.5
+  yaw: 0.0
