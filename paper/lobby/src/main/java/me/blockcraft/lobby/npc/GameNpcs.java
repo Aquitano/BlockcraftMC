@@ -75,6 +75,7 @@ public final class GameNpcs implements Listener, AutoCloseable {
     private final SpotEntities.Group<Npc> placed;
     private final Map<UUID, Long> lastClick = new HashMap<>();
     private final Map<String, Long> wokenAt = new HashMap<>();
+    private final Map<LobbyLocation, Optional<GroupStatus>> labelled = new HashMap<>();
     private final Random random = new Random();
     private final BukkitTask look;
     private final BukkitTask idle;
@@ -119,7 +120,9 @@ public final class GameNpcs implements Listener, AutoCloseable {
         for (var area : LobbyLocation.values()) {
             area.game().ifPresent(icon -> spots.get(spot(area)).ifPresent(base -> {
                 var figure = Figures.spawn(base, skin(area), spawned -> spawned.getEquipment().setItemInMainHand(icon.item().build()));
-                var card = Cards.line(base.clone().add(0, CARD_HEIGHT, 0), card(area));
+                var now = statusOf(area);
+                var card = Cards.line(base.clone().add(0, CARD_HEIGHT, 0), card(area, now));
+                labelled.put(area, now);
                 card.setPersistent(false);
                 var npc = new Npc(area, base.clone(), figure, card);
                 npcs.add(npc);
@@ -133,10 +136,14 @@ public final class GameNpcs implements Listener, AutoCloseable {
                 .orElse(Skins.GAME_HOST);
     }
 
-    private Component card(LobbyLocation area) {
+    private Optional<GroupStatus> statusOf(LobbyLocation area) {
+        return Optional.ofNullable(groups.get(area)).filter(group -> !group.isBlank()).map(status::status);
+    }
+
+    private Component card(LobbyLocation area, Optional<GroupStatus> status) {
         var lines = new ArrayList<Component>();
         lines.add(messages.get("navigator." + area.key()));
-        Optional.ofNullable(groups.get(area)).filter(group -> !group.isBlank()).map(status::status).ifPresentOrElse(now -> {
+        status.ifPresentOrElse(now -> {
             lines.add(shared.get("game-status." + now.availability().name().toLowerCase(Locale.ROOT)));
             lines.add(messages.get("game-npcs.online", Formatter.number("online", now.online())));
             lines.add(messages.get(now.joinable() ? "game-npcs.play" : "game-npcs.retry"));
@@ -145,7 +152,12 @@ public final class GameNpcs implements Listener, AutoCloseable {
     }
 
     private void relabel() {
-        npcs.forEach(npc -> npc.card().text(card(npc.area())));
+        for (var npc : npcs) {
+            var now = statusOf(npc.area());
+            if (!now.equals(labelled.put(npc.area(), now))) {
+                npc.card().text(card(npc.area(), now));
+            }
+        }
     }
 
     /** The proxy checks availability at the moment of the click, as it does for the navigator and the signs. */
@@ -235,6 +247,7 @@ public final class GameNpcs implements Listener, AutoCloseable {
     private void removeAll() {
         placed.close();
         npcs.clear();
+        labelled.clear();
     }
 
     @Override

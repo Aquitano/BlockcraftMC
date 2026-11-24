@@ -18,6 +18,7 @@ public final class StatusSigns {
     private final ServerGroups groups;
     private final SignRenderer renderer;
     private final Map<Location, StatusSign> signs = new ConcurrentHashMap<>();
+    private final Map<Location, GroupStatus> drawn = new ConcurrentHashMap<>();
 
     public StatusSigns(Plugin plugin, SignStore store, ServerGroups groups, SignRenderer renderer) {
         this.plugin = plugin;
@@ -33,10 +34,12 @@ public final class StatusSigns {
 
     public void add(StatusSign sign) {
         signs.put(sign.location(), sign);
+        drawn.remove(sign.location());
         store.add(sign);
     }
 
     public void remove(Location location) {
+        drawn.remove(location);
         if (signs.remove(location) != null) {
             store.remove(location);
         }
@@ -56,6 +59,15 @@ public final class StatusSigns {
     }
 
     public void start() {
-        groups.onRefresh(plugin, () -> signs.values().forEach(sign -> renderer.render(sign, status(sign))));
+        groups.onRefresh(plugin, () -> signs.values().forEach(this::draw));
+    }
+
+    /** A drawn sign keeps its text while its chunk unloads, so only a changed status is drawn again. */
+    private void draw(StatusSign sign) {
+        var status = status(sign);
+        if (status.equals(drawn.get(sign.location()))) return;
+        if (renderer.render(sign, status)) {
+            drawn.put(sign.location(), status);
+        }
     }
 }

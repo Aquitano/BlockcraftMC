@@ -26,11 +26,12 @@ public final class SignRenderer {
         this.messages = messages;
     }
 
-    public void render(StatusSign statusSign, GroupStatus status) {
-        if (!statusSign.location().isChunkLoaded()) return;
+    /** Whether the sign and its indicator block now show {@code status}; false when either is not loaded. */
+    public boolean render(StatusSign statusSign, GroupStatus status) {
+        if (!statusSign.location().isChunkLoaded()) return false;
         var signBlock = statusSign.location().getBlock();
         if (!StatusSign.isSignType(signBlock.getType()) || !(signBlock.getState() instanceof Sign sign)) {
-            return;
+            return false;
         }
         var front = sign.getSide(Side.FRONT);
         var shared = BlockcraftApi.get().messages();
@@ -53,10 +54,12 @@ public final class SignRenderer {
         // A sleeping or starting game is yellow like a restarting one: not open yet, but a click gets the player in.
         var material = status.state().map(state -> indicator(state, status.joinable()))
                 .orElse(status.clickable() ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA);
-        if (block.getLocation().isChunkLoaded() && block.getType() != material) {
+        boolean indicated = block.getLocation().isChunkLoaded();
+        if (indicated && block.getType() != material) {
             block.setType(material);
         }
         if (changed) sign.update();
+        return indicated;
     }
 
     /** The name of a group the shared messages lack, from its id: {@code build-battle} becomes "Build Battle". */
