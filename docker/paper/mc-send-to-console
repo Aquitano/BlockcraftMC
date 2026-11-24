@@ -1,0 +1,2 @@
+#!/bin/sh
+printf '%s\n' "$*" > /tmp/minecraft-console-in

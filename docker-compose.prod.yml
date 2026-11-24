@@ -16,7 +16,6 @@ x-network: &network
 x-paper: &paper
   environment:
     <<: [*db-password, *network]
-    REPLACE_ENV_DURING_SYNC: "TRUE"
     CFG_FORWARDING_SECRET: ${FORWARDING_SECRET:?set FORWARDING_SECRET in .env}
   volumes:
     - ./prod/paper-global.yml:/config/paper-global.yml:ro

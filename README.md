@@ -72,6 +72,19 @@ newer `velocity-api` and `velocity-build` values.
 Older clients would need ViaBackwards, compatible resource packs, dialog fallbacks and a lower client minimum after
 testing those features. The pack's vanilla fallback does not provide older-client support.
 
+### The Paper image
+
+Every Paper server runs `docker/paper`, which Compose builds from the Paper jar `stagePlugins` downloads for the
+catalog's `minecraft` and `paper-api` build and checks against Paper's published checksum. Paper is patched once while
+the image builds, so a start only copies the plugins from `COPY_PLUGINS_SRC` and `/config` (filling in `${CFG_*}`),
+writes `server.properties` and starts Java: about 20 s faster than the itzg image it replaces. A Paper bump is a catalog
+change, `stagePlugins` and `docker compose up -d`; a server whose image is older than `runtime.env` refuses to start.
+
+`start-paper` reads `EULA`, `MEMORY`, `JVM_XX_OPTS`, `JVM_OPTS`, `CREATE_CONSOLE_IN_PIPE`, `STOP_DURATION`,
+`RCON_PASSWORD` and the server.properties settings it lists. It refuses to start with an itzg setting it does not read,
+such as `VIEW_DISTANCE`, instead of ignoring it. `rcon-cli` and `mc-send-to-console` work as before, and `docker
+compose exec` runs as the server's user.
+
 ## Run locally
 
 ### The whole network in Docker
@@ -166,6 +179,8 @@ docker compose restart velocity lobby replay bedwars mlgrush duell zombies ender
 
 - Add `waker` to the restart when on-demand runs. Both commands start every game again, and the proxy stops each after
   `idle-stop-minutes`.
+- `up -d` rebuilds [the Paper image](#the-paper-image) and recreates the servers whose image changed, such as after a
+  Paper bump; a `restart` alone keeps the image a container was created with.
 - New and changed plugin defaults arrive with the jar. A renamed key needs its local override renamed by hand.
 - A changed `luckperms/ranks.json` reaches the network only through [the rank import](#importing-the-ranks).
   `stagePlugins` already put the new `ranks.json.gz` next to LuckPerms.
