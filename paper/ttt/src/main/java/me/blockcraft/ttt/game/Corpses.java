@@ -72,7 +72,6 @@ public final class Corpses {
             mannequin.setAI(false);
             mannequin.setSilent(true);
             mannequin.setPersistent(false);
-            mannequin.setRemoveWhenFarAway(false);
             mannequin.customName(messages.get("corpse.unknown"));
             mannequin.setCustomNameVisible(true);
         });

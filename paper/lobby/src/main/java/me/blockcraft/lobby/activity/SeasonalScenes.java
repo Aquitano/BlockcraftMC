@@ -214,7 +214,7 @@ public final class SeasonalScenes implements Listener, AutoCloseable {
         mob.setInvulnerable(true);
         mob.setSilent(true);
         mob.setPersistent(false);
-        mob.setRemoveWhenFarAway(false);
+        mob.setPersistenceRequired(true);
         mob.setCollidable(false);
     }
 

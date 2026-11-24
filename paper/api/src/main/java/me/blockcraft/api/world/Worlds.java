@@ -126,6 +126,6 @@ public final class Worlds {
                 || entity instanceof TNTPrimed
                 || entity instanceof FallingBlock
                 || entity instanceof AreaEffectCloud
-                || (entity instanceof Mob mob && mob.getRemoveWhenFarAway());
+                || (entity instanceof Mob mob && !mob.isPersistenceRequired());
     }
 }

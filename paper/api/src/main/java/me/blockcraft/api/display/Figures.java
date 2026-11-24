@@ -47,7 +47,6 @@ public final class Figures {
             figure.setInvulnerable(true);
             figure.setSilent(true);
             figure.setPersistent(false);
-            figure.setRemoveWhenFarAway(false);
             extra.accept(figure);
         });
     }

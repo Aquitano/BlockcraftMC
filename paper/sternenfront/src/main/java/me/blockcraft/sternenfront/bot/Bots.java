@@ -473,7 +473,7 @@ public final class Bots implements Listener {
         var at = game.deployment().spot(soldier.faction, start(soldier));
         var mob = at.getWorld().spawn(at, Skeleton.class, skeleton -> {
             skeleton.setPersistent(false);
-            skeleton.setRemoveWhenFarAway(false);
+            skeleton.setPersistenceRequired(true);
             skeleton.setCanPickupItems(false);
             skeleton.setShouldBurnInDay(false);
             skeleton.setSilent(true);

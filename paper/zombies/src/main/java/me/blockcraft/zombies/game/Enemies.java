@@ -197,7 +197,7 @@ public final class Enemies {
         }
         mob.addScoreboardTag(OWNER_TAG);
         mob.setPersistent(false);
-        mob.setRemoveWhenFarAway(false);
+        mob.setPersistenceRequired(true);
         mob.setCanPickupItems(false);
         mob.setAI(true);
         mob.setSilent(false);

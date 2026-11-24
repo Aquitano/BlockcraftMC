@@ -194,7 +194,6 @@ final class PlaybackCast {
             mannequin.setAI(false);
             mannequin.setSilent(true);
             mannequin.setPersistent(false);
-            mannequin.setRemoveWhenFarAway(false);
             mannequin.setCollidable(false);
             mannequin.customName(Component.text(participant.name()));
             mannequin.setCustomNameVisible(true);
@@ -258,7 +257,7 @@ final class PlaybackCast {
             case Mob mob -> {
                 mob.setDespawnInPeacefulOverride(TriState.FALSE);
                 mob.setAI(false);
-                mob.setRemoveWhenFarAway(false);
+                mob.setPersistenceRequired(true);
                 mob.setCollidable(false);
             }
             case Fireball fireball -> {

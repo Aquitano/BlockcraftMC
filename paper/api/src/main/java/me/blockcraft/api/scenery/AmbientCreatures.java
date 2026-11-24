@@ -82,7 +82,7 @@ public final class AmbientCreatures implements Listener, AutoCloseable {
 
     private static void prepare(Mob creature) {
         creature.setPersistent(false);
-        creature.setRemoveWhenFarAway(false);
+        creature.setPersistenceRequired(true);
         creature.setAI(false);
         creature.setGravity(false);
         creature.setInvulnerable(true);
